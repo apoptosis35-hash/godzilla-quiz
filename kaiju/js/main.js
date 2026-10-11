@@ -397,6 +397,8 @@ function startStageSelect() {
 function startArcade(def) {
   const others = ROSTER.filter((d) => d !== def);
   for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
+  others.length = Math.min(others.length, 4);
+  for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
   const order = others.map((d, i) => ({ def: d, stage: STAGES[i % 3 === 0 ? 0 : i % STAGES.length] }));
   order.push({ def: ROSTER[0], boss: true, stage: STAGES.find((s) => s.id === 'volcano') });
   App.arcade = { player: def, order, idx: 0, level: sel.level, color: sel.colors[0] };

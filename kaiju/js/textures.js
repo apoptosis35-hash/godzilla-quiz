@@ -356,3 +356,26 @@ export function skyTexture(top, mid, bottom, stars = 0) {
     return t;
   });
 }
+
+// Glowing cracks (emissive map) for magma-veined skin
+export function crackTexture(seed = 3) {
+  return cached('crack-em' + seed, () => {
+    const size = 512, c = canvas(size), ctx = c.getContext('2d');
+    ctx.fillStyle = '#000'; ctx.fillRect(0, 0, size, size);
+    let r = seed * 9301 + 49297;
+    const rnd = () => { r = (r * 9301 + 49297) % 233280; return r / 233280; };
+    ctx.lineCap = 'round';
+    const branch = (x, y, a, len, w, d) => {
+      if (d > 6 || len < 3) return;
+      const x2 = x + Math.cos(a) * len, y2 = y + Math.sin(a) * len;
+      for (const [ww, col] of [[w * 3, 'rgba(255,40,0,0.25)'], [w, 'rgba(255,90,20,1)'], [w * 0.4, 'rgba(255,220,160,1)']]) {
+        ctx.strokeStyle = col; ctx.lineWidth = ww;
+        for (const ox of [-size, 0, size]) for (const oy of [-size, 0, size]) { ctx.beginPath(); ctx.moveTo(x + ox, y + oy); ctx.lineTo(x2 + ox, y2 + oy); ctx.stroke(); }
+      }
+      branch(x2, y2, a + (rnd() - 0.5) * 0.9, len * 0.85, w * 0.85, d + 1);
+      if (rnd() < 0.45) branch(x2, y2, a + (rnd() - 0.5) * 2.2, len * 0.6, w * 0.6, d + 2);
+    };
+    for (let i = 0; i < 14; i++) branch(rnd() * size, rnd() * size, rnd() * Math.PI * 2, 18 + rnd() * 20, 3, 0);
+    return tex(c, 1, true);
+  });
+}

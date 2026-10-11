@@ -1,5 +1,5 @@
 // Offline cache for the game (cache-first for app files, network fallback).
-const CACHE = 'kaiju-fighters-v1';
+const CACHE = 'kaiju-fighters-v2';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
@@ -10,7 +10,7 @@ const CORE = [
   'vendor/addons/geometries/RoundedBoxGeometry.js',
   'js/main.js', 'js/game.js', 'js/fighter.js', 'js/rig.js', 'js/textures.js', 'js/fx.js', 'js/stage.js', 'js/camera.js', 'js/audio.js',
   'js/input.js', 'js/ai.js', 'js/quality.js', 'js/save.js',
-  'js/kaiju/index.js', 'js/kaiju/biped.js', 'js/kaiju/gorvath.js', 'js/kaiju/vespera.js', 'js/kaiju/trivern.js', 'js/kaiju/kurogane.js',
+  'js/kaiju/index.js', 'js/kaiju/biped.js', 'js/kaiju/reptile.js', 'js/kaiju/ragnos.js', 'js/kaiju/vorthar.js', 'js/kaiju/mutagon.js', 'js/kaiju/primordon.js', 'js/kaiju/gorvath.js', 'js/kaiju/vespera.js', 'js/kaiju/trivern.js', 'js/kaiju/kurogane.js',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));
@@ -18,16 +18,14 @@ self.addEventListener('install', (e) => {
 self.addEventListener('activate', (e) => {
   e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim()));
 });
+// network-first (so updates arrive immediately), falling back to cache when offline
 self.addEventListener('fetch', (e) => {
   const req = e.request;
   if (req.method !== 'GET') return;
   e.respondWith(
-    caches.match(req).then((hit) => {
-      const net = fetch(req).then((res) => {
-        if (res && (res.ok || res.type === 'opaque')) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
-        return res;
-      }).catch(() => hit);
-      return hit || net;
-    }),
+    fetch(req).then((res) => {
+      if (res && (res.ok || res.type === 'opaque')) { const copy = res.clone(); caches.open(CACHE).then((c) => c.put(req, copy)); }
+      return res;
+    }).catch(() => caches.match(req)),
   );
 });

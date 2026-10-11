@@ -3,8 +3,12 @@ import gorvath from './gorvath.js';
 import vespera from './vespera.js';
 import trivern from './trivern.js';
 import kurogane from './kurogane.js';
+import ragnos from './ragnos.js';
+import vorthar from './vorthar.js';
+import mutagon from './mutagon.js';
+import primordon from './primordon.js';
 
-export const ROSTER = [gorvath, vespera, trivern, kurogane];
+export const ROSTER = [gorvath, ragnos, vorthar, mutagon, primordon, vespera, trivern, kurogane];
 
 // Alternate colour schemes: map of original material colour -> replacement (applied after build).
 const PALETTES = {
@@ -22,6 +26,26 @@ const PALETTES = {
     { label: 'オリジナル' },
     { label: '黄金', map: { 0x6b4a26: 0xc8982e, 0x5a2e14: 0xa8781e, 0xe0c070: 0xfff0b0 } },
     { label: '漆黒', map: { 0x6b4a26: 0x26262c, 0x5a2e14: 0x301818, 0x60ff40: 0xff3020, 0x90ff60: 0xff4030 } },
+  ],
+  ragnos: [
+    { label: 'オリジナル' },
+    { label: '灼熱', map: { 0x2a7cff: 0xff5a10, 0xe0f4ff: 0xffe0b0, 0x9fc8ff: 0xffa060, 0xdde3ea: 0xe8d8cc } },
+    { label: '灰燼', map: { 0x2a2b2c: 0x5a5856, 0x2a7cff: 0x50e0ff } },
+  ],
+  vorthar: [
+    { label: 'オリジナル' },
+    { label: '蒼炎', map: { 0xff4818: 0x2a8cff, 0xffe0a0: 0xd8f0ff, 0xffa080: 0x90c8ff } },
+    { label: '黒鉄', map: { 0x2b2f2e: 0x18181c, 0xc4c8d0: 0x50545c } },
+  ],
+  mutagon: [
+    { label: 'オリジナル' },
+    { label: '暗紅', map: { 0x3a2622: 0x2a1414, 0xa040ff: 0xff3060, 0xffc8ff: 0xffd0d8 } },
+    { label: '凍結', map: { 0x3a2622: 0x5a6670, 0xff3010: 0x40c0ff, 0xa040ff: 0x60e0ff, 0xffc8ff: 0xe0ffff } },
+  ],
+  primordon: [
+    { label: 'オリジナル' },
+    { label: 'モノクロ', map: { 0x48484a: 0x3a3a3a, 0xbdb9b0: 0xe8e8e8, 0xffb040: 0xffffff, 0x9fd8ff: 0xffffff } },
+    { label: '深緑', map: { 0x48484a: 0x2e3a2c, 0xbdb9b0: 0xc8c0a0 } },
   ],
   kurogane: [
     { label: 'オリジナル' },
@@ -65,10 +89,6 @@ export const LOCKED = [
   { id: 'l5', name: '???', type: '植物融合怪獣' },
   { id: 'l6', name: '???', type: '甲殻装甲怪獣' },
   { id: 'l7', name: '???', type: '翼竜型怪獣' },
-  { id: 'l8', name: '???', type: '再生細胞怪獣' },
-  { id: 'l9', name: '???', type: '古代原種怪獣' },
   { id: 'l10', name: '???', type: '深海怪獣' },
-  { id: 'l11', name: '???', type: '雷撃怪獣' },
-  { id: 'l12', name: '???', type: '第四形態変異体' },
 ];
 export function byId(id) { return ROSTER.find((d) => d.id === id); }
