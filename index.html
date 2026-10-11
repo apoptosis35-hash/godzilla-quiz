@@ -186,6 +186,8 @@ h2.sec small{font-family:var(--f-mono);font-size:11px;color:var(--atomic);letter
 .kcard.has-img .rar{position:relative;z-index:1;margin:5px}
 .kcard.has-img .nm{position:absolute;left:5px;right:5px;bottom:5px;z-index:1}
 .kcard.has-img .st{z-index:1}
+.kcard.locked.has-img .art{filter:none}
+.kcard.locked.has-img .art img{filter:grayscale(1) brightness(.4) blur(2px)}
 .imgtools{display:grid;grid-template-columns:1fr auto;gap:8px}
 .imgtools label{display:grid;place-items:center}
 .kcard .nm{font-size:11px;font-weight:900;line-height:1.25;background:rgba(0,0,0,.55);border-radius:4px;padding:3px 2px;color:#fff;overflow-wrap:anywhere}
@@ -589,7 +591,7 @@ function openModal(html){$('#modalBox').innerHTML=html;$('#modal').hidden=false}
 function closeModal(){$('#modal').hidden=true}
 function cardHTML(c,opts={}){
   const owned=opts.owned!==false; const cnt=S.cards[c.id]||0; const stars=owned&&cnt?'★'.repeat(Math.min(cnt,5)):'';
-  const img=owned&&(IMG[c.id]||WP[c.id]);
+  const img=owned?(IMG[c.id]||WP[c.id]):WP[c.id];
   return `<div class="kcard ${RARITY[c.r].cls} ${owned?'':'locked'} ${img?'has-img':''}" style="--h:${c.h}">
     <span class="rar">${c.r}</span>${stars?`<span class="st" aria-label="★${Math.min(cnt,5)}">${stars}</span>`:''}
     <div class="art" aria-hidden="true">${img?`<img src="${img}" alt="">`:c.e}</div><div class="nm">${owned?esc(c.n):'？？？'}</div></div>`;
