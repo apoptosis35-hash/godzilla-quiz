@@ -1,0 +1,15 @@
+{
+  "name": "KAIJU FIGHTERS 巨獣大決戦",
+  "short_name": "KAIJU FIGHTERS",
+  "description": "巨大怪獣3D対戦格闘ゲーム(オリジナル怪獣による技術デモ)",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "landscape",
+  "background_color": "#07080c",
+  "theme_color": "#07080c",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

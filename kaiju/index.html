@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>KAIJU FIGHTERS 巨獣大決戦</title>
+<meta name="description" content="巨大怪獣を操作して戦う3D対戦格闘ゲーム(オリジナル怪獣による技術デモ)">
+<meta name="theme-color" content="#07080c">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="KAIJU FIGHTERS">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@500;700;900&display=swap">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="dim"></div>
+<div id="ui">
+  <!-- loading -->
+  <section id="s-boot" class="screen show">
+    <div class="boot-logo">KAIJU<br>FIGHTERS</div>
+    <div class="boot-msg" id="boot-msg">LOADING…</div>
+  </section>
+
+  <!-- title -->
+  <section id="s-title" class="screen">
+    <div class="title-wrap">
+      <div class="title-kicker">GIANT MONSTER 3D FIGHTING</div>
+      <h1 class="logo"><span>KAIJU</span><span>FIGHTERS</span></h1>
+      <div class="title-jp">巨獣大決戦</div>
+      <button class="press focusable" id="btn-start">PRESS START <small>タップ / ENTER</small></button>
+    </div>
+    <div class="title-foot">オリジナル怪獣による技術デモ版 ・ 全グラフィック/サウンドはプログラム生成</div>
+  </section>
+
+  <!-- main menu -->
+  <section id="s-menu" class="screen">
+    <div class="menu-side">
+      <div class="menu-logo">KAIJU<b>FIGHTERS</b></div>
+      <nav class="menu-list">
+        <button class="mi focusable" data-mode="arcade"><b>ARCADE</b><span>アーケード - CPUを勝ち抜き最終ボスへ</span></button>
+        <button class="mi focusable" data-mode="cpu"><b>VS CPU</b><span>好きな怪獣でCPUと対戦</span></button>
+        <button class="mi focusable" data-mode="vs"><b>VS 2P</b><span>ローカル2人対戦 (キーボード/ゲームパッド)</span></button>
+        <button class="mi focusable" data-mode="training"><b>TRAINING</b><span>当たり判定・ダメージ・コンボ確認</span></button>
+        <button class="mi focusable" data-go="howto"><b>HOW TO PLAY</b><span>操作方法・技表</span></button>
+        <button class="mi focusable" data-go="settings"><b>SETTINGS</b><span>画質・ルール・キー設定・タッチ配置</span></button>
+        <button class="mi focusable" data-go="credits"><b>CREDITS</b><span>権利表記・使用技術</span></button>
+      </nav>
+    </div>
+    <div class="menu-record" id="menu-record"></div>
+  </section>
+
+  <!-- character select -->
+  <section id="s-select" class="screen">
+    <div class="sel-head">
+      <button class="back focusable" data-back>‹ BACK</button>
+      <div class="sel-title" id="sel-title">SELECT YOUR KAIJU</div>
+      <div class="sel-step" id="sel-step">1P</div>
+    </div>
+    <div class="sel-body">
+      <div class="sel-info" id="sel-info"></div>
+      <div class="sel-preview-ctl">
+        <button class="pv focusable" data-pv="idle">待機</button>
+        <button class="pv focusable" data-pv="win">勝利ポーズ</button>
+        <button class="pv focusable" data-pv="special">必殺技</button>
+      </div>
+      <div class="sel-grid" id="sel-grid"></div>
+    </div>
+    <div class="sel-foot">
+      <div class="sel-diff" id="sel-diff"></div>
+      <button class="go focusable" id="sel-ok">決定 <small>CONFIRM</small></button>
+    </div>
+  </section>
+
+  <!-- stage select -->
+  <section id="s-stage" class="screen">
+    <div class="sel-head">
+      <button class="back focusable" data-back>‹ BACK</button>
+      <div class="sel-title">SELECT STAGE</div>
+      <div></div>
+    </div>
+    <div class="stage-list" id="stage-list"></div>
+  </section>
+
+  <!-- vs splash -->
+  <section id="s-vs" class="screen">
+    <div class="vs-wrap">
+      <div class="vs-side l" id="vs-l"></div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-side r" id="vs-r"></div>
+    </div>
+    <div class="vs-stage" id="vs-stage"></div>
+  </section>
+
+  <!-- battle hud -->
+  <section id="s-battle" class="screen">
+    <div class="hud">
+      <div class="hud-p p1">
+        <div class="hp"><div class="hp-red" id="hpr0"></div><div class="hp-fill" id="hp0"></div></div>
+        <div class="hud-name"><span id="nm0"></span><i class="wins" id="w0"></i></div>
+      </div>
+      <div class="hud-timer"><div id="timer">60</div><div class="hud-round" id="hud-round"></div></div>
+      <div class="hud-p p2">
+        <div class="hp"><div class="hp-red" id="hpr1"></div><div class="hp-fill" id="hp1"></div></div>
+        <div class="hud-name"><i class="wins" id="w1"></i><span id="nm1"></span></div>
+      </div>
+      <button class="pause-btn focusable" id="btn-pause" aria-label="pause">II</button>
+    </div>
+    <div class="meter m0"><div class="meter-fill" id="mt0"></div><span>SUPER</span></div>
+    <div class="meter m1"><div class="meter-fill" id="mt1"></div><span>SUPER</span></div>
+    <div class="combo c0" id="cb0"></div>
+    <div class="combo c1" id="cb1"></div>
+    <div class="banner" id="banner"></div>
+    <div class="popups" id="popups"></div>
+    <div class="fps" id="fps"></div>
+    <div class="train-panel" id="train-panel"></div>
+    <div id="touch" class="touch"></div>
+  </section>
+
+  <!-- pause -->
+  <section id="s-pause" class="screen overlay">
+    <div class="panel">
+      <h2>PAUSE</h2>
+      <button class="mi focusable" id="p-resume"><b>RESUME</b><span>再開</span></button>
+      <button class="mi focusable" id="p-moves"><b>MOVE LIST</b><span>技表</span></button>
+      <button class="mi focusable" id="p-restart"><b>RESTART</b><span>最初から</span></button>
+      <button class="mi focusable" id="p-quit"><b>QUIT</b><span>メニューへ戻る</span></button>
+    </div>
+  </section>
+
+  <!-- result -->
+  <section id="s-result" class="screen overlay">
+    <div class="panel result">
+      <div class="res-win" id="res-win"></div>
+      <div class="res-stats" id="res-stats"></div>
+      <div class="res-btns" id="res-btns"></div>
+    </div>
+  </section>
+
+  <!-- how to -->
+  <section id="s-howto" class="screen overlay scroll">
+    <div class="panel wide">
+      <div class="sel-head"><button class="back focusable" data-back>‹ BACK</button><h2>HOW TO PLAY</h2><div></div></div>
+      <div id="howto-body"></div>
+    </div>
+  </section>
+
+  <!-- settings -->
+  <section id="s-settings" class="screen overlay scroll">
+    <div class="panel wide">
+      <div class="sel-head"><button class="back focusable" data-back>‹ BACK</button><h2>SETTINGS</h2><div></div></div>
+      <div id="settings-body"></div>
+    </div>
+  </section>
+
+  <!-- credits -->
+  <section id="s-credits" class="screen overlay scroll">
+    <div class="panel wide">
+      <div class="sel-head"><button class="back focusable" data-back>‹ BACK</button><h2>CREDITS / 権利表記</h2><div></div></div>
+      <div class="credits">
+        <p><b>KAIJU FIGHTERS 巨獣大決戦</b> は、巨大怪獣格闘ゲームの技術デモです。</p>
+        <p>登場する怪獣(ゴルヴァス / ヴェスペラ / トライヴァーン / 鋼神クロガネ)、ステージ、BGM、効果音はすべて本作のためのオリジナル作品で、プログラムで生成しています。外部の3Dモデル・画像・録音音源は使用していません。</p>
+        <p>東宝株式会社の「ゴジラ」シリーズのキャラクター・名称・デザイン・音楽は権利で保護されています。本作は許諾を得ていないため、それらは収録していません。正式な許諾を得た場合は、同じ格闘システムに公式キャラクターを追加できる設計になっています。</p>
+        <p>使用ライブラリ: three.js r169 (MIT License, © three.js authors)。フォント: Google Fonts (Anton / Dela Gothic One / Zen Kaku Gothic New, SIL Open Font License)。</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="s-rotate" class="rotate-hint">
+    <div>📱↻<br>横画面にしてプレイしてください<br><small>Rotate to landscape</small></div>
+  </section>
+</div>
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
