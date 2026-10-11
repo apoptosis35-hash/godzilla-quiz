@@ -127,10 +127,17 @@ function build(q, opts = {}) {
     limb(rig, 'arm' + s, 'fore' + s, 0.32, 0.26, green);
     limb(rig, 'fore' + s, 'claw' + s, 0.26, 0.2, crimson);
     const m = s === 'L' ? 1 : -1;
-    const blade = new THREE.Mesh(new THREE.ConeGeometry(0.3, 2.6, 4).translate(0, 1.3, 0), crimson);
-    blade.scale.set(0.35, 1, 1);
-    blade.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(0.05 * m, -0.5, 1).normalize());
-    rig.bones['claw' + s].add(blade);
+    // pincer claw: two curved prongs
+    for (const side of [1, -1]) {
+      const prong = new THREE.Mesh(new THREE.TorusGeometry(0.9, 0.16, 6, 10, Math.PI * 0.75), crimson);
+      prong.rotation.set(0, Math.PI / 2, side > 0 ? -0.35 : Math.PI + 0.35);
+      prong.position.set(0, 0.15 * side, 0.9);
+      prong.scale.set(1, 1, 0.6);
+      rig.bones['claw' + s].add(prong);
+    }
+    const palm = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8), crimson);
+    palm.scale.set(0.8, 0.9, 1.3); palm.position.set(0, 0, 0.2);
+    rig.bones['claw' + s].add(palm);
     const ser = [];
     for (let i = 0; i < 5; i++) ser.push({ p: [0, -0.12 - i * 0.12, 0.3 + i * 0.4], d: [0, -1, 0.3], r: 0.06, l: 0.3 });
     rig.attach('claw' + s, new THREE.Mesh(spikes(ser, 0.06, 0.3, 4), dark));
@@ -265,7 +272,7 @@ const moves = {
     events: [[26, 'groundSlam', { z: 4, power: 0.7 }]], sfx: [[2, 'whoosh', { pitch: 0.6 }], [18, 'whoosh', { pitch: 1.2 }]],
   },
   grab: {
-    name: 'エナジードレイン', startup: 8, active: 4, recovery: 26, dmg: 0, height: 'throw', hit: { z: 4.2, y: 6, r: 2.3 },
+    name: 'ピンサー・ドレイン', startup: 8, active: 4, recovery: 26, dmg: 0, height: 'throw', hit: { z: 4.2, y: 6, r: 2.3 },
     anim: [[0, P.base], [7, P.stab, 'snap'], [14, P.stab], [36, P.base, 'io']],
     throw: { anim: [[0, P.drainHold], [40, P.drainHold], [46, P.slashHitR, 'snap'], [64, P.base, 'io']], len: 64, release: 44,
       path: [[0, 3.4, 0.5], [10, 3.2, 2], [40, 3.2, 2.5], [44, 3.5, 1]],
@@ -283,10 +290,15 @@ const moves = {
     events: [[0, 'invul', { n: 12 }], [16, 'zapCharge'], [29, 'groundSlam', { z: 3, power: 1 }]], sfx: [[14, 'electric', { vol: 1 }]],
   },
   shock: {
-    name: 'ショックフィールド', special: true, startup: 9, active: 10, recovery: 26, dmg: 50, height: 'mid', hit: { z: 0, y: 6, r: 7 },
-    hitstun: 24, blockstun: 16, push: 1.1, launch: 0.42, meterCost: 25, chip: 0.2,
+    name: 'ソニックウィング', special: true, startup: 9, active: 10, recovery: 26, dmg: 50, height: 'mid', hit: { z: 0, y: 6, r: 7.5 },
+    hitstun: 24, blockstun: 16, push: 1.4, launch: 0.42, meterCost: 25, chip: 0.2,
     anim: [[0, P.base], [8, P.shock, 'snap'], [24, P.shock], [45, P.base, 'io']],
-    events: [[0, 'invul', { n: 16 }], [9, 'pulse', { color: 0x80ffe0, r: 8 }], [9, 'zapCharge']], sfx: [[9, 'electric', { vol: 1, pitch: 0.7 }]],
+    events: [[0, 'invul', { n: 16 }], [9, 'sonic'], [15, 'sonic']], sfx: [[9, 'whoosh', { vol: 1, pitch: 0.3 }]],
+  },
+  fireball: {
+    name: 'エナジーボール', special: true, startup: 18, active: 6, recovery: 24, dmg: 0, height: 'mid',
+    anim: [[0, P.base], [12, P.aimSting, 'io'], [20, P.stingHit, 'snap'], [28, P.stingHit], [46, P.base, 'io']],
+    events: [[18, 'fireball']], cooldown: 40,
   },
   super: {
     name: 'ヘルズ・サンダースウォーム', super: true, special: true, startup: 56, active: 70, recovery: 34, dmg: 0, height: 'mid',
@@ -299,16 +311,16 @@ for (const k in moves) moves[k].id = k;
 
 export default {
   id: 'vespera', name: 'VESPERA', jp: 'ヴェスペラ', title: '超翅怪獣', era: '2001年 渋谷水没地区 出現',
-  desc: '4枚の巨大な翅で高速飛行する昆虫型怪獣。鎌状の前脚と毒針、放電能力で敵を翻弄し、相手のエネルギーを吸収して回復する。',
+  desc: '4枚の巨大な翅で音速を超えて飛ぶトンボ型の女王怪獣。2本のハサミで敵を捕え、尾の針で突き刺してエネルギーを吸収する。吸収した力は巨大なエネルギー弾として撃ち返し、羽ばたきの衝撃波はビルをも砕く。',
   style: '高速空中機動型', strengths: '最速の技・空中からの急降下・体力吸収', weakness: '体力が低い・1発が軽い',
-  stats: { power: 2, speed: 5, defense: 2, reach: 3 }, specialNames: ['ニードルボルト', 'サンダーダイブ', 'ショックフィールド'], superName: 'ヘルズ・サンダースウォーム',
+  stats: { power: 2, speed: 5, defense: 2, reach: 3 }, specialNames: ['ニードルボルト', 'エナジーボール', 'ソニックウィング', 'サンダーダイブ'], superName: 'ヘルズ・サンダースウォーム',
   hp: 880, defense: 0.95, walk: 0.13, back: 0.11, side: 0.13, dash: 0.6, evade: 0.45, weight: 0.85, push: 2.1, height: 10, stride: 1.6, flyer: true,
   hurt: [{ z: 0, y0: 2.2, y1: 9.5, r: 2.2 }, { z: 2.2, y0: 6.5, y1: 9.5, r: 1.3 }, { z: -3.5, y0: 3, y1: 7, r: 1.4 }],
   voice: { pitch: 1.9, insect: true, rough: 0.5 }, color: '#80ffb0', camH: 1,
   tails: [AB], poses: P, anims, gait, proc,
   portraitOff: [3.5, 0.8, 7.5],
   moves,
-  commands: { L: 'jab', 'f+L': 'stab', 'd+L': 'rake', H: 'sting', 'f+H': 'swoop', 'd+H': 'tailsweep', 'b+H': 'launch', 'dash+H': 'swoop', 'dash+L': 'stab', G: 'grab', S: 'needles', 'f+S': 'thunderDive', 'd+S': 'shock', 'b+S': 'shock', X: 'super' },
+  commands: { L: 'jab', 'f+L': 'stab', 'd+L': 'rake', H: 'sting', 'f+H': 'swoop', 'd+H': 'tailsweep', 'b+H': 'launch', 'dash+H': 'swoop', 'dash+L': 'stab', G: 'grab', S: 'needles', 'f+S': 'thunderDive', 'd+S': 'shock', 'b+S': 'fireball', X: 'super' },
   ai: { range: 6, zoning: 0.25, aggression: 0.75 },
   events: {
     drain(f, m) {
@@ -318,6 +330,21 @@ export default {
       for (let i = 0; i < 12; i++) m.fx.add.emit({ x: p.x, y: p.y, z: p.z, vx: (f.pos.x - v.pos.x) * 2 + (Math.random() - 0.5) * 4, vy: 2 + Math.random() * 3, vz: (f.pos.z - v.pos.z) * 2 + (Math.random() - 0.5) * 4, r: 0.4, g: 1, b: 0.6, size: 1.2, life: 0.6, drag: 0.97 });
       m.audio.play('buzz', { len: 0.25, pitch: 1.5, vol: 0.7 });
       m.popup(f.side, '+HP', 'throw');
+      f.absorbed = 1;
+    },
+    sonic(f, m) {
+      const p = f.local(0, 6);
+      m.fx.ring(p, { sphere: true, color: 0xe0fff0, r0: 2, r1: 12, dur: 0.35, opacity: 0.45 });
+      m.fx.ring(f.local(0, 0.3), { color: 0xffffff, r1: 26, dur: 0.6, opacity: 0.5 });
+      m.fx.dust(f.local(0, 0.5), 2.4);
+      m.camRig.shake(0.4);
+      m.stage.impact(p, 1.6, 16);
+    },
+    fireball(f, m) {
+      const charged = !!f.absorbed;
+      f.absorbed = 0;
+      m.spawnProjectile(f, { kind: 'orb', speed: 0.85, y: 5, z: 3, r: charged ? 2.2 : 1.5, life: 70, dmg: charged ? 75 : 36, hitstun: 22, push: 1.1, knockdown: charged, color: 0xff7a20, aim: true, sfx: 'explosion', power: charged ? 2.5 : 1.2 });
+      if (charged) { m.popup(f.side, 'ENERGY RELEASE!', 'counter'); m.fx.flash(f.local(2, 5), 0xff7a20, 60, 0.4); }
     },
     zapCharge(f, m) {
       const p = f.local(0, 7);

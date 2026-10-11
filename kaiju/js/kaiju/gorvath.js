@@ -10,7 +10,7 @@ function build(q, opts = {}) {
   const sc = scaleMaps('reptile', 1);
   const boss = opts.boss;
   const skin = new THREE.MeshStandardMaterial({
-    color: boss ? 0x2b2124 : 0x3b403b, map: sc.color, normalMap: sc.normal, normalScale: new THREE.Vector2(1.6, 1.6),
+    color: boss ? 0x2b2124 : 0x353d36, map: sc.color, normalMap: sc.normal, normalScale: new THREE.Vector2(1.6, 1.6),
     roughnessMap: sc.rough, roughness: 1, metalness: 0.05, vertexColors: true,
   });
   const dark = (u, a) => {
@@ -121,7 +121,7 @@ function build(q, opts = {}) {
   // ---- dorsal plates (3 rows, crystalline, glow) ----
   const plates = [];
   const plateBase = new THREE.MeshPhysicalMaterial({
-    color: boss ? 0xffb0b0 : 0xd4c6ff, roughness: 0.22, metalness: 0.0, clearcoat: 1, clearcoatRoughness: 0.15,
+    color: boss ? 0xffb0b0 : 0xc39cff, roughness: 0.22, metalness: 0.0, clearcoat: 1, clearcoatRoughness: 0.15,
     emissive: boss ? 0xff2040 : 0x8a4dff, emissiveIntensity: 0.12, sheen: 0.5, sheenColor: new THREE.Color(0xb090ff),
   });
   const fr = body.userData.frames, pr = body.userData.prof;
@@ -146,9 +146,9 @@ function build(q, opts = {}) {
       const { P, T, S, N: Nn } = fr(u);
       const p = pr(u);
       const sizeK = Math.min(1, p.h / 1.4) * (u > 0.62 && u < 0.9 ? 1.2 : 1);
-      let h = (row === 0 ? 2.2 : 1.45) * sizeK + 0.25, w = (row === 0 ? 1.6 : 1.1) * sizeK + 0.25;
+      let h = (row === 0 ? 2.7 : 1.7) * sizeK + 0.3, w = (row === 0 ? 1.6 : 1.1) * sizeK + 0.25;
       if (u > 0.9) { h *= 0.6; w *= 0.7; }
-      const geo = plateGeometry(w, h, row === 0 ? 3 : 2, 0.09 + 0.06 * sizeK, i + row * 7);
+      const geo = plateGeometry(w, h, row === 0 ? 4 : 3, 0.09 + 0.06 * sizeK, i + row * 7);
       const mat = plateBase.clone();
       const mesh = new THREE.Mesh(geo, mat);
       mesh.castShadow = true;
@@ -167,12 +167,12 @@ function build(q, opts = {}) {
   rig.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = q.level >= 2; } });
   let light = null;
   if (q.level >= 2) {
-    light = new THREE.PointLight(boss ? 0xff3050 : 0x9a60ff, 0, 30, 1.6);
+    light = new THREE.PointLight(boss ? 0xff3050 : 0xff7a20, 0, 30, 1.6);
     rig.attach('chest', light, 0, 1, -2.5);
   }
-  const glowCol = new THREE.Color(boss ? 0xff2040 : 0x8a4dff), hot = new THREE.Color(boss ? 0xffd0d0 : 0xe8d8ff);
+  const glowCol = new THREE.Color(boss ? 0xff2040 : 0xff7a20), hot = new THREE.Color(boss ? 0xffd0d0 : 0xffe4a8), idleCol = new THREE.Color(boss ? 0xff2040 : 0x8a4dff);
   return {
-    root, pivot, rig, plates, light, glowColors: [glowCol, hot],
+    root, pivot, rig, plates, light, glowColors: [glowCol, hot, idleCol],
     mouth: { bone: 'head', off: new THREE.Vector3(0, -0.15, 2.45) },
     update(f) {
       // dorsal glow ripple driven by move frames
@@ -189,7 +189,7 @@ function build(q, opts = {}) {
         const ripple = Math.max(0, Math.min(1, charge * 1.6 - (1 - pl.k) * 0.9));
         let e = 0.1 + Math.sin(t * 1.5 + pl.k * 4) * 0.04 + ripple * 1.1 + full * (1.1 + Math.sin(t * 40 + pl.k * 9) * 0.3);
         pl.mat.emissiveIntensity = e * (boss ? 1.2 : 1);
-        pl.mat.emissive.copy(glowCol).lerp(hot, Math.min(1, full * 0.5 + ripple * 0.3));
+        pl.mat.emissive.copy(idleCol).lerp(glowCol, Math.min(1, ripple * 1.5 + full)).lerp(hot, Math.min(1, full * 0.5 + ripple * 0.3));
       }
       if (light) light.intensity = (charge * 25 + full * 60) * (q.level >= 3 ? 1 : 0.7);
     },
@@ -256,7 +256,7 @@ const moves = {
   },
   breath: {
     name: 'フィッション・レイ', special: true, startup: 30, active: 40, recovery: 24, dmg: 16, height: 'mid',
-    beam: { from: 30, to: 70, z: 4, y: 9.6, width: 1.0, tick: 5, dmg: 16, push: 0.18, hitstun: 14, blockstun: 9, range: 75, color: 0x9a6bff, core: 0xfff0ff, sweep: 0.0065, kind: 'fission' },
+    beam: { from: 30, to: 70, z: 4, y: 9.6, width: 1.0, tick: 5, dmg: 16, push: 0.18, hitstun: 14, blockstun: 9, range: 75, color: 0xff6a18, core: 0xfff0c8, sweep: 0.0065, kind: 'fission', ignite: true },
     anim: [[0, P.base], [14, P.breathCharge, 'io'], [30, P.breathCharge], [33, P.breathFire, 'snap'], [70, P.breathFire], [94, P.base, 'io']],
     track: 20, sfx: [[1, 'charge', { len: 0.5 }]], blend: 0.3,
   },
@@ -264,7 +264,7 @@ const moves = {
     name: 'フィッション・パルス', special: true, startup: 10, active: 8, recovery: 26, dmg: 58, height: 'mid', hit: { z: 0, y: 5, r: 7.2 },
     hitstun: 22, blockstun: 16, push: 1.3, launch: 0.42, meterCost: 25, invul: true, chip: 0.2,
     anim: [[0, P.base], [8, P.breathCharge, 'io'], [11, P.pulse, 'snap'], [24, P.pulse], [44, P.base, 'io']],
-    events: [[0, 'invul', { n: 18 }], [10, 'pulse', { color: 0xa070ff, r: 9 }]],
+    events: [[0, 'invul', { n: 18 }], [10, 'pulse', { color: 0xff8a30, r: 9 }]],
   },
   quake: {
     name: 'アースクエイク', special: true, startup: 20, active: 4, recovery: 22, dmg: 0, height: 'low',
@@ -274,7 +274,7 @@ const moves = {
   },
   super: {
     name: 'メルトダウン・フィッション', super: true, special: true, startup: 72, active: 64, recovery: 30, dmg: 22, height: 'mid',
-    beam: { from: 72, to: 136, z: 4, y: 9.6, width: 2.3, tick: 4, dmg: 22, push: 0.28, hitstun: 16, blockstun: 10, range: 90, color: 0xb070ff, core: 0xffffff, sweep: 0.006, kind: 'fission', super: true },
+    beam: { from: 72, to: 136, z: 4, y: 9.6, width: 2.3, tick: 4, dmg: 22, push: 0.28, hitstun: 16, blockstun: 10, range: 90, color: 0xff5a10, core: 0xfff4d8, sweep: 0.006, kind: 'fission', super: true, ignite: true },
     anim: [[0, P.base], [20, P.roar, 'io'], [50, P.roar], [66, P.breathCharge, 'io'], [74, P.breathFire, 'snap'], [136, P.breathFire], [166, P.base, 'io']],
     track: 70, roar: true, events: [[0, 'invul', { n: 76 }]], sfx: [[50, 'charge', { len: 0.4, pitch: 0.8 }]], blend: 0.25,
   },
@@ -288,7 +288,7 @@ export default {
   stats: { power: 5, speed: 2, defense: 4, reach: 3 }, specialNames: ['フィッション・レイ', 'フィッション・パルス', 'アースクエイク'], superName: 'メルトダウン・フィッション',
   hp: 1150, defense: 1.08, walk: 0.085, back: 0.06, side: 0.075, dash: 0.36, evade: 0.3, weight: 1.35, push: 2.4, height: 11.5, stride: 1.25,
   hurt: [{ z: 0, y0: 0, y1: 9.5, r: 2.4 }, { z: 1.6, y0: 8.5, y1: 11.2, r: 1.4 }, { z: -4, y0: 0, y1: 4, r: 1.6 }],
-  voice: { pitch: 0.75, rough: 1 }, color: '#9a6bff', camH: 1,
+  voice: { pitch: 0.75, rough: 1 }, color: '#ff7a20', camH: 1,
   tails: [TAIL],
   poses: P, anims: A, gait: bipedGait, proc: bipedProc,
   moves,

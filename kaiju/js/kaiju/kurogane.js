@@ -8,8 +8,8 @@ import { poses, addTo, mergeByBone } from '../rig.js';
 function build(q, opts = {}) {
   const rig = bipedSkeleton(0.98, { tail: [[0, -0.2, -1.3], [0, -0.55, -1.4], [0, -0.6, -1.4], [0, -0.6, -1.35], [0, -0.55, -1.3], [0, -0.5, -1.2], [0, -0.45, -1.1], [0, -0.35, -1.0]] });
   const pm = panelMaps(3);
-  const silver = new THREE.MeshStandardMaterial({ color: 0xc9ced6, metalness: 1, roughness: 0.28, normalMap: pm.normal, normalScale: new THREE.Vector2(0.9, 0.9), roughnessMap: pm.rough, map: pm.color });
-  const black = new THREE.MeshStandardMaterial({ color: 0x23262c, metalness: 0.75, roughness: 0.42, normalMap: pm.normal, normalScale: new THREE.Vector2(0.7, 0.7), map: pm.color });
+  const silver = new THREE.MeshStandardMaterial({ color: 0xdfe3ea, metalness: 0.9, roughness: 0.3, normalMap: pm.normal, normalScale: new THREE.Vector2(0.9, 0.9), roughnessMap: pm.rough, map: pm.color });
+  const black = new THREE.MeshStandardMaterial({ color: 0x3c4048, metalness: 0.75, roughness: 0.42, normalMap: pm.normal, normalScale: new THREE.Vector2(0.7, 0.7), map: pm.color });
   const gold = new THREE.MeshStandardMaterial({ color: 0xd4a640, metalness: 1, roughness: 0.3 });
   const red = new THREE.MeshStandardMaterial({ color: 0x9a1818, metalness: 0.6, roughness: 0.4 });
   const eye = new THREE.MeshStandardMaterial({ color: 0x302000, emissive: 0xffd040, emissiveIntensity: 3 });
@@ -51,7 +51,7 @@ function build(q, opts = {}) {
   const head = new THREE.Group();
   head.add(box(1.5, 1.0, 2.6, silver, 0.25));
   const snout = box(1.15, 0.6, 1.4, silver, 0.15); snout.position.set(0, -0.15, 1.5); head.add(snout);
-  const crest = box(0.25, 0.6, 2.2, gold, 0.08); crest.position.set(0, 0.6, -0.2); head.add(crest);
+  const crest = box(0.25, 0.6, 2.2, silver, 0.08); crest.position.set(0, 0.6, -0.2); head.add(crest);
   for (const m of [1, -1]) {
     const v = box(0.2, 0.22, 0.9, eye, 0.05); v.position.set(0.66 * m, 0.18, 0.5); v.rotation.y = 0.15 * m; head.add(v);
     const fin = box(0.15, 0.5, 1.2, black, 0.05); fin.position.set(0.75 * m, 0.45, -0.7); fin.rotation.set(0.4, 0, -0.3 * m); head.add(fin);
@@ -62,8 +62,20 @@ function build(q, opts = {}) {
   for (const [sd, m] of [['L', 1], ['R', -1]]) {
     A('shoulder' + sd, cyl(0.45, 0.4, 1.6, black), 0.1 * m, -0.75, 0.2, 0.3, 0, 0);
     const fore = box(1.0, 1.7, 1.0, silver, 0.2); A('elbow' + sd, fore, 0.02 * m, -0.6, 0.45, -0.55);
-    const blade = new THREE.Mesh(new THREE.ConeGeometry(0.28, 2.4, 4), gold); blade.scale.set(0.35, 1, 1);
-    A('elbow' + sd, blade, 0.5 * m, -0.7, 0.4, -0.55 + Math.PI, 0, 0);
+    if (sd === 'L') {
+      // wrist blade
+      const blade = new THREE.Mesh(new THREE.ConeGeometry(0.28, 2.4, 4), silver); blade.scale.set(0.35, 1, 1);
+      A('elbow' + sd, blade, 0.5 * m, -0.7, 0.4, -0.55 + Math.PI, 0, 0);
+    } else {
+      // spiral drill arm
+      const drill = new THREE.Group();
+      const cone = new THREE.Mesh(new THREE.ConeGeometry(0.62, 3.0, 14).rotateX(Math.PI / 2).translate(0, 0, 1.5), silver);
+      const pts = []; for (let i = 0; i <= 40; i++) { const t = i / 40, a = t * Math.PI * 8, r = 0.62 * (1 - t) + 0.04; pts.push(new THREE.Vector3(Math.cos(a) * r, Math.sin(a) * r, t * 3.0)); }
+      const groove = new THREE.Mesh(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts), 60, 0.07, 5), black);
+      drill.add(cone, groove);
+      drill.userData.noMerge = true; drill.userData.drill = true;
+      A('wrist' + sd, drill, 0, -0.25, 0.55, 0.35);
+    }
     const hand = box(0.7, 0.6, 0.8, black, 0.12); A('wrist' + sd, hand, 0, -0.2, 0.35);
     for (let i = 0; i < 3; i++) { const fg = box(0.16, 0.16, 0.6, silver, 0.05); A('wrist' + sd, fg, (-0.2 + i * 0.2) * m, -0.35, 0.8, 0.5); }
     // legs
@@ -84,6 +96,8 @@ function build(q, opts = {}) {
   const root = new THREE.Group(), pivot = new THREE.Group();
   root.add(pivot); pivot.add(rig.root);
   const thr = [];
+  let drillObj = null;
+  rig.root.traverse((o) => { if (o.userData.drill) drillObj = o; });
   rig.root.traverse((o) => { if (o.userData.thr) thr.push(o); });
   let light = null;
   if (q.level >= 2) { light = new THREE.PointLight(0x60c8ff, 0, 25, 1.6); A('chest', light, 0, 0.3, 3); }
@@ -93,6 +107,7 @@ function build(q, opts = {}) {
       const id = f.state === 'move' ? f.moveId : null;
       const boost = f.state === 'dash' || f.state === 'evade' || f.state === 'backdash' || id === 'boostKnee' || id === 'dashKnee' || (f.move && f.move.boost);
       const t = performance.now() * 0.02;
+      if (drillObj) drillObj.rotation.z += (id === 'drill' || id === 'jab2' ? 0.6 : 0.03);
       for (const o of thr) { const s = boost ? 1.4 + Math.sin(t * 3) * 0.2 : 0.35 + Math.sin(t) * 0.05; o.scale.set(1, s, 1); o.visible = s > 0.2; }
       let e = 0.6;
       if (id === 'maser' || id === 'super') {
@@ -132,7 +147,7 @@ const moves = {
     cancel: { from: 9, until: 20, to: ['boostKnee', 'maser', 'missiles', 'heavy'], special: true, chain: { L: 'drill' } }, sparkColor: 0xfff0a0,
   },
   drill: {
-    name: 'ドリルクロー', startup: 13, active: 8, recovery: 18, dmg: 52, height: 'mid', hit: { z: 6, y: 6.5, r: 2.4 },
+    name: 'スパイラルクラッシャー', startup: 13, active: 8, recovery: 18, dmg: 52, height: 'mid', hit: { z: 6, y: 6.5, r: 2.4 },
     hitstun: 22, blockstun: 14, push: 0.9, lunge: [[6, 18, 0.32]], anim: [[0, P.base], [9, P.clawWindR, 'io'], [13, P.drill, 'snap'], [26, P.drill], [39, P.base, 'io']],
     sfx: [[13, 'buzz', { len: 0.3, pitch: 2 }]], sparkColor: 0xfff0a0, boost: true,
   },
@@ -174,8 +189,8 @@ const moves = {
     anim: [[0, P.base], [10, P.missileAim, 'io'], [40, P.missileAim], [48, P.base, 'io']], cooldown: 70,
   },
   maser: {
-    name: 'メーサーブラスター', special: true, startup: 20, active: 28, recovery: 22, dmg: 13, height: 'mid',
-    beam: { from: 20, to: 48, z: 2.6, y: 7.9, width: 0.75, tick: 4, dmg: 13, push: 0.14, hitstun: 12, blockstun: 8, range: 70, color: 0x40c8ff, core: 0xe0ffff, sweep: 0.009, kind: 'maser', pitch: 1.8, bright: 2 },
+    name: '口部メーサー砲', special: true, startup: 20, active: 28, recovery: 22, dmg: 13, height: 'mid',
+    beam: { originBone: 'head', originOff: [0, -0.25, 2.3], from: 20, to: 48, z: 3.2, y: 9.8, width: 0.75, tick: 4, dmg: 13, push: 0.14, hitstun: 12, blockstun: 8, range: 70, color: 0x40c8ff, core: 0xe0ffff, sweep: 0.009, kind: 'maser', pitch: 1.8, bright: 2 },
     anim: [[0, P.base], [12, P.maserAim, 'io'], [48, P.maserAim], [70, P.base, 'io']], track: 16, sfx: [[1, 'charge', { len: 0.33, pitch: 1.6 }]],
   },
   overdrive: {
@@ -194,9 +209,9 @@ for (const k in moves) moves[k].id = k;
 
 export default {
   id: 'kurogane', name: 'KUROGANE', jp: '鋼神クロガネ 三式', title: '対巨獣決戦兵器', era: '2003年 特生自衛隊 配備',
-  desc: '人類が建造した銀と黒の対巨獣兵器。ブースターによる高機動とアームブレード、ミサイル、胸部メーサー砲を使い分ける万能型。',
+  desc: '巨獣の骨格を元に建造された白銀の対巨獣兵器。背部ブースターの高機動、右腕の回転ドリル、左腕のブレード、肩のミサイル、口部のメーサー砲を使い分け、胸部の絶対零度砲で決着をつける。',
   style: '高機動兵器型', strengths: '高速な技・飛び道具・ブースト突進', weakness: '一撃は軽め・ミサイルに再使用時間',
-  stats: { power: 3, speed: 4, defense: 3, reach: 4 }, specialNames: ['ミサイル一斉射', 'メーサーブラスター', 'オーバーブースト'], superName: 'アブソリュート・ゼロ',
+  stats: { power: 3, speed: 4, defense: 3, reach: 4 }, specialNames: ['ミサイル一斉射', '口部メーサー砲', 'オーバーブースト'], superName: 'アブソリュート・ゼロ',
   hp: 1000, defense: 1.0, walk: 0.11, back: 0.085, side: 0.1, dash: 0.48, evade: 0.38, weight: 1.15, push: 2.3, height: 11.2, stride: 1.4,
   hurt: [{ z: 0, y0: 0, y1: 9.5, r: 2.3 }, { z: 1.5, y0: 8.5, y1: 11, r: 1.3 }, { z: -4, y0: 0, y1: 4, r: 1.4 }],
   voice: { pitch: 0.9, metal: true, rough: 0.6, formant: 1.2 }, color: '#60c8ff', camH: 1,

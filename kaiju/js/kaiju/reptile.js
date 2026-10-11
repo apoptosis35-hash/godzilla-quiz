@@ -17,7 +17,7 @@ export function makeReptileBuild(c) {
       color: c.skin, map: sc.color, normalMap: sc.normal, normalScale: new THREE.Vector2(c.normal || 1.6, c.normal || 1.6),
       roughnessMap: sc.rough, roughness: 1, metalness: 0.05, vertexColors: true,
     });
-    if (c.cracks) { skin.emissiveMap = crackTexture(c.seed || 3); skin.emissive = new THREE.Color(c.cracks); skin.emissiveIntensity = 0.9; }
+    if (c.cracks) { skin.emissiveMap = crackTexture(c.seed || 3); skin.emissive = new THREE.Color(c.cracks); skin.emissiveIntensity = c.crackBase ?? 0.9; }
     const dark = (u, a) => { const k = 1 - Math.max(0, Math.sin(a)) * 0.35; return [0.75 * k + 0.08, 0.78 * k + 0.06, 0.74 * k + 0.05]; };
     const shape = (u, a) => { const s = Math.sin(a); return 1 + 0.07 * Math.pow(Math.max(0, s), 6) - 0.08 * Math.pow(Math.max(0, -s), 2); };
     const bw = c.bodyW || 1, tw = c.tailW || 1;
@@ -96,7 +96,7 @@ export function makeReptileBuild(c) {
     const plates = [];
     const plateBase = new THREE.MeshPhysicalMaterial({
       color: boss ? 0xffb0b0 : c.plate, roughness: c.plateRough ?? 0.3, metalness: c.plateMetal ?? 0, clearcoat: 1, clearcoatRoughness: 0.2,
-      emissive: boss ? 0xff2040 : c.glow, emissiveIntensity: 0.1, sheen: 0.4, sheenColor: new THREE.Color(c.sheen || c.glow),
+      emissive: boss ? 0xff2040 : (c.idleGlow || c.glow), emissiveIntensity: 0.1, sheen: 0.4, sheenColor: new THREE.Color(c.sheen || c.glow),
     });
     const fr = body.userData.frames, pr = body.userData.prof;
     const boneNames = ['tail8', 'tail7', 'tail6', 'tail5', 'tail4', 'tail3', 'tail2', 'tail1', 'hips', 'spine', 'chest', 'neck', 'head'];
@@ -128,9 +128,9 @@ export function makeReptileBuild(c) {
     rig.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = q.level >= 2; } });
     let light = null;
     if (q.level >= 2) { light = new THREE.PointLight(boss ? 0xff3050 : (c.light || c.glow), 0, 30, 1.6); rig.attach('chest', light, 0, 1, -2.5); }
-    const glowCol = new THREE.Color(boss ? 0xff2040 : c.glow), hot = new THREE.Color(boss ? 0xffd0d0 : c.hot);
+    const glowCol = new THREE.Color(boss ? 0xff2040 : c.glow), hot = new THREE.Color(boss ? 0xffd0d0 : c.hot), idleCol = new THREE.Color(boss ? 0xff2040 : (c.idleGlow || c.glow));
     return {
-      root, pivot, rig, plates, light, glowColors: [glowCol, hot],
+      root, pivot, rig, plates, light, glowColors: [glowCol, hot, idleCol],
       mouth: { bone: 'head', off: new THREE.Vector3(0, -0.15 * hs, (0.5 + 1.95 * sn) * hs) },
       update(f) {
         let charge = 0, full = 0;
@@ -144,10 +144,10 @@ export function makeReptileBuild(c) {
         for (const pl of plates) {
           const ripple = Math.max(0, Math.min(1, charge * 1.6 - (1 - pl.k) * 0.9));
           pl.mat.emissiveIntensity = (0.1 + Math.sin(t * 1.5 + pl.k * 4) * 0.04 + ripple * 1.1 + full * (1.1 + Math.sin(t * 40 + pl.k * 9) * 0.3)) * (c.glowMul || 1);
-          pl.mat.emissive.copy(glowCol).lerp(hot, Math.min(1, full * 0.5 + ripple * 0.3));
+          pl.mat.emissive.copy(idleCol).lerp(glowCol, Math.min(1, ripple * 1.5 + full)).lerp(hot, Math.min(1, full * 0.5 + ripple * 0.3));
           if (c.rise) pl.mesh.position.copy(pl.base).addScaledVector(pl.up, (ripple * 0.6 + full * 0.4) * c.rise * (pl.row ? 0.6 : 1));
         }
-        if (c.cracks) skin.emissiveIntensity = 0.7 + Math.sin(t * 2) * 0.15 + (charge + full) * 1.2;
+        if (c.cracks) skin.emissiveIntensity = (c.crackBase ?? 0.7) + (c.crackBase === 0 ? 0 : Math.sin(t * 2) * 0.15) + (charge * 0.8 + full) * 1.3;
         if (light) light.intensity = (charge * 25 + full * 60) * (q.level >= 3 ? 1 : 0.7);
       },
     };

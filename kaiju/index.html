@@ -47,6 +47,7 @@
     <div class="menu-side">
       <div class="menu-logo">KAIJU<b>FIGHTERS</b></div>
       <nav class="menu-list">
+        <button class="mi focusable" id="btn-story"><b>STORY</b><span>ストーリーモード - 全8章</span></button>
         <button class="mi focusable" data-mode="arcade"><b>ARCADE</b><span>アーケード - CPUを勝ち抜き最終ボスへ</span></button>
         <button class="mi focusable" data-mode="cpu"><b>VS CPU</b><span>好きな怪獣でCPUと対戦</span></button>
         <button class="mi focusable" data-mode="vs"><b>VS 2P</b><span>ローカル2人対戦 (キーボード/ゲームパッド)</span></button>
@@ -57,6 +58,25 @@
       </nav>
     </div>
     <div class="menu-record" id="menu-record"></div>
+  </section>
+
+  <!-- story -->
+  <section id="s-story" class="screen">
+    <div class="sel-head">
+      <button class="back focusable" data-back>‹ BACK</button>
+      <div class="sel-title">STORY MODE</div>
+      <div></div>
+    </div>
+    <div class="story-list" id="story-list"></div>
+  </section>
+  <section id="s-talk" class="screen">
+    <div class="talk-chapter" id="talk-chapter"></div>
+    <button class="talk-skip focusable" id="talk-skip">SKIP ››</button>
+    <button class="talk-box focusable" id="talk-box">
+      <div class="talk-face" id="talk-face"></div>
+      <div class="talk-body"><div class="talk-name" id="talk-name"></div><div class="talk-text" id="talk-text"></div></div>
+      <div class="talk-next">▼</div>
+    </button>
   </section>
 
   <!-- character select -->

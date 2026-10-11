@@ -119,6 +119,18 @@ class Bolt {
     this.pts = [];
     for (let i = 0; i <= segs; i++) this.pts.push(new THREE.Vector3());
   }
+  setPoints(pts, cam, width) {
+    const tmp = new THREE.Vector3(), side = new THREE.Vector3(), toCam = new THREE.Vector3();
+    for (let i = 0; i <= this.segs; i++) this.pts[i].copy(pts[i]);
+    for (let i = 0; i <= this.segs; i++) {
+      const p = this.pts[i];
+      tmp.subVectors(this.pts[Math.min(this.segs, i + 1)], this.pts[Math.max(0, i - 1)]);
+      toCam.subVectors(cam.position, p);
+      side.crossVectors(tmp, toCam).normalize().multiplyScalar(width);
+      this.pos.set([p.x + side.x, p.y + side.y, p.z + side.z, p.x - side.x, p.y - side.y, p.z - side.z], i * 6);
+    }
+    this.mesh.geometry.attributes.position.needsUpdate = true;
+  }
   set(a, b, jitter, cam, w) {
     const dir = new THREE.Vector3().subVectors(b, a);
     const len = dir.length();
@@ -301,6 +313,10 @@ export class FX {
     if (spec.kind === 'gravity' || spec.kind === 'lightning') {
       for (let i = 0; i < (spec.kind === 'gravity' ? 3 : 2); i++) { const b = new Bolt(spec.color, spec.width * 0.5); bolts.push(b); this.root.add(b.mesh); }
       outer.visible = inner.visible = false;
+    } else if (spec.kind === 'spiral') {
+      for (const c of [spec.spiral ?? 0xff2010, spec.spiral2 ?? 0xffd020]) { const b = new Bolt(c, spec.width * 0.4, 48); bolts.push(b); this.root.add(b.mesh); }
+    } else if (spec.kind === 'breath') {
+      outer.material.uniforms.opacity.value = 0.32; inner.visible = false;
     }
     let light = null;
     if (this.q.level >= 1) { light = new THREE.PointLight(spec.color, 0, 50, 1.4); grp.add(light); }
@@ -321,7 +337,27 @@ export class FX {
     }
     if (b.light) { b.light.position.copy(a).lerp(end, 0.25); b.light.intensity = 260 * b.w * (this.q.level >= 3 ? 1 : 0.6); }
     if (origins) b.origins = origins;
-    b.bolts.forEach((bolt, i) => bolt.set(b.origins ? b.origins[i % b.origins.length] : a, end, b.spec.kind === 'gravity' ? 1.4 : 0.9, cam, w * 0.55));
+    if (b.spec.kind === 'spiral') {
+      // two helices winding around the core ray
+      const ax = new THREE.Vector3().subVectors(end, a); const L = ax.length(); ax.normalize();
+      const u = new THREE.Vector3(0, 1, 0).cross(ax).normalize(); const v = new THREE.Vector3().crossVectors(ax, u);
+      b.bolts.forEach((bolt, k) => {
+        const pts = [];
+        for (let i = 0; i <= bolt.segs; i++) {
+          const t = i / bolt.segs, ang = t * L * 0.9 - b.t * 25 + k * Math.PI, r = w * 1.1 * Math.min(1, t * 6);
+          pts.push(a.clone().addScaledVector(ax, t * L).addScaledVector(u, Math.cos(ang) * r).addScaledVector(v, Math.sin(ang) * r));
+        }
+        bolt.setPoints(pts, cam, w * 0.28);
+      });
+    } else b.bolts.forEach((bolt, i) => bolt.set(b.origins ? b.origins[i % b.origins.length] : a, end, b.spec.kind === 'gravity' ? 1.4 : 0.9, cam, w * 0.55));
+    if (b.spec.kind === 'breath') {
+      // white-hot mist: dense expanding vapour along the stream
+      for (let i = 0; i < 4 * this.q.fxMul + 1; i++) {
+        const t = Math.random(), pp = a.clone().lerp(end, t);
+        this.smoke.emit({ x: pp.x, y: pp.y, z: pp.z, vx: (Math.random() - 0.5) * 3, vy: Math.random() * 2, vz: (Math.random() - 0.5) * 3, r: 0.9, g: 0.95, b: 1, size: w * (0.8 + t * 2.5), grow: 3, life: 0.5, alpha: 0.55, drag: 0.9 });
+      }
+    }
+    if (b.spec.ring && Math.random() < 0.5) this.ring(a.clone(), { sphere: true, color: b.spec.color, r0: w, r1: w * 3, dur: 0.25, opacity: 0.35 });
     b.end = end.clone(); b.start = a.clone();
     // particles along beam + impact
     const dir = new THREE.Vector3().subVectors(end, a).normalize();

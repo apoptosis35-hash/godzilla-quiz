@@ -16,6 +16,7 @@ import { AudioSys } from './audio.js';
 import { Input, HumanController, TouchControls, DEFAULT_KEYS, DEFAULT_PAD, ACTIONS, ACTION_NAMES } from './input.js';
 import { AIController, LEVELS } from './ai.js';
 import * as store from './save.js';
+import { STORY } from './story.js';
 
 const $ = (id) => document.getElementById(id);
 const DEFAULTS = {
@@ -393,6 +394,75 @@ function startStageSelect() {
   go('stage');
 }
 
+// ---------------- story ----------------
+const fmtStory = (t) => t.replace(/\{(\w+)\}/g, (_, id) => (byId(id) ? byId(id).jp : id));
+function toStory() {
+  const cleared = App.records.story || 0;
+  const list = $('story-list');
+  list.innerHTML = '';
+  STORY.forEach((c, i) => {
+    const b = document.createElement('button');
+    const locked = i > cleared;
+    b.className = 'chap focusable' + (locked ? ' locked' : '') + (i < cleared ? ' done' : '');
+    const p = byId(c.player), o = byId(c.opp);
+    b.innerHTML = locked ? `<b>${c.title.split(' ')[0]}</b><span>？？？</span>` :
+      `<b>${c.title}</b><span>${c.sub}</span><i><img src="${App.portraits[p.id]}"> VS <img src="${App.portraits[o.id]}" style="${c.boss ? 'filter:hue-rotate(140deg) saturate(2)' : ''}"></i><em>${p.jp} vs ${o.jp}${c.boss ? ' Ω' : ''}${i < cleared ? ' ・ CLEAR' : ''}</em>`;
+    b.onclick = () => { if (locked) { audio.play('cancel'); return; } audio.play('ok'); startChapter(i); };
+    list.appendChild(b);
+  });
+  go('story');
+  App.view = 'show';
+  audio.startMusic('select');
+}
+function startChapter(i) {
+  const c = STORY[i];
+  App.view = 'show';
+  showModel(byId(c.opp), !!c.boss); setPreview('idle');
+  audio.startMusic('select');
+  playTalk(c, c.intro, () => launch({ mode: 'story', chapter: i, defs: [byId(c.player), byId(c.opp)], stage: STAGES.find((s) => s.id === c.stage), level: c.level, boss: c.boss, hpMul: c.hpMul }));
+}
+function storyOutro(i) {
+  const c = STORY[i];
+  endBattle();
+  App.view = 'show';
+  showModel(byId(c.player)); setPreview('win');
+  audio.startMusic('menu');
+  App.records.story = Math.max(App.records.story || 0, i + 1);
+  saveRecords();
+  playTalk(c, c.outro, () => { if (i === STORY.length - 1) audio.play('fanfare'); toStory(); });
+}
+let talk = null;
+function playTalk(chap, lines, done) {
+  talk = { lines, i: 0, done, timer: null };
+  $('talk-chapter').innerHTML = `<b>${chap.title}</b><span>${chap.sub}</span>`;
+  go('talk', { focus: 'talk-box' });
+  showLine();
+}
+function showLine() {
+  const [who, raw] = talk.lines[talk.i];
+  const def = byId(who);
+  const text = fmtStory(raw);
+  $('talk-name').textContent = who === 'narr' ? '' : def ? def.jp : who;
+  $('talk-face').innerHTML = def ? `<img src="${App.portraits[def.id]}">` : '';
+  $('talk-face').style.display = def ? '' : 'none';
+  $('talk-box').classList.toggle('narr', who === 'narr');
+  if (def && who !== 'narr') audio.roar({ ...def.voice, dur: 1.2, vol: 0.5 });
+  const el = $('talk-text');
+  clearInterval(talk.timer);
+  let n = 0;
+  talk.full = text; talk.typing = true;
+  el.textContent = '';
+  talk.timer = setInterval(() => { n += 1; el.textContent = text.slice(0, n); if (n >= text.length) { clearInterval(talk.timer); talk.typing = false; } }, 28);
+}
+function advanceTalk() {
+  if (!talk) return;
+  if (talk.typing) { clearInterval(talk.timer); talk.typing = false; $('talk-text').textContent = talk.full; return; }
+  audio.play('ui');
+  talk.i++;
+  if (talk.i >= talk.lines.length) { const d = talk.done; clearInterval(talk.timer); talk = null; d(); return; }
+  showLine();
+}
+
 // ---------------- arcade ----------------
 function startArcade(def) {
   const others = ROSTER.filter((d) => d !== def);
@@ -423,7 +493,7 @@ function launch(cfg) {
   $('vs-l').innerHTML = `<img src="${App.portraits[d0.id]}"><div class="nm">${d0.name}</div><div class="jp">${d0.title} ${d0.jp}</div>`;
   $('vs-r').innerHTML = `<img src="${App.portraits[d1.id]}" style="${cfg.boss ? 'filter:hue-rotate(140deg) saturate(2)' : ''}"><div class="nm">${d1.name}${bossName}</div><div class="jp">${cfg.boss ? '最終ボス' : d1.title} ${d1.jp}</div>`;
   const a = App.arcade;
-  $('vs-stage').textContent = (cfg.mode === 'arcade' ? `STAGE ${a.idx + 1} / ${a.order.length}  ・  ` : '') + cfg.stage.en + (cfg.mode !== 'vs' && cfg.mode !== 'training' ? `  ・  CPU ${cfg.level}` : '');
+  $('vs-stage').textContent = cfg.mode === 'story' ? `${STORY[cfg.chapter].title}  ・  ${cfg.stage.en}` : (cfg.mode === 'arcade' ? `STAGE ${a.idx + 1} / ${a.order.length}  ・  ` : '') + cfg.stage.en + (cfg.mode !== 'vs' && cfg.mode !== 'training' ? `  ・  CPU ${cfg.level}` : '');
   go('vs');
   audio.stopMusic();
   audio.play('explosion', { vol: 0.7, pitch: 0.7 });
@@ -450,7 +520,7 @@ function startBattle(cfg) {
   else ctrls[1] = new AIController(cfg.level);
   const cols = cfg.colors || [0, 0];
   if (cfg.defs[0] === cfg.defs[1] && cols[0] === cols[1] && !cfg.boss) cols[1] = (cols[0] + 1) % cfg.defs[1].palettes.length;
-  const fopts = [{ alt: cols[0] }, cfg.boss ? { boss: true, hpMul: 1.35, dmgMul: 1.15 } : { alt: cols[1] }];
+  const fopts = [{ alt: cols[0] }, cfg.boss ? { boss: true, hpMul: 1.35 * (cfg.hpMul || 1), dmgMul: 1.15 } : { alt: cols[1], hpMul: cfg.hpMul || 1 }];
   const match = new Match({
     scene, quality: q, fx, stage, audio, camRig, ctrls, defs: cfg.defs, fopts,
     rounds: App.settings.rounds, time: App.settings.time === 0 ? 0 : App.settings.time, training: cfg.mode === 'training',
@@ -577,7 +647,10 @@ function showResult(res) {
   $('res-win').innerHTML = `${label}<small>${w.def.name}${w.boss ? ' Ω' : ''} ・ ${res.wins[0]} - ${res.wins[1]}${res.perfect ? ' ・ PERFECT' : ''}</small>`;
   $('res-stats').innerHTML = `最大コンボ 1P: ${res.stats[0].maxCombo} HIT / 2P: ${res.stats[1].maxCombo} HIT<br>与ダメージ 1P: ${res.stats[0].dmgDealt} / 2P: ${res.stats[1].dmgDealt}`;
   const btns = [];
-  if (cfg.mode === 'arcade') {
+  if (cfg.mode === 'story') {
+    if (playerWon) btns.push(['NEXT', 'ストーリーを進める', () => storyOutro(cfg.chapter)]);
+    else { btns.push(['RETRY', 'もう一度挑戦', () => launch(App.lastLaunch)]); btns.push(['STORY', '章選択へ', () => { endBattle(); toStory(); }]); }
+  } else if (cfg.mode === 'arcade') {
     const a = App.arcade;
     if (playerWon) {
       if (a.idx >= a.order.length - 1) {
@@ -839,6 +912,10 @@ function wire() {
   };
   $('s-stage').querySelector('[data-back]').onclick = () => { audio.play('cancel'); go('select'); updateSelect(); };
   $('sel-ok').onclick = confirmSelect;
+  $('btn-story').onclick = () => { audio.play('ok'); toStory(); };
+  $('s-story').querySelector('[data-back]').onclick = () => { audio.play('cancel'); toMenu(); };
+  $('talk-box').onclick = advanceTalk;
+  $('talk-skip').onclick = () => { if (!talk) return; const d = talk.done; clearInterval(talk.timer); talk = null; audio.play('ok'); d(); };
   document.querySelectorAll('.pv[data-pv]').forEach((b) => b.onclick = () => { audio.play('ui'); setPreview(b.dataset.pv); });
   $('sel-color').onclick = () => { const def = ROSTER[sel.cursor[sel.step]]; if (!def) return; audio.play('ui'); sel.colors[sel.step] = (sel.colors[sel.step] + 1) % def.palettes.length; updateSelect(); };
   $('btn-pause').onclick = pause;
@@ -919,6 +996,7 @@ boot();
 
 // test hooks
 App.api = {
+  toStory, startChapter, STORY,
   // test helpers: run the simulation headlessly
   cpuVsCpu(level = 'HARD') { battle.match.ctrls[0] = new AIController(level); },
   simulate(n) { const m = battle.match; for (let i = 0; i < n; i++) { m.step(); if (m.phase === 'matchEnd') break; } return { phase: m.phase, frame: m.frame, round: m.round, hp: m.fighters.map((f) => Math.round(f.hp)), wins: m.fighters.map((f) => f.wins), st: m.fighters.map((f) => f.state) }; },

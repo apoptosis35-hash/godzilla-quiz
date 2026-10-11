@@ -125,11 +125,11 @@ function build(q, opts = {}) {
   const det = q.detail;
   const sc = scaleMaps('reptile', 5);
   const boss = opts.boss;
-  const skin = new THREE.MeshStandardMaterial({ color: boss ? 0x502030 : 0x6b4a26, map: sc.color, normalMap: sc.normal, normalScale: new THREE.Vector2(1.5, 1.5), roughnessMap: sc.rough, roughness: 0.9, metalness: 0.25, vertexColors: true });
-  const memMat = new THREE.MeshStandardMaterial({ color: boss ? 0x401018 : 0x5a2e14, roughness: 0.75, side: THREE.DoubleSide, normalMap: scaleMaps('fine', 6).normal, emissive: 0x200800, emissiveIntensity: 0.4 });
-  const horn = new THREE.MeshStandardMaterial({ color: 0xe0c070, metalness: 0.8, roughness: 0.3 });
+  const skin = new THREE.MeshStandardMaterial({ color: boss ? 0x502030 : 0xc8982e, map: sc.color, normalMap: sc.normal, normalScale: new THREE.Vector2(1.5, 1.5), roughnessMap: sc.rough, roughness: 0.9, metalness: 0.25, vertexColors: true });
+  const memMat = new THREE.MeshStandardMaterial({ color: boss ? 0x401018 : 0xa8781e, roughness: 0.75, side: THREE.DoubleSide, normalMap: scaleMaps('fine', 6).normal, emissive: 0x200800, emissiveIntensity: 0.4 });
+  const horn = new THREE.MeshStandardMaterial({ color: 0xfff0b0, metalness: 0.9, roughness: 0.25 });
   const teeth = new THREE.MeshStandardMaterial({ color: 0xf0ead0, roughness: 0.4 });
-  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x041000, emissive: boss ? 0xff2020 : 0x60ff40, emissiveIntensity: 2.5 });
+  const eyeMat = new THREE.MeshStandardMaterial({ color: 0x041000, emissive: boss ? 0xff2020 : 0xff5a18, emissiveIntensity: 2.5 });
   const belly = (u, a) => { const s = Math.sin(a); const k = s < -0.3 ? [1.35, 1.15, 0.75] : s > 0.6 ? [0.7, 0.6, 0.55] : [1, 1, 1]; return k; };
   // body
   skinnedLoft(rig, [
@@ -195,7 +195,7 @@ function build(q, opts = {}) {
   root.add(pivot); pivot.add(rig.root);
   rig.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; } });
   let light = null;
-  if (q.level >= 2) { light = new THREE.PointLight(boss ? 0xff4040 : 0x90ff60, 0, 30, 1.6); rig.attach('nC3', light, 0, 0, 1); }
+  if (q.level >= 2) { light = new THREE.PointLight(boss ? 0xff4040 : 0xffd040, 0, 30, 1.6); rig.attach('nC3', light, 0, 0, 1); }
   const mouth = (s) => ({ bone: 'head' + s, off: new THREE.Vector3(0, -0.1, 2.0) });
   return {
     root, pivot, rig, mouth: mouth('C'), mouths: [mouth('C'), mouth('L'), mouth('R')],
@@ -330,13 +330,13 @@ const moves = {
   },
   gravity: {
     name: 'グラビティ・ボルト', special: true, startup: 24, active: 36, recovery: 24, dmg: 15, height: 'mid',
-    beam: { from: 24, to: 60, z: 6, y: 10.5, width: 1.4, tick: 6, dmg: 15, push: 0.22, hitstun: 14, blockstun: 9, range: 72, color: 0xc8ff40, core: 0xffffc0, sweep: 0.01, kind: 'gravity', pitch: 1.3, bright: 1.5 },
+    beam: { from: 24, to: 60, z: 6, y: 10.5, width: 1.4, tick: 6, dmg: 15, push: 0.22, hitstun: 14, blockstun: 9, range: 72, color: 0xffd640, core: 0xfff8d0, sweep: 0.01, kind: 'gravity', pitch: 1.3, bright: 1.5 },
     anim: [[0, P.base], [16, P.beamCharge, 'io'], [24, P.beamCharge], [27, P.beamFire, 'snap'], [60, P.beamFire], [84, P.base, 'io']],
     track: 20, sfx: [[1, 'charge', { len: 0.4, pitch: 1.2 }]], blend: 0.3,
   },
   orbs: {
     name: 'グラビトンオーブ', special: true, startup: 18, active: 6, recovery: 22, dmg: 0, height: 'mid',
-    proj: [{ at: 18, kind: 'bolt', count: 3, spread: 0.7, stagger: 5, speed: 0.6, y: 10, z: 5, r: 1.4, life: 90, dmg: 22, hitstun: 16, push: 0.4, color: 0xc8ff40, homing: 0.035, homingDelay: 8, aim: true, sfx: 'electric' }],
+    proj: [{ at: 18, kind: 'bolt', count: 3, spread: 0.7, stagger: 5, speed: 0.6, y: 10, z: 5, r: 1.4, life: 90, dmg: 22, hitstun: 16, push: 0.4, color: 0xffd640, homing: 0.035, homingDelay: 8, aim: true, sfx: 'electric' }],
     anim: [[0, P.base], [12, P.beamCharge, 'io'], [20, P.beamFire, 'snap'], [30, P.beamFire], [46, P.base, 'io']], cooldown: 60,
   },
   gale: {
@@ -346,7 +346,7 @@ const moves = {
   },
   super: {
     name: 'グラビトン・テンペスト', super: true, special: true, startup: 70, active: 60, recovery: 34, dmg: 24, height: 'mid',
-    beam: { from: 70, to: 130, z: 6, y: 12, width: 3.2, tick: 4, dmg: 24, push: 0.3, hitstun: 16, blockstun: 10, range: 90, color: 0xd8ff60, core: 0xffffff, sweep: 0.007, kind: 'gravity', super: true, pitch: 1.0, bright: 1.3 },
+    beam: { from: 70, to: 130, z: 6, y: 12, width: 3.2, tick: 4, dmg: 24, push: 0.3, hitstun: 16, blockstun: 10, range: 90, color: 0xffe060, core: 0xffffff, sweep: 0.007, kind: 'gravity', super: true, pitch: 1.0, bright: 1.3 },
     anim: [[0, P.base], [25, P.roar, 'io'], [55, P.skyRise, 'io'], [66, P.beamCharge], [72, { ...P.beamFire, _root: [0, 3, -0.3, 0, 0, 0] }, 'snap'], [130, { ...P.beamFire, _root: [0, 3, -0.3, 0, 0, 0] }], [164, P.base, 'io']],
     track: 68, roar: true, events: [[0, 'invul', { n: 74 }], [56, 'gust'], [60, 'storm'], [80, 'storm'], [100, 'storm']], blend: 0.25,
   },
@@ -355,12 +355,12 @@ for (const k in moves) moves[k].id = k;
 
 export default {
   id: 'trivern', name: 'TRIVERN', jp: 'トライヴァーン', title: '三首魔竜', era: '1991年 宇宙より飛来',
-  desc: '三つの首と二本の尾、巨大な翼を持つ竜。長い首によるリーチと、三つの口から放つ引力光線で広範囲を制圧する。',
+  desc: '黄金の鱗に覆われた三つの首と二本の尾、コウモリのような巨大な翼を持つ宇宙の竜。長い首によるリーチと、三つの口から放つ金色の稲妻のような引力光線で広範囲を制圧する。',
   style: '広範囲攻撃型', strengths: '最長リーチ・広範囲光線・誘導弾', weakness: '巨体で被弾しやすい・近距離の発生が遅い',
   stats: { power: 4, speed: 2, defense: 4, reach: 5 }, specialNames: ['グラビティ・ボルト', 'グラビトンオーブ', 'ゲイルウィング'], superName: 'グラビトン・テンペスト',
   hp: 1120, defense: 1.05, walk: 0.08, back: 0.065, side: 0.07, dash: 0.34, evade: 0.3, weight: 1.45, push: 2.6, height: 13.5, stride: 1.25,
   hurt: [{ z: 0, y0: 0, y1: 10, r: 2.7 }, { z: 2.2, y0: 9, y1: 13.5, r: 2.4 }, { z: -4, y0: 0, y1: 4, r: 1.8 }],
-  voice: { pitch: 0.95, multi: true, rough: 1.2 }, color: '#c8ff40', camH: 1.1,
+  voice: { pitch: 0.95, multi: true, rough: 1.2 }, color: '#ffd640', camH: 1.1,
   tails: [TA, TB], poses: P, anims, gait, proc,
   portraitBone: 'headC', portraitOff: [4.5, 1.2, 9],
   moves,
@@ -381,8 +381,8 @@ export default {
     storm(f, m) {
       for (let i = 0; i < 4; i++) {
         const a = f.local(Math.random() * 30 - 5, 0, (Math.random() - 0.5) * 30);
-        m.fx.strike(a.clone().setY(70), a.setY(0.3), 0xd8ff60, 0.3, 1.2);
-        m.fx.explosion(a.setY(1), 0.8, 0xd8ff60);
+        m.fx.strike(a.clone().setY(70), a.setY(0.3), 0xffe060, 0.3, 1.2);
+        m.fx.explosion(a.setY(1), 0.8, 0xffe060);
         m.stage.impact(a, 0.6, 5, { silent: true });
       }
       m.audio.play('thunder', { vol: 0.8 });

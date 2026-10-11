@@ -429,6 +429,12 @@ export class Stage {
     this.root.add(this.rain);
   }
 
+  addFire(p, life) {
+    if (this.fires.length > 40) this.fires.shift();
+    const v = p.clone(); v.y = Math.max(0.5, Math.min(p.y, 6)); v.life = life;
+    this.fires.push(v);
+  }
+
   // ---------- interaction ----------
   // Damage buildings/props around point p. power ~0.3..3
   impact(p, power, radius = 6, opts = {}) {
@@ -659,6 +665,7 @@ export class Stage {
         this.fx.burst(t, { n: 10, color: 0x201010, speed: 10, up: 2, size: 20, grow: 15, life: 5, smoke: true, alpha: 0.6 });
       }
     }
+    this.fires = this.fires.filter((f) => f.life === undefined || (f.life -= dt) > 0);
     for (const f of this.fires) if (Math.random() < 0.5 * this.q.fxMul) {
       this.fx.add.emit({ x: f.x + (Math.random() - 0.5) * 3, y: f.y, z: f.z + (Math.random() - 0.5) * 3, vx: 0, vy: 4 + Math.random() * 3, vz: 0, r: 1, g: 0.45, b: 0.12, size: 3, grow: -2, life: 0.9, drag: 0.98 });
       if (Math.random() < 0.15) this.fx.smoke.emit({ x: f.x, y: f.y + 4, z: f.z, vx: 1, vy: 4, vz: 0, r: 0.15, g: 0.14, b: 0.13, size: 6, grow: 6, life: 4, alpha: 0.5, drag: 0.99 });

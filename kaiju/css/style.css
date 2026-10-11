@@ -255,3 +255,29 @@ body.touch-on .touch { display: block; }
 .nm-in { width: min(170px, 38vw); padding: 6px 8px; font: 14px var(--f-tx); color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 3px; -webkit-user-select: text; user-select: text; touch-action: auto; pointer-events: auto; }
 .nm-in:focus { outline: none; border-color: var(--acc2); }
 .toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 50; background: rgba(0,0,0,.85); border: 1px solid var(--acc2); color: var(--ink); padding: 10px 18px; border-radius: 6px; font-size: 14px; animation: fadein .3s; }
+
+/* story */
+#s-story.show { display: flex; flex-direction: column; background: linear-gradient(90deg, rgba(0,0,0,.85), rgba(0,0,0,.35)); }
+.story-list { flex: 1; overflow-y: auto; padding: 8px 16px 16px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(300px, 44vw), 1fr)); gap: 10px; align-content: start; touch-action: pan-y; }
+.chap { text-align: left; padding: 10px 14px; border: 1px solid var(--line); border-left: 4px solid var(--acc); background: rgba(10,12,18,.85); display: flex; flex-direction: column; gap: 3px; min-height: 92px; }
+.chap b { font-family: var(--f-jp); font-weight: 400; font-size: clamp(15px, 2.2vw, 19px); }
+.chap span { font-size: 12px; color: var(--acc2); }
+.chap i { font-style: normal; display: flex; align-items: center; gap: 6px; font-family: var(--f-en); color: var(--dim); }
+.chap i img { width: 40px; height: 40px; object-fit: cover; border: 1px solid var(--line); }
+.chap em { font-style: normal; font-size: 11px; color: var(--dim); }
+.chap.done { border-left-color: var(--acc2); }
+.chap.locked { opacity: .45; border-left-color: #555; }
+.chap:hover, .chap.kfocus { outline: none; background: rgba(255,90,31,.18); }
+#s-talk.show { display: block; }
+.talk-chapter { position: absolute; top: calc(14px + env(safe-area-inset-top)); left: calc(16px + env(safe-area-inset-left)); font-family: var(--f-jp); text-shadow: 0 2px 8px #000; }
+.talk-chapter b { display: block; font-weight: 400; font-size: clamp(18px, 3vw, 28px); }
+.talk-chapter span { color: var(--acc2); font-size: 13px; }
+.talk-skip { position: absolute; top: calc(14px + env(safe-area-inset-top)); right: calc(16px + env(safe-area-inset-right)); font-family: var(--f-en); letter-spacing: .1em; padding: 6px 12px; border: 1px solid var(--line); background: rgba(0,0,0,.5); border-radius: 4px; }
+.talk-box { position: absolute; left: 50%; transform: translateX(-50%); bottom: calc(14px + env(safe-area-inset-bottom)); width: min(920px, 94vw); min-height: clamp(96px, 26vh, 170px); display: flex; gap: 14px; align-items: flex-start; text-align: left; padding: 14px 18px; background: rgba(6,8,12,.9); border: 1px solid rgba(255,255,255,.25); border-top: 3px solid var(--acc); border-radius: 6px; }
+.talk-box.narr { border-top-color: #888; }
+.talk-face img { width: clamp(64px, 14vh, 110px); height: clamp(64px, 14vh, 110px); object-fit: cover; border: 2px solid var(--acc); }
+.talk-body { flex: 1; }
+.talk-name { font-family: var(--f-jp); color: var(--acc2); font-size: 16px; margin-bottom: 4px; }
+.talk-text { font-size: clamp(14px, 2.4vh, 19px); line-height: 1.7; }
+.talk-box.narr .talk-text { font-style: italic; color: #dde; }
+.talk-next { position: absolute; right: 14px; bottom: 8px; color: var(--acc2); animation: blink 1s infinite; font-size: 12px; }

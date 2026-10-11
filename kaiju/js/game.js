@@ -640,6 +640,7 @@ export class Match {
       if (tick) {
         if (endKind === 'building') { this.stage.impact(b.end, s.super ? 1.4 : 0.8, 5); if (k % (s.tick * 2) === 0) this.fx.explosion(b.end, 1.2, s.color); }
         else if (endKind === 'ground') { this.stage.impact(b.end, 0.5, 6, { silent: true }); if (k % (s.tick * 2) === 0) { this.fx.explosion(b.end, 0.9, s.color); this.fx.crack(b.end, 5); } }
+        if (s.ignite && (endKind === 'ground' || endKind === 'building') && k % (s.tick * 3) === 0) this.stage.addFire(b.end.clone().setY(0.5), 8);
         else if (endKind === 'clash') { this.fx.burst(b.end, { n: 30, color: 0xffffff, speed: 30, size: 1.3, life: 0.35 }); this.fx.flash(b.end, 0xffffff, 40, 0.15); this.camRig.shake(0.2); }
       }
       this.camRig.shake(0.012);
@@ -651,7 +652,7 @@ export class Match {
     for (const f of this.fighters) f.syncView(dt);
     for (const f of this.fighters) {
       if (f.beamVis && f.beam) {
-        const mb = f.model.mouth;
+        const mb = f.beam.spec.originBone ? { bone: f.beam.spec.originBone, off: new THREE.Vector3(...f.beam.spec.originOff) } : f.model.mouth;
         const o = f.model.rig.bones[mb.bone].localToWorld(tv.copy(mb.off));
         // use simulated origin blended with mouth position for visual alignment
         const origins = f.model.mouths ? f.model.mouths.map((mm) => f.model.rig.bones[mm.bone].localToWorld(mm.off.clone())) : null;

@@ -5,8 +5,8 @@ import { BP, bipedAnims, bipedGait, bipedProc, TAIL } from './biped.js';
 import { makeReptileBuild, reptileMoves, REPTILE_COMMANDS } from './reptile.js';
 
 const build = makeReptileBuild({
-  scale: 1.0, seed: 33, skin: 0x2b2f2e, noise: 0.05, normal: 1.4, bodyW: 0.84, chestW: 1.05, tailW: 0.85, armW: 1.05, legW: 0.92, headS: 0.92, snout: 1.12, muzzleW: 0.85, brow: 0.16,
-  plate: 0xc4c8d0, glow: 0xff4818, hot: 0xffe0a0, sheen: 0xffa080, eye: 0xffc040, plateH: 1.1, plateW: 0.85, plateN: 14, plateMetal: 0.4, plateRough: 0.25, rowTilt: 0.55,
+  scale: 1.0, seed: 33, skin: 0x2a2c2c, noise: 0.05, normal: 1.4, bodyW: 0.82, chestW: 1.05, tailW: 0.85, armW: 0.88, legW: 0.86, headS: 0.92, snout: 1.12, muzzleW: 0.85, brow: 0.16,
+  plate: 0xe9e3d2, glow: 0x60b0ff, hot: 0xffffff, sheen: 0xd8e8ff, eye: 0xff4a10, eyeI: 2.6, plateH: 1.1, plateW: 0.85, plateN: 14, plateRough: 0.5, rowTilt: 0.55,
 });
 const P = poses(BP.base, {
   ...Object.fromEntries(Object.entries(BP).filter(([k]) => k !== 'base')),
@@ -17,7 +17,8 @@ const P = poses(BP.base, {
   punch: { _root: [0, -0.1, 0.5, 0.15, 0, 0], spine: [0.25, -0.4, 0], shoulderR: [-1.6, 0, 0.1], elbowR: [-0.05, 0, 0], shoulderL: [-0.6, 0, 0.4], thighL: [-0.6, 0, 0], kneeL: [0.5, 0, 0] },
 });
 const anims = bipedAnims(P);
-const moves = reptileMoves(P, { dmg: 0.88, beam: 0xff4818, core: 0xffe8c0, beamName: 'スパイラル・レイ', pulseName: 'バーニング・パルス', superName: 'ハイパー・スパイラル・レイ' });
+const moves = reptileMoves(P, { dmg: 0.88, beam: 0xa8d4ff, core: 0xffffff, beamName: 'スパイラル・レイ', pulseName: 'バーニング・パルス', superName: 'ハイパー・スパイラル・レイ' });
+for (const id of ['breath', 'super']) Object.assign(moves[id].beam, { kind: 'spiral', spiral: 0xff1a08, spiral2: 0xffd020 });
 // faster normals
 for (const id in moves) if (!moves[id].special && moves[id].startup > 7) moves[id].startup -= 2;
 for (const id of ['tailspin', 'ram']) delete moves[id].armor;
@@ -48,12 +49,12 @@ for (const k in moves) moves[k].id = k;
 
 export default {
   id: 'vorthar', name: 'VORTHAR', jp: 'ヴォルザ', title: '闘神', era: '2004年 南極氷床より覚醒',
-  desc: '引き締まった体で格闘戦を得意とする俊敏な巨獣。蹴り技と突進で間合いを詰め、渦を巻く真紅の熱線で仕留める。',
+  desc: '細身で引き締まった体と骨色の背びれ、燃えるような赤い眼を持つ俊敏な巨獣。蹴り技と突進で間合いを詰め、青白い光に真紅と黄色の螺旋が絡む熱線で仕留める。',
   style: '格闘スピード型', strengths: '速い連携・蹴り技・突進', weakness: '体力と防御がやや低い・アーマー技なし',
   stats: { power: 3, speed: 4, defense: 3, reach: 3 }, specialNames: ['スパイラル・レイ', 'ラッシュブロー', 'バーニング・パルス'], superName: 'ハイパー・スパイラル・レイ',
   hp: 1000, defense: 0.97, walk: 0.12, back: 0.09, side: 0.11, dash: 0.55, evade: 0.38, weight: 1.05, push: 2.2, height: 11.3, stride: 1.5,
   hurt: [{ z: 0, y0: 0, y1: 9.4, r: 2.2 }, { z: 1.6, y0: 8.5, y1: 11.1, r: 1.3 }, { z: -4, y0: 0, y1: 4, r: 1.4 }],
-  voice: { pitch: 0.85, rough: 0.9 }, color: '#ff5a20', camH: 1,
+  voice: { pitch: 0.85, rough: 0.9 }, color: '#a8d4ff', camH: 1,
   tails: [TAIL], poses: P, anims, gait: (p, ph, a, c) => bipedGait(p, ph, a * 0.9, c), proc: bipedProc,
   moves,
   commands: { ...REPTILE_COMMANDS, 'f+L': 'kick', 'd+L': 'lowkick', H: 'spinkick', 'f+H': 'dropkick', 'dash+H': 'dropkick', 'dash+L': 'kick', 'f+S': 'rush', 'b+S': 'pulse', 'u+L': 'highkick' },

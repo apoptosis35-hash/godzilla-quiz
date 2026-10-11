@@ -149,6 +149,8 @@ export class Fighter {
     if (this.throwInvul > 0) this.throwInvul--;
     if (this.flash > 0) this.flash--;
     if (this.wallsplat > 0) this.wallsplat--;
+    // self-regeneration (some kaiju): only while not under pressure, up to 40% of max HP
+    if (this.def.regen && this.hp > 0 && this.hp < this.hpMax * 0.4 && this.isActionable() && this.match.frame - (this.lastHitFrame || 0) > 120) this.hp = Math.min(this.hpMax * 0.4, this.hp + this.def.regen);
     this.sf++;
     const opp = this.opp;
     const st = this.state;
@@ -366,6 +368,7 @@ export class Fighter {
     // returns 'hit' | 'block' | 'whiff' | 'armor'
     const m = this.match;
     if (this.invul > 0 && mv.height !== 'throw') return 'whiff';
+    this.lastHitFrame = this.match.frame;
     if (this.state === 'grabbed' && opts.src !== att) return 'whiff';
     if (this.state === 'ko') return 'whiff';
     const down = this.state === 'down' || this.state === 'getup';

@@ -6,11 +6,11 @@ import { makeReptileBuild, reptileMoves, REPTILE_COMMANDS } from './reptile.js';
 
 const build = makeReptileBuild({
   scale: 0.97, seed: 54, skin: 0x48484a, noise: 0.09, normal: 1.9, bodyW: 1.05, armW: 1.0, legW: 1.08, headS: 1.04, snout: 0.82, muzzleW: 1.1, brow: 0.22,
-  plate: 0xbdb9b0, glow: 0x9fd8ff, hot: 0xffffff, sheen: 0xd0e8ff, eye: 0xffb040, eyeI: 1.8, plateH: 0.9, plateW: 1.15, plateSpikes: (r) => (r ? 2 : 3), plateRough: 0.55, plateThick: 1.2, rowTilt: 0.35,
+  plate: 0xd8d2c4, idleGlow: 0x9fb8d0, glow: 0xeaf6ff, hot: 0xffffff, sheen: 0xf0f4ff, eye: 0xffb040, eyeI: 1.8, plateH: 0.9, plateW: 1.15, plateSpikes: (r) => (r ? 2 : 3), plateRough: 0.55, plateThick: 1.2, rowTilt: 0.35,
 });
 const P = poses(BP.base, { ...Object.fromEntries(Object.entries(BP).filter(([k]) => k !== 'base')) });
 const anims = bipedAnims(P);
-const moves = reptileMoves(P, { dmg: 1.0, beam: 0xcfe6ff, core: 0xffffff, mouthY: 9.3, beamName: '白熱ブレス', pulseName: '原初の咆哮', superName: '白熱の大咆哮' });
+const moves = reptileMoves(P, { dmg: 1.0, beam: 0xeaf4ff, core: 0xffffff, mouthY: 9.3, beamName: '白熱ブレス', pulseName: '原初の咆哮', superName: '白熱の大咆哮' });
 moves.jab2.cancel.chain = { L: 'bite' };
 Object.assign(moves, {
   bite: { name: 'サベージバイト', startup: 12, active: 4, recovery: 18, dmg: 52, height: 'mid', hit: { z: 5, y: 7.5, r: 2.4 }, hitstun: 24, blockstun: 14, push: 0.6, lunge: [[0, 12, 0.14]],
@@ -29,7 +29,7 @@ for (const k in moves) moves[k].id = k;
 
 export default {
   id: 'primordon', name: 'PRIMORDON', jp: 'プリモルドン', title: '原初怪獣', era: '1954年 大戸島 伝承',
-  desc: '古代から眠っていた原初の巨獣。バランスの取れた体格と、獲物に食らいつく噛みつき、至近距離を白く焼き尽くす高熱の吐息を持つ。',
+  desc: '古代から眠っていた原初の巨獣。炭のような灰色の皮膚と骨色の背びれ。背びれを白く光らせて吐く霧状の「白熱光」は、至近距離のすべてを焼き尽くす。',
   style: 'バランス型', strengths: '強力な噛みつき・投げ・近距離ブレス', weakness: 'ブレスの射程が短い',
   stats: { power: 4, speed: 3, defense: 3, reach: 2 }, specialNames: ['白熱ブレス', '原初の咆哮', 'アースクエイク'], superName: '白熱の大咆哮',
   hp: 1100, defense: 1.04, walk: 0.09, back: 0.065, side: 0.08, dash: 0.38, evade: 0.32, weight: 1.3, push: 2.35, height: 11.2, stride: 1.3,
