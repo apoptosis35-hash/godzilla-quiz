@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ゴジラクイズゲーム(家族用)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@400;700;900&family=Share+Tech+Mono&display=swap">
+<style>
+/* Layout: 防衛隊の監視モニター風。縦一列のアプリ画面 + 下部タブ。暗い深海に放射熱線の青が光る単一ダークテーマ */
+:root{
+  color-scheme: dark;
+  --abyss:#06090f;
+  --panel:#0e1520;
+  --panel-2:#142030;
+  --line:#22324a;
+  --fg:#e6eef8;
+  --muted:#8597ad;
+  --atomic:#4fd6ff;
+  --atomic-hi:#b8f4ff;
+  --alert:#ffb224;
+  --ok:#3fe08c;
+  --ng:#ff5a5a;
+  --r-n:#9aa7b5; --r-r:#4f9dff; --r-sr:#c77dff; --r-ssr:#ffcc33;
+  --f-display:"Dela Gothic One","Hiragino Sans","Yu Gothic",sans-serif;
+  --f-body:"Zen Kaku Gothic New","Hiragino Sans","Yu Gothic","Meiryo",sans-serif;
+  --f-mono:"Share Tech Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+  --radius:10px;
+}
+*{box-sizing:border-box}
+[hidden]{display:none !important}
+html,body{height:100%}
+body{
+  margin:0;background:var(--abyss);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.6;
+  background-image:radial-gradient(ellipse 120% 50% at 50% -10%, rgba(79,214,255,.13), transparent 60%),
+    linear-gradient(rgba(79,214,255,.035) 1px, transparent 1px),linear-gradient(90deg, rgba(79,214,255,.035) 1px, transparent 1px);
+  background-size:auto,28px 28px,28px 28px;background-attachment:fixed;
+  -webkit-tap-highlight-color:transparent;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--atomic);outline-offset:2px}
+.app{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:0 calc(88px + env(safe-area-inset-bottom,0px))}
+.num{font-family:var(--f-mono);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+
+/* HUD */
+.hud{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;margin-inline:-16px;padding:10px 16px 8px;
+  background:linear-gradient(var(--abyss) 70%, rgba(6,9,15,.0));display:grid;gap:6px}
+.hud-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.lv{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.lv-badge{font-family:var(--f-mono);background:var(--atomic);color:#03121a;font-weight:700;border-radius:6px;padding:1px 7px;font-size:13px;white-space:nowrap}
+.lv-title{font-weight:700;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wallet{display:flex;gap:8px}
+.chip{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:2px 9px;font-size:13px;white-space:nowrap}
+.xpbar{height:4px;border-radius:4px;background:var(--panel-2);overflow:hidden}
+.xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--atomic),var(--atomic-hi));border-radius:4px;transition:width .5s}
+
+/* Generic */
+h2.sec{font-family:var(--f-display);font-weight:400;font-size:17px;letter-spacing:.04em;margin:0;display:flex;align-items:baseline;gap:8px}
+h2.sec small{font-family:var(--f-mono);font-size:11px;color:var(--atomic);letter-spacing:.15em}
+.stack{display:grid;gap:22px;padding-top:6px}
+.block{display:grid;gap:10px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px}
+.muted{color:var(--muted)}
+.small{font-size:12.5px}
+.btn{border:0;border-radius:8px;padding:11px 16px;font-weight:700;background:var(--panel-2);border:1px solid var(--line);transition:transform .08s, filter .15s}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--atomic);color:#03121a;border-color:transparent;box-shadow:0 0 18px rgba(79,214,255,.35)}
+.btn.alert{background:var(--alert);color:#241500;border-color:transparent}
+.btn.ghost{background:transparent}
+.btn.wide{width:100%}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.spacer{flex:1}
+
+/* Hero */
+.hero{display:grid;gap:4px;padding-top:4px}
+.hero svg{width:100%;max-width:100%;height:auto;display:block}
+.hero-meta{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.date{font-family:var(--f-mono);color:var(--muted);font-size:13px;letter-spacing:.08em}
+.tag{font-size:12px;font-weight:700;border-radius:4px;padding:2px 8px;background:rgba(255,178,36,.14);color:var(--alert);border:1px solid rgba(255,178,36,.4)}
+
+/* Login strip */
+.login-strip{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.lday{border:1px solid var(--line);border-radius:7px;padding:6px 2px;text-align:center;background:var(--panel);font-size:11px;line-height:1.3;position:relative;min-width:0}
+.lday b{display:block;font-family:var(--f-mono);font-size:10px;color:var(--muted);letter-spacing:.05em}
+.lday .ic{font-size:18px;display:block;margin:2px 0}
+.lday.done{opacity:.45}
+.lday.done::after{content:"✓";position:absolute;inset:0;display:grid;place-items:center;font-size:22px;color:var(--ok);font-weight:900}
+.lday.today{border-color:var(--alert);box-shadow:0 0 0 1px var(--alert) inset}
+.lday.big{background:linear-gradient(160deg,rgba(199,125,255,.25),var(--panel))}
+
+/* Daily quiz */
+.daily{border:1px solid rgba(79,214,255,.45);background:linear-gradient(140deg,rgba(79,214,255,.14),var(--panel) 55%);border-radius:var(--radius);padding:16px;display:grid;gap:10px;position:relative;overflow:hidden}
+.daily .big{font-family:var(--f-display);font-size:22px;line-height:1.3}
+.streak{display:flex;align-items:center;gap:10px}
+.flame{font-size:30px;filter:drop-shadow(0 0 8px rgba(255,140,40,.6))}
+.streak .n{font-family:var(--f-mono);font-size:28px;color:var(--alert);line-height:1}
+.cal{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+.cal i{aspect-ratio:1;border-radius:3px;background:var(--panel-2);border:1px solid var(--line);display:block;max-width:100%}
+.cal i.on{background:var(--atomic);border-color:var(--atomic);box-shadow:0 0 6px rgba(79,214,255,.6)}
+.cal i.perfect{background:var(--alert);border-color:var(--alert)}
+.cal i.today{outline:1px solid var(--fg);outline-offset:1px}
+.countdown{font-family:var(--f-mono);font-size:24px;color:var(--atomic-hi);letter-spacing:.06em}
+
+/* Fortune */
+.fortune{display:grid;grid-template-columns:auto 1fr;gap:14px;align-items:center}
+.fortune .emo{font-size:46px;width:72px;height:72px;display:grid;place-items:center;border-radius:50%;background:radial-gradient(circle,rgba(79,214,255,.25),transparent 70%)}
+.fortune .luck{font-family:var(--f-display);font-size:24px;color:var(--alert)}
+.seal{width:100%;border:1px dashed var(--alert);background:rgba(255,178,36,.06);border-radius:var(--radius);padding:18px;display:grid;gap:4px;text-align:center}
+
+/* Missions */
+.mission{display:grid;grid-template-columns:1fr auto;gap:4px 12px;align-items:center;padding:10px 0;border-bottom:1px solid var(--line)}
+.mission:last-child{border-bottom:0}
+.bar{height:6px;border-radius:6px;background:var(--panel-2);overflow:hidden;grid-column:1}
+.bar i{display:block;height:100%;background:var(--ok);border-radius:6px}
+.mission .btn{padding:6px 12px;font-size:13px;grid-row:span 2}
+.claimed{color:var(--muted);font-size:12px;grid-row:span 2}
+
+/* Play modes */
+.modes{display:grid;gap:10px}
+.mode{display:grid;grid-template-columns:52px 1fr auto;gap:12px;align-items:center;text-align:left;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px;width:100%}
+.mode .ico{font-size:30px;width:52px;height:52px;display:grid;place-items:center;background:var(--panel-2);border-radius:8px}
+.mode h3{margin:0;font-size:16px}
+.mode p{margin:0;font-size:12.5px;color:var(--muted)}
+.mode .rec{font-family:var(--f-mono);font-size:12px;color:var(--atomic);text-align:right}
+.cats{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.cat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:left;display:grid;gap:2px}
+.cat b{font-size:14px}
+.cat span{font-size:11.5px;color:var(--muted)}
+.cat.lucky{border-color:var(--alert)}
+
+/* Quiz overlay */
+.overlay{position:fixed;inset:0;z-index:50;background:var(--abyss);overflow-y:auto;
+  background-image:radial-gradient(ellipse 120% 40% at 50% 0%, rgba(79,214,255,.12), transparent 60%)}
+.overlay .inner{max-width:560px;margin:0 auto;padding-inline:16px;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(24px + env(safe-area-inset-bottom,0px));display:grid;gap:14px}
+.qtop{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.qmode{font-family:var(--f-display);font-size:15px}
+.qprog{font-family:var(--f-mono);color:var(--muted)}
+.lives{letter-spacing:2px}
+.timer{height:6px;border-radius:6px;background:var(--panel-2);overflow:hidden}
+.timer i{display:block;height:100%;background:var(--atomic);transition:width .1s linear}
+.timer.warn i{background:var(--ng)}
+.qcard{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:18px 16px;display:grid;gap:8px;min-height:120px}
+.qcat{font-size:11.5px;color:var(--atomic);font-weight:700;letter-spacing:.08em}
+.qtext{font-size:18px;font-weight:700;line-height:1.55;text-wrap:balance}
+.choices{display:grid;gap:9px}
+.choice{display:grid;grid-template-columns:28px 1fr;gap:10px;align-items:center;text-align:left;background:var(--panel-2);border:1px solid var(--line);border-radius:9px;padding:12px;font-size:15.5px;font-weight:700;width:100%}
+.choice .k{font-family:var(--f-mono);width:28px;height:28px;border-radius:6px;display:grid;place-items:center;background:var(--abyss);color:var(--atomic);font-size:14px}
+.choice.correct{border-color:var(--ok);background:rgba(63,224,140,.14)}
+.choice.correct .k{background:var(--ok);color:#03140a}
+.choice.wrong{border-color:var(--ng);background:rgba(255,90,90,.13)}
+.choice.wrong .k{background:var(--ng);color:#1a0303}
+.choice:disabled{cursor:default}
+.combo{font-family:var(--f-display);color:var(--alert);font-size:14px}
+.feedback{border-radius:var(--radius);padding:14px;display:grid;gap:6px;border:1px solid var(--line);background:var(--panel)}
+.feedback .verdict{font-family:var(--f-display);font-size:22px}
+.feedback.ok .verdict{color:var(--ok)}
+.feedback.ng .verdict{color:var(--ng)}
+.gain{font-family:var(--f-mono);color:var(--alert);font-size:13px}
+.flash{position:fixed;inset:0;pointer-events:none;z-index:60;opacity:0}
+.flash.ok{animation:fl .5s ease-out;background:radial-gradient(circle,rgba(63,224,140,.25),transparent 70%)}
+.flash.ng{animation:fl .5s ease-out;background:radial-gradient(circle,rgba(255,90,90,.25),transparent 70%)}
+@keyframes fl{0%{opacity:1}100%{opacity:0}}
+
+/* Results */
+.result-head{text-align:center;display:grid;gap:4px;padding-top:10px}
+.result-head .score{font-family:var(--f-display);font-size:54px;line-height:1.1;color:var(--atomic-hi);text-shadow:0 0 24px rgba(79,214,255,.5)}
+.result-head .rank{font-family:var(--f-display);font-size:20px;color:var(--alert)}
+.rewards{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:8px}
+.reward{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px;text-align:center}
+.reward b{display:block;font-family:var(--f-mono);font-size:20px;color:var(--alert)}
+.reward span{font-size:12px;color:var(--muted)}
+.review{display:grid;gap:6px}
+.review div{font-size:13px;padding:8px 10px;border-radius:7px;background:var(--panel);border-left:3px solid var(--ok)}
+.review div.x{border-left-color:var(--ng)}
+
+/* Cards */
+.zgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+@media (min-width:480px){.zgrid{grid-template-columns:repeat(4,1fr)}}
+.kcard{position:relative;aspect-ratio:3/4;max-width:100%;border-radius:9px;border:2px solid var(--rc);overflow:hidden;
+  background:radial-gradient(circle at 50% 38%, hsla(var(--h),80%,55%,.45), hsla(var(--h),60%,12%,1) 70%);
+  display:grid;grid-template-rows:auto 1fr auto;padding:5px;text-align:center;width:100%}
+.kcard .rar{justify-self:start;font-family:var(--f-mono);font-size:10px;font-weight:700;background:var(--rc);color:#0a0a0a;border-radius:3px;padding:0 5px;line-height:1.5}
+.kcard .art{font-size:clamp(30px,10vw,48px);display:grid;place-items:center;filter:drop-shadow(0 3px 6px rgba(0,0,0,.6));min-height:0;overflow:hidden}
+.kcard.has-img{padding:0}
+.kcard.has-img .art{position:absolute;inset:0;filter:none}
+.kcard.has-img .art img{width:100%;height:100%;object-fit:cover;display:block}
+.kcard.has-img .rar{position:relative;z-index:1;margin:5px}
+.kcard.has-img .nm{position:absolute;left:5px;right:5px;bottom:5px;z-index:1}
+.kcard.has-img .st{z-index:1}
+.imgtools{display:grid;grid-template-columns:1fr auto;gap:8px}
+.imgtools label{display:grid;place-items:center}
+.kcard .nm{font-size:11px;font-weight:900;line-height:1.25;background:rgba(0,0,0,.55);border-radius:4px;padding:3px 2px;color:#fff;overflow-wrap:anywhere}
+.kcard .st{position:absolute;top:5px;right:6px;font-size:9px;color:var(--r-ssr);letter-spacing:-1px}
+.kcard.locked{--h:215 !important;border-color:var(--line);background:var(--panel)}
+.kcard.locked .art{filter:brightness(0) opacity(.55)}
+.kcard.locked .rar{background:var(--line);color:var(--muted)}
+.kcard.r-ssr:not(.locked)::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.35) 45%,rgba(255,220,120,.25) 52%,transparent 65%);background-size:250% 100%;animation:sheen 3.2s linear infinite;mix-blend-mode:screen}
+.kcard.r-sr:not(.locked)::after{content:"";position:absolute;inset:0;pointer-events:none;background:linear-gradient(115deg,transparent 40%,rgba(255,255,255,.18) 50%,transparent 60%);background-size:250% 100%;animation:sheen 4.5s linear infinite}
+@keyframes sheen{0%{background-position:150% 0}100%{background-position:-100% 0}}
+.r-n{--rc:var(--r-n)} .r-r{--rc:var(--r-r)} .r-sr{--rc:var(--r-sr)} .r-ssr{--rc:var(--r-ssr)}
+.filters{display:flex;gap:6px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:var(--panel);border-radius:999px;padding:4px 12px;font-size:13px}
+.filters button[aria-pressed="true"]{background:var(--atomic);color:#03121a;border-color:transparent;font-weight:700}
+.progress-big{display:flex;align-items:baseline;gap:8px}
+.progress-big b{font-family:var(--f-display);font-size:30px;color:var(--atomic-hi)}
+
+/* Gacha */
+.machine{display:grid;place-items:center;padding:18px 0 6px}
+.capsule{width:130px;height:130px;border-radius:50%;position:relative;
+  background:linear-gradient(180deg,var(--cap,#4fd6ff) 0 50%, #e8eef5 50% 100%);box-shadow:0 0 0 4px #0b111a, 0 0 40px rgba(79,214,255,.35);display:grid;place-items:center}
+.capsule::before{content:"";position:absolute;left:0;right:0;top:calc(50% - 3px);height:6px;background:#0b111a}
+.capsule::after{content:"";position:absolute;top:16px;left:26px;width:30px;height:16px;border-radius:50%;background:rgba(255,255,255,.55);transform:rotate(-25deg)}
+.capsule .lbl{position:relative;z-index:1;font-family:var(--f-display);font-size:14px;color:#0b111a;background:#fff;border-radius:4px;padding:0 6px;margin-top:2px}
+.capsule.shake{animation:shake .9s ease-in-out}
+@keyframes shake{0%,100%{transform:rotate(0)}15%{transform:rotate(-14deg)}30%{transform:rotate(12deg)}45%{transform:rotate(-10deg)}60%{transform:rotate(8deg)}75%{transform:rotate(-4deg) scale(1.05)}}
+.rates{display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.rates span{font-family:var(--f-mono);font-size:12px;border:1px solid var(--rc);color:var(--rc);border-radius:4px;padding:0 6px}
+.gbtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gbtns .btn{display:grid;gap:0;padding:10px 8px;line-height:1.35}
+.gbtns .btn small{font-weight:400;font-size:11.5px;opacity:.85}
+.pull-result{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.pull-result.one{grid-template-columns:minmax(0,180px);justify-content:center}
+.pull-result .kcard{animation:pop .45s backwards}
+.pull-result .new{position:absolute;bottom:26px;left:50%;transform:translateX(-50%);font-family:var(--f-mono);font-size:9px;background:var(--ng);color:#fff;padding:0 4px;border-radius:3px;z-index:2}
+@keyframes pop{0%{transform:scale(.4) rotateY(90deg);opacity:0}100%{transform:none;opacity:1}}
+
+/* Records */
+.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:10px 12px}
+.stat span{font-size:12px;color:var(--muted);display:block}
+.stat b{font-family:var(--f-mono);font-size:22px}
+.achs{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.ach{border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:var(--panel);display:grid;gap:1px}
+.ach b{font-size:13.5px}
+.ach span{font-size:11.5px;color:var(--muted)}
+.ach em{font-style:normal;font-size:11px;color:var(--alert)}
+.ach.on{border-color:rgba(255,178,36,.6);background:linear-gradient(150deg,rgba(255,178,36,.13),var(--panel))}
+.ach:not(.on){opacity:.6}
+
+/* Tabbar */
+.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:30;background:rgba(10,15,23,.96);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);backdrop-filter:blur(8px)}
+.tabbar nav{max-width:560px;margin:0 auto;display:grid;grid-template-columns:repeat(5,1fr)}
+.tabbar button{background:none;border:0;padding:8px 0 9px;display:grid;justify-items:center;gap:1px;font-size:11px;color:var(--muted);position:relative}
+.tabbar button .i{font-size:21px;line-height:1.2}
+.tabbar button[aria-current="page"]{color:var(--atomic)}
+.tabbar button[aria-current="page"]::before{content:"";position:absolute;top:0;left:30%;right:30%;height:2px;background:var(--atomic);box-shadow:0 0 8px var(--atomic)}
+.dot{position:absolute;top:6px;right:calc(50% - 18px);width:8px;height:8px;border-radius:50%;background:var(--ng);box-shadow:0 0 0 2px var(--abyss)}
+
+/* Modal & toast */
+.modal{position:fixed;inset:0;z-index:70;background:rgba(2,4,8,.78);display:grid;place-items:center;padding:16px}
+.modal .box{width:100%;max-width:400px;background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;display:grid;gap:12px;text-align:center;max-height:90vh;overflow-y:auto;animation:pop .3s}
+.modal h3{font-family:var(--f-display);font-weight:400;font-size:22px;margin:0}
+.modal .bigcard{width:min(220px,70vw);margin:0 auto}
+.modal .bigcard .kcard .art{font-size:84px}
+.modal .bigcard .kcard .nm{font-size:15px}
+.toasts{position:fixed;top:calc(10px + env(safe-area-inset-top,0px));left:0;right:0;z-index:90;display:grid;justify-items:center;gap:6px;pointer-events:none;padding-inline:16px}
+.toast{background:var(--panel-2);border:1px solid var(--alert);color:var(--fg);border-radius:9px;padding:8px 14px;font-size:13.5px;font-weight:700;box-shadow:0 8px 24px rgba(0,0,0,.5);animation:tin .3s, tout .4s 2.6s forwards;max-width:100%}
+@keyframes tin{from{transform:translateY(-10px);opacity:0}}
+@keyframes tout{to{opacity:0;transform:translateY(-6px)}}
+.foot{font-size:11px;color:var(--muted);text-align:center;padding-top:10px}
+.fin-glow{animation:glow 2s ease-in-out infinite alternate}
+@keyframes glow{from{filter:drop-shadow(0 0 3px rgba(79,214,255,.5))}to{filter:drop-shadow(0 0 14px rgba(79,214,255,.95))}}
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation:none !important;transition:none !important}
+}
+</style>
+
+</head><body>
+<div class="app" id="app">
+  <header class="hud" id="hud"></header>
+  <main id="view"></main>
+  <p class="foot">家族で楽しむための私的な版です。カードの画像はWikipediaに掲載されている画像を直接表示しています(インターネット接続が必要です)。<br>非公式のファンメイドクイズです。「ゴジラ」は東宝株式会社の登録商標です。<br>進み具合はこのブラウザに保存されます。</p>
+</div>
+
+<div class="tabbar"><nav id="tabs" aria-label="メニュー"></nav></div>
+<section class="overlay" id="quiz" hidden aria-live="polite"><div class="inner" id="quizInner"></div></section>
+<div class="modal" id="modal" hidden><div class="box" id="modalBox" role="dialog" aria-modal="true"></div></div>
+<div class="toasts" id="toasts"></div>
+<div class="flash" id="flash"></div>
+
+<script>
+"use strict";
+/* ============ データ ============ */
+const CATS = {
+  showa:{n:'昭和ゴジラ',d:'1954〜1975年の15作品'},
+  heisei:{n:'平成VSシリーズ',d:'1984〜1995年の7作品'},
+  modern:{n:'ミレニアム〜令和',d:'2000年代からシン・ゴジラ、-1.0まで'},
+  kaiju:{n:'怪獣大百科',d:'ライバル怪獣と仲間たち'},
+  world:{n:'ハリウッド・海外',d:'モンスターバースほか'},
+  behind:{n:'制作の裏側',d:'スタッフ・撮影・豆知識'}
+};
+// [ジャンル, 難易度1-3, 問題, [正解, 誤答, 誤答, 誤答], 解説]
+const QS = [
+['showa',1,'初代『ゴジラ』が公開されたのは何年？',['1954年','1950年','1958年','1962年'],'1954年11月3日公開。この日は「ゴジラの日」になっています。'],
+['showa',2,'初代ゴジラが最初に姿を現した島は？',['大戸島','インファント島','ラゴス島','アドノア島'],'大戸島には「呉爾羅(ゴジラ)」の伝説が伝わっていました。'],
+['showa',1,'初代ゴジラを倒した兵器は？',['オキシジェン・デストロイヤー','メーサー殺獣光線車','スーパーX','抗核エネルギーバクテリア'],'水中の酸素を破壊する恐るべき兵器でした。'],
+['showa',2,'オキシジェン・デストロイヤーを開発した科学者は？',['芹沢大助','山根恭平','尾形秀人','白神源壱朗'],'芹沢博士は兵器の悪用を恐れ、研究とともに海に消えました。'],
+['showa',1,'ゴジラが初めて戦った怪獣は？',['アンギラス','ラドン','キングギドラ','モスラ'],'『ゴジラの逆襲』(1955)で、大阪を舞台に激突しました。'],
+['showa',2,'『キングコング対ゴジラ』(1962)で、2大怪獣が組み合ったまま壊した城は？',['熱海城','大阪城','名古屋城','姫路城'],'熱海城を壊しながら、両者はもつれ合って海へ落ちていきました。'],
+['showa',1,'『三大怪獣 地球最大の決戦』で、ゴジラ・ラドンと共にキングギドラと戦ったのは？',['モスラ','アンギラス','バラゴン','エビラ'],'モスラ(幼虫)が2大怪獣を説得して共闘しました。'],
+['showa',2,'ゴジラの息子・ミニラが初めて登場した作品は？',['『怪獣島の決戦 ゴジラの息子』','『怪獣総進撃』','『オール怪獣大進撃』','『ゴジラ対ヘドラ』'],'1967年公開。ミニラは輪っか状の放射能を吐きました。'],
+['showa',1,'ヘドラは何から生まれた怪獣？',['公害のヘドロ','水爆実験','宇宙の隕石','植物の細胞'],'『ゴジラ対ヘドラ』(1971)は公害問題を正面から描きました。'],
+['showa',2,'1974年のメカゴジラを作った宇宙人は？',['ブラックホール第3惑星人','X星人','M宇宙ハンター星雲人','キラアク星人'],'X星人は『怪獣大戦争』、キラアク星人は『怪獣総進撃』に登場します。'],
+['showa',3,'昭和のメカゴジラの体を作っている宇宙金属は？',['スペースチタニウム','オリハルコン','人工ダイヤモンド','ゴジニウム'],'平成のメカゴジラ(1993)は人工ダイヤモンドのコーティングでした。'],
+['showa',2,'『地球攻撃命令 ゴジラ対ガイガン』でゴジラとタッグを組んだ怪獣は？',['アンギラス','ラドン','モスラ','ミニラ'],'ゴジラ&アンギラス組が、ガイガン&キングギドラ組と戦いました。'],
+['showa',1,'『ゴジラ対メガロ』でゴジラと共闘した巨大ロボットは？',['ジェットジャガー','モゲラ','メカニコング','機龍'],'意思を持って巨大化した、昭和の人気ヒーローロボットです。'],
+['showa',2,'昭和ゴジラシリーズの最終作は？',['『メカゴジラの逆襲』','『ゴジラ対メカゴジラ』','『ゴジラ対メガロ』','『怪獣総進撃』'],'1975年公開。この後、1984年まで新作は作られませんでした。'],
+['showa',3,'『怪獣総進撃』で怪獣たちが暮らす「怪獣ランド」がある場所は？',['小笠原諸島','富士山麓','北海道','沖縄'],'怪獣たちは小笠原の島で管理されていましたが、宇宙人に操られてしまいます。'],
+['showa',2,'キングシーサーはどの地方に伝わる守り神？',['沖縄','北海道','九州','東北'],'『ゴジラ対メカゴジラ』(1974)でゴジラと共にメカゴジラに立ち向かいました。'],
+['heisei',1,'1984年の『ゴジラ』で投入された首都防衛移動要塞は？',['スーパーX','スーパーX2','機龍','ガルーダ'],'カドミウム弾でゴジラの体内炉心を抑えようとしました。'],
+['heisei',2,'ビオランテは何が組み合わさって生まれた？',['バラ・ゴジラ細胞・人間','サクラ・ゴジラ細胞','ヒマワリ・モスラの鱗粉','藻・ヘドラの細胞'],'白神博士が亡き娘の細胞を組み込んだバラが元になっています。'],
+['heisei',2,'『ゴジラvsキングギドラ』で、ゴジラの元になった恐竜の名前は？',['ゴジラザウルス','ゴロザウルス','ティラノゴジラ','ギドラサウルス'],'ラゴス島に生き残っていた恐竜が核の影響でゴジラになった、という設定です。'],
+['heisei',1,'『ゴジラvsモスラ』(1992)に登場した「黒いモスラ」とも呼ばれる怪獣は？',['バトラ','ビオランテ','デストロイア','メガギラス'],'地球の生命力が生んだ戦士で、目から光線を放ちます。'],
+['heisei',2,'『ゴジラvsメカゴジラ』(1993)でメカゴジラを運用した組織は？',['Gフォース','特生自衛隊','モナーク','地球防衛軍'],'国連が作った対ゴジラ専門組織です。特生自衛隊は機龍の時代の組織です。'],
+['heisei',1,'体内炉心が暴走し、全身が赤く輝くゴジラの通称は？',['バーニングゴジラ','シン・ゴジラ','ゴジラ・アース','スーパーゴジラ'],'『ゴジラvsデストロイア』(1995)で、メルトダウンの危機を迎えました。'],
+['heisei',2,'デストロイアが生まれたきっかけは？',['オキシジェン・デストロイヤー','工場の公害','宇宙からの隕石','遺伝子実験の失敗'],'初代ゴジラを倒した兵器の影響で、古代生物が目覚めました。'],
+['heisei',2,'『ゴジラvsスペースゴジラ』で作られた対ゴジラロボットは？',['MOGERA(モゲラ)','スーパーメカゴジラ','ジェットジャガー','機龍'],'Mobile Operation Godzilla Expert Robot Aero-typeの略です。'],
+['heisei',1,'1993年の作品で卵から孵った、ゴジラの子どもは？',['ベビーゴジラ','ミニラ','ゴジラザウルス','ゴジラ・フィリウス'],'のちにリトルゴジラ、ゴジラジュニアへと成長していきます。'],
+['heisei',3,'平成VSシリーズでゴジラのスーツアクターを務めたのは？',['薩摩剣八郎','中島春雄','喜多川務','野村萬斎'],'中島春雄は昭和、喜多川務はミレニアムシリーズで演じました。'],
+['modern',1,'『シン・ゴジラ』で総監督を務めたのは？',['庵野秀明','樋口真嗣','山崎貴','金子修介'],'樋口真嗣は監督・特技監督を担当しました。'],
+['modern',2,'『シン・ゴジラ』の第2形態が上陸し、愛称の由来になった地名は？',['蒲田','品川','鎌倉','川崎'],'呑川をさかのぼって上陸し、ファンから「蒲田くん」と呼ばれています。'],
+['modern',2,'『シン・ゴジラ』でゴジラを凍結させた作戦名は？',['ヤシオリ作戦','海神作戦','G消滅作戦','機龍作戦'],'血液凝固剤をゴジラに経口投与する作戦でした。'],
+['modern',1,'シン・ゴジラの体高は？',['118.5m','50m','80m','100m'],'公開当時の歴代ゴジラで最大の大きさでした。'],
+['modern',3,'『シン・ゴジラ』の主人公・矢口蘭堂の役職は？',['内閣官房副長官','防衛大臣','内閣総理大臣','環境省課長補佐'],'環境省課長補佐は尾頭ヒロミの役職です。'],
+['modern',1,'『ゴジラ-1.0』の監督は？',['山崎貴','庵野秀明','樋口真嗣','北村龍平'],'監督・脚本・VFXを一人で担当しました。'],
+['modern',1,'『ゴジラ-1.0』の時代設定は？',['戦後まもなくの日本','高度経済成長期','平成の日本','近未来'],'キャッチコピーは「戦後、日本。無(ゼロ)から負(マイナス)へ。」でした。'],
+['modern',2,'『ゴジラ-1.0』でゴジラに挑んだ民間主導の作戦は？',['海神(わだつみ)作戦','ヤシオリ作戦','G消滅作戦','オペレーション・ノア'],'フロンガスでゴジラを深海へ沈める作戦でした。'],
+['modern',2,'『ゴジラ-1.0』の最後の作戦で、敷島浩一が乗り込んだ戦闘機は？',['震電','零戦','隼','紫電改'],'終戦で実戦に出られなかった試作機でした。'],
+['modern',1,'『ゴジラ-1.0』が受賞したアカデミー賞の部門は？',['視覚効果賞','国際長編映画賞','作曲賞','美術賞'],'日本映画として初めて視覚効果賞を受賞しました。'],
+['modern',2,'『ゴジラ-1.0』でゴジラが熱線を放ち、大きな被害を受けた街は？',['銀座','渋谷','新宿','浅草'],'背びれが1枚ずつ飛び出してから、熱線が放たれました。'],
+['modern',2,'『ゴジラ×メカゴジラ』(2002)の機龍の骨格に使われたのは？',['初代ゴジラの骨','宇宙の隕石','モスラの繭','スペースゴジラの結晶'],'東京湾に眠っていた初代ゴジラの骨が使われました。'],
+['modern',1,'『ゴジラ FINAL WARS』(2004)は何周年記念作品？',['50周年','40周年','60周年','70周年'],'たくさんの怪獣が登場するお祭り作品です。'],
+['modern',2,'『ゴジラ2000 ミレニアム』に登場した怪獣は？',['オルガ','メガギラス','デストロイア','スペースゴジラ'],'宇宙からの侵略者がゴジラ細胞を取り込んで変異した姿です。'],
+['modern',3,'『大怪獣総攻撃』(2001)で、モスラ・キングギドラ・バラゴンは何と呼ばれた？',['護国聖獣','三大守護神','地球怪獣軍','大和三神'],'日本を守る神獣として、ゴジラに立ち向かいました。'],
+['modern',2,'アニメ映画『GODZILLA 怪獣惑星』(2017)に登場する巨大なゴジラの名前は？',['ゴジラ・アース','ゴジラ・ウルティマ','バーニングゴジラ','ゴジラジュニア'],'体高300mを超える、史上最大級のゴジラです。'],
+['modern',3,'TVアニメ『ゴジラ S.P<シンギュラポイント>』に登場するゴジラの名前は？',['ゴジラ・ウルティマ','ゴジラ・アース','ゴジラ・フィリウス','メカゴジラシティ'],'2021年放送。紅塵(こうじん)という謎の物質が鍵になりました。'],
+['modern',3,'『ゴジラ-1.0』は、東宝が製作した日本の実写ゴジラ映画で何作目？',['30作目','25作目','28作目','33作目'],'ゴジラ生誕70周年記念作品でもあります。'],
+['kaiju',1,'キングギドラの首はいくつ？',['3つ','2つ','4つ','5つ'],'3つの首に2本の尾、巨大な翼を持つ宇宙超怪獣です。'],
+['kaiju',1,'キングギドラの体の色は？',['金色','銀色','赤色','黒色'],'昭和シリーズでは「黄金の宇宙超怪獣」とも呼ばれました。'],
+['kaiju',1,'キングギドラが口から放つ光線の名前は？',['引力光線','放射熱線','メーサー光線','プラズマ火球'],'稲妻のようにうねる黄金の光線です。'],
+['kaiju',1,'モスラの故郷の島は？',['インファント島','大戸島','ラゴス島','バース島'],'1961年の映画『モスラ』で初登場しました。'],
+['kaiju',1,'モスラに仕える双子の妖精は？',['小美人','双子姫','コスモス','エリアス'],'1961年版ではザ・ピーナッツが演じ「モスラの歌」を歌いました。'],
+['kaiju',2,'『空の大怪獣ラドン』(1956)で、ラドンが最期を迎えた火山は？',['阿蘇山','富士山','桜島','浅間山'],'噴火する阿蘇山の中に2頭のラドンが消えていきました。'],
+['kaiju',1,'アンギラスの大きな特徴は？',['背中にびっしりと並ぶトゲ','3つの首','巨大な翼','両手の大きなハサミ'],'のちにゴジラの仲間として何度も登場します。'],
+['kaiju',2,'メガギラスは何の昆虫がもとになった怪獣？',['トンボ','カマキリ','クモ','カブトムシ'],'古代トンボ・メガヌロンの女王です。'],
+['kaiju',1,'カマキラスは何の昆虫に似た怪獣？',['カマキリ','バッタ','トンボ','ハチ'],'『怪獣島の決戦 ゴジラの息子』に登場しました。'],
+['kaiju',1,'エビラはどんな生き物の怪獣？',['エビ','カニ','タコ','イカ'],'『ゴジラ・エビラ・モスラ 南海の大決闘』(1966)に登場しました。'],
+['kaiju',1,'ゴジラの代表的な必殺技は？',['放射熱線','引力光線','超音波メス','冷凍光線'],'背びれが光ったあと、口から放たれます。'],
+['kaiju',1,'ゴジラが熱線を吐く前に光る体の部分は？',['背びれ','目','しっぽの先','胸'],'背びれが青白く光るのが熱線のサインです。'],
+['kaiju',2,'次のうち、ゴジラシリーズの怪獣ではないのは？',['ガメラ','モスラ','ラドン','アンギラス'],'ガメラは大映(現KADOKAWA)の怪獣です。'],
+['kaiju',3,'『大怪獣バラン』(1958)のバランは、何のように空を滑空した？',['ムササビ','コウモリ','トビウオ','ワシ'],'手足の間の膜を広げて滑空しました。'],
+['kaiju',2,'ガイガンを操った宇宙人は？',['M宇宙ハンター星雲人','ブラックホール第3惑星人','X星人','ミレニアン'],'ガイガンは改造手術を受けたサイボーグ怪獣です。'],
+['kaiju',3,'マンダが初登場した作品は？',['『海底軍艦』','『怪獣大戦争』','『宇宙大怪獣ドゴラ』','『妖星ゴラス』'],'1963年公開。ムウ帝国の守護竜として登場しました。'],
+['world',1,'1998年のハリウッド版『GODZILLA』の監督は？',['ローランド・エメリッヒ','ギャレス・エドワーズ','マイケル・ドハティ','アダム・ウィンガード'],'『インデペンデンス・デイ』の監督としても知られています。'],
+['world',2,'1998年版のハリウッドゴジラは、のちに日本で何と呼ばれるようになった？',['ジラ','ゴジラザウルス','ゴジラジュニア','ズィラ'],'『ゴジラ FINAL WARS』で「ジラ」として登場しました。'],
+['world',1,'モンスターバースで怪獣を研究する秘密組織は？',['モナーク','Gフォース','特生自衛隊','地球防衛軍'],'2014年の『GODZILLA ゴジラ』から登場しています。'],
+['world',1,'2014年の『GODZILLA ゴジラ』の監督は？',['ギャレス・エドワーズ','ローランド・エメリッヒ','アダム・ウィンガード','J・J・エイブラムス'],'のちに『ローグ・ワン』も監督しました。'],
+['world',2,'『ゴジラvsコング』(2021)の監督は？',['アダム・ウィンガード','マイケル・ドハティ','ギャレス・エドワーズ','ジョーダン・ヴォート＝ロバーツ'],'続編『ゴジラxコング 新たなる帝国』(2024)も監督しました。'],
+['world',2,'『ゴジラ キング・オブ・モンスターズ』(2019)の監督は？',['マイケル・ドハティ','ギャレス・エドワーズ','アダム・ウィンガード','ローランド・エメリッヒ'],'キングギドラ、モスラ、ラドンもハリウッドで復活しました。'],
+['world',2,'ゴジラがハリウッドの「ウォーク・オブ・フェーム」に星を刻まれた年は？',['2004年','1994年','2014年','1984年'],'ゴジラ50周年の年でした。'],
+['world',3,'初代『ゴジラ』をアメリカ向けに再編集した1956年版の英題は？',['Godzilla, King of the Monsters!','Godzilla Raids Again','The Return of Godzilla','Gigantis'],'アメリカ人記者のシーンが追加されました。'],
+['behind',1,'「ゴジラ」という名前の由来は？',['ゴリラとクジラ','ゴリラとトカゲ','ゴジラという島','ゴロゴロとクジラ'],'力強いゴリラと巨大なクジラを合わせた名前です。'],
+['behind',1,'初代『ゴジラ』の音楽を作曲したのは？',['伊福部昭','佐藤勝','鷺巣詩郎','佐藤直紀'],'「ゴジラのテーマ」は今も多くの作品で使われています。'],
+['behind',1,'初代『ゴジラ』で特技監督を務め「特撮の神様」と呼ばれたのは？',['円谷英二','本多猪四郎','中野昭慶','川北紘一'],'のちにウルトラマンも生み出しました。'],
+['behind',2,'初代『ゴジラ』の監督は？',['本多猪四郎','黒澤明','円谷英二','福田純'],'本多監督は多くの東宝特撮映画を手がけました。'],
+['behind',3,'初代ゴジラの鳴き声はどうやって作られた？',['松ヤニを塗った手袋でコントラバスの弦をこすった','ライオンの声を逆再生した','ゾウの声を重ねた','ドラム缶を叩いた'],'作曲家・伊福部昭のアイデアだといわれています。'],
+['behind',2,'初代から昭和シリーズでゴジラのスーツアクターを務めたのは？',['中島春雄','薩摩剣八郎','喜多川務','野村萬斎'],'約20年間ゴジラを演じ続けました。'],
+['behind',2,'『シン・ゴジラ』でゴジラの動きをモーションキャプチャーで演じた狂言師は？',['野村萬斎','中島春雄','市川海老蔵','茂山逸平'],'伝統芸能の動きがゴジラに取り入れられました。'],
+['behind',1,'初代ゴジラの身長は？',['50m','80m','100m','118.5m'],'当時の東京で一番高い建物より大きく、ということで決まったといわれています。'],
+['behind',1,'ゴジラ映画を製作している日本の映画会社は？',['東宝','大映','松竹','東映'],'東宝の撮影所で多くの特撮が撮影されました。'],
+['behind',2,'初代ゴジラ誕生のきっかけになったといわれる出来事は？',['ビキニ環礁の水爆実験','関東大震災','東京オリンピック','アポロの月面着陸'],'1954年に第五福竜丸が被ばくした事件が大きな影響を与えました。'],
+['behind',2,'2015年、ゴジラが新宿区から任命された役職は？',['新宿区観光特使','新宿区長','名誉都民','新宿警察署長'],'特別住民票も交付されました。'],
+['behind',1,'11月3日は何の日？',['ゴジラの日','モスラの日','怪獣の日','特撮の日'],'初代『ゴジラ』の公開日にちなんでいます。'],
+['behind',3,'初代『ゴジラ』のプロデューサーは？',['田中友幸','円谷英二','本多猪四郎','藤本真澄'],'ゴジラシリーズの生みの親のひとりです。']
+];
+
+// [id, 名前, 絵, レア度, 出典, 説明, 背景の色相]
+const CARDS = [
+['g54','ゴジラ(1954)','🦖','SSR','『ゴジラ』1954年','水爆実験によって目覚めた初代ゴジラ。身長50m。東京を火の海にし、オキシジェン・デストロイヤーによって海に消えた。',205],
+['shin','シン・ゴジラ','🦖','SSR','『シン・ゴジラ』2016年','上陸のたびに姿を変える完全生物。体高118.5m。背中や尾からも熱線を放つ。',355],
+['minus','ゴジラ(-1.0)','🦖','SSR','『ゴジラ-1.0』2023年','戦後の日本を襲ったゴジラ。熱線を吐く前に背びれが1枚ずつ飛び出す。',190],
+['ghido','キングギドラ','🐉','SSR','『三大怪獣 地球最大の決戦』1964年','3つの首と2本の尾、巨大な翼を持つ黄金の宇宙超怪獣。口から引力光線を放つ。',45],
+['burn','バーニングゴジラ','🔥','SSR','『ゴジラvsデストロイア』1995年','体内炉心が暴走し、全身が赤く輝くゴジラ。メルトダウン寸前の姿。',12],
+['earth','ゴジラ・アース','🌍','SSR','『GODZILLA 怪獣惑星』2017年','2万年もの間、地球に君臨し続けたゴジラ。体高300m超。',150],
+['mothra','モスラ','🦋','SR','『モスラ』1961年','インファント島の守護神。小美人の歌に応えて現れる。幼虫と成虫の姿を持つ。',300],
+['rodan','ラドン','🦅','SR','『空の大怪獣ラドン』1956年','超音速で空を飛ぶ翼竜型の怪獣。羽ばたきで街を吹き飛ばす。',20],
+['mecha','メカゴジラ','🤖','SR','『ゴジラ対メカゴジラ』1974年','ブラックホール第3惑星人が作った、スペースチタニウム製のロボット怪獣。',220],
+['kiryu','機龍','🛡️','SR','『ゴジラ×メカゴジラ』2002年','初代ゴジラの骨格から作られた3式機龍。必殺武器は絶対零度砲アブソリュート・ゼロ。',195],
+['bio','ビオランテ','🌹','SR','『ゴジラvsビオランテ』1989年','バラ、ゴジラ細胞、人間の細胞から生まれた植物怪獣。',330],
+['dest','デストロイア','😈','SR','『ゴジラvsデストロイア』1995年','オキシジェン・デストロイヤーの影響で目覚めた古代生物が進化した怪獣。',0],
+['space','スペースゴジラ','💎','SR','『ゴジラvsスペースゴジラ』1994年','宇宙に飛び散ったゴジラ細胞から生まれた怪獣。肩に巨大な結晶を持つ。',270],
+['battra','バトラ','🦇','SR','『ゴジラvsモスラ』1992年','地球の生命力が生んだ「黒いモスラ」。目から光線を放つ。',285],
+['oxy','オキシジェン・デストロイヤー','🧪','SR','『ゴジラ』1954年','芹沢大助博士が発明した、水中の酸素を破壊する兵器。初代ゴジラを倒した。',180],
+['shinden','震電','✈️','SR','『ゴジラ-1.0』2023年','敷島浩一が最後の作戦で乗り込んだ局地戦闘機。',35],
+['angu','アンギラス','🦔','R','『ゴジラの逆襲』1955年','ゴジラが初めて戦った怪獣。背中にトゲがびっしり並ぶ。のちにゴジラの仲間に。',30],
+['gigan','ガイガン','⚙️','R','『地球攻撃命令 ゴジラ対ガイガン』1972年','M宇宙ハンター星雲人が送り込んだサイボーグ怪獣。腹部に回転カッターを持つ。',170],
+['hedo','ヘドラ','🌫️','R','『ゴジラ対ヘドラ』1971年','公害のヘドロから生まれた怪獣。空を飛びながら有害な霧をまき散らす。',95],
+['jet','ジェットジャガー','🦾','R','『ゴジラ対メガロ』1973年','意思を持ち巨大化した人型ロボット。ゴジラと共にメガロに立ち向かった。',210],
+['mog','MOGERA','🚜','R','『ゴジラvsスペースゴジラ』1994年','Gフォースが作った対ゴジラ用の巨大ロボット。分離・合体ができる。',230],
+['superx','スーパーX','🛸','R','『ゴジラ』1984年','自衛隊の首都防衛移動要塞。カドミウム弾でゴジラを眠らせた。',200],
+['orga','オルガ','👾','R','『ゴジラ2000 ミレニアム』1999年','宇宙からの侵略者がゴジラ細胞を取り込み、変異した姿。',140],
+['mega','メガギラス','🪰','R','『ゴジラ×メガギラス G消滅作戦』2000年','古代トンボ・メガヌロンの女王。巨大な羽で高速飛行する。',80],
+['shisa','キングシーサー','🦁','R','『ゴジラ対メカゴジラ』1974年','沖縄に伝わる守り神。歌によって目覚めた。',40],
+['titano','チタノザウルス','🦕','R','『メカゴジラの逆襲』1975年','海に棲む恐竜型の怪獣。尾びれを広げて突風を起こす。',175],
+['baby','ベビーゴジラ','🥚','R','『ゴジラvsメカゴジラ』1993年','アドノア島で見つかった卵から生まれたゴジラの子ども。',110],
+['minira','ミニラ','🐣','N','『怪獣島の決戦 ゴジラの息子』1967年','ゴジラの息子。口から輪っかの形の放射能を吐く。',60],
+['kama','カマキラス','🦗','N','『怪獣島の決戦 ゴジラの息子』1967年','南の島に棲む巨大なカマキリの怪獣。',100],
+['kumo','クモンガ','🕷️','N','『怪獣島の決戦 ゴジラの息子』1967年','巨大なクモの怪獣。口から糸を吐いて獲物をからめとる。',260],
+['ebira','エビラ','🦞','N','『ゴジラ・エビラ・モスラ 南海の大決闘』1966年','南の海に棲む巨大なエビの怪獣。',8],
+['tako','大ダコ','🐙','N','『キングコング対ゴジラ』1962年','島の村を襲った巨大なタコ。',320],
+['varan','バラン','🦎','N','『大怪獣バラン』1958年','手足の間の膜を広げ、ムササビのように滑空する怪獣。',125],
+['bara','バラゴン','🐾','N','『フランケンシュタイン対地底怪獣』1965年','地中を掘り進む地底怪獣。のちに護国聖獣としても登場した。',25],
+['manda','マンダ','🐍','N','『海底軍艦』1963年','ムウ帝国の守護竜。長い体で敵に巻きつく。',160],
+['goro','ゴロザウルス','🦕','N','『キングコングの逆襲』1967年','恐竜型の怪獣。尾で体を支えてキックを放つ。',90],
+['megalo','メガロ','🪲','N','『ゴジラ対メガロ』1973年','海底王国シートピアの守護神。カブトムシに似た怪獣。',50],
+['kobito','小美人','🧚','N','『モスラ』1961年','モスラに仕える双子の妖精。歌でモスラを呼ぶ。',310],
+['maser','メーサー殺獣光線車','📡','N','『フランケンシュタインの怪獣 サンダ対ガイラ』1966年','怪獣と戦う光線兵器の車両。多くの作品に登場する人気メカ。',215]
+].map(c=>({id:c[0],n:c[1],e:c[2],r:c[3],f:c[4],d:c[5],h:c[6]}));
+const CARD = Object.fromEntries(CARDS.map(c=>[c.id,c]));
+const RARITY = {N:{w:50,cls:'r-n'},R:{w:32,cls:'r-r'},SR:{w:14,cls:'r-sr'},SSR:{w:4,cls:'r-ssr'}};
+
+const LOGIN = [
+ {t:'coins',n:100,ic:'🪙',l:'100'},{t:'coins',n:150,ic:'🪙',l:'150'},{t:'tickets',n:1,ic:'🎫',l:'×1'},
+ {t:'coins',n:200,ic:'🪙',l:'200'},{t:'coins',n:300,ic:'🪙',l:'300'},{t:'tickets',n:2,ic:'🎫',l:'×2'},{t:'srTickets',n:1,ic:'💜',l:'SR確定'}
+];
+const MISSIONS = [
+ {id:'c10',t:'クイズに10問正解する',ev:'correct',g:10,r:80},
+ {id:'c25',t:'クイズに25問正解する',ev:'correct',g:25,r:160},
+ {id:'cb5',t:'5問連続で正解する',ev:'combo',g:5,r:100,max:1},
+ {id:'ta1',t:'タイムアタックを1回遊ぶ',ev:'ta',g:1,r:60},
+ {id:'ta10',t:'タイムアタックで10問正解',ev:'taScore',g:10,r:120,max:1},
+ {id:'sv5',t:'サバイバルで5問正解',ev:'svScore',g:5,r:100,max:1},
+ {id:'g1',t:'ガチャを1回まわす',ev:'gacha',g:1,r:50},
+ {id:'lk5',t:'ラッキージャンルで5問正解',ev:'lucky',g:5,r:100},
+ {id:'pr1',t:'ジャンル別クイズを1回クリア',ev:'practice',g:1,r:60}
+];
+const ACH = [
+ {id:'first',n:'はじめての正解',d:'クイズに1問正解',c:s=>s.stats.correct>=1,r:{coins:50}},
+ {id:'c50',n:'防衛隊員',d:'通算50問正解',c:s=>s.stats.correct>=50,r:{tickets:1}},
+ {id:'c200',n:'怪獣研究員',d:'通算200問正解',c:s=>s.stats.correct>=200,r:{tickets:2}},
+ {id:'c500',n:'怪獣博士',d:'通算500問正解',c:s=>s.stats.correct>=500,r:{srTickets:1}},
+ {id:'cb5',n:'5連鎖',d:'5問連続で正解',c:s=>s.stats.bestCombo>=5,r:{coins:100}},
+ {id:'cb15',n:'放射熱線',d:'15問連続で正解',c:s=>s.stats.bestCombo>=15,r:{tickets:1}},
+ {id:'dp',n:'パーフェクト',d:'デイリークイズで全問正解',c:s=>s.stats.dailyPerfect>=1,r:{coins:150}},
+ {id:'ds3',n:'三日坊主卒業',d:'デイリークイズ3日連続',c:s=>s.daily.best>=3,r:{tickets:1}},
+ {id:'ds7',n:'一週間の守護者',d:'デイリークイズ7日連続',c:s=>s.daily.best>=7,r:{srTickets:1}},
+ {id:'ds14',n:'不屈の防衛線',d:'デイリークイズ14日連続',c:s=>s.daily.best>=14,r:{tickets:3}},
+ {id:'ds30',n:'怪獣王の継承者',d:'デイリークイズ30日連続',c:s=>s.daily.best>=30,r:{srTickets:3}},
+ {id:'lg7',n:'常連隊員',d:'ログイン合計7日',c:s=>s.login.count>=7,r:{tickets:1}},
+ {id:'lg30',n:'基地の主',d:'ログイン合計30日',c:s=>s.login.count>=30,r:{srTickets:1}},
+ {id:'z10',n:'コレクター',d:'カードを10種類集める',c:s=>ownedCount(s)>=10,r:{tickets:1}},
+ {id:'z20',n:'図鑑の番人',d:'カードを20種類集める',c:s=>ownedCount(s)>=20,r:{srTickets:1}},
+ {id:'z30',n:'怪獣大図鑑',d:'カードを30種類集める',c:s=>ownedCount(s)>=30,r:{srTickets:2}},
+ {id:'zall',n:'怪獣総進撃',d:'全カードをコンプリート',c:s=>ownedCount(s)>=CARDS.length,r:{coins:3000}},
+ {id:'ssr',n:'王の降臨',d:'SSRカードを手に入れる',c:s=>CARDS.some(c=>c.r==='SSR'&&s.cards[c.id]),r:{coins:200}},
+ {id:'ta15',n:'スピードスター',d:'タイムアタックで15問正解',c:s=>s.stats.taBest>=15,r:{tickets:1}},
+ {id:'sv15',n:'不死身の怪獣',d:'サバイバルで15問正解',c:s=>s.stats.survBest>=15,r:{tickets:1}},
+ {id:'g10',n:'カプセルマニア',d:'ガチャを通算10回',c:s=>s.stats.gachaCount>=10,r:{coins:200}},
+ {id:'cat',n:'全ジャンル制覇',d:'6ジャンルすべてで10問ずつ正解',c:s=>Object.keys(CATS).every(k=>(s.stats.catCorrect[k]||0)>=10),r:{srTickets:1}}
+];
+const TITLES = [[1,'見習い隊員'],[3,'防衛隊員'],[6,'特生自衛官'],[10,'Gフォース隊長'],[15,'怪獣博士'],[20,'怪獣王']];
+const LUCKS = [
+ ['大吉','今日は放射熱線のように冴えわたる一日。何をやってもうまくいく！'],
+ ['中吉','モスラの加護あり。困ったときは仲間に頼ろう。'],
+ ['小吉','アンギラスのように粘り強く。コツコツが吉。'],
+ ['吉','キングシーサーが見守っている。歌を口ずさむと運気アップ。'],
+ ['末吉','今は眠れるゴジラ。夕方から運気が上昇！'],
+ ['怪獣注意報','ゴジラ上陸の気配…。でもクイズで乗り切れば大逆転！']
+];
+
+/* ============ ユーティリティ ============ */
+const $ = s=>document.querySelector(s);
+const esc = s=>String(s).replace(/[&<>"]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+function dkey(d=new Date()){return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')}
+function shiftKey(n){const d=new Date();d.setDate(d.getDate()+n);return dkey(d)}
+function hash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>0}
+function rng(seed){let a=seed>>>0;return()=>{a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function shuffle(arr,r=Math.random){const a=arr.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const isWeekend = ()=>{const d=new Date().getDay();return d===0||d===6};
+const isGodzillaDay = ()=>{const d=new Date();return d.getMonth()===10&&d.getDate()===3};
+
+/* ============ セーブデータ ============ */
+const SAVE_KEY='gzquiz.v1';
+function fresh(){return{coins:300,tickets:1,srTickets:0,xp:0,level:1,cards:{},sound:true,
+  stats:{answered:0,correct:0,bestCombo:0,taBest:0,survBest:0,gachaCount:0,dailyPerfect:0,catCorrect:{}},
+  login:{last:null,count:0,streak:0,best:0},daily:{last:null,streak:0,best:0,history:{}},ach:{},day:null}}
+function load(){
+  const base=fresh();
+  try{const raw=localStorage.getItem(SAVE_KEY);if(raw){const s=JSON.parse(raw);
+    return Object.assign(base,s,{stats:Object.assign(base.stats,s.stats||{}),login:Object.assign(base.login,s.login||{}),daily:Object.assign(base.daily,s.daily||{})})}}catch(e){}
+  return base;
+}
+let S=load();
+function save(){try{localStorage.setItem(SAVE_KEY,JSON.stringify(S))}catch(e){}}
+const ownedCount = s=>CARDS.filter(c=>s.cards[c.id]).length;
+// プレイヤーが自分で設定したカード画像 (このブラウザ内だけに保存)
+const IMG_KEY='gzquiz.img';
+let IMG={};try{IMG=JSON.parse(localStorage.getItem(IMG_KEY)||'{}')||{}}catch(e){}
+// Wikipediaの記事のメイン画像を直接参照する (ファイルとしては取り込まない)
+const WP_TITLES={g54:'Godzilla (1954 film)',shin:'Shin Godzilla',minus:'Godzilla Minus One',ghido:'King Ghidorah',burn:'Godzilla vs. Destoroyah',
+ earth:'Godzilla: Planet of the Monsters',mothra:'Mothra',rodan:'Rodan',mecha:'Mechagodzilla',kiryu:'Godzilla Against Mechagodzilla',bio:'Biollante',
+ dest:'Destoroyah',space:'SpaceGodzilla',battra:'Godzilla vs. Mothra',oxy:'Akihiko Hirata',shinden:'Kyushu J7W Shinden',angu:'Anguirus',gigan:'Gigan',
+ hedo:'Hedorah',jet:'Jet Jaguar',mog:'Godzilla vs. SpaceGodzilla',superx:'The Return of Godzilla',orga:'Godzilla 2000',mega:'Godzilla vs. Megaguirus',
+ shisa:'Godzilla vs. Mechagodzilla',titano:'Terror of Mechagodzilla',baby:'Godzilla vs. Mechagodzilla II',minira:'Minilla',kama:'Son of Godzilla',
+ kumo:'Kumonga',ebira:'Ebirah, Horror of the Deep',tako:'King Kong vs. Godzilla',varan:'Varan',bara:'Baragon',manda:'Atragon',goro:'King Kong Escapes',
+ megalo:'Godzilla vs. Megalon',kobito:'The Peanuts',maser:'The War of the Gargantuas'};
+const WP_KEY='gzquiz.wp';
+let WP={};try{const c=JSON.parse(localStorage.getItem(WP_KEY)||'null');if(c&&Date.now()-c.t<7*864e5&&Object.keys(c.m||{}).length)WP=c.m}catch(e){}
+async function loadWP(){
+  if(Object.keys(WP).length)return;
+  try{
+    const titles=[...new Set(Object.values(WP_TITLES))];
+    const u='https://en.wikipedia.org/w/api.php?action=query&format=json&origin=*&redirects=1&prop=pageimages&piprop=thumbnail&pithumbsize=480&pilicense=any&pilimit=50&titles='+encodeURIComponent(titles.join('|'));
+    const d=await (await fetch(u)).json();const q=d.query||{};const alias={};
+    for(const x of (q.normalized||[]))alias[x.from]=x.to;for(const x of (q.redirects||[]))alias[x.from]=x.to;
+    const byTitle={};for(const p of Object.values(q.pages||{}))if(p.thumbnail)byTitle[p.title]=p.thumbnail.source;
+    const resolve=t=>{let s=t;for(let i=0;i<3&&alias[s];i++)s=alias[s];return s};
+    const m={};for(const [id,t] of Object.entries(WP_TITLES)){const s=byTitle[resolve(t)];if(s)m[id]=s}
+    if(!Object.keys(m).length)throw new Error('no images');
+    WP=m;try{localStorage.setItem(WP_KEY,JSON.stringify({t:Date.now(),m}))}catch(e){}
+    if(!Q)render();
+  }catch(e){toast('カード画像を読み込めませんでした。インターネット接続を確認してください')}
+}
+function saveImg(){try{localStorage.setItem(IMG_KEY,JSON.stringify(IMG));return true}catch(e){return false}}
+function setCardImage(id,file){
+  if(!file||!/^image\//.test(file.type)){toast('画像ファイルを選んでください');return}
+  const rd=new FileReader();
+  rd.onload=()=>{const im=new Image();
+    im.onload=()=>{const W=360,H=480,cv=document.createElement('canvas');cv.width=W;cv.height=H;const x=cv.getContext('2d');
+      const s=Math.max(W/im.width,H/im.height),w=im.width*s,h=im.height*s;x.drawImage(im,(W-w)/2,(H-h)/2,w,h);
+      const prev=IMG[id];IMG[id]=cv.toDataURL('image/jpeg',.82);
+      if(saveImg())toast('カードに画像を設定しました');else{if(prev)IMG[id]=prev;else delete IMG[id];toast('保存容量がいっぱいです。ほかのカードの画像を外してください')}
+      render();showCard(CARD[id])};
+    im.onerror=()=>toast('この画像は読み込めませんでした');im.src=rd.result};
+  rd.readAsDataURL(file);
+}
+const today = ()=>dkey();
+
+function ensureDay(){
+  const k=today();
+  if(S.day&&S.day.key===k) return false;
+  const r=rng(hash('day'+k));
+  const ms=shuffle(MISSIONS,r).slice(0,3).map(m=>({id:m.id,p:0,done:false}));
+  const catKeys=Object.keys(CATS);
+  S.day={key:k,missions:ms,allBonus:false,loginClaimed:false,loginIdx:0,
+    fortune:{revealed:false,card:CARDS[Math.floor(r()*CARDS.length)].id,luck:Math.floor(r()*LUCKS.length),cat:catKeys[Math.floor(r()*catKeys.length)]},
+    dailyDone:false,dailyScore:0};
+  // ログイン処理
+  const L=S.login;
+  if(L.last!==k){L.streak=(L.last===shiftKey(-1))?L.streak+1:1;L.count++;L.best=Math.max(L.best,L.streak);L.last=k}
+  S.day.loginIdx=(L.count-1)%7;
+  // デイリーのストリークが途切れていたら0に
+  if(S.daily.last&&S.daily.last!==k&&S.daily.last!==shiftKey(-1)) S.daily.streak=0;
+  save();
+  return true;
+}
+
+function grant(r,mult=1){const parts=[];
+  if(r.coins){const n=Math.round(r.coins*mult);S.coins+=n;parts.push('🪙'+n)}
+  if(r.tickets){S.tickets+=r.tickets;parts.push('🎫×'+r.tickets)}
+  if(r.srTickets){S.srTickets+=r.srTickets;parts.push('💜SR確定×'+r.srTickets)}
+  return parts.join(' ');
+}
+function rewardText(r){return [r.coins?'🪙'+r.coins:'',r.tickets?'🎫×'+r.tickets:'',r.srTickets?'💜SR確定×'+r.srTickets:''].filter(Boolean).join(' ')}
+function xpNeed(l){return 80+l*40}
+function titleOf(l){let t=TITLES[0][1];for(const [lv,n] of TITLES) if(l>=lv) t=n;return t}
+function addXP(n){S.xp+=n;let ups=0;while(S.xp>=xpNeed(S.level)){S.xp-=xpNeed(S.level);S.level++;ups++;S.tickets++}
+  if(ups) toast(`レベルアップ！ Lv.${S.level}「${titleOf(S.level)}」 🎫×${ups}`);return ups}
+function coinMult(cat){let m=1;if(isWeekend())m*=1.5;if(isGodzillaDay())m*=2;if(cat&&S.day.fortune.revealed&&S.day.fortune.cat===cat)m*=1.5;return m}
+
+function track(ev,val=1){
+  for(const m of S.day.missions){const d=MISSIONS.find(x=>x.id===m.id);if(!d||d.ev!==ev||m.done)continue;
+    m.p=d.max?Math.max(m.p,val):m.p+val; if(m.p>=d.g){m.p=d.g}}
+}
+function checkAch(){
+  for(const a of ACH){if(!S.ach[a.id]&&a.c(S)){S.ach[a.id]=today();const g=grant(a.r);toast(`🏆 実績「${a.n}」達成！ ${g}`)}}
+}
+
+/* ============ サウンド ============ */
+let AC=null;
+function beep(type){ if(!S.sound) return; try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  const seq={ok:[[660,.08],[990,.12]],ng:[[200,.18],[150,.2]],tap:[[520,.04]],gacha:[[400,.06],[500,.06],[600,.06],[800,.15]],ssr:[[523,.1],[659,.1],[784,.1],[1047,.3]],up:[[600,.08],[900,.08],[1200,.16]]}[type]||[];
+  let t=AC.currentTime; for(const [f,d] of seq){const o=AC.createOscillator(),g=AC.createGain();o.type='square';o.frequency.value=f;g.gain.setValueAtTime(.06,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g).connect(AC.destination);o.start(t);o.stop(t+d);t+=d*.9}
+}catch(e){} }
+
+/* ============ 共通UI ============ */
+function toast(msg){const el=document.createElement('div');el.className='toast';el.textContent=msg;$('#toasts').appendChild(el);setTimeout(()=>el.remove(),3200)}
+function openModal(html){$('#modalBox').innerHTML=html;$('#modal').hidden=false}
+function closeModal(){$('#modal').hidden=true}
+function cardHTML(c,opts={}){
+  const owned=opts.owned!==false; const cnt=S.cards[c.id]||0; const stars=owned&&cnt?'★'.repeat(Math.min(cnt,5)):'';
+  const img=owned&&(IMG[c.id]||WP[c.id]);
+  return `<div class="kcard ${RARITY[c.r].cls} ${owned?'':'locked'} ${img?'has-img':''}" style="--h:${c.h}">
+    <span class="rar">${c.r}</span>${stars?`<span class="st" aria-label="★${Math.min(cnt,5)}">${stars}</span>`:''}
+    <div class="art" aria-hidden="true">${img?`<img src="${img}" alt="">`:c.e}</div><div class="nm">${owned?esc(c.n):'？？？'}</div></div>`;
+}
+const FIN_SVG = `<svg viewBox="0 0 360 96" role="img" aria-label="ゴジラクイズ">
+ <defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#b8f4ff"/><stop offset="1" stop-color="#1a6f8f"/></linearGradient></defs>
+ <g class="fin-glow" fill="url(#fg)">
+  <polygon points="14,92 30,48 24,46 40,18 38,38 48,34 44,92"/>
+  <polygon points="40,92 56,30 48,28 70,0 66,24 80,18 72,92"/>
+  <polygon points="70,92 82,44 76,42 94,16 92,36 102,32 98,92"/>
+ </g>
+ <text x="116" y="52" fill="#e6eef8" font-family="Dela Gothic One, sans-serif" font-size="38">ゴジラクイズ</text>
+ <text x="118" y="80" fill="#4fd6ff" font-family="Share Tech Mono, monospace" font-size="14" letter-spacing="5">KAIJU DEFENSE QUIZ</text>
+</svg>`;
+
+/* ============ 画面 ============ */
+let tab='home'; let zFilter='ALL'; let lastPull=null; let resetArm=false;
+const TABS=[['home','🏠','ホーム'],['play','❓','クイズ'],['zukan','📖','図鑑'],['gacha','🥚','ガチャ'],['record','🏆','記録']];
+
+function renderHUD(){
+  const need=xpNeed(S.level);
+  $('#hud').innerHTML=`<div class="hud-row">
+    <div class="lv"><span class="lv-badge">Lv.${S.level}</span><span class="lv-title">${titleOf(S.level)}</span></div>
+    <div class="wallet"><span class="chip num" title="コイン">🪙 ${S.coins}</span><span class="chip num" title="ガチャチケット">🎫 ${S.tickets}</span>${S.srTickets?`<span class="chip num" title="SR確定チケット">💜 ${S.srTickets}</span>`:''}<span class="chip num" title="デイリー連続日数">🔥 ${S.daily.streak}</span></div>
+  </div><div class="xpbar" title="経験値 ${S.xp}/${need}"><i style="width:${Math.min(100,S.xp/need*100)}%"></i></div>`;
+}
+function renderTabs(){
+  const homeDot=!S.day.loginClaimed||!S.day.dailyDone||!S.day.fortune.revealed||S.day.missions.some(m=>{const d=MISSIONS.find(x=>x.id===m.id);return m.p>=d.g&&!m.done});
+  const gDot=S.tickets>0||S.srTickets>0||S.coins>=100;
+  $('#tabs').innerHTML=TABS.map(([k,i,l])=>`<button data-tab="${k}" ${tab===k?'aria-current="page"':''}><span class="i">${i}</span>${l}${(k==='home'&&homeDot)||(k==='gacha'&&gDot)?'<span class="dot"></span>':''}</button>`).join('');
+}
+function render(){ensureDay();renderHUD();renderTabs();({home:viewHome,play:viewPlay,zukan:viewZukan,gacha:viewGacha,record:viewRecord})[tab]()}
+
+function viewHome(){
+  const D=S.day, f=D.fortune, fc=CARD[f.card], luck=LUCKS[f.luck];
+  const days=['日','月','火','水','木','金','土'];const now=new Date();
+  const boosts=[];if(isGodzillaDay())boosts.push('ゴジラの日 コイン2倍');if(isWeekend())boosts.push('週末ボーナス コイン1.5倍');
+  const cal=Array.from({length:14},(_,i)=>{const k=shiftKey(i-13);const h=S.daily.history[k];return `<i class="${h!=null?(h===5?'perfect':'on'):''} ${i===13?'today':''}" title="${k}${h!=null?' '+h+'/5':''}"></i>`}).join('');
+  const missions=D.missions.map(m=>{const d=MISSIONS.find(x=>x.id===m.id);const pct=m.p/d.g*100;
+    return `<div class="mission"><div><div style="font-weight:700;font-size:14px">${d.t}</div></div>
+      ${m.done?'<span class="claimed">受取済み ✓</span>':m.p>=d.g?`<button class="btn alert" data-act="mclaim" data-id="${m.id}">🪙${d.r} 受け取る</button>`:`<span class="claimed num">${m.p}/${d.g}</span>`}
+      <div class="bar"><i style="width:${pct}%"></i></div></div>`}).join('');
+  const allDone=D.missions.every(m=>m.done);
+  $('#view').innerHTML=`<div class="stack">
+  <div class="hero">${FIN_SVG}
+    <div class="hero-meta"><span class="date">${now.getFullYear()}.${String(now.getMonth()+1).padStart(2,'0')}.${String(now.getDate()).padStart(2,'0')} (${days[now.getDay()]})</span>${boosts.map(b=>`<span class="tag">${b}</span>`).join('')}</div>
+  </div>
+
+  <section class="block">
+    <h2 class="sec">ログインボーナス <small>DAY ${D.loginIdx+1}/7</small></h2>
+    <div class="login-strip">${LOGIN.map((r,i)=>`<div class="lday ${i<D.loginIdx||(i===D.loginIdx&&D.loginClaimed)?'done':''} ${i===D.loginIdx?'today':''} ${i===6?'big':''}"><b>${i+1}日目</b><span class="ic">${r.ic}</span>${r.l}</div>`).join('')}</div>
+    ${D.loginClaimed?`<p class="small muted" style="margin:0">ログイン ${S.login.count}日目・${S.login.streak}日連続。また明日も来てね。</p>`:`<button class="btn alert wide" data-act="login">今日のボーナスを受け取る</button>`}
+  </section>
+
+  <section class="daily">
+    <div class="row"><div><div class="small" style="color:var(--atomic);font-weight:700;letter-spacing:.1em">DAILY QUIZ</div><div class="big">今日のデイリークイズ</div></div><span class="spacer"></span>
+      <div class="streak"><span class="flame" aria-hidden="true">🔥</span><div><div class="n">${S.daily.streak}</div><div class="small muted">日連続</div></div></div></div>
+    ${D.dailyDone?`<div class="row"><div><div class="small muted">今日の結果</div><div style="font-family:var(--f-display);font-size:26px">${D.dailyScore} / 5</div></div><span class="spacer"></span><div style="text-align:right"><div class="small muted">次のクイズまで</div><div class="countdown" id="cd">--:--:--</div></div></div>`
+      :`<p style="margin:0" class="small">全員共通の5問。1日1回だけ挑戦できます。全問正解で🪙100ボーナス、連続挑戦でストリークが伸びます。</p><button class="btn primary wide" data-act="daily">挑戦する</button>`}
+    <div><div class="small muted" style="margin-bottom:4px">最近14日間の記録 (金色は全問正解)</div><div class="cal">${cal}</div></div>
+  </section>
+
+  <section class="block">
+    <h2 class="sec">今日の怪獣占い</h2>
+    ${f.revealed?`<div class="panel fortune"><div class="emo" aria-hidden="true">${fc.e}</div><div><div class="small muted">今日の守護怪獣は「${esc(fc.n)}」</div><div class="luck">${luck[0]}</div><div class="small">${luck[1]}</div>
+      <div class="small" style="margin-top:6px">ラッキージャンル: <b style="color:var(--alert)">${CATS[f.cat].n}</b> (コイン1.5倍)</div></div></div>`
+      :`<button class="seal" data-act="fortune"><span style="font-size:30px">🔮</span><b>おみくじを引く</b><span class="small muted">守護怪獣とラッキージャンルがわかります (🪙20)</span></button>`}
+  </section>
+
+  <section class="block">
+    <h2 class="sec">デイリーミッション <small>${D.missions.filter(m=>m.done).length}/3</small></h2>
+    <div class="panel" style="padding-block:4px">${missions}</div>
+    ${allDone?(D.allBonus?'<p class="small muted" style="margin:0">全ミッション達成ボーナス受取済み ✓</p>':'<button class="btn alert wide" data-act="mall">全達成ボーナス 🎫×1 を受け取る</button>'):'<p class="small muted" style="margin:0">3つすべて達成するとガチャチケットがもらえます。ミッションは毎日0時に入れ替わります。</p>'}
+  </section>
+  </div>`;
+  tickCountdown();
+}
+function tickCountdown(){const el=$('#cd');if(!el)return;const n=new Date();const m=new Date(n);m.setHours(24,0,0,0);let s=Math.max(0,Math.floor((m-n)/1000));
+  el.textContent=[Math.floor(s/3600),Math.floor(s%3600/60),s%60].map(x=>String(x).padStart(2,'0')).join(':')}
+
+function viewPlay(){
+  const lucky=S.day.fortune.revealed?S.day.fortune.cat:null;
+  $('#view').innerHTML=`<div class="stack">
+  <section class="block"><h2 class="sec">クイズモード <small>${QS.length}問収録</small></h2>
+   <div class="modes">
+    <button class="mode" data-act="daily" ${S.day.dailyDone?'disabled style="opacity:.55"':''}><span class="ico">📅</span><div><h3>デイリークイズ</h3><p>1日1回・5問。全問正解でボーナス</p></div><span class="rec">${S.day.dailyDone?'挑戦済み':'未挑戦'}</span></button>
+    <button class="mode" data-act="ta"><span class="ico">⏱️</span><div><h3>タイムアタック</h3><p>60秒で何問正解できるか</p></div><span class="rec">BEST<br>${S.stats.taBest}問</span></button>
+    <button class="mode" data-act="survival"><span class="ico">❤️</span><div><h3>サバイバル</h3><p>ライフ3つ。全部なくなるまで続く</p></div><span class="rec">BEST<br>${S.stats.survBest}問</span></button>
+   </div></section>
+  <section class="block"><h2 class="sec">ジャンル別 <small>10問</small></h2>
+   <div class="cats">
+    <button class="cat" data-act="practice" data-cat="all"><b>🌀 ぜんぶミックス</b><span>全ジャンルからランダム</span></button>
+    ${Object.entries(CATS).map(([k,c])=>`<button class="cat ${lucky===k?'lucky':''}" data-act="practice" data-cat="${k}"><b>${c.n}${lucky===k?' ⭐':''}</b><span>${c.d}<br>正解数 ${S.stats.catCorrect[k]||0}</span></button>`).join('')}
+   </div>
+   ${lucky?`<p class="small muted" style="margin:0">⭐ は今日のラッキージャンル。正解するとコインが1.5倍です。</p>`:''}
+  </section></div>`;
+}
+
+function viewZukan(){
+  const own=ownedCount(S);const list=CARDS.filter(c=>zFilter==='ALL'||c.r===zFilter);
+  $('#view').innerHTML=`<div class="stack"><section class="block">
+   <h2 class="sec">怪獣カード図鑑</h2>
+   <div class="progress-big"><b class="num">${own}</b><span class="muted">/ ${CARDS.length} 種類 (${Math.floor(own/CARDS.length*100)}%)</span></div>
+   <div class="xpbar"><i style="width:${own/CARDS.length*100}%"></i></div>
+   <p class="small muted" style="margin:0">同じカードを引くと★が増えます(最大★5)。10・20・30種類と全種コンプで特別報酬。入手したカードをタップすると、自分の画像を絵として設定できます。</p>
+   <div class="filters">${['ALL','SSR','SR','R','N'].map(r=>`<button data-act="zf" data-r="${r}" aria-pressed="${zFilter===r}">${r==='ALL'?'すべて':r} ${r==='ALL'?'':CARDS.filter(c=>c.r===r&&S.cards[c.id]).length+'/'+CARDS.filter(c=>c.r===r).length}</button>`).join('')}</div>
+   <div class="zgrid">${list.map(c=>`<button style="background:none;border:0;padding:0" data-act="card" data-id="${c.id}" aria-label="${S.cards[c.id]?esc(c.n):'未入手のカード'}">${cardHTML(c,{owned:!!S.cards[c.id]})}</button>`).join('')}</div>
+  </section></div>`;
+}
+
+function viewGacha(){
+  const caps={SSR:'#ffcc33',SR:'#c77dff',R:'#4f9dff',N:'#9aa7b5'};
+  $('#view').innerHTML=`<div class="stack"><section class="block">
+   <h2 class="sec">怪獣カプセル</h2>
+   <div class="machine"><div class="capsule" id="cap" style="--cap:${lastPull?caps[lastPull.best]:'#4fd6ff'}"><span class="lbl">KAIJU</span></div></div>
+   <div class="rates">${Object.entries(RARITY).reverse().map(([k,v])=>`<span class="${v.cls}" style="--rc:var(--${v.cls})">${k} ${v.w}%</span>`).join('')}</div>
+   <div class="gbtns">
+     <button class="btn primary" data-act="pull" data-k="ticket" ${S.tickets<1?'disabled':''}>🎫 チケットで1回<small>所持 ${S.tickets}枚</small></button>
+     <button class="btn" data-act="pull" data-k="coin1" ${S.coins<100?'disabled':''}>🪙100で1回<small>所持 ${S.coins}</small></button>
+     <button class="btn alert" data-act="pull" data-k="coin10" ${S.coins<900?'disabled':''}>🪙900で10連<small>SR以上1枚確定</small></button>
+     <button class="btn" data-act="pull" data-k="sr" ${S.srTickets<1?'disabled':''} style="border-color:var(--r-sr)">💜 SR確定で1回<small>所持 ${S.srTickets}枚</small></button>
+   </div>
+   <p class="small muted" style="margin:0">★5のカードがさらに出ると🪙30に変わります。コインはクイズの正解、チケットはログインボーナスやミッションで集まります。</p>
+   <div id="pullArea">${lastPull?pullHTML(lastPull):''}</div>
+  </section></div>`;
+}
+function pullHTML(p){return `<div class="block"><h2 class="sec">結果</h2><div class="pull-result ${p.items.length===1?'one':''}">${p.items.map((it,i)=>`<button style="background:none;border:0;padding:0;position:relative;animation-delay:${i*.08}s" data-act="card" data-id="${it.id}">${cardHTML(CARD[it.id])}${it.isNew?'<span class="new">NEW</span>':''}</button>`).join('')}</div>
+  ${p.refund?`<p class="small" style="margin:0;color:var(--alert)">★5超過分を 🪙${p.refund} に変換しました</p>`:''}</div>`}
+
+function viewRecord(){
+  const s=S.stats;const rate=s.answered?Math.round(s.correct/s.answered*100):0;
+  const done=ACH.filter(a=>S.ach[a.id]).length;
+  $('#view').innerHTML=`<div class="stack">
+   <section class="block"><h2 class="sec">隊員記録</h2>
+    <div class="stats">
+     <div class="stat"><span>通算正解</span><b>${s.correct}</b></div><div class="stat"><span>正答率</span><b>${rate}%</b></div>
+     <div class="stat"><span>最大連続正解</span><b>${s.bestCombo}</b></div><div class="stat"><span>デイリー最長連続</span><b>${S.daily.best}日</b></div>
+     <div class="stat"><span>ログイン日数</span><b>${S.login.count}日</b></div><div class="stat"><span>ガチャ回数</span><b>${s.gachaCount}</b></div>
+     <div class="stat"><span>タイムアタック最高</span><b>${s.taBest}問</b></div><div class="stat"><span>サバイバル最高</span><b>${s.survBest}問</b></div>
+    </div></section>
+   <section class="block"><h2 class="sec">実績 <small>${done}/${ACH.length}</small></h2>
+    <div class="achs">${ACH.map(a=>`<div class="ach ${S.ach[a.id]?'on':''}"><b>${S.ach[a.id]?'🏆':'🔒'} ${a.n}</b><span>${a.d}</span><em>${rewardText(a.r)}</em></div>`).join('')}</div></section>
+   <section class="block"><h2 class="sec">称号</h2>
+    <div class="filters">${TITLES.map(([lv,n])=>`<button aria-pressed="${S.level>=lv}" tabindex="-1">Lv.${lv} ${n}</button>`).join('')}</div></section>
+   <section class="block"><h2 class="sec">設定</h2>
+    <div class="row"><button class="btn" data-act="sound">効果音: ${S.sound?'オン':'オフ'}</button><span class="spacer"></span>
+    ${resetArm?`<button class="btn" data-act="resetno">やめる</button><button class="btn" style="background:var(--ng);color:#fff;border-color:transparent" data-act="resetyes">本当に消す</button>`:`<button class="btn ghost" data-act="reset">データを消す</button>`}</div>
+    ${resetArm?'<p class="small" style="color:var(--ng);margin:0">カード・コイン・記録がすべて消えます。元に戻せません。</p>':''}
+   </section></div>`;
+}
+
+/* ============ クイズ ============ */
+let Q=null, qTimer=null;
+const PER_Q=20;
+function startQuiz(mode,cat){
+  let list;
+  if(mode==='daily'){if(S.day.dailyDone)return;list=shuffle(QS,rng(hash('daily'+today()))).slice(0,5)}
+  else if(mode==='practice'){list=shuffle(cat==='all'?QS:QS.filter(q=>q[0]===cat)).slice(0,10)}
+  else list=shuffle(QS);
+  Q={mode,cat,list,idx:0,correct:0,combo:0,maxCombo:0,coins:0,xp:0,lives:mode==='survival'?3:0,
+     total:mode==='ta'?60:0,qLeft:PER_Q,locked:false,log:[],startedAt:Date.now()};
+  $('#quiz').hidden=false;document.body.style.overflow='hidden';
+  clearInterval(qTimer);qTimer=setInterval(tick,100);
+  showQ();
+}
+function curQ(){return Q.list[Q.idx]}
+function showQ(){
+  const q=curQ(); Q.order=shuffle([0,1,2,3]); Q.locked=false; Q.qLeft=PER_Q;
+  const label={daily:'デイリークイズ',practice:Q.cat==='all'?'ぜんぶミックス':(CATS[Q.cat]||{}).n,ta:'タイムアタック',survival:'サバイバル'}[Q.mode];
+  const prog=Q.mode==='ta'?`<span class="qprog" id="tleft">${Math.ceil(Q.total)}秒</span>`:Q.mode==='survival'?`<span class="lives" aria-label="ライフ${Q.lives}">${'❤️'.repeat(Q.lives)}${'🖤'.repeat(3-Q.lives)}</span>`:`<span class="qprog">${Q.idx+1} / ${Q.list.length}</span>`;
+  $('#quizInner').innerHTML=`<div class="qtop"><span class="qmode">${label}</span>${prog}<span class="spacer"></span>
+    ${Q.combo>=2?`<span class="combo">${Q.combo} COMBO</span>`:''}<span class="gain">🪙${Q.coins}</span>
+    ${Q.mode!=='daily'?'<button class="btn ghost" style="padding:4px 10px;font-size:13px" data-act="quit">終了</button>':''}</div>
+   <div class="timer" id="tbar"><i style="width:100%"></i></div>
+   <div class="qcard"><span class="qcat">${CATS[q[0]].n} ・ ${'★'.repeat(q[1])}</span><div class="qtext">${esc(q[2])}</div></div>
+   <div class="choices">${Q.order.map((o,i)=>`<button class="choice" data-act="ans" data-i="${i}"><span class="k">${'ABCD'[i]}</span><span>${esc(q[3][o])}</span></button>`).join('')}</div>
+   <div id="fb"></div>`;
+}
+function tick(){
+  if(!Q||Q.done)return;
+  if(Q.mode==='ta'){Q.total-=.1;const el=$('#tleft');if(el)el.textContent=Math.max(0,Math.ceil(Q.total))+'秒';
+    const b=$('#tbar');if(b){b.firstElementChild.style.width=Math.max(0,Q.total/60*100)+'%';b.classList.toggle('warn',Q.total<10)}
+    if(Q.total<=0){finish();}return}
+  if(Q.locked)return;
+  Q.qLeft-=.1;const b=$('#tbar');if(b){b.firstElementChild.style.width=Math.max(0,Q.qLeft/PER_Q*100)+'%';b.classList.toggle('warn',Q.qLeft<5)}
+  if(Q.qLeft<=0)answer(-1);
+}
+function answer(i){
+  if(!Q||Q.locked)return;Q.locked=true;
+  const q=curQ();const ok=i>=0&&Q.order[i]===0;
+  document.querySelectorAll('.choice').forEach((b,j)=>{b.disabled=true;if(Q.order[j]===0)b.classList.add('correct');else if(j===i)b.classList.add('wrong')});
+  S.stats.answered++;
+  let gained=0;
+  if(ok){Q.correct++;Q.combo++;Q.maxCombo=Math.max(Q.maxCombo,Q.combo);S.stats.correct++;S.stats.bestCombo=Math.max(S.stats.bestCombo,Q.combo);
+    S.stats.catCorrect[q[0]]=(S.stats.catCorrect[q[0]]||0)+1;
+    const base={daily:20,practice:10,ta:5,survival:8}[Q.mode];const comboB=Q.mode==='ta'?0:Math.min(Q.combo-1,5)*2;
+    gained=Math.round((base+comboB+(q[1]-1)*2)*coinMult(q[0]));Q.coins+=gained;Q.xp+=10+q[1]*2;
+    track('correct');track('combo',Q.combo);if(S.day.fortune.revealed&&q[0]===S.day.fortune.cat)track('lucky');
+    beep('ok');flash('ok');
+  }else{Q.combo=0;Q.xp+=2;if(Q.mode==='survival')Q.lives--;beep('ng');flash('ng')}
+  Q.log.push({q,ok});
+  if(Q.mode==='ta'){setTimeout(()=>{if(!Q||Q.done)return;nextQ()},ok?350:800);return}
+  const last=(Q.mode==='survival'&&Q.lives<=0)||((Q.mode==='daily'||Q.mode==='practice')&&Q.idx>=Q.list.length-1);
+  $('#fb').innerHTML=`<div class="feedback ${ok?'ok':'ng'}"><div class="row"><span class="verdict">${ok?'正解！':i<0?'時間切れ':'ざんねん'}</span><span class="spacer"></span>${ok?`<span class="gain">+🪙${gained}</span>`:''}</div>
+   ${ok?'':`<div class="small">正解は「<b>${esc(q[3][0])}</b>」</div>`}<div class="small muted">${esc(q[4])}</div>
+   <button class="btn primary wide" data-act="next">${last?'結果を見る':'次の問題へ'}</button></div>`;
+  $('#fb').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function flash(k){const f=$('#flash');f.className='flash';void f.offsetWidth;f.className='flash '+k}
+function nextQ(){
+  if(Q.mode==='survival'&&Q.lives<=0)return finish();
+  Q.idx++;
+  if(Q.mode==='daily'||Q.mode==='practice'){if(Q.idx>=Q.list.length)return finish()}
+  else if(Q.idx>=Q.list.length){Q.list=Q.list.concat(shuffle(QS))}
+  showQ();
+}
+function finish(){
+  if(!Q||Q.done)return;Q.done=true;clearInterval(qTimer);
+  const lines=[];let bonus={};
+  S.coins+=Q.coins;
+  const ups=addXP(Q.xp);if(ups)beep('up');
+  if(Q.mode==='daily'){
+    const k=today();S.day.dailyDone=true;S.day.dailyScore=Q.correct;S.daily.history[k]=Q.correct;
+    S.daily.streak=(S.daily.last===shiftKey(-1))?S.daily.streak+1:(S.daily.last===k?S.daily.streak:1);
+    S.daily.last=k;S.daily.best=Math.max(S.daily.best,S.daily.streak);
+    if(Q.correct===Q.list.length){S.stats.dailyPerfect++;bonus.coins=100;S.coins+=100;lines.push('全問正解ボーナス 🪙100')}
+    const sb=Math.min(S.daily.streak,10)*10;S.coins+=sb;lines.push(`連続${S.daily.streak}日ボーナス 🪙${sb}`);
+    track('daily');
+  }
+  if(Q.mode==='ta'){S.stats.taBest=Math.max(S.stats.taBest,Q.correct);track('ta');track('taScore',Q.correct)}
+  if(Q.mode==='survival'){S.stats.survBest=Math.max(S.stats.survBest,Q.correct);track('svScore',Q.correct)}
+  if(Q.mode==='practice'&&Q.idx>=Q.list.length-1)track('practice');
+  checkAch();save();
+  const n=Q.mode==='daily'||Q.mode==='practice'?Q.list.length:Q.log.length;
+  const ratio=n?Q.correct/n:0;
+  const rank=Q.mode==='ta'?(Q.correct>=20?'怪獣王':Q.correct>=12?'Gフォース級':Q.correct>=6?'防衛隊員級':'見習い級')
+    :Q.mode==='survival'?(Q.correct>=20?'不死身':Q.correct>=10?'歴戦の勇士':Q.correct>=5?'粘り強い':'これから')
+    :ratio===1?'パーフェクト！':ratio>=.7?'お見事！':ratio>=.4?'あと一歩':'また挑戦しよう';
+  $('#quizInner').innerHTML=`<div class="result-head"><span class="small muted">${{daily:'デイリークイズ',practice:'ジャンル別クイズ',ta:'タイムアタック',survival:'サバイバル'}[Q.mode]} 結果</span>
+    <div class="score num">${Q.correct}${Q.mode==='daily'||Q.mode==='practice'?`<span style="font-size:24px;color:var(--muted)"> / ${Q.list.length}</span>`:'<span style="font-size:24px;color:var(--muted)"> 問正解</span>'}</div><div class="rank">${rank}</div></div>
+   <div class="rewards"><div class="reward"><b>🪙${Q.coins}</b><span>正解コイン</span></div><div class="reward"><b>${Q.xp}</b><span>経験値</span></div><div class="reward"><b>${Q.maxCombo}</b><span>最大コンボ</span></div></div>
+   ${lines.length?`<div class="panel small" style="display:grid;gap:2px">${lines.map(l=>`<div>✨ ${l}</div>`).join('')}</div>`:''}
+   ${Q.mode==='daily'?`<p class="small muted" style="text-align:center;margin:0">🔥 ストリーク ${S.daily.streak}日。明日の0時に新しい5問が届きます。</p>`:''}
+   <div class="row"><button class="btn primary" style="flex:1" data-act="close">ホームへ</button>${Q.mode!=='daily'?`<button class="btn" style="flex:1" data-act="again">もう一度</button>`:''}</div>
+   <h2 class="sec" style="margin-top:6px">ふりかえり</h2>
+   <div class="review">${Q.log.map(l=>`<div class="${l.ok?'':'x'}">${l.ok?'⭕':'❌'} ${esc(l.q[2])}<br><span class="muted">答え: ${esc(l.q[3][0])}</span></div>`).join('')}</div>`;
+  $('#quiz').scrollTop=0;
+}
+function closeQuiz(){clearInterval(qTimer);if(Q&&!Q.done)finish();$('#quiz').hidden=true;document.body.style.overflow='';Q=null;render()}
+
+/* ============ ガチャ ============ */
+function rollRarity(r,minSR){let w=Object.entries(RARITY);if(minSR)w=w.filter(([k])=>k==='SR'||k==='SSR');
+  const tot=w.reduce((a,[,v])=>a+v.w,0);let x=r()*tot;for(const [k,v] of w){if((x-=v.w)<0)return k}return w[w.length-1][0]}
+function pull(kind){
+  let n=1,minSRLast=false,minSRAll=false;
+  if(kind==='ticket'){if(S.tickets<1)return;S.tickets--}
+  else if(kind==='coin1'){if(S.coins<100)return;S.coins-=100}
+  else if(kind==='coin10'){if(S.coins<900)return;S.coins-=900;n=10;minSRLast=true}
+  else if(kind==='sr'){if(S.srTickets<1)return;S.srTickets--;minSRAll=true}
+  const items=[];let refund=0;
+  for(let i=0;i<n;i++){
+    let rar=rollRarity(Math.random,minSRAll||(minSRLast&&i===n-1&&!items.some(it=>['SR','SSR'].includes(CARD[it.id].r))));
+    const pool=CARDS.filter(c=>c.r===rar);const c=pool[Math.floor(Math.random()*pool.length)];
+    const isNew=!S.cards[c.id];
+    if((S.cards[c.id]||0)>=5){refund+=30;S.coins+=30}else S.cards[c.id]=(S.cards[c.id]||0)+1;
+    items.push({id:c.id,isNew});
+  }
+  S.stats.gachaCount+=n;track('gacha',n);
+  const order=['N','R','SR','SSR'];const best=items.map(it=>CARD[it.id].r).sort((a,b)=>order.indexOf(b)-order.indexOf(a))[0];
+  lastPull={items,refund,best};
+  checkAch();save();
+  const cap=$('#cap');const caps={SSR:'#ffcc33',SR:'#c77dff',R:'#4f9dff',N:'#9aa7b5'};
+  $('#pullArea').innerHTML='';document.querySelectorAll('.gbtns .btn').forEach(b=>b.disabled=true);
+  beep('gacha');
+  if(cap&&!matchMedia('(prefers-reduced-motion: reduce)').matches){cap.classList.remove('shake');void cap.offsetWidth;cap.classList.add('shake');cap.style.setProperty('--cap',caps[best])}
+  setTimeout(()=>{if(best==='SSR')beep('ssr');renderHUD();renderTabs();viewGacha();
+    if(n===1){const c=CARD[items[0].id];showCard(c,items[0].isNew?'NEW！':'')}},950);
+}
+function showCard(c,head){
+  const cnt=S.cards[c.id]||0;
+  openModal(`${head?`<div style="font-family:var(--f-display);color:var(--alert);font-size:18px">${head}</div>`:''}<div class="bigcard">${cardHTML(c,{owned:!!cnt})}</div>
+   ${cnt?`<h3>${esc(c.n)}</h3><div class="small" style="color:var(--atomic)">${esc(c.f)}</div>${WP[c.id]&&!IMG[c.id]?`<div class="small muted">画像出典: <a href="https://en.wikipedia.org/wiki/${encodeURIComponent(WP_TITLES[c.id].replace(/ /g,'_'))}" target="_blank" rel="noopener" style="color:var(--atomic)">Wikipedia「${esc(WP_TITLES[c.id])}」</a></div>`:''}<p style="margin:0;text-align:left" class="small">${esc(c.d)}</p><div class="small muted">所持 ${cnt}枚 ・ ★${Math.min(cnt,5)}/5</div>
+     <div class="imgtools"><label class="btn" for="imgIn">🖼️ ${IMG[c.id]?'画像を変更':'自分の画像を設定'}</label>${IMG[c.id]?`<button class="btn ghost" data-act="imgdel" data-id="${c.id}">外す</button>`:''}</div>
+     <input type="file" id="imgIn" accept="image/*" data-id="${c.id}" hidden>
+     <div class="small muted">手持ちの画像ファイルをカードの絵にできます。画像はこのブラウザの中だけに保存されます。</div>`
+     :`<h3>？？？</h3><p class="small muted" style="margin:0">まだ出会っていない怪獣です。レア度 ${c.r}。ガチャで探そう。</p>`}
+   <button class="btn primary wide" data-act="mclose">閉じる</button>`);
+}
+
+/* ============ 操作 ============ */
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-tab],[data-act]');if(!t)return;
+  if(t.dataset.tab){tab=t.dataset.tab;resetArm=false;beep('tap');render();window.scrollTo(0,0);return}
+  const a=t.dataset.act;const D=S.day;
+  switch(a){
+    case 'login':{if(D.loginClaimed)break;const r=LOGIN[D.loginIdx];D.loginClaimed=true;grant({[r.t]:r.n});beep('up');
+      openModal(`<div style="font-size:48px">${r.ic}</div><h3>ログインボーナス ${D.loginIdx+1}日目</h3><p style="margin:0">${r.t==='coins'?'🪙'+r.n+' コイン':r.t==='tickets'?'🎫 ガチャチケット ×'+r.n:'💜 SR確定チケット ×1'} を受け取りました</p><p class="small muted" style="margin:0">${S.login.streak}日連続ログイン中。7日目はSR確定チケット！</p><button class="btn primary wide" data-act="mclose">OK</button>`);
+      checkAch();save();render();break}
+    case 'fortune':{if(D.fortune.revealed)break;D.fortune.revealed=true;S.coins+=20;beep('ok');save();render();break}
+    case 'mclaim':{const m=D.missions.find(x=>x.id===t.dataset.id);const d=MISSIONS.find(x=>x.id===m.id);if(m.done||m.p<d.g)break;m.done=true;S.coins+=d.r;beep('up');toast(`ミッション達成！ 🪙${d.r}`);save();render();break}
+    case 'mall':{if(D.allBonus||!D.missions.every(m=>m.done))break;D.allBonus=true;S.tickets++;beep('up');toast('全ミッション達成！ 🎫×1');save();render();break}
+    case 'daily':startQuiz('daily');break;
+    case 'ta':startQuiz('ta');break;
+    case 'survival':startQuiz('survival');break;
+    case 'practice':startQuiz('practice',t.dataset.cat);break;
+    case 'ans':answer(+t.dataset.i);break;
+    case 'next':nextQ();break;
+    case 'quit':finish();break;
+    case 'close':closeQuiz();break;
+    case 'again':{const m=Q.mode,c=Q.cat;Q=null;startQuiz(m,c);break}
+    case 'zf':zFilter=t.dataset.r;viewZukan();break;
+    case 'card':showCard(CARD[t.dataset.id]);break;
+    case 'mclose':closeModal();break;
+    case 'imgdel':{delete IMG[t.dataset.id];saveImg();toast('画像を外しました');render();showCard(CARD[t.dataset.id]);break}
+    case 'pull':pull(t.dataset.k);break;
+    case 'sound':S.sound=!S.sound;save();viewRecord();break;
+    case 'reset':resetArm=true;viewRecord();break;
+    case 'resetno':resetArm=false;viewRecord();break;
+    case 'resetyes':{try{localStorage.removeItem(SAVE_KEY);localStorage.removeItem(IMG_KEY)}catch(err){}S=fresh();IMG={};resetArm=false;lastPull=null;tab='home';render();toast('データを消しました');break}
+  }
+});
+document.addEventListener('change',e=>{if(e.target.id==='imgIn'&&e.target.files[0])setCardImage(e.target.dataset.id,e.target.files[0])});
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal')closeModal()});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'&&!$('#modal').hidden)closeModal();
+  if(Q&&!$('#quiz').hidden&&!Q.done){const i='1234'.indexOf(e.key);const j='abcd'.indexOf(e.key.toLowerCase());const k=i>=0?i:j;
+    if(k>=0&&!Q.locked)answer(k);else if((e.key==='Enter'||e.key===' ')&&Q.locked&&Q.mode!=='ta'){e.preventDefault();nextQ()}}
+});
+setInterval(()=>{
+  if(S.day&&S.day.key!==today()&&!Q){render();toast('日付が変わりました。新しいデイリーが届いています！')}
+  else if(tab==='home')tickCountdown();
+},1000);
+
+ensureDay();render();loadWP();
+if(!S.day.loginClaimed){setTimeout(()=>{const D=S.day;if(D.loginClaimed)return;const r=LOGIN[D.loginIdx];
+  openModal(`<div style="font-size:48px">${r.ic}</div><h3>ログインボーナス</h3><p style="margin:0">今日は${D.loginIdx+1}日目。${r.t==='coins'?'🪙'+r.n+' コイン':r.t==='tickets'?'🎫 ガチャチケット ×'+r.n:'💜 SR確定チケット'}がもらえます。</p><button class="btn alert wide" data-act="login">受け取る</button>`)},400)}
+</script>
+</body></html>
