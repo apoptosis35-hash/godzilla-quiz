@@ -1,5 +1,5 @@
 // Offline cache for the game (cache-first for app files, network fallback).
-const CACHE = 'kaiju-fighters-v3';
+const CACHE = 'kaiju-fighters-v4';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',

@@ -21,7 +21,7 @@ import { STORY } from './story.js';
 const $ = (id) => document.getElementById(id);
 const DEFAULTS = {
   quality: 'AUTO', showFps: false, time: 60, rounds: 2, music: 0.5, sfx: 0.9, voice: true, cpuLevel: 'NORMAL', dynRes: true,
-  keys: DEFAULT_KEYS, pad: DEFAULT_PAD, names: {},
+  keys: DEFAULT_KEYS, pad: DEFAULT_PAD, names: {}, sounds: {},
   touch: { mode: 'auto', size: 1, opacity: 0.7, offsetX: 16, offsetY: 0, stickX: 0 },
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -39,6 +39,7 @@ let canvas = $('gl');
 let renderer, composer, renderPass, bloom, q;
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.5, 1200);
 const audio = new AudioSys();
+App.audio = audio;
 let input, touch;
 
 function initRenderer() {
@@ -753,6 +754,10 @@ function buildSettings() {
     <div class="set-row"><span>スティック位置</span><input type="range" min="0" max="160" step="2" value="${t.stickX}" data-tr="stickX"></div>
     <p class="note">スティックは画面左半分のどこに触れても出現します(フローティング)。ボタンは指をスライドして押し替え可能。超必殺ボタンはゲージ満タン時に点灯します。</p>
   </div>
+  <div class="set-grp"><h3>MY SOUNDS</h3>
+    <p class="note">お手持ちの音声ファイル(購入したサウンドトラックや録音など)を、BGMと怪獣の咆哮に使えます。ファイルはこの端末の中だけに保存され、外部には送信されません。MP3 / M4A / WAV に対応しています。</p>
+    ${soundRows()}
+  </div>
   <div class="set-grp"><h3>CHARACTER NAMES</h3>
     <p class="note">怪獣の表示名を自由に変更できます(例: 家族で呼んでいる名前)。入力した名前はこの端末の中だけに保存され、ほかの人には表示されません。空欄にすると元の名前に戻ります。</p>
     ${ROSTER.map((d) => `<div class="set-row"><span>${d._orig.name}</span><div class="opts"><input class="nm-in" data-nid="${d.id}" data-nk="name" maxlength="24" placeholder="${d._orig.name}" value="${(s.names[d.id] || {}).name || ''}"><input class="nm-in" data-nid="${d.id}" data-nk="jp" maxlength="24" placeholder="${d._orig.jp}" value="${(s.names[d.id] || {}).jp || ''}"></div></div>`).join('')}
@@ -768,6 +773,31 @@ function buildSettings() {
     s[k] = v; saveSettings(); audio.play('ui');
     if (k === 'quality') applyQuality();
     buildSettings(); setFocus(body.querySelector(`[data-k="${k}"][data-v="${b.dataset.v}"]`));
+  });
+  body.querySelectorAll('[data-snd-pick]').forEach((b) => b.onclick = () => {
+    const key = b.dataset.sndPick;
+    const inp = document.createElement('input'); inp.type = 'file'; inp.accept = 'audio/*';
+    inp.onchange = async () => {
+      const file = inp.files[0]; if (!file) return;
+      audio.init();
+      b.textContent = '読込中…';
+      const ok = await audio.setCustom(key, file);
+      if (!ok) { alert('このファイルは再生できませんでした。MP3 / M4A / WAV をお試しください。'); buildSettings(); return; }
+      await store.saveBlob(key, file);
+      s.sounds[key] = file.name; saveSettings(); buildSettings();
+    };
+    inp.click();
+  });
+  body.querySelectorAll('[data-snd-test]').forEach((b) => b.onclick = () => {
+    audio.init();
+    const key = b.dataset.sndTest;
+    if (key.startsWith('roar:')) { const d = byId(key.slice(5)); audio.roar(d.voice); }
+    else { const st = { 'music:menu': 'menu', 'music:battle': 0, 'music:boss': 'boss' }[key]; audio.stopMusic(); audio.startMusic(st); }
+  });
+  body.querySelectorAll('[data-snd-clear]').forEach((b) => b.onclick = async () => {
+    const key = b.dataset.sndClear;
+    await audio.setCustom(key, null); await store.saveBlob(key, null);
+    delete s.sounds[key]; saveSettings(); buildSettings();
   });
   body.querySelectorAll('.nm-in').forEach((el) => el.oninput = () => {
     const n = s.names[el.dataset.nid] || (s.names[el.dataset.nid] = {});
@@ -788,6 +818,19 @@ function buildSettings() {
     input.capture = cap;
   });
   $('set-reset').onclick = () => { App.settings = clone(DEFAULTS); input.settings = App.settings; saveSettings(); audio.setVolumes(App.settings.music, App.settings.sfx); applyQuality(); touch.settings = App.settings; touch.build(); applyCustomNames({}); buildSelectGrid(); buildSettings(); };
+}
+function soundRows() {
+  const s = App.settings.sounds || (App.settings.sounds = {});
+  const slots = [['music:menu', 'BGM: メニュー・キャラ選択'], ['music:battle', 'BGM: バトル(全ステージ)'], ['music:boss', 'BGM: ボス戦・最終章'],
+    ...ROSTER.map((d) => ['roar:' + d.id, '咆哮: ' + d.jp])];
+  return slots.map(([k, label]) => `<div class="set-row"><span>${label}<br><small class="note">${s[k] ? '♪ ' + String(s[k]).replace(/[<>&"]/g, '') : '内蔵の合成音'}</small></span><div class="opts">
+    <button class="chip focusable" data-snd-pick="${k}">ファイル選択</button><button class="chip focusable" data-snd-test="${k}">試聴</button>${s[k] ? `<button class="chip focusable" data-snd-clear="${k}">元に戻す</button>` : ''}</div></div>`).join('');
+}
+async function loadCustomSounds() {
+  for (const k in (App.settings.sounds || {})) {
+    const blob = await store.loadBlob(k);
+    if (blob) await audio.setCustom(k, blob); else delete App.settings.sounds[k];
+  }
 }
 function applyQuality() {
   const nq = resolveQuality(App.settings.quality);
@@ -967,6 +1010,7 @@ async function boot() {
     msg('LOADING SETTINGS…');
     await loadSettings();
     importNamesFromLink();
+    loadCustomSounds();
     initRenderer();
     resize();
     input = new Input(App.settings);

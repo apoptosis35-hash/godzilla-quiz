@@ -70,6 +70,7 @@ for (const d of ROSTER) {
   const build = d.build;
   d.build = (q, o = {}) => { const m = build(q, o); if (o.alt && !o.boss) applyPalette(m, d.palettes[o.alt]); return m; };
   d._orig = { name: d.name, jp: d.jp };
+  d.voice = { ...d.voice, id: d.id };
 }
 // Player-defined display names (stored only on the player's own device).
 export function applyCustomNames(names = {}) {

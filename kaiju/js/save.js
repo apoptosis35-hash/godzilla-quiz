@@ -30,3 +30,12 @@ export async function save(key, val) {
   if (!db) return;
   try { await new Promise((res) => { const t = db.transaction(STORE, 'readwrite'); t.objectStore(STORE).put(val, key); t.oncomplete = res; t.onerror = res; }); } catch (e) { /* ignore */ }
 }
+// Binary data (user-supplied audio). IndexedDB only; stays on this device.
+export async function saveBlob(key, blob) {
+  const db = await open(); if (!db) return false;
+  return new Promise((res) => { const t = db.transaction(STORE, 'readwrite'); if (blob) t.objectStore(STORE).put(blob, 'blob:' + key); else t.objectStore(STORE).delete('blob:' + key); t.oncomplete = () => res(true); t.onerror = () => res(false); });
+}
+export async function loadBlob(key) {
+  const db = await open(); if (!db) return null;
+  return new Promise((res) => { const r = db.transaction(STORE).objectStore(STORE).get('blob:' + key); r.onsuccess = () => res(r.result || null); r.onerror = () => res(null); });
+}

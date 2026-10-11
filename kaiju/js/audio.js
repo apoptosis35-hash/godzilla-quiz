@@ -7,6 +7,25 @@ export class AudioSys {
     this.loops = new Set();
     this.music = null;
     this.lastPlay = {};
+    this.custom = {};      // key -> AudioBuffer (player's own files)
+    this.pendingCustom = {}; // key -> Blob waiting for the AudioContext
+  }
+  // Player-supplied audio (stored on the device only). key: 'music:menu' | 'music:battle' | 'music:boss' | 'roar:<kaijuId>'
+  async setCustom(key, blob) {
+    if (!blob) { delete this.custom[key]; delete this.pendingCustom[key]; if (this.music && this.music.key === key) { const st = this.music.style; this.stopMusic(); this.startMusic(st); } return true; }
+    if (!this.ctx) { this.pendingCustom[key] = blob; return true; }
+    try {
+      const buf = await this.ctx.decodeAudioData(await blob.arrayBuffer());
+      this.custom[key] = buf;
+      if (key.startsWith('music:') && this.music && this.musicKey(this.music.style) === key) { const st = this.music.style; this.stopMusic(); this.music = null; this.startMusic(st); }
+      return true;
+    } catch (e) { console.warn('decode failed', key, e); return false; }
+  }
+  musicKey(style) { return style === 'boss' ? 'music:boss' : (style === 'menu' || style === 'select') ? 'music:menu' : 'music:battle'; }
+  playBuffer(buf, { vol = 1, rate = 1, verb = 0.3 } = {}) {
+    const src = this.ctx.createBufferSource(); src.buffer = buf; src.playbackRate.value = rate;
+    const out = this.out(vol, verb); src.connect(out); src.start();
+    return src;
   }
   init() {
     if (this.ctx) { if (this.ctx.state === 'suspended') this.ctx.resume(); return; }
@@ -30,6 +49,7 @@ export class AudioSys {
     const d = nb.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1;
     this.noiseBuf = nb;
     this.dist = this.makeCurve(30);
+    for (const k in this.pendingCustom) { const b = this.pendingCustom[k]; delete this.pendingCustom[k]; this.setCustom(k, b); }
     if (this.pendingMusic != null) { const m = this.pendingMusic; this.pendingMusic = null; this.startMusic(m); }
   }
   setVolumes(m, s) {
@@ -112,7 +132,11 @@ export class AudioSys {
     }
   }
   s_step(ctx, t, v, p) {
-    const out = this.out(v * 0.9, 0.15);
+    const out = this.out(v * 0.9, 0.35);
+    const sub = ctx.createOscillator(); sub.type = 'sine';
+    sub.frequency.setValueAtTime(42 * p, t); sub.frequency.exponentialRampToValueAtTime(22, t + 0.9);
+    const sg = ctx.createGain(); this.env(sg, t, 0.01, 0.9, 1.0); sub.connect(sg); sg.connect(out); sub.start(t); sub.stop(t + 1.05);
+    for (let i = 0; i < 4; i++) { const tt = t + 0.05 + Math.random() * 0.4; const f2 = ctx.createBiquadFilter(); f2.type = 'bandpass'; f2.frequency.value = 900 + Math.random() * 1500; f2.Q.value = 4; const g3 = ctx.createGain(); this.env(g3, tt, 0.001, 0.25, 0.06); this.noise(tt, 0.08, f2); f2.connect(g3); g3.connect(out); }
     const osc = ctx.createOscillator(); osc.type = 'sine';
     osc.frequency.setValueAtTime(70 * p, t); osc.frequency.exponentialRampToValueAtTime(28, t + 0.35);
     const g = ctx.createGain(); this.env(g, t, 0.005, 1.4, 0.45);
@@ -122,7 +146,9 @@ export class AudioSys {
     this.noise(t, 0.45, f); f.connect(g2); g2.connect(out);
   }
   s_explosion(ctx, t, v, p) {
-    const out = this.out(v, 0.5);
+    const out = this.out(v, 0.6);
+    const sub = ctx.createOscillator(); sub.frequency.setValueAtTime(48 * p, t); sub.frequency.exponentialRampToValueAtTime(18, t + 1.6);
+    const sg = ctx.createGain(); this.env(sg, t, 0.01, 1.4, 1.8); sub.connect(sg); sg.connect(out); sub.start(t); sub.stop(t + 1.9);
     const f = ctx.createBiquadFilter(); f.type = 'lowpass';
     f.frequency.setValueAtTime(3500 * p, t); f.frequency.exponentialRampToValueAtTime(120, t + 1.4);
     const g = ctx.createGain(); this.env(g, t, 0.005, 1.4, 1.6);
@@ -277,9 +303,13 @@ export class AudioSys {
     }
   }
 
-  // Kaiju roar: detuned saws through formant filters with pitch glide + distortion.
+  // Kaiju roar. Uses the player's own roar file if one is set for this kaiju; otherwise a synthesized
+  // "bowed string scrape" roar: a high screeching attack that slides down into a deep growl.
   roar(voice = {}) {
     if (!this.ctx) return;
+    const own = voice.id && this.custom['roar:' + voice.id];
+    if (own) { this.playBuffer(own, { vol: 0.9 * (voice.vol ?? 1), verb: 0.45 }); return; }
+    if (!voice.insect && !voice.metal) { this.roarScrape(voice); return; }
     const ctx = this.ctx, t = ctx.currentTime + 0.01;
     const p = voice.pitch ?? 1, dur = voice.dur ?? 2.2;
     const out = this.out(0.55 * (voice.vol ?? 1), 0.7);
@@ -315,6 +345,50 @@ export class AudioSys {
     }
   }
 
+  roarScrape(voice) {
+    const ctx = this.ctx, t = ctx.currentTime + 0.01;
+    const p = voice.pitch ?? 1, dur = (voice.dur ?? 2.6) * (0.9 + Math.random() * 0.2);
+    const out = this.out(0.6 * (voice.vol ?? 1), 0.9);
+    const master = ctx.createGain();
+    master.gain.setValueAtTime(0.0001, t); master.gain.linearRampToValueAtTime(1, t + 0.12);
+    master.gain.setValueAtTime(1, t + dur * 0.55); master.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    // stick-slip friction: fast irregular amplitude chatter
+    const am = ctx.createGain(); am.gain.value = 0.55;
+    const chat = ctx.createOscillator(); chat.type = 'square'; chat.frequency.setValueAtTime(34, t); chat.frequency.linearRampToValueAtTime(22, t + dur);
+    const cg = ctx.createGain(); cg.gain.value = 0.45; chat.connect(cg); cg.connect(am.gain);
+    const ws = ctx.createWaveShaper(); ws.curve = this.makeCurve(90 * (voice.rough ?? 1));
+    const src = [];
+    for (const [type, det, k] of [['sawtooth', 0, 1], ['sawtooth', 11, 1], ['square', -7, 0.5], ['sawtooth', 0, 2]]) {
+      const os = ctx.createOscillator(); os.type = type; os.detune.value = det * 3;
+      const f0 = 210 * p * k;
+      os.frequency.setValueAtTime(f0 * 0.8, t);
+      os.frequency.exponentialRampToValueAtTime(f0 * 1.9, t + dur * 0.18);   // screech up
+      os.frequency.exponentialRampToValueAtTime(f0 * 1.45, t + dur * 0.4);
+      os.frequency.exponentialRampToValueAtTime(f0 * 0.42, t + dur);         // growl down
+      const g = ctx.createGain(); g.gain.value = k === 2 ? 0.25 : 0.4;
+      os.connect(g); g.connect(am); os.start(t); os.stop(t + dur + 0.05); src.push(os);
+    }
+    const jit = ctx.createOscillator(); jit.frequency.value = 9; const jg = ctx.createGain(); jg.gain.value = 18 * p;
+    jit.connect(jg); for (const os of src) jg.connect(os.frequency); jit.start(t); jit.stop(t + dur);
+    am.connect(ws);
+    // moving formant: bright "screech" then dark "throat"
+    for (const [a, b, q] of [[2600, 900, 5], [1500, 520, 6], [4200, 1800, 8]]) {
+      const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = q;
+      f.frequency.setValueAtTime(a * (voice.formant ?? 1), t); f.frequency.exponentialRampToValueAtTime(b * (voice.formant ?? 1), t + dur);
+      ws.connect(f); f.connect(master);
+    }
+    // rosin rasp
+    const n = this.noise(t, dur, null); const nf = ctx.createBiquadFilter(); nf.type = 'bandpass'; nf.Q.value = 1.5;
+    nf.frequency.setValueAtTime(3200, t); nf.frequency.exponentialRampToValueAtTime(900, t + dur);
+    const ng = ctx.createGain(); ng.gain.value = 0.35; n.connect(nf); nf.connect(ng); ng.connect(am);
+    chat.start(t); chat.stop(t + dur);
+    master.connect(out);
+    if (voice.multi) {
+      setTimeout(() => this.roarScrape({ ...voice, multi: 0, pitch: p * 1.3, vol: 0.55 }), 200);
+      setTimeout(() => this.roarScrape({ ...voice, multi: 0, pitch: p * 0.8, vol: 0.55 }), 420);
+    }
+  }
+
   stopLoops() { for (const h of [...this.loops]) h.stop(); }
 
   // ---------- procedural music ----------
@@ -322,6 +396,14 @@ export class AudioSys {
     if (!this.ctx) { this.pendingMusic = style; return; }
     if (this.music && this.music.style === style) return;
     this.stopMusic();
+    const key = this.musicKey(style);
+    if (this.custom[key]) {
+      const bus = this.ctx.createGain(); bus.gain.value = 0; bus.connect(this.mus);
+      bus.gain.linearRampToValueAtTime(1, this.ctx.currentTime + 0.8);
+      const src = this.ctx.createBufferSource(); src.buffer = this.custom[key]; src.loop = true; src.connect(bus); src.start();
+      this.music = { style, key, bus, src };
+      return;
+    }
     const S = SONGS[style] || SONGS[0];
     const ctx = this.ctx;
     const bus = ctx.createGain(); bus.gain.value = 0; bus.connect(this.mus);
@@ -341,6 +423,7 @@ export class AudioSys {
     const m = this.music; this.music = null;
     clearInterval(m.timer);
     const t = this.ctx.currentTime;
+    if (m.src) m.src.stop(t + 0.7);
     m.bus.gain.cancelScheduledValues(t); m.bus.gain.setValueAtTime(m.bus.gain.value, t); m.bus.gain.linearRampToValueAtTime(0, t + 0.6);
     setTimeout(() => m.bus.disconnect(), 800);
   }
