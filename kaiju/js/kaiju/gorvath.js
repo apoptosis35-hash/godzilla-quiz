@@ -1,6 +1,6 @@
 // GORVATH — 核熱巨獣ゴルヴァス. Original heavy-power reptile kaiju with violet crystal dorsal plates.
 import * as THREE from 'three';
-import { skinnedLoft, rigidLoft, spikes, plateGeometry } from '../rig.js';
+import { mergeByBone, skinnedLoft, rigidLoft, spikes, plateGeometry } from '../rig.js';
 import { scaleMaps } from '../textures.js';
 import { bipedSkeleton, BP, bipedAnims, bipedGait, bipedProc, TAIL } from './biped.js';
 
@@ -161,6 +161,7 @@ function build(q, opts = {}) {
       idx++;
     }
   }
+  mergeByBone(rig);
   const root = new THREE.Group(), pivot = new THREE.Group();
   root.add(pivot); pivot.add(rig.root);
   rig.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = q.level >= 2; } });
@@ -190,7 +191,7 @@ function build(q, opts = {}) {
         pl.mat.emissiveIntensity = e * (boss ? 1.2 : 1);
         pl.mat.emissive.copy(glowCol).lerp(hot, Math.min(1, full * 0.5 + ripple * 0.3));
       }
-      if (light) light.intensity = (charge * 60 + full * 140) * (q.level >= 3 ? 1 : 0.7);
+      if (light) light.intensity = (charge * 25 + full * 60) * (q.level >= 3 ? 1 : 0.7);
     },
   };
 }

@@ -234,9 +234,10 @@ body.touch-on .touch { display: block; }
   .menu-side { padding: 2vh 3vw; }
   .menu-logo { font-size: 20px; margin-bottom: 4px; }
   .menu-logo b { display: inline; margin-left: 6px; }
-  .mi { padding: 3px 10px; }
-  .mi b { font-size: 17px; }
-  .mi span { font-size: 9.5px; }
+  .mi { padding: 4px 10px; line-height: 1.25; }
+  .mi b { display: inline; font-size: 16px; margin-right: 8px; }
+  .mi span { font-size: 10px; }
+  .panel .mi b { display: block; }
   .sel-info { width: 40vw; padding: 6px 10px; max-height: calc(100% - 4px); }
   .sel-info .nm { font-size: 26px; }
   .sel-info .desc { display: none; }

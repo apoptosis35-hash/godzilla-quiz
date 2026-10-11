@@ -1,6 +1,6 @@
 // TRIVERN — 三首魔竜トライヴァーン. Original three-headed winged dragon: long reach, wide gravity beams.
 import * as THREE from 'three';
-import { Rig, skinnedLoft, rigidLoft, spikes, poses, addTo } from '../rig.js';
+import { mergeByBone, Rig, skinnedLoft, rigidLoft, spikes, poses, addTo } from '../rig.js';
 import { scaleMaps } from '../textures.js';
 
 const NECKS = { C: ['nC1', 'nC2', 'nC3', 'nC4', 'nC5'], L: ['nL1', 'nL2', 'nL3', 'nL4'], R: ['nR1', 'nR2', 'nR3', 'nR4'] };
@@ -190,6 +190,7 @@ function build(q, opts = {}) {
   const bs = [];
   for (let i = 0; i < 5; i++) bs.push({ p: [0, 1.6 - i * 0.1, -1.8 + i * 0.5], d: [0, 1, -0.6], r: 0.18, l: 1.0 - i * 0.1 });
   rig.attach('spine', new THREE.Mesh(spikes(bs, 0.15, 1, 5), horn), 0, -0.5, 0);
+  mergeByBone(rig);
   const root = new THREE.Group(), pivot = new THREE.Group();
   root.add(pivot); pivot.add(rig.root);
   rig.root.traverse((o) => { if (o.isMesh) { o.castShadow = true; } });

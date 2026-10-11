@@ -424,8 +424,9 @@ export class Match {
     this.camRig.setCine({ type: 'super', f, dur: (this.cineFreeze + 40) / 60 });
     this.setBanner(mv.name, f.def.name, 'super', 1.4);
     this.audio.play('charge', { len: 1.0, vol: 1, pitch: 0.7 });
-    this.fx.flash(f.local(0, f.def.height * 0.6), f.def.color, 40, 0.8);
-    this.fx.burst(f.local(0, f.def.height * 0.6), { n: 50, color: f.def.color, speed: 25, size: 1.5, life: 0.8 });
+    this.fx.flash(f.local(-3, f.def.height * 0.6), f.def.color, 14, 0.8);
+    this.fx.burst(f.local(0, f.def.height * 0.5), { n: 40, color: f.def.color, speed: 30, size: 0.6, life: 0.7, spread: 4 });
+    this.fx.ring(f.local(0, 0.3), { color: f.def.color, r1: 26, dur: 0.9, opacity: 0.6 });
   }
 
   onFootstep(f, power) {
@@ -489,7 +490,7 @@ export class Match {
         if (p.age % 2 === 0) { this.fx.dust(p.pos, 0.9, 0x7a6a58); this.fx.spawnDebris(p.pos, { n: 2, size: 0.6, speed: 7, up: 1.3, color: 0x5a5048 }); }
         if (p.age % 6 === 0) this.fx.crack(p.pos, 4);
       } else if (s.kind === 'missile') {
-        this.fx.smoke.emit({ x: p.pos.x, y: p.pos.y, z: p.pos.z, vx: 0, vy: 0.5, vz: 0, r: 0.6, g: 0.6, b: 0.62, size: 1.4, grow: 2.5, life: 0.9, alpha: 0.45, drag: 0.9 });
+        if (p.age % 2 === 0) this.fx.smoke.emit({ x: p.pos.x, y: p.pos.y, z: p.pos.z, vx: 0, vy: 0.5, vz: 0, r: 0.42, g: 0.42, b: 0.44, size: 0.9, grow: 1.4, life: 0.7, alpha: 0.28, drag: 0.9 });
         this.fx.add.emit({ x: p.pos.x, y: p.pos.y, z: p.pos.z, r: 1, g: 0.6, b: 0.2, size: 1.6, life: 0.08 });
       } else if (this.quality.fxMul > 0.4) {
         const c = new THREE.Color(s.color || 0xffffff);

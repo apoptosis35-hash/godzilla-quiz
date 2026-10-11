@@ -69,7 +69,7 @@ export class CameraRig {
           f.local(13 - a * 3, f.def.height * 0.75, 7 - a * 9, this.desiredPos = this.desiredPos || new THREE.Vector3());
           f.local(2, f.def.height * 0.75, 0, this.desiredLook);
         } else {
-          f.local(-11, f.def.height * 0.95, 7, this.desiredPos);
+          f.local(-15, f.def.height * 1.2, 11, this.desiredPos);
           f.local(14, f.def.height * 0.4, 0, this.desiredLook);
         }
         lerp = ph === 0 && c.t < 0.05 ? 1 : 1 - Math.pow(0.0005, dt);
@@ -78,8 +78,8 @@ export class CameraRig {
         const who = c.t < c.dur / 2 ? f0 : f1;
         const a = (c.t % (c.dur / 2)) / (c.dur / 2);
         const ang = -0.9 + a * 0.9;
-        who.local(Math.cos(ang) * 16, who.def.height * (0.35 + a * 0.3), Math.sin(ang) * 16, this.desiredPos);
-        who.local(0, who.def.height * 0.65, 0, this.desiredLook);
+        who.local(Math.cos(ang) * 21, who.def.height * (0.45 + a * 0.35), Math.sin(ang) * 21, this.desiredPos);
+        who.local(0, who.def.height * 0.6, 0, this.desiredLook);
         lerp = a < 0.02 ? 1 : 1 - Math.pow(0.02, dt);
         if (c.t >= c.dur) { this.cine = null; this.computeFight(f0, f1); }
       } else if (c.type === 'ko' || c.type === 'win') {

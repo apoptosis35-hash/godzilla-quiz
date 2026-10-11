@@ -1,6 +1,6 @@
 // VESPERA — 超翅怪獣ヴェスペラ. Original giant dragonfly/wasp kaiju: high-speed aerial fighter.
 import * as THREE from 'three';
-import { Rig, skinnedLoft, rigidLoft, spikes, blob, poses, addTo } from '../rig.js';
+import { mergeByBone, Rig, skinnedLoft, rigidLoft, spikes, blob, poses, addTo } from '../rig.js';
 import { chitinMaps, wingTexture, hexEyeTexture } from '../textures.js';
 
 const AB = ['ab1', 'ab2', 'ab3', 'ab4', 'ab5', 'ab6'];
@@ -139,6 +139,7 @@ function build(q, opts = {}) {
     limb(rig, 'legB' + s, 'legB2' + s, 0.22, 0.18, green);
     limb(rig, 'legB2' + s, 'legB3' + s, 0.18, 0.08, dark);
   }
+  mergeByBone(rig);
   const root = new THREE.Group(), pivot = new THREE.Group();
   root.add(pivot); pivot.add(rig.root);
   rig.root.traverse((o) => { if (o.isMesh && o.material !== wmat) o.castShadow = true; });

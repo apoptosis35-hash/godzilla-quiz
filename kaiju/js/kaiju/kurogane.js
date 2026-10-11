@@ -3,7 +3,7 @@ import * as THREE from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { panelMaps } from '../textures.js';
 import { bipedSkeleton, BP, bipedAnims, bipedProc, bipedGait, TAIL } from './biped.js';
-import { poses, addTo } from '../rig.js';
+import { poses, addTo, mergeByBone } from '../rig.js';
 
 function build(q, opts = {}) {
   const rig = bipedSkeleton(0.98, { tail: [[0, -0.2, -1.3], [0, -0.55, -1.4], [0, -0.6, -1.4], [0, -0.6, -1.35], [0, -0.55, -1.3], [0, -0.5, -1.2], [0, -0.45, -1.1], [0, -0.35, -1.0]] });
@@ -80,6 +80,7 @@ function build(q, opts = {}) {
     A(t, box(1.4 * k + 0.2, 1.2 * k + 0.2, 1.6, i % 2 ? black : silver, 0.15), 0, 0, -0.65);
     if (i < 6) A(t, box(0.2, 0.6 * k, 0.9, silver, 0.05), 0, 0.75 * k + 0.3, -0.6, -0.4);
   });
+  mergeByBone(rig);
   const root = new THREE.Group(), pivot = new THREE.Group();
   root.add(pivot); pivot.add(rig.root);
   const thr = [];

@@ -187,7 +187,7 @@ export class Stage {
       if (this.cfg.water && x > 40) continue;
       blocks.push([x, z, d]);
     }
-    const maxB = q.level >= 2 ? 99 : q.level === 1 ? 12 : 6;
+    const maxB = q.level >= 2 ? 99 : q.level === 1 ? 6 : 0;
     blocks.sort((a, b) => a[2] - b[2]);
     let count = 0;
     // inner ring: buildings right at the arena edge, so slamming an opponent into the wall wrecks them
@@ -226,7 +226,7 @@ export class Stage {
     const b = { x, z, w, d, h, kind, chunks: [], alive: true, collapsing: false, group: new THREE.Group(), hpMax: 0 };
     b.group.position.set(x, 0, z);
     this.root.add(b.group);
-    const chunkH = kind === 'container' ? 2.6 : kind === 'tank' ? h : kind === 'rock' ? 4 : 4.8;
+    const chunkH = kind === 'container' ? 2.6 : kind === 'tank' ? h : kind === 'rock' ? 4 : (this.q.level <= 1 ? 6.5 : 4.8);
     const n = Math.max(1, Math.round(h / chunkH));
     const style = (c.styles || [0])[Math.floor(Math.random() * (c.styles || [0]).length)];
     let mat;

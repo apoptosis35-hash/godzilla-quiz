@@ -347,3 +347,54 @@ export function poses(base, defs) {
   for (const k in defs) out[k] = { ...base, ...defs[k] };
   return out;
 }
+
+// Reduce draw calls: merge rigid meshes that share a bone and a material into one mesh.
+export function mergeByBone(rig) {
+  const flat = (obj, parentMat, out) => {
+    obj.updateMatrix();
+    const m = parentMat ? parentMat.clone().multiply(obj.matrix) : obj.matrix.clone();
+    if (obj.isMesh) { if (obj.children.length) return false; out.push({ mesh: obj, m }); return true; }
+    if (obj.isGroup) { for (const c of obj.children) if (!flat(c, m, out)) return false; return true; }
+    return false;
+  };
+  for (const name in rig.bones) {
+    const bone = rig.bones[name];
+    const items = [];
+    for (const c of [...bone.children]) {
+      if (c.isBone || c.isSkinnedMesh || c.isLight || c.userData.noMerge) continue;
+      const list = [];
+      if (c.isMesh && (c.userData.thr || c.material.transparent)) continue;
+      if (!flat(c, null, list)) continue;
+      if (list.some((x) => x.mesh.userData.thr || x.mesh.material.transparent)) continue;
+      items.push({ root: c, list });
+    }
+    const groups = new Map();
+    for (const it of items) for (const x of it.list) {
+      const key = x.mesh.material.uuid + '|' + Object.keys(x.mesh.geometry.attributes).sort().join(',');
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(x);
+    }
+    const consumed = new Set();
+    for (const [, list] of groups) {
+      if (list.length < 2) continue;
+      const attrs = Object.keys(list[0].mesh.geometry.attributes);
+      const geos = list.map((x) => { const g = (x.mesh.geometry.index ? x.mesh.geometry.toNonIndexed() : x.mesh.geometry.clone()); g.applyMatrix4(x.m); return g; });
+      let n = 0; for (const g of geos) n += g.attributes.position.count;
+      const out = new THREE.BufferGeometry();
+      for (const a of attrs) {
+        const size = geos[0].attributes[a].itemSize;
+        const arr = new Float32Array(n * size);
+        let o = 0;
+        for (const g of geos) { arr.set(g.attributes[a].array, o); o += g.attributes[a].array.length; }
+        out.setAttribute(a, new THREE.BufferAttribute(arr, size));
+      }
+      const mm = new THREE.Mesh(out, list[0].mesh.material);
+      mm.castShadow = true; mm.receiveShadow = list[0].mesh.receiveShadow;
+      bone.add(mm);
+      for (const x of list) { consumed.add(x.mesh); x.mesh.geometry.dispose(); }
+    }
+    // remove fully-consumed roots
+    for (const it of items) if (it.list.every((x) => consumed.has(x.mesh))) bone.remove(it.root);
+      else for (const x of it.list) if (consumed.has(x.mesh)) x.mesh.parent.remove(x.mesh);
+  }
+}

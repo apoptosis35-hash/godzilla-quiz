@@ -312,7 +312,7 @@ export class FX {
   updateBeam(b, a, end, cam, power = 1, origins = null) {
     const len = a.distanceTo(end);
     b.w += (power - b.w) * 0.35;
-    const w = b.spec.width * 1.5 * b.w * (1 + Math.sin(b.t * 50) * 0.08);
+    const w = b.spec.width * (b.spec.super ? 1.1 : 1.5) * b.w * (1 + Math.sin(b.t * 50) * 0.08);
     for (const [m, k] of [[b.outer, 1], [b.inner, 0.38]]) {
       m.position.copy(a);
       m.lookAt(end);

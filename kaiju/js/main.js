@@ -34,7 +34,7 @@ const App = {
 window.__kf = App;
 
 // ---------------- renderer ----------------
-const canvas = $('gl');
+let canvas = $('gl');
 let renderer, composer, renderPass, bloom, q;
 const camera = new THREE.PerspectiveCamera(50, innerWidth / innerHeight, 0.5, 1200);
 const audio = new AudioSys();
@@ -43,7 +43,12 @@ let input, touch;
 function initRenderer() {
   q = resolveQuality(App.settings.quality);
   setTextureSize(q.tex);
-  if (renderer) { renderer.dispose(); }
+  if (renderer) {
+    // a fresh canvas is needed because context attributes (antialias) cannot change
+    renderer.dispose(); renderer.forceContextLoss();
+    const c2 = document.createElement('canvas'); c2.id = 'gl';
+    canvas.replaceWith(c2); canvas = c2;
+  }
   renderer = new THREE.WebGLRenderer({ canvas, antialias: q.aa, powerPreference: 'high-performance', stencil: false });
   renderer.setPixelRatio(q.pixelRatio);
   renderer.setSize(innerWidth, innerHeight, false);
@@ -54,7 +59,8 @@ function initRenderer() {
   renderer.shadowMap.type = q.level >= 3 ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
   composer = null;
   if (q.bloom) {
-    composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType }));
+    const hdr = renderer.extensions.has('EXT_color_buffer_float') || renderer.extensions.has('EXT_color_buffer_half_float');
+    composer = new EffectComposer(renderer, new THREE.WebGLRenderTarget(1, 1, { type: hdr ? THREE.HalfFloatType : THREE.UnsignedByteType }));
     renderPass = new RenderPass(new THREE.Scene(), camera);
     composer.addPass(renderPass);
     bloom = new UnrealBloomPass(new THREE.Vector2(innerWidth * q.bloomRes, innerHeight * q.bloomRes), 0.55, 0.5, 0.82);
