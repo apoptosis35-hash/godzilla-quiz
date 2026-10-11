@@ -864,12 +864,32 @@ function wire() {
   document.addEventListener('visibilitychange', () => { if (document.hidden) pause(); });
 }
 
+// A shared link like  index.html#names=<json>  sets the player's display names on this device only.
+function importNamesFromLink() {
+  const m = location.hash.match(/names=([^&]+)/);
+  if (!m) return;
+  try {
+    const data = JSON.parse(decodeURIComponent(m[1]));
+    const names = {};
+    for (const d of ROSTER) {
+      const v = data[d.id];
+      if (Array.isArray(v)) names[d.id] = { name: String(v[0] || ''), jp: String(v[1] || '') };
+    }
+    App.settings.names = { ...App.settings.names, ...names };
+    applyCustomNames(App.settings.names);
+    saveSettings();
+    App.namesImported = Object.keys(names).length;
+  } catch (e) { console.warn('bad names link', e); }
+  history.replaceState(null, '', location.pathname + location.search);
+}
+
 // ---------------- boot ----------------
 async function boot() {
   const msg = (t) => { $('boot-msg').textContent = t; };
   try {
     msg('LOADING SETTINGS…');
     await loadSettings();
+    importNamesFromLink();
     initRenderer();
     resize();
     input = new Input(App.settings);
@@ -884,6 +904,7 @@ async function boot() {
     showModel(ROSTER[0]);
     requestAnimationFrame(loop);
     toTitle();
+    if (App.namesImported) { const t = document.createElement('div'); t.className = 'toast'; t.textContent = `${App.namesImported}体の怪獣の名前を設定しました`; document.body.appendChild(t); setTimeout(() => t.remove(), 4000); }
     if ('serviceWorker' in navigator && location.protocol.startsWith('http') && !location.hostname.match(/^(localhost|127\.)/)) {
       navigator.serviceWorker.register('sw.js').catch(() => {});
     }

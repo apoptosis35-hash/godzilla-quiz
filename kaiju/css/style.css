@@ -254,3 +254,4 @@ body.touch-on .touch { display: block; }
 
 .nm-in { width: min(170px, 38vw); padding: 6px 8px; font: 14px var(--f-tx); color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 3px; -webkit-user-select: text; user-select: text; touch-action: auto; pointer-events: auto; }
 .nm-in:focus { outline: none; border-color: var(--acc2); }
+.toast { position: fixed; left: 50%; top: calc(16px + env(safe-area-inset-top)); transform: translateX(-50%); z-index: 50; background: rgba(0,0,0,.85); border: 1px solid var(--acc2); color: var(--ink); padding: 10px 18px; border-radius: 6px; font-size: 14px; animation: fadein .3s; }
