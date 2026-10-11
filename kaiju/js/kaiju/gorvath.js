@@ -172,7 +172,7 @@ function build(q, opts = {}) {
   }
   const glowCol = new THREE.Color(boss ? 0xff2040 : 0x8a4dff), hot = new THREE.Color(boss ? 0xffd0d0 : 0xe8d8ff);
   return {
-    root, pivot, rig, plates, light,
+    root, pivot, rig, plates, light, glowColors: [glowCol, hot],
     mouth: { bone: 'head', off: new THREE.Vector3(0, -0.15, 2.45) },
     update(f) {
       // dorsal glow ripple driven by move frames

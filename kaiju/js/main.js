@@ -7,7 +7,7 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { resolveQuality, isMobile, PRESETS } from './quality.js';
 import { setTextureSize } from './textures.js';
 import { sampleClip, approachPose, copyPose, addTo } from './rig.js';
-import { ROSTER, LOCKED, byId } from './kaiju/index.js';
+import { ROSTER, LOCKED, byId, applyCustomNames } from './kaiju/index.js';
 import { STAGES, Stage } from './stage.js';
 import { FX } from './fx.js';
 import { CameraRig } from './camera.js';
@@ -20,7 +20,7 @@ import * as store from './save.js';
 const $ = (id) => document.getElementById(id);
 const DEFAULTS = {
   quality: 'AUTO', showFps: false, time: 60, rounds: 2, music: 0.5, sfx: 0.9, voice: true, cpuLevel: 'NORMAL', dynRes: true,
-  keys: DEFAULT_KEYS, pad: DEFAULT_PAD,
+  keys: DEFAULT_KEYS, pad: DEFAULT_PAD, names: {},
   touch: { mode: 'auto', size: 1, opacity: 0.7, offsetX: 16, offsetY: 0, stickX: 0 },
 };
 const clone = (o) => JSON.parse(JSON.stringify(o));
@@ -125,10 +125,10 @@ function buildShowroom() {
   show.scene = s;
   show.models = {};
 }
-function showModel(def, boss = false) {
-  const key = def.id + (boss ? 'b' : '');
+function showModel(def, boss = false, alt = 0) {
+  const key = def.id + (boss ? 'b' : '') + alt;
   if (!show.models[key]) {
-    const m = def.build(q, { boss });
+    const m = def.build(q, { boss, alt });
     m.root.traverse((o) => { if (o.isMesh) o.castShadow = true; });
     show.models[key] = m;
   }
@@ -263,6 +263,7 @@ function navBack() {
 async function loadSettings() {
   const s = await store.load('settings', null);
   if (s) App.settings = { ...clone(DEFAULTS), ...s, touch: { ...DEFAULTS.touch, ...(s.touch || {}) }, keys: s.keys || clone(DEFAULT_KEYS), pad: { ...DEFAULT_PAD, ...(s.pad || {}) } };
+  applyCustomNames(App.settings.names);
   const r = await store.load('records', null);
   if (r) App.records = r;
 }
@@ -293,7 +294,7 @@ function toMenu() {
 }
 
 // ---------------- character select ----------------
-const sel = { mode: 'cpu', step: 0, picks: [null, null], cursor: [0, 0], level: 'NORMAL' };
+const sel = { mode: 'cpu', step: 0, picks: [null, null], cursor: [0, 0], level: 'NORMAL', colors: [0, 0] };
 function buildSelectGrid() {
   const g = $('sel-grid');
   g.innerHTML = '';
@@ -307,6 +308,7 @@ function buildSelectGrid() {
     b.title = e.def ? e.def.name : `${e.locked.type} (開発中)`;
     b.onclick = () => {
       if (e.locked) { audio.play('cancel'); flashInfoLocked(e.locked); return; }
+      if (sel.cursor[sel.step] !== i) sel.colors[sel.step] = 0;
       sel.cursor[sel.step] = i;
       audio.play('ui');
       updateSelect();
@@ -319,7 +321,7 @@ function flashInfoLocked(l) {
   $('sel-info').innerHTML = `<div class="nm">LOCKED</div><div class="jp">${l.type}</div><div class="desc">このキャラクターは開発中です。完全な技・アニメーション・当たり判定が完成するまで選択できません。</div>`;
 }
 function startSelect(mode) {
-  sel.mode = mode; sel.step = 0; sel.picks = [null, null];
+  sel.mode = mode; sel.step = 0; sel.picks = [null, null]; sel.colors = [0, 0];
   sel.level = App.settings.cpuLevel;
   audio.startMusic('select');
   go('select', { focus: null });
@@ -340,7 +342,8 @@ function updateSelect() {
   $('sel-step').classList.toggle('p2', sel.step === 1);
   $('sel-title').textContent = sel.step === 0 ? 'SELECT YOUR KAIJU' : (sel.mode === 'vs' ? 'PLAYER 2 SELECT' : 'SELECT OPPONENT');
   if (def) {
-    if (show.def !== def) showModel(def);
+    if (show.def !== def || show.alt !== sel.colors[sel.step]) { showModel(def, false, sel.colors[sel.step]); show.alt = sel.colors[sel.step]; }
+    $('sel-color').textContent = 'カラー: ' + def.palettes[sel.colors[sel.step] % def.palettes.length].label;
     const st = def.stats;
     const bar = (n, v) => `<div class="stat">${n}<i style="--v:${v}"></i></div>`;
     $('sel-info').innerHTML = `<div class="nm">${def.name}</div><div class="jp">${def.title} ${def.jp}</div><div class="era">${def.era} ・ ${def.style}</div>
@@ -363,6 +366,7 @@ function confirmSelect() {
   if (sel.step === 0) {
     sel.step = 1;
     sel.cursor[1] = sel.mode === 'training' ? sel.cursor[0] : (sel.cursor[0] + 1) % ROSTER.length;
+    sel.colors[1] = sel.cursor[1] === sel.cursor[0] ? (sel.colors[0] + 1) % ROSTER[sel.cursor[1]].palettes.length : 0;
     updateSelect();
     setFocus(document.querySelector(`.slot[data-slot="${sel.cursor[1]}"]`));
     return;
@@ -377,14 +381,14 @@ function startStageSelect() {
     b.className = 'stg focusable';
     b.style.background = `linear-gradient(180deg, ${s.sky[0]}, ${s.sky[1]} 55%, ${s.sky[2]})`;
     b.innerHTML = `<b>${s.en}</b><span>${s.name}</span>`;
-    b.onclick = () => { audio.play('ok'); launch({ mode: sel.mode, defs: [sel.picks[0], sel.picks[1]], stage: s, level: sel.level }); };
+    b.onclick = () => { audio.play('ok'); launch({ mode: sel.mode, defs: [sel.picks[0], sel.picks[1]], colors: [...sel.colors], stage: s, level: sel.level }); };
     list.appendChild(b);
   });
   const r = document.createElement('button');
   r.className = 'stg focusable';
   r.style.background = 'linear-gradient(135deg,#222,#444)';
   r.innerHTML = '<b>RANDOM</b><span>ランダム</span>';
-  r.onclick = () => { audio.play('ok'); launch({ mode: sel.mode, defs: [sel.picks[0], sel.picks[1]], stage: STAGES[Math.floor(Math.random() * STAGES.length)], level: sel.level }); };
+  r.onclick = () => { audio.play('ok'); launch({ mode: sel.mode, defs: [sel.picks[0], sel.picks[1]], colors: [...sel.colors], stage: STAGES[Math.floor(Math.random() * STAGES.length)], level: sel.level }); };
   list.appendChild(r);
   go('stage');
 }
@@ -395,7 +399,7 @@ function startArcade(def) {
   for (let i = others.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [others[i], others[j]] = [others[j], others[i]]; }
   const order = others.map((d, i) => ({ def: d, stage: STAGES[i % 3 === 0 ? 0 : i % STAGES.length] }));
   order.push({ def: ROSTER[0], boss: true, stage: STAGES.find((s) => s.id === 'volcano') });
-  App.arcade = { player: def, order, idx: 0, level: sel.level };
+  App.arcade = { player: def, order, idx: 0, level: sel.level, color: sel.colors[0] };
   nextArcade();
 }
 function nextArcade() {
@@ -404,7 +408,7 @@ function nextArcade() {
   const lvKeys = Object.keys(LEVELS);
   const base = lvKeys.indexOf(a.level);
   const lv = e.boss ? 'VERY HARD' : lvKeys[Math.min(lvKeys.length - 1, base + Math.floor(a.idx / 2))];
-  launch({ mode: 'arcade', defs: [a.player, e.def], stage: e.stage, level: lv, boss: e.boss });
+  launch({ mode: 'arcade', defs: [a.player, e.def], colors: [a.color || 0, e.def === a.player ? ((a.color || 0) + 1) % e.def.palettes.length : 0], stage: e.stage, level: lv, boss: e.boss });
 }
 
 // ---------------- battle ----------------
@@ -442,7 +446,9 @@ function startBattle(cfg) {
   if (two) ctrls[1] = new HumanController(input, 1, true);
   else if (cfg.mode === 'training') ctrls[1] = new AIController('NORMAL', App.trainingOpts.cpu);
   else ctrls[1] = new AIController(cfg.level);
-  const fopts = [{}, cfg.boss ? { boss: true, hpMul: 1.35, dmgMul: 1.15 } : {}];
+  const cols = cfg.colors || [0, 0];
+  if (cfg.defs[0] === cfg.defs[1] && cols[0] === cols[1] && !cfg.boss) cols[1] = (cols[0] + 1) % cfg.defs[1].palettes.length;
+  const fopts = [{ alt: cols[0] }, cfg.boss ? { boss: true, hpMul: 1.35, dmgMul: 1.15 } : { alt: cols[1] }];
   const match = new Match({
     scene, quality: q, fx, stage, audio, camRig, ctrls, defs: cfg.defs, fopts,
     rounds: App.settings.rounds, time: App.settings.time === 0 ? 0 : App.settings.time, training: cfg.mode === 'training',
@@ -672,6 +678,10 @@ function buildSettings() {
     <div class="set-row"><span>スティック位置</span><input type="range" min="0" max="160" step="2" value="${t.stickX}" data-tr="stickX"></div>
     <p class="note">スティックは画面左半分のどこに触れても出現します(フローティング)。ボタンは指をスライドして押し替え可能。超必殺ボタンはゲージ満タン時に点灯します。</p>
   </div>
+  <div class="set-grp"><h3>CHARACTER NAMES</h3>
+    <p class="note">怪獣の表示名を自由に変更できます(例: 家族で呼んでいる名前)。入力した名前はこの端末の中だけに保存され、ほかの人には表示されません。空欄にすると元の名前に戻ります。</p>
+    ${ROSTER.map((d) => `<div class="set-row"><span>${d._orig.name}</span><div class="opts"><input class="nm-in" data-nid="${d.id}" data-nk="name" maxlength="24" placeholder="${d._orig.name}" value="${(s.names[d.id] || {}).name || ''}"><input class="nm-in" data-nid="${d.id}" data-nk="jp" maxlength="24" placeholder="${d._orig.jp}" value="${(s.names[d.id] || {}).jp || ''}"></div></div>`).join('')}
+  </div>
   <div class="set-grp"><h3>KEYBOARD 1P</h3><div class="keymap">${keyRows(0)}</div></div>
   <div class="set-grp"><h3>KEYBOARD 2P</h3><div class="keymap">${keyRows(1)}</div></div>
   <div class="set-grp"><h3>GAMEPAD</h3><div class="keymap">${padRows}</div><p class="note">ボタンを選択後、ゲームパッドのボタンを押すと割り当てます(標準配置: X=弱 Y=強 B=必殺 A=掴み RB/LT=ガード LB=回避 RT=超必殺 START=ポーズ)。iPhoneはiOS対応のBluetoothコントローラーが利用できます。</p></div>
@@ -683,6 +693,11 @@ function buildSettings() {
     s[k] = v; saveSettings(); audio.play('ui');
     if (k === 'quality') applyQuality();
     buildSettings(); setFocus(body.querySelector(`[data-k="${k}"][data-v="${b.dataset.v}"]`));
+  });
+  body.querySelectorAll('.nm-in').forEach((el) => el.oninput = () => {
+    const n = s.names[el.dataset.nid] || (s.names[el.dataset.nid] = {});
+    n[el.dataset.nk] = el.value;
+    applyCustomNames(s.names); saveSettings(); buildSelectGrid();
   });
   body.querySelectorAll('[data-r]').forEach((r) => r.oninput = () => { s[r.dataset.r] = +r.value; audio.setVolumes(s.music, s.sfx); saveSettings(); });
   body.querySelectorAll('[data-tm]').forEach((b) => b.onclick = () => { t.mode = b.dataset.tm; saveSettings(); buildSettings(); });
@@ -697,7 +712,7 @@ function buildSettings() {
     cap.pad = true;
     input.capture = cap;
   });
-  $('set-reset').onclick = () => { App.settings = clone(DEFAULTS); input.settings = App.settings; saveSettings(); audio.setVolumes(App.settings.music, App.settings.sfx); applyQuality(); touch.settings = App.settings; touch.build(); buildSettings(); };
+  $('set-reset').onclick = () => { App.settings = clone(DEFAULTS); input.settings = App.settings; saveSettings(); audio.setVolumes(App.settings.music, App.settings.sfx); applyQuality(); touch.settings = App.settings; touch.build(); applyCustomNames({}); buildSelectGrid(); buildSettings(); };
 }
 function applyQuality() {
   const nq = resolveQuality(App.settings.quality);
@@ -822,7 +837,8 @@ function wire() {
   };
   $('s-stage').querySelector('[data-back]').onclick = () => { audio.play('cancel'); go('select'); updateSelect(); };
   $('sel-ok').onclick = confirmSelect;
-  document.querySelectorAll('.pv').forEach((b) => b.onclick = () => { audio.play('ui'); setPreview(b.dataset.pv); });
+  document.querySelectorAll('.pv[data-pv]').forEach((b) => b.onclick = () => { audio.play('ui'); setPreview(b.dataset.pv); });
+  $('sel-color').onclick = () => { const def = ROSTER[sel.cursor[sel.step]]; if (!def) return; audio.play('ui'); sel.colors[sel.step] = (sel.colors[sel.step] + 1) % def.palettes.length; updateSelect(); };
   $('btn-pause').onclick = pause;
   $('p-resume').onclick = () => { audio.play('ok'); resume(); };
   $('p-moves').onclick = () => { buildHowto(battle?.cfg.defs[0].id); go('howto'); };
@@ -830,6 +846,7 @@ function wire() {
   $('p-quit').onclick = () => { audio.play('cancel'); endBattle(); toMenu(); };
   input.onKey((e) => {
     if (input.capture) return;
+    if (e.target && e.target.tagName === 'INPUT') return;
     if (App.screen === 'battle') { if (e.code === 'Escape' || e.code === 'Enter' && false) pause(); return; }
     if (App.screen === 'boot') return;
     const k = e.code;

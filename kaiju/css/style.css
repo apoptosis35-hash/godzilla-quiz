@@ -251,3 +251,6 @@ body.touch-on .touch { display: block; }
   .sel-foot { padding: 4px 12px; }
   .go { font-size: 18px; padding: 5px 20px; }
 }
+
+.nm-in { width: min(170px, 38vw); padding: 6px 8px; font: 14px var(--f-tx); color: var(--ink); background: rgba(255,255,255,.06); border: 1px solid var(--line); border-radius: 3px; -webkit-user-select: text; user-select: text; touch-action: auto; pointer-events: auto; }
+.nm-in:focus { outline: none; border-color: var(--acc2); }
