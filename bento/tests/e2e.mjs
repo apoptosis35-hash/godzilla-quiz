@@ -45,6 +45,23 @@ await p.waitForTimeout(50);
 const first = await G(() => { const b = window.__obento.game.foods[0]; return b ? b.position.x : null; });
 check('drag moves the aim and release drops there', first !== null && Math.abs(first - aim) < 40, `aim ${aim?.toFixed(0)} drop ${first?.toFixed(0)}`);
 
+// power drop: pull down from the touch point; moving back up lowers it; aim and pull work together
+await p.waitForTimeout(500);
+const sx = box.x + 150, sy = box.y + 60;
+await touch('touchStart', sx, sy);
+await touch('touchMove', sx, sy + 60); const pw1 = await G(() => window.__obento.renderer.power);
+await touch('touchMove', sx, sy + 20); const pw2 = await G(() => window.__obento.renderer.power);
+const aimStart = await G(() => window.__obento.renderer.aimX);
+await touch('touchMove', sx + 80, sy + 200); const pw3 = await G(() => [window.__obento.renderer.power, window.__obento.renderer.aimX]);
+const scrolled = await G(() => scrollY + document.scrollingElement.scrollTop);
+await touch('touchEnd'); await p.waitForTimeout(20);
+const pd = await G(() => { const b = window.__obento.game.lastDropped; return { power: b.food.power, x: b.position.x, aim: window.__obento.renderer.aimX }; });
+check('pull distance sets the power', Math.abs(pw1 - (60 - 12) / 120) < 0.02, pw1.toFixed(2));
+check('pulling back up lowers the power', pw2 < 0.1, pw2.toFixed(2));
+check('aim and pull at the same time, capped at max', pw3[0] === 1 && pw3[1] > aimStart + 40, JSON.stringify([...pw3, aimStart]));
+check('release throws at full power where aimed', pd.power === 1 && Math.abs(pd.x - pd.aim) < 1, JSON.stringify(pd));
+check('dragging never scrolls the page', scrolled === 0);
+
 // a quick double tap must not drop two pieces
 await p.waitForTimeout(500);
 const n0 = await G(() => window.__obento.game.dropCount);
@@ -69,6 +86,21 @@ await p.waitForTimeout(1200);
 const chain = await G(() => window.__obento.game.maxCombo);
 check('cascade produces a 5+ chain', chain >= 5, `max chain ${chain}`);
 await shot(p, '03-chain');
+await p.waitForTimeout(1500);
+
+// SMASH banners from a power-drop chain
+await G(() => {
+  const g = window.__obento.game;
+  for (const b of [...g.foods]) g._remove(b);
+  const r = 18;
+  g.makeFood(1, r, 600 - r, { landed: true, born: -1e9 }); g.makeFood(1, r * 3 + 8, 600 - r, { landed: true, born: -1e9 });
+  g.makeFood(2, r * 4 + 8 + 65, 600 - 25, { landed: true, born: -1e9 });
+  g.current = 2; g.cooldown = 0; g.drop(r * 3 + 8 + 18, 1);
+});
+let smashSeen = '';
+for (let i = 0; i < 30 && !smashSeen; i++) { await p.waitForTimeout(50); smashSeen = await G(() => [...document.querySelectorAll('#banners .banner')].map((e) => e.textContent).find((t) => /SMASH/.test(t)) || ''); }
+await shot(p, '03b-smash');
+check('power-drop chain shows a SMASH banner', /SMASH/.test(smashSeen), smashSeen);
 await p.waitForTimeout(1500);
 
 // settings persist
@@ -118,7 +150,7 @@ await p.tap('#s-zukan [data-close]');
 // every synthesized sound renders audibly, without NaN, without clipping
 const snd = await G(async () => {
   const { Sound } = await import('./js/audio.js');
-  const cases = { drop: (s) => s.drop(2), tap: (s) => s.tap(5, 3), merge: (s) => s.merge(3, 1), chain5: (s) => s.merge(4, 5), king: (s) => s.king(), over: (s) => s.gameover(), high: (s) => s.highscore(), fever: (s) => s.feverStart() };
+  const cases = { drop: (s) => s.drop(2), tap: (s) => s.tap(5, 3), merge: (s) => s.merge(3, 1), chain5: (s) => s.merge(4, 5), king: (s) => s.king(), over: (s) => s.gameover(), high: (s) => s.highscore(), fever: (s) => s.feverStart(), charge: (s) => s.charge(3), powerDrop: (s) => s.powerDrop(1), impact: (s) => s.impact(1), smash: (s) => s.smash(5) };
   const out = {};
   for (const [k, fn] of Object.entries(cases)) {
     const c = new OfflineAudioContext(1, 44100 * 2, 44100);

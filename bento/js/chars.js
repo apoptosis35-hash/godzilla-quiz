@@ -1,9 +1,9 @@
 // Original okazu characters, drawn procedurally so they stay crisp at any size.
 // Every character is drawn centred at (0,0) for collision radius r.
-// Expressions: normal, blink, surprised, hit, happy, sad, worried
+// Expressions: normal, blink, surprised, hit, happy, sad, worried, power (determined, for power drops)
 import { TIERS } from './config.js';
 
-export const EXPRESSIONS = ['normal', 'blink', 'surprised', 'hit', 'happy', 'sad', 'worried'];
+export const EXPRESSIONS = ['normal', 'blink', 'surprised', 'hit', 'happy', 'sad', 'worried', 'power'];
 export const SPRITE_PAD = 1.3; // sprites are this many radii wide on each side (crowns, tails)
 
 const INK = '#4a2c1d';
@@ -111,6 +111,18 @@ function face(ctx, r, expr, o = {}) {
     case 'surprised':
       for (const sx of [-1, 1]) openEye(sx, 1.18);
       break;
+    case 'power':
+      // determined: narrowed eyes under angry brows
+      for (const sx of [-1, 1]) {
+        const x = sx * gap;
+        ctx.beginPath(); ctx.ellipse(x, eh * 0.1, ew * 0.95, eh * 0.7, 0, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(x - ew * 0.25, -eh * 0.1, ew * 0.32, 0, Math.PI * 2); ctx.fill(); ctx.fillStyle = ink;
+      }
+      ctx.save(); ctx.lineWidth = Math.max(1.2, s * 0.08);
+      ctx.beginPath();
+      for (const sx of [-1, 1]) { ctx.moveTo(sx * (gap + ew * 1.3), -eh * 1.35); ctx.lineTo(sx * (gap - ew * 0.9), -eh * 0.75); }
+      ctx.stroke(); ctx.restore();
+      break;
     case 'worried':
       for (const sx of [-1, 1]) openEye(sx, 1.0);
       ctx.beginPath();
@@ -144,7 +156,7 @@ function face(ctx, r, expr, o = {}) {
       for (const sx of [-1, 1]) openEye(sx, 1);
   }
 
-  if (o.brows && expr !== 'sad' && expr !== 'worried') {
+  if (o.brows && expr !== 'sad' && expr !== 'worried' && expr !== 'power') {
     ctx.beginPath();
     for (const sx of [-1, 1]) {
       const x = sx * gap;
@@ -160,7 +172,11 @@ function face(ctx, r, expr, o = {}) {
   const my = eh * 1.35;
   const mouth = o.mouth || 'smile';
   ctx.lineWidth = Math.max(1, s * 0.05);
-  if (expr === 'happy') {
+  if (expr === 'power') {
+    roundRect(ctx, -s * 0.13, my - s * 0.02, s * 0.26, s * 0.1, s * 0.04);
+    ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = ink; ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s * 0.12, my + s * 0.03); ctx.lineTo(s * 0.12, my + s * 0.03); ctx.lineWidth = Math.max(0.8, s * 0.025); ctx.stroke();
+  } else if (expr === 'happy') {
     ctx.beginPath(); ctx.moveTo(-s * 0.15, my - s * 0.02); ctx.quadraticCurveTo(0, my + s * 0.28, s * 0.15, my - s * 0.02); ctx.closePath();
     ctx.fillStyle = '#7a2b22'; ctx.fill();
     ctx.save(); ctx.clip(); ctx.fillStyle = '#ff7b7b'; ctx.beginPath(); ctx.ellipse(0, my + s * 0.16, s * 0.09, s * 0.06, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
@@ -486,6 +502,15 @@ function drawCharLayer(ctx, tier, r, expr) {
 export class Sprites {
   constructor() { this.cache = new Map(); this.px = 1; }
   setScale(px) { if (Math.abs(px - this.px) > 0.001) { this.px = px; this.cache.clear(); } }
+  // render a few not-yet-cached sprites (call once per frame) so none is drawn for the first time mid-action
+  warm(n = 3) {
+    for (let t = 0; t < TIERS.length && n > 0; t++) {
+      for (const e of EXPRESSIONS) {
+        if (!this.cache.has(t * 16 + EXPRESSIONS.indexOf(e))) { this.get(t, e); if (--n <= 0) return false; }
+      }
+    }
+    return n > 0;
+  }
   get(tier, expr) {
     const key = tier * 16 + EXPRESSIONS.indexOf(expr);
     let c = this.cache.get(key);

@@ -55,6 +55,23 @@ export class FX {
     }
   }
 
+  // power-drop impact: a flat shockwave and dust puffs; scaled by power, no flash
+  shockwave(x, y, power, r) {
+    const k = this.intensity;
+    this.rings.push({ x, y, r0: r * 0.5, r1: r + 30 + power * 60, life: 0, max: 300 + power * 120, color: '#ffffff', w: 5 + power * 4 });
+    if (power > 0.7) this.rings.push({ x, y, r0: r * 0.3, r1: r + 18 + power * 40, life: 0, max: 260, color: '#ffb36b', w: 4 });
+    const n = Math.round((6 + power * 14) * k);
+    for (let i = 0; i < n; i++) {
+      if (this.parts.length >= this.maxParts) this.parts.shift();
+      const dir = i % 2 ? 1 : -1, sp = 1.5 + Math.random() * (2 + power * 3.5);
+      this.parts.push({
+        x: x + dir * r * 0.5, y, vx: dir * sp, vy: -Math.random() * (1 + power * 2),
+        life: 0, max: 380 + Math.random() * 260, size: 3 + Math.random() * 4 + power * 2,
+        rot: 0, vr: 0, shape: Math.random() < 0.75 ? 'dot' : 'spark', color: Math.random() < 0.5 ? '#fff4e0' : '#ffd9a8', grav: 0.04,
+      });
+    }
+  }
+
   popup(x, y, text, size = 18, color = '#ff6f86') {
     this.pops.push({ x, y, text, size, color, life: 0, max: 900 });
     if (this.pops.length > 14) this.pops.shift();

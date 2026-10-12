@@ -1,6 +1,6 @@
 // Canvas renderer: bento box, characters (interpolated between physics steps),
 // chopsticks holding the next piece, guide line and effects.
-import { WORLD, TIERS } from './config.js';
+import { WORLD, TIERS, POWER } from './config.js';
 import { Sprites } from './chars.js';
 
 const VIEW = { x0: -WORLD.VIEW_PAD, x1: WORLD.W + WORLD.VIEW_PAD, y0: 0, y1: WORLD.FLOOR + WORLD.VIEW_PAD };
@@ -17,6 +17,9 @@ export class Renderer {
     this.dropAnim = -1e9;
     this.fever = 0;
     this.overAt = 0;
+    this.power = 0;          // current pull (0..1) while charging
+    this.charging = false;
+    this.gaugeA = 0;
     this.resize();
   }
 
@@ -96,7 +99,7 @@ export class Renderer {
     if (game.over) return 'sad';
     if (now < v.happyUntil) return 'happy';
     if (now < v.hitUntil) return 'hit';
-    if (b.food.dropping) return 'surprised';
+    if (b.food.dropping) return b.food.power >= POWER.SMASH_MIN ? 'power' : 'surprised';
     if (game.danger > 0.25 && b.position.y - b.circleRadius < WORLD.TOP + 50) return 'worried';
     if ((now + v.blinkPhase) % v.blinkEvery < 120) return 'blink';
     return 'normal';
@@ -138,19 +141,41 @@ export class Renderer {
       ctx.fillRect(0, WORLD.TOP, WORLD.W, 30);
     }
 
-    // guide line + landing ghost
+    // guide line + landing ghost (it heats up with the pull)
     if (held && held.visible) {
       const tier = held.tier, r = TIERS[tier].r;
       const x = game.clampX(this.aimX, tier);
       const ly = game.landingY(x, tier);
+      const p = this.charging ? this.power : 0;
+      const hot = powerColor(p);
       ctx.save();
-      ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3; ctx.setLineDash([2, 8]); ctx.lineCap = 'round';
-      ctx.lineDashOffset = -now / 40;
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = 'rgba(255,255,255,0.95)'; ctx.lineWidth = 3 + p * 3; ctx.setLineDash([2, 8 - p * 3]);
+      ctx.lineDashOffset = -now / (40 - p * 28);
       ctx.beginPath(); ctx.moveTo(x, WORLD.DROP_Y + r); ctx.lineTo(x, ly); ctx.stroke();
-      ctx.strokeStyle = 'rgba(240,120,140,0.55)'; ctx.lineWidth = 1.5;
+      ctx.strokeStyle = p > 0 ? hot : 'rgba(240,120,140,0.55)'; ctx.lineWidth = 1.5 + p * 1.5;
       ctx.beginPath(); ctx.moveTo(x, WORLD.DROP_Y + r); ctx.lineTo(x, ly); ctx.stroke();
-      ctx.setLineDash([5, 6]); ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(240,120,140,0.5)';
+      ctx.setLineDash([5, 6]); ctx.lineWidth = 2; ctx.strokeStyle = p > 0 ? hot : 'rgba(240,120,140,0.5)';
       ctx.beginPath(); ctx.arc(x, ly, r, 0, Math.PI * 2); ctx.stroke();
+      if (p >= POWER.SMASH_MIN) {
+        // impact zone: how far the hit will push things around
+        ctx.setLineDash([]);
+        const zr = r + 18 + p * 46, pulse = 0.5 + 0.5 * Math.sin(now / 90);
+        ctx.globalAlpha = 0.18 + 0.2 * pulse;
+        ctx.strokeStyle = hot; ctx.lineWidth = 2.5;
+        ctx.beginPath(); ctx.arc(x, ly + r * 0.3, zr, Math.PI * 0.95, Math.PI * 2.05); ctx.stroke();
+        ctx.globalAlpha = 1;
+        // chevrons pointing down the line
+        ctx.fillStyle = hot;
+        const n = p > 0.7 ? 3 : 2, len = ly - (WORLD.DROP_Y + r);
+        for (let k = 0; k < n; k++) {
+          const t = ((now / (260 - p * 140)) + k / n) % 1;
+          const yy = WORLD.DROP_Y + r + 10 + t * Math.max(0, len - 20);
+          ctx.globalAlpha = Math.sin(t * Math.PI);
+          ctx.beginPath(); ctx.moveTo(x - 7, yy - 5); ctx.lineTo(x, yy + 3); ctx.lineTo(x + 7, yy - 5); ctx.lineTo(x + 7, yy - 1); ctx.lineTo(x, yy + 7); ctx.lineTo(x - 7, yy - 1); ctx.closePath(); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
       ctx.restore();
     }
 
@@ -158,6 +183,17 @@ export class Renderer {
 
     // characters
     const px = this.px;
+    for (const b of game.foods) {
+      const f = b.food;
+      if (!f.dropping || !(f.power >= POWER.SMASH_MIN)) continue;
+      const img = this.sprites.get(f.tier, 'power');
+      const w = img.width / px, x = b.position.x, y = b.position.y;
+      for (let k = 3; k >= 1; k--) {
+        ctx.globalAlpha = 0.12 * (4 - k) * f.power;
+        ctx.drawImage(img, x - w / 2, y - b.velocity.y * k * 1.1 - w / 2, w, w);
+      }
+      ctx.globalAlpha = 1;
+    }
     for (const b of game.foods) {
       const v = this.vis(b);
       const x = b.prevX + (b.position.x - b.prevX) * alpha;
@@ -218,11 +254,90 @@ export class Renderer {
       ctx.beginPath(); ctx.moveTo(topX, topY); ctx.lineTo(topX + (tipX - topX) * 0.18, topY + (tipY - topY) * 0.18); ctx.stroke();
     }
     ctx.restore();
+    this.gaugeA += ((this.charging && held.visible ? 1 : 0) - this.gaugeA) * 0.35;
+    if (this.gaugeA > 0.02) this._drawGauge(ctx, now);
     if (!held.visible) return;
+    const p = this.charging ? this.power : 0;
     const e = appear < 1 ? backOut(appear) : 1;
-    const img = this.sprites.get(tier, (now % 3100) < 120 ? 'blink' : 'normal');
+    const expr = p > 0.7 ? 'power' : p >= POWER.SMASH_MIN ? 'surprised' : (now % 3100) < 120 ? 'blink' : 'normal';
+    const img = this.sprites.get(tier, expr);
     const w = (img.width / this.px) * e;
-    ctx.drawImage(img, x - w / 2, y - w / 2, w, w);
+    if (p >= POWER.SMASH_MIN) this._drawCharge(ctx, x, y, r, p, now);
+    const shake = p > 0.7 ? (p - 0.7) * 4 : 0;
+    const jx = shake ? (Math.random() - 0.5) * shake : 0, jy = shake ? (Math.random() - 0.5) * shake : 0;
+    ctx.save();
+    ctx.translate(x + jx, y + jy);
+    ctx.scale(1 + p * 0.06, 1 - p * 0.09);   // squeezed by the chopsticks as you pull
+    ctx.drawImage(img, -w / 2, -w / 2, w, w);
+    ctx.restore();
+    if (p >= 0.999) {
+      const t = now / 120;
+      ctx.save();
+      ctx.font = '900 20px "Hiragino Maru Gothic ProN","M PLUS Rounded 1c","Arial Rounded MT Bold",sans-serif';
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      const yy = y - 2 - Math.abs(Math.sin(t)) * 3;
+      const xx = x > WORLD.W - 90 ? x - r - 38 : x + r + 38;   // beside the piece, on the roomier side
+      ctx.lineWidth = 5; ctx.strokeStyle = '#fff'; ctx.lineJoin = 'round'; ctx.strokeText('MAX', xx, yy);
+      ctx.fillStyle = '#ff4f6d'; ctx.fillText('MAX', xx, yy);
+      ctx.restore();
+    }
+  }
+
+  // speed lines (mid power) and focus lines + sparkles (high power) around the held piece
+  _drawCharge(ctx, x, y, r, p, now) {
+    ctx.save();
+    ctx.lineCap = 'round';
+    const col = powerColor(p);
+    if (p <= 0.7) {
+      ctx.strokeStyle = col; ctx.lineWidth = 2;
+      for (let k = 0; k < 4; k++) {
+        const t = ((now / 260) + k / 4) % 1;
+        const xx = x + (k - 1.5) * r * 0.6;
+        ctx.globalAlpha = (1 - t) * 0.7;
+        ctx.beginPath(); ctx.moveTo(xx, y - r - 4 - t * 18); ctx.lineTo(xx, y - r - 14 - t * 18); ctx.stroke();
+      }
+    } else {
+      const n = 16, seed = Math.floor(now / 50);
+      ctx.strokeStyle = col; ctx.lineWidth = 2.2;
+      for (let k = 0; k < n; k++) {
+        const jitter = ((seed * 9301 + k * 49297) % 233) / 233;
+        const a = (k / n) * Math.PI * 2 + jitter * 0.2;
+        const r0 = r * 1.25 + jitter * 6, r1 = r0 + 10 + p * 16 + jitter * 8;
+        ctx.globalAlpha = 0.35 + jitter * 0.45;
+        ctx.beginPath(); ctx.moveTo(x + Math.cos(a) * r0, y + Math.sin(a) * r0); ctx.lineTo(x + Math.cos(a) * r1, y + Math.sin(a) * r1); ctx.stroke();
+      }
+      if (p >= 0.999) {
+        ctx.fillStyle = '#fff6a8';
+        for (let k = 0; k < 4; k++) {
+          const a = now / 300 + k * Math.PI / 2, d = r * 1.5;
+          const s = 3 + 2 * Math.sin(now / 80 + k);
+          ctx.globalAlpha = 0.9;
+          star4(ctx, x + Math.cos(a) * d, y + Math.sin(a) * d, s);
+        }
+      }
+    }
+    ctx.restore();
+  }
+
+  // compact power gauge on the right lacquer wall; fills downwards like the pull
+  _drawGauge(ctx, now) {
+    const x = WORLD.W + WORLD.VIEW_PAD / 2, y0 = WORLD.TOP + 6, h = 190, w = 9;
+    const p = this.charging ? this.power : 0;
+    ctx.save();
+    ctx.globalAlpha = this.gaugeA;
+    rr(ctx, x - w / 2 - 2, y0 - 2, w + 4, h + 4, 7); ctx.fillStyle = 'rgba(120,30,45,0.55)'; ctx.fill();
+    rr(ctx, x - w / 2, y0, w, h, 5); ctx.fillStyle = 'rgba(255,240,240,0.9)'; ctx.fill();
+    if (p > 0) {
+      ctx.save(); rr(ctx, x - w / 2, y0, w, h, 5); ctx.clip();
+      const g = ctx.createLinearGradient(0, y0, 0, y0 + h);
+      g.addColorStop(0, '#7fdcb5'); g.addColorStop(0.3, '#9be27a'); g.addColorStop(0.31, '#ffd34d'); g.addColorStop(0.7, '#ff9a3d'); g.addColorStop(0.71, '#ff5c6c'); g.addColorStop(1, '#ff2f6d');
+      ctx.fillStyle = g; ctx.fillRect(x - w / 2, y0, w, h * p);
+      if (p >= 0.999) { ctx.fillStyle = `rgba(255,255,255,${0.35 + 0.35 * Math.sin(now / 60)})`; ctx.fillRect(x - w / 2, y0, w, h); }
+      ctx.restore();
+    }
+    ctx.fillStyle = 'rgba(120,30,45,0.6)';
+    for (const m of [0.3, 0.7]) ctx.fillRect(x - w / 2, y0 + h * m - 0.75, w, 1.5);
+    ctx.restore();
   }
 }
 
@@ -239,6 +354,16 @@ function popCurve(t, s0) {
   const e = 1 - Math.pow(1 - t, 3);
   const over = Math.sin(t * Math.PI) * 0.16 * (1 - t * 0.5);
   return s0 + (1 - s0) * e + over;
+}
+function powerColor(p) {
+  if (p < 0.31) return 'rgba(110,200,160,0.9)';
+  if (p <= 0.7) return 'rgba(255,160,40,0.95)';
+  return 'rgba(255,60,95,0.95)';
+}
+function star4(ctx, x, y, s) {
+  ctx.beginPath();
+  ctx.moveTo(x, y - s); ctx.quadraticCurveTo(x + s * 0.15, y - s * 0.15, x + s, y); ctx.quadraticCurveTo(x + s * 0.15, y + s * 0.15, x, y + s);
+  ctx.quadraticCurveTo(x - s * 0.15, y + s * 0.15, x - s, y); ctx.quadraticCurveTo(x - s * 0.15, y - s * 0.15, x, y - s); ctx.fill();
 }
 function backOut(t) { const c = 1.9; return 1 + (c + 1) * Math.pow(t - 1, 3) + c * Math.pow(t - 1, 2); }
 

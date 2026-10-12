@@ -1,6 +1,6 @@
 // Core game: physics world, dropping, merging, chains, score and game over.
 // No DOM access here, so the same code runs in the browser and in node tests.
-import { WORLD, PHYS, RULES, TIERS, MAX_TIER, scoreFor, kingScore } from './config.js';
+import { WORLD, PHYS, RULES, POWER, TIERS, MAX_TIER, scoreFor, kingScore, powerSpeed } from './config.js';
 
 const M = () => globalThis.Matter;
 
@@ -47,6 +47,11 @@ export class Game {
     this.current = this._rollSpawn();
     this.next = this._rollSpawn();
     this.lastDropped = null;
+    this.smash = null;        // the current power-drop impact event
+    this.smashSeq = 0;
+    this.maxSmash = 0;
+    this.powerDrops = 0;
+    this.powerLive = 0;       // ms left in which extra substeps are used
     Events.on(engine, 'collisionStart', (e) => this._collide(e.pairs, true));
     Events.on(engine, 'collisionActive', (e) => this._collide(e.pairs, false));
   }
@@ -106,27 +111,34 @@ export class Game {
   }
 
   // Drop the held piece at world x. Returns the body, or null if not allowed.
-  drop(x) {
+  // power: 0 = normal drop ... 1 = strongest power drop
+  drop(x, power = 0) {
     if (this.over) return null;
     if (this.cooldown > 0) {
-      if (this.cooldown <= RULES.INPUT_BUFFER) this.queuedDrop = x;
+      if (this.cooldown <= RULES.INPUT_BUFFER) this.queuedDrop = { x, power };
       return null;
     }
-    return this._doDrop(x);
+    return this._doDrop(x, power);
   }
 
-  _doDrop(x) {
+  _doDrop(x, power = 0) {
     const { Body } = M();
     const tier = this.current;
-    const b = this.makeFood(tier, this.clampX(x, tier), WORLD.DROP_Y, { dropping: true });
-    Body.setVelocity(b, { x: 0, y: PHYS.DROP_SPEED });
+    const p = Math.max(0, Math.min(1, +power || 0));
+    const b = this.makeFood(tier, this.clampX(x, tier), WORLD.DROP_Y, { dropping: true, power: p });
+    Body.setVelocity(b, { x: 0, y: powerSpeed(p) });
+    if (p >= POWER.SMASH_MIN) {
+      b.food.baseDensity = b.density;
+      this.powerDrops++;
+      this.powerLive = 4000;
+    }
     this.lastDropped = b;
     this.dropCount++;
     this.current = this.next;
     this.next = this._rollSpawn();
     this.cooldown = RULES.DROP_COOLDOWN;
     this.queuedDrop = null;
-    this.emit('drop', { body: b, tier });
+    this.emit('drop', { body: b, tier, power: p });
     return b;
   }
 
@@ -136,6 +148,12 @@ export class Game {
       const fa = a.food, fb = b.food;
       if (fa && !fa.landed) this._land(a);
       if (fb && !fb.landed) this._land(b);
+      const sm = this.smash;
+      if (sm && this.time <= sm.until && fa && fb) {
+        // the shock travels from a struck piece to what it pushes into, while it is still moving
+        if (fa.smashId === sm.id && fb.smashId !== sm.id && a.speed >= POWER.SHOCK_SPEED) fb.smashId = sm.id;
+        else if (fb.smashId === sm.id && fa.smashId !== sm.id && b.speed >= POWER.SHOCK_SPEED) fa.smashId = sm.id;
+      }
       if (start) {
         const rv = Math.abs((a.velocity.x - b.velocity.x) * p.collision.normal.x + (a.velocity.y - b.velocity.y) * p.collision.normal.y);
         if (rv > 1.2) this.emit('impact', { a, b, speed: rv });
@@ -148,9 +166,27 @@ export class Game {
   }
 
   _land(b) {
-    b.food.landed = true;
-    b.food.landedAt = this.time;
-    if (b.food.dropping) { b.food.dropping = false; this.emit('land', { body: b }); }
+    const f = b.food;
+    f.landed = true;
+    f.landedAt = this.time;
+    if (f.dropping) {
+      f.dropping = false;
+      if (f.power >= POWER.SMASH_MIN) {
+        // impact: heavier for a moment, and open a smash event for everything it hits
+        M().Body.setDensity(b, f.baseDensity * (1 + POWER.MASS_BOOST * f.power));
+        b.restitution = PHYS.RESTITUTION + POWER.BOUNCE * f.power;
+        f.boostUntil = this.time + POWER.BOOST_MS;
+        this.smash = { id: ++this.smashSeq, power: f.power, start: this.time, until: this.time + POWER.SMASH_WINDOW, count: 0 };
+        f.smashId = this.smash.id;
+        this.emit('smashImpact', { body: b, power: f.power, x: b.position.x, y: b.position.y + b.circleRadius * 0.6, speed: b.speed });
+      }
+      this.emit('land', { body: b });
+    }
+  }
+
+  _isSmash(f) {
+    const sm = this.smash;
+    return !!sm && f.smashId === sm.id && this.time <= sm.until;
   }
 
   _remove(b) {
@@ -179,7 +215,15 @@ export class Game {
       // a merge started by a newly dropped piece begins a new one.
       a.food.x = a.position.x; a.food.y = a.position.y;
       const level = this._chainLevel(a.food, b.food);
-      this.combo = level;
+      // smash: a merge of pieces moved by the current power-drop impact (or of a piece born from one)
+      let smash = 0;
+      const sm = this.smash;
+      if (this._isSmash(a.food) || this._isSmash(b.food)) {
+        smash = ++sm.count;
+        sm.until = Math.min(sm.start + POWER.SMASH_MAX_MS, Math.max(sm.until, this.time + POWER.SMASH_EXTEND));
+        if (smash > this.maxSmash) this.maxSmash = smash;
+      }
+      this.combo = Math.max(level, smash);   // shown chain count
       this.lastMergeAt = this.time;
       this.lastLevel = level;
       this.lastMergePos = { x, y, r: TIERS[Math.min(MAX_TIER, tier + 1)].r };
@@ -188,10 +232,10 @@ export class Game {
 
       if (tier === MAX_TIER) {
         // two kings: both vanish with a big bonus
-        const points = kingScore(this.combo);
+        const points = kingScore(level, smash);
         this.score += points;
         this.kings++;
-        this.emit('king', { x, y, points, combo: this.combo, parts });
+        this.emit('king', { x, y, points, combo: this.combo, level, smash, parts });
         continue;
       }
       const nt = tier + 1;
@@ -199,16 +243,16 @@ export class Game {
       const cx = Math.max(r, Math.min(WORLD.W - r, x));
       const cy = Math.min(y, WORLD.FLOOR - r);
       const firstTime = this.created[nt] === 0;
-      const nb = this.makeFood(nt, cx, cy, { landed: true, landedAt: this.time, fromMerge: true, chain: level });
+      const nb = this.makeFood(nt, cx, cy, { landed: true, landedAt: this.time, fromMerge: true, chain: level, smashId: smash ? sm.id : 0 });
       // start at the old size and grow, so neighbours are pushed gently instead of blasted
       const s0 = TIERS[tier].r / r;
       Body.scale(nb, s0, s0);
       nb.food.scale = s0;
       nb.food.grow = { from: s0, t: 0 };
       Body.setVelocity(nb, { x: vx, y: vy });
-      const points = scoreFor(nt, this.combo);
+      const points = scoreFor(nt, level, smash);
       this.score += points;
-      this.emit('merge', { body: nb, tier: nt, from: tier, x: cx, y: cy, points, combo: this.combo, parts, firstTime });
+      this.emit('merge', { body: nb, tier: nt, from: tier, x: cx, y: cy, points, combo: this.combo, level, smash, parts, firstTime });
     }
   }
 
@@ -243,12 +287,30 @@ export class Game {
     }
   }
 
+  _powerTick(step) {
+    const { Body } = M();
+    let live = false;
+    for (const b of this.foods) {
+      const f = b.food;
+      if (f.boostUntil && this.time >= f.boostUntil) { Body.setDensity(b, f.baseDensity); b.restitution = PHYS.RESTITUTION; f.boostUntil = 0; }
+      if (f.boostUntil || (f.dropping && f.power >= POWER.SMASH_MIN)) live = true;
+    }
+    // keep the finer solver a little after the impact, while things are still flying
+    this.powerLive = live ? 600 : Math.max(0, this.powerLive - step);
+    const sm = this.smash;
+    if (sm && this.time > sm.until) {
+      this.smash = null;
+      this.emit('smashEnd', { count: sm.count, power: sm.power });
+    }
+  }
+
   _clamp() {
     const { Body } = M();
     for (const b of this.foods) {
       const v = b.velocity;
       const sp = Math.hypot(v.x, v.y);
-      if (sp > PHYS.MAX_SPEED) Body.setVelocity(b, { x: v.x * PHYS.MAX_SPEED / sp, y: v.y * PHYS.MAX_SPEED / sp });
+      const cap = b.food.dropping && b.food.power > 0 ? POWER.FLIGHT_CAP : PHYS.MAX_SPEED;
+      if (sp > cap) Body.setVelocity(b, { x: v.x * cap / sp, y: v.y * cap / sp });
       if (Math.abs(b.angularVelocity) > PHYS.MAX_SPIN) Body.setAngularVelocity(b, Math.sign(b.angularVelocity) * PHYS.MAX_SPIN);
       // safety net: anything that escaped the box is put back inside
       const r = b.circleRadius;
@@ -276,7 +338,7 @@ export class Game {
   _gameOver() {
     if (this.over) return;
     this.over = true;
-    this.emit('over', { score: this.score, maxCombo: this.maxCombo, highestTier: this.highestTier, merges: this.merges });
+    this.emit('over', { score: this.score, maxCombo: this.maxCombo, highestTier: this.highestTier, merges: this.merges, maxSmash: this.maxSmash, powerDrops: this.powerDrops });
   }
 
   get danger() { return Math.min(1, this.dangerT / RULES.OVER_TIME); }
@@ -285,8 +347,9 @@ export class Game {
     const { Engine } = M();
     const step = PHYS.STEP;
     for (const b of this.foods) { b.prevX = b.position.x; b.prevY = b.position.y; b.prevA = b.angle; }
-    const sub = step / PHYS.SUBSTEPS;
-    for (let i = 0; i < PHYS.SUBSTEPS; i++) {
+    const n = this.powerLive > 0 ? POWER.SUBSTEPS : PHYS.SUBSTEPS;
+    const sub = step / n;
+    for (let i = 0; i < n; i++) {
       this._clamp();
       Engine.update(this.engine, sub);
     }
@@ -294,6 +357,7 @@ export class Game {
     this._processMerges();
     this._grow(step);
     this._clamp();
+    this._powerTick(step);
     if (this.combo > 0 && this.time - this.lastMergeAt > RULES.COMBO_WINDOW) {
       const c = this.combo;
       this.combo = 0;
@@ -304,7 +368,7 @@ export class Game {
       if (this.cooldown <= 0) {
         this.cooldown = 0;
         this.emit('ready', {});
-        if (this.queuedDrop != null) this._doDrop(this.queuedDrop);
+        if (this.queuedDrop != null) this._doDrop(this.queuedDrop.x, this.queuedDrop.power);
       }
     }
     this._danger(step);

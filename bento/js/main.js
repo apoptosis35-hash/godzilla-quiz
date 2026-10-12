@@ -1,4 +1,4 @@
-import { WORLD, TIERS, RULES, MAX_TIER, rankFor, comboMultiplier } from './config.js';
+import { WORLD, TIERS, RULES, POWER, MAX_TIER, rankFor, comboMultiplier, smashBonus } from './config.js';
 import { Game } from './game.js';
 import { Renderer } from './render.js';
 import { FX } from './fx.js';
@@ -23,6 +23,8 @@ let shownScore = 0;
 let lastWarn = 0;
 let feverOn = false;
 let feverLevel = 0;
+let feverUntil = 0;   // >0 while a short smash fever is running
+let spritesWarm = false;
 let retryArmedUntil = 0;
 let lastSave = 0;
 let firstKingShown = false;
@@ -58,6 +60,7 @@ function openModal(id) {
   if (id === 's-settings') buildStats();
   show(id);
   if (mode === 'play') paused = true;
+  activePointer = null; endPull();
 }
 function closeModal(id) {
   show(id, false);
@@ -96,7 +99,7 @@ function startGame(snapshot) {
   store.clearResume();
   fx.clear();
   mode = 'play'; paused = false;
-  feverOn = false; feverLevel = 0; renderer.fever = 0;
+  feverOn = false; feverLevel = 0; feverUntil = 0; renderer.fever = 0; endPull();
   firstKingShown = game.highestTier >= MAX_TIER;
   newDiscoveries = [];
   bestAtStart = store.data.best; bestShown = false;
@@ -193,6 +196,7 @@ function showResult(e, isBest) {
   $('r-best').textContent = store.data.best.toLocaleString();
   $('r-combo').textContent = e.maxCombo;
   $('r-merges').textContent = e.merges;
+  $('r-smash').textContent = e.maxSmash >= 2 ? `${e.maxSmash}れんさ` : e.powerDrops ? '-' : 'パワードロップで狙おう';
   $('r-top').textContent = TIERS[e.highestTier].name;
   paintSprite($('r-top-cv'), e.highestTier, 'happy');
   $('r-disc').hidden = !newDiscoveries.length;
@@ -212,14 +216,23 @@ function showResult(e, isBest) {
 // ---------------------------------------------------------------- game events
 const COMBO_WORDS = { 3: 'ナイス！', 4: 'すごい！', 6: 'とまらない！', 7: 'おみごと！', 8: 'さいこう！', 9: 'かみわざ！', 10: 'でんせつ級！' };
 
-game.on('drop', ({ tier }) => {
-  sound.drop(tier);
+game.on('drop', ({ tier, power }) => {
+  if (power >= POWER.SMASH_MIN) sound.powerDrop(power); else sound.drop(tier);
   haptics.pulse(8);
   renderer.dropAnim = performance.now();
   if (!store.data.tutorialDone) { store.data.tutorialDone = true; store.save(); $('hint').classList.add('off'); }
   noteBorn(tier);
   drawNext(true);
+  if (power >= POWER.SMASH_MIN && !store.data.powerTipDone) { store.data.powerTipDone = true; store.save(); }
+  if (!store.data.powerTipDone && game.dropCount === 6) showHint('下に引っぱると<br>パワードロップ！', 3200);
 });
+
+let hintTimer = 0;
+function showHint(html, ms) {
+  const h = $('hint');
+  h.innerHTML = html; h.classList.remove('off');
+  clearTimeout(hintTimer); hintTimer = setTimeout(() => h.classList.add('off'), ms);
+}
 
 game.on('ready', () => { renderer.heldShowAt = performance.now(); });
 
@@ -252,7 +265,7 @@ game.on('merge', (e) => {
       if (e.combo >= 2) bv.hopAt = now + Math.min(200, d * 0.6);
     }
   }
-  const mult = comboMultiplier(e.combo);
+  const mult = comboMultiplier(e.level) * (1 + smashBonus(e.smash));
   fx.popup(e.x, e.y - r * 0.4, `+${e.points}`, 16 + Math.min(14, e.tier * 1.2 + e.combo * 1.5), e.combo >= 3 ? '#ff7a1f' : '#ff5f7e');
   if (mult > 1) fx.popup(e.x, e.y - r * 0.4 - 22, `×${mult.toFixed(1)}`, 13, '#b44dff');
   sound.merge(e.tier, e.combo);
@@ -275,7 +288,9 @@ game.on('merge', (e) => {
   }
   setCombo(e.combo);
   checkBest();
-  if (e.combo >= RULES.BIG_COMBO) {
+  if (e.smash >= 2 && e.smash >= e.level) {
+    onSmash(e);
+  } else if (e.combo >= RULES.BIG_COMBO) {
     if (e.combo === RULES.FEVER_COMBO) {
       feverOn = true; sound.fever = true;
       banner('fever', 'フィーバー！<small>スコア 1.5ばい</small>', 1200);
@@ -290,6 +305,38 @@ game.on('merge', (e) => {
   }
   updateHud();
 });
+
+// SMASH! / SMASH COMBO! / SUPER SMASH!!: merges started by a power-drop impact
+function onSmash(e) {
+  const n = e.smash;
+  if (n >= 5) {
+    banner('supersmash', `SUPER SMASH!!<small>${n}れんさ</small>`, 1100);
+    if (!feverOn) {
+      feverOn = true; sound.fever = true; feverUntil = performance.now() + 2600;   // short fever, visuals only
+      sound.feverStart();
+      $('fever-frame').classList.add('on');
+    } else if (feverUntil) feverUntil = performance.now() + 2600;
+    fx.confetti(e.x, e.y - 40, WORLD.W * 0.8, 50);
+  } else {
+    banner(n >= 3 ? 'smash2' : 'smash', n >= 3 ? `SMASH COMBO!<small>${n}れんさ</small>` : 'SMASH!', 900);
+  }
+  if (n >= 3) {
+    fx.burst(e.x, e.y, TIERS[e.tier].r * 1.2, '#8fb8ff', n + 2, e.tier + 2);
+    fx.kick(Math.min(3, 1 + (n - 3) * 0.6));
+  }
+  sound.smash(n);
+}
+
+game.on('smashImpact', (e) => {
+  const p = e.power, r = e.body.circleRadius;
+  fx.shockwave(e.x, e.y, p, r);
+  sound.impact(p);
+  haptics.pulse(p > 0.7 ? 25 : 14);
+  if (p > 0.7) fx.kick(1.2 + (p - 0.7) * 3);   // gentle: at most ~2 units
+  const v = renderer.vis(e.body); v.sq = Math.min(0.24, 0.1 + p * 0.14); v.hitUntil = performance.now() + 220;
+});
+
+game.on('smashEnd', (e) => { if (e.count > (store.data.maxSmash || 0)) { store.data.maxSmash = e.count; } });
 
 game.on('king', (e) => {
   fx.burst(e.x, e.y, 110, '#ffd84a', 8, 10);
@@ -306,7 +353,7 @@ game.on('king', (e) => {
 });
 
 game.on('comboEnd', () => {
-  if (feverOn) { feverOn = false; sound.fever = false; $('fever-frame').classList.remove('on'); }
+  if (feverOn && !feverUntil) { feverOn = false; sound.fever = false; $('fever-frame').classList.remove('on'); }
   setTimeout(() => { if (game.combo === 0) setCombo(0); }, 400);
 });
 
@@ -432,14 +479,29 @@ function buildStats() {
   const d = store.data;
   $('set-stats').innerHTML = [
     ['ハイスコア', d.best.toLocaleString()], ['最大れんさ', d.maxCombo], ['プレイ回数', d.plays],
-    ['合体した回数', d.totalMerges.toLocaleString()], ['おべんとう完成', d.kings], ['図鑑', `${d.born.filter((v) => v > 0).length} / ${TIERS.length}`],
+    ['合体した回数', d.totalMerges.toLocaleString()], ['最大スマッシュ', d.maxSmash >= 2 ? `${d.maxSmash}れんさ` : '-'], ['おべんとう完成', d.kings], ['図鑑', `${d.born.filter((v) => v > 0).length} / ${TIERS.length}`],
   ].map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('');
 }
 
 // ---------------------------------------------------------------- input
 const stage = $('stage');
 let activePointer = null;
+let pullStartY = 0;
+let pullLevel = 0;            // 0..3 band last announced (for the gauge ticks)
+let keyPower = 0;
 function aimFrom(e) { renderer.aimX = Math.max(-20, Math.min(WORLD.W + 20, renderer.toWorldX(e.clientX))); }
+// power = how far the finger moved down from where it touched (moving back up lowers it)
+function pullFrom(e) {
+  const dy = e.clientY - pullStartY;
+  setPower(Math.max(0, Math.min(1, (dy - POWER.DEADZONE_PX) / POWER.PULL_PX)));
+}
+function setPower(p) {
+  renderer.power = p;
+  const level = p >= 0.999 ? 3 : p > 0.7 ? 2 : p >= POWER.SMASH_MIN ? 1 : 0;
+  if (level > pullLevel) { sound.charge(level); if (level === 3) haptics.pulse(15); }
+  pullLevel = level;
+}
+function endPull() { renderer.charging = false; renderer.power = 0; pullLevel = 0; }
 stage.addEventListener('pointerdown', (e) => {
   sound.unlock();
   if (mode !== 'play' || paused || game.over) return;
@@ -447,24 +509,33 @@ stage.addEventListener('pointerdown', (e) => {
   activePointer = e.pointerId;
   try { stage.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
   aimFrom(e);
+  pullStartY = e.clientY;
+  renderer.charging = true; setPower(0);
   e.preventDefault();
 });
 stage.addEventListener('pointermove', (e) => {
   if (mode !== 'play' || paused) return;
-  if (e.pointerId === activePointer || (activePointer === null && e.pointerType === 'mouse')) aimFrom(e);
+  if (e.pointerId === activePointer) { aimFrom(e); pullFrom(e); }
+  else if (activePointer === null && e.pointerType === 'mouse') aimFrom(e);
 });
 const release = (e, drop) => {
   if (e.pointerId !== activePointer) return;
   activePointer = null;
-  if (drop && mode === 'play' && !paused) { aimFrom(e); game.drop(renderer.aimX); }
+  const p = renderer.power;
+  endPull();
+  if (drop && mode === 'play' && !paused) game.drop(renderer.aimX, p);   // aim stays where the finger was while pulling
 };
 stage.addEventListener('pointerup', (e) => release(e, true));
 stage.addEventListener('pointercancel', (e) => release(e, false));
+// keyboard: arrows aim, hold Down to charge (Up to lower), Space/Enter drops
 window.addEventListener('keydown', (e) => {
   if (mode !== 'play' || paused) return;
   if (e.key === 'ArrowLeft') renderer.aimX = Math.max(0, renderer.aimX - 12);
   else if (e.key === 'ArrowRight') renderer.aimX = Math.min(WORLD.W, renderer.aimX + 12);
-  else if (e.key === ' ' || e.key === 'Enter') { sound.unlock(); game.drop(renderer.aimX); }
+  else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+    keyPower = Math.max(0, Math.min(1, keyPower + (e.key === 'ArrowDown' ? 0.1 : -0.1)));
+    renderer.charging = keyPower > 0; setPower(keyPower);
+  } else if (e.key === ' ' || e.key === 'Enter') { sound.unlock(); game.drop(renderer.aimX, keyPower); keyPower = 0; endPull(); }
   else return;
   e.preventDefault();
 });
@@ -485,6 +556,7 @@ window.addEventListener('pagehide', saveProgress);
 
 function onResize() {
   renderer.resize();
+  spritesWarm = false;
   drawEvo();
   if (mode === 'play') drawNext();
   sizeTitle();
@@ -556,10 +628,12 @@ function frame(now) {
     }
     if (!paused) fx.update(dt);
     updateVis(now);
+    if (feverUntil && now > feverUntil) { feverUntil = 0; if (game.combo < RULES.FEVER_COMBO) { feverOn = false; sound.fever = false; $('fever-frame').classList.remove('on'); } }
     feverLevel += ((feverOn ? 1 : 0) - feverLevel) * 0.08;
     renderer.fever = feverLevel;
     const held = mode === 'play' && !game.over ? { tier: game.current, visible: game.canDrop } : null;
     renderer.draw(game, fx, alpha, now, held);
+    if (!spritesWarm) spritesWarm = renderer.sprites.warm(dt < 20 ? 3 : 1);
     tickScore();
     if (retryArmedUntil && now > retryArmedUntil) { retryArmedUntil = 0; $('b-retry').classList.remove('armed'); $('retry-lbl').textContent = 'リトライ'; }
     // auto quality: if frames are slow, lower resolution and particle count

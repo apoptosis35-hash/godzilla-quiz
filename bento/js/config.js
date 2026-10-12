@@ -45,7 +45,36 @@ export const RULES = {
   OPENING_DROPS: 3,       // the first drops only use tiers 0..2
 };
 
-// 11 tiers. r = collision radius in world units.
+// Power drop: pull down to throw the piece harder.
+export const POWER = {
+  DEADZONE_PX: 12,        // a pull shorter than this (css px) is a normal drop
+  PULL_PX: 120,           // pull distance (css px) for full power
+  INIT_SPEED: 19,         // initial downward speed at full power (units per step); normal drop is PHYS.DROP_SPEED
+  CURVE: 1.25,            // power -> speed curve (fine control at low power)
+  FLIGHT_CAP: 24,         // speed cap for a power piece until it hits something (normal cap: PHYS.MAX_SPEED)
+  MASS_BOOST: 1.6,        // the piece is up to (1 + this) times heavier for a moment at impact
+  BOOST_MS: 320,          // how long the extra weight lasts after the first contact
+  BOUNCE: 0.3,            // extra restitution at impact (x power): hard hits bounce things upward
+  SUBSTEPS: 4,            // solver substeps while a power piece is flying or hitting
+  SMASH_MIN: 0.31,        // weaker throws are treated like normal drops (no smash)
+  SMASH_WINDOW: 900,      // ms after impact in which merges of struck pieces count as a smash
+  SMASH_EXTEND: 600,      // each smash merge keeps the window open this much longer
+  SMASH_MAX_MS: 3200,     // a smash event never lasts longer than this
+  SHOCK_SPEED: 1.6,       // a struck piece passes the shock on only while it moves at least this fast
+  BONUS_STEP: 0.1,        // smash bonus: +10% per smash merge after the first ...
+  BONUS_MAX: 0.4,         // ... up to +40%
+};
+
+export function powerSpeed(p) {
+  const k = Math.pow(Math.max(0, Math.min(1, p)), POWER.CURVE);
+  return PHYS.DROP_SPEED + (POWER.INIT_SPEED - PHYS.DROP_SPEED) * k;
+}
+
+export function smashBonus(count) {
+  return count >= 2 ? Math.min(POWER.BONUS_MAX, POWER.BONUS_STEP * (count - 1)) : 0;
+}
+
+// 10 tiers. r = collision radius in world units.
 export const TIERS = [
   { id: 'edamame', name: 'えだまめ',          r: 13,  color: '#8fd35b', light: '#d4f7a0', dark: '#4f9a2f', fx: '#a8e86f',
     desc: 'ちいさくても元気いっぱい。ころころ転がるのが大好き。' },
@@ -81,12 +110,12 @@ export function comboMultiplier(combo) {
   return m;
 }
 
-export function scoreFor(newTier, combo) {
-  return Math.round(basePoints(newTier) * comboMultiplier(combo));
+export function scoreFor(newTier, combo, smash = 0) {
+  return Math.round(basePoints(newTier) * comboMultiplier(combo) * (1 + smashBonus(smash)));
 }
 
-export function kingScore(combo) {
-  return Math.round(RULES.KING_BONUS * comboMultiplier(combo));
+export function kingScore(combo, smash = 0) {
+  return Math.round(RULES.KING_BONUS * comboMultiplier(combo) * (1 + smashBonus(smash)));
 }
 
 // Titles shown on the result screen.

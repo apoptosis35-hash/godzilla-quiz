@@ -59,7 +59,7 @@
     <div id="stage">
       <canvas id="cv"></canvas>
       <div id="banners" aria-live="polite"></div>
-      <div id="hint" class="hint">ゆびで左右に動かして<br>はなすとポン！</div>
+      <div id="hint" class="hint">ゆびで左右に動かして<br>はなすとポン！<small>下に引っぱるとパワードロップ</small></div>
       <div id="fever-frame"></div>
     </div>
     <div id="evo"><canvas id="evo-cv"></canvas></div>
@@ -101,6 +101,7 @@
       <div class="r-grid">
         <div><span>最大れんさ</span><b id="r-combo">0</b></div>
         <div><span>合体</span><b id="r-merges">0</b></div>
+        <div class="r-smash"><span>最大スマッシュ</span><b id="r-smash">-</b></div>
         <div class="r-top"><span>いちばん大きいおかず</span><canvas id="r-top-cv" width="120" height="120"></canvas><b id="r-top">-</b></div>
       </div>
       <div class="r-disc" id="r-disc" hidden></div>
@@ -138,7 +139,7 @@
         <button class="btn sub" id="set-title"><svg><use href="#i-home"/></svg>タイトルへ</button>
         <button class="btn danger" id="set-reset">記録を消す</button>
       </div>
-      <p class="credit">おべんとうポン！ v1.1 ・ キャラクター/効果音/BGMはすべてプログラムで作ったオリジナルです。物理演算: Matter.js (MIT)</p>
+      <p class="credit">おべんとうポン！ v1.2 ・ キャラクター/効果音/BGMはすべてプログラムで作ったオリジナルです。物理演算: Matter.js (MIT)</p>
     </div>
   </section>
 

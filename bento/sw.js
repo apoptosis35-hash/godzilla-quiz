@@ -1,5 +1,5 @@
 // Offline cache: serve from cache instantly, refresh the cache in the background.
-const CACHE = 'obento-pon-v3';
+const CACHE = 'obento-pon-v4';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'vendor/matter.min.js',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',

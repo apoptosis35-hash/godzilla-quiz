@@ -133,6 +133,37 @@ export class Sound {
     }
   }
 
+  // gauge crossing 31% / 71% / MAX while pulling
+  charge(level) {
+    if (!this.se || !this.ok) return;
+    const f = [660, 880, 1320][level - 1] || 660;
+    this.tone({ f, f2: f * 1.25, type: 'triangle', d: 0.07, v: 0.07 + level * 0.02 });
+    if (level === 3) this.tone({ f: f * 1.5, type: 'sine', t: 0.05, d: 0.18, v: 0.07, echo: true });
+  }
+
+  // release of a power drop: a whoosh that grows with the power
+  powerDrop(p) {
+    if (!this.se || !this.ok) return;
+    this.noiseHit({ d: 0.12 + p * 0.1, v: 0.08 + p * 0.12, f: 1800 + p * 1600, q: 0.9 });
+    this.tone({ f: 520 + p * 300, f2: 180, type: 'sine', d: 0.12 + p * 0.06, v: 0.12 + p * 0.1 });
+  }
+
+  // the moment a power drop hits: a soft "dosun", firmer at high power (kept below the merge "pon")
+  impact(p) {
+    if (!this.se || !this.ok) return;
+    this.tone({ f: 150 - p * 40, f2: 55, type: 'sine', a: 0.003, d: 0.22 + p * 0.12, v: 0.22 + p * 0.22 });
+    this.noiseHit({ d: 0.08 + p * 0.08, v: 0.06 + p * 0.1, f: 700, type: 'lowpass', q: 0.6 });
+    if (p > 0.7) this.noiseHit({ t: 0.01, d: 0.05, v: 0.06, f: 3500, q: 1.5 });
+  }
+
+  // SMASH banner sting; pitch climbs with the smash count
+  smash(count) {
+    if (!this.se || !this.ok) return;
+    const i = Math.min(SCALE.length - 3, count + 2);
+    [0, 1, 2].forEach((k) => this.tone({ f: hz(SCALE[i + k] + 12), type: 'square', t: k * 0.04, a: 0.003, d: 0.12, v: 0.045, q: 3200, echo: true }));
+    this.noiseHit({ d: 0.12, v: 0.05, f: 6000, type: 'highpass', q: 0.6 });
+  }
+
   comboFanfare(combo) {
     if (!this.se || !this.ok) return;
     const top = Math.min(SCALE.length - 4, combo);
