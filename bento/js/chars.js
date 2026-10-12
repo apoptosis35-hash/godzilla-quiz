@@ -206,10 +206,10 @@ function shadow(ctx, r) {
 }
 
 // ---------------------------------------------------------------- characters
-const DRAW = [];
+const DRAW = {}; // keyed by TIERS[].id
 
 // 0 えだまめ: a plump two-bean pod with a little sprout
-DRAW[0] = (ctx, r, e, T) => {
+DRAW.edamame = (ctx, r, e, T) => {
   const pod = () => {
     ctx.beginPath();
     ctx.arc(-r * 0.4, r * 0.04, r * 0.6, Math.PI * 0.55, Math.PI * 1.45);
@@ -236,7 +236,7 @@ DRAW[0] = (ctx, r, e, T) => {
 };
 
 // 1 ミニトマト: glossy, shy, with a star calyx
-DRAW[1] = (ctx, r, e, T) => {
+DRAW.tomato = (ctx, r, e, T) => {
   blob(ctx, r, (a) => 0.97 - 0.035 * Math.cos(2 * a) * (Math.sin(a) < 0 ? 1 : 0.3));
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill(); outline(ctx, r, '#8e1f1c');
   gloss(ctx, r, -0.38, -0.42, 0.34, 0.2, 0.85);
@@ -258,7 +258,7 @@ DRAW[1] = (ctx, r, e, T) => {
 };
 
 // 2 たまごやき: rolled omelette with layers
-DRAW[2] = (ctx, r, e, T) => {
+DRAW.tamago = (ctx, r, e, T) => {
   const w = r * 1.72, h = r * 1.5;
   roundRect(ctx, -w / 2, -h / 2, w, h, r * 0.42);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark, -0.3, -0.5); ctx.fill();
@@ -278,7 +278,7 @@ DRAW[2] = (ctx, r, e, T) => {
 };
 
 // 3 タコさんウインナー: red dome with 4 curly legs and a pout
-DRAW[3] = (ctx, r, e, T) => {
+DRAW.tako = (ctx, r, e, T) => {
   // legs
   ctx.fillStyle = T.color; ctx.strokeStyle = '#a32a40'; ctx.lineWidth = Math.max(1.2, r * 0.07);
   for (let i = 0; i < 4; i++) {
@@ -305,7 +305,7 @@ DRAW[3] = (ctx, r, e, T) => {
 };
 
 // 4 シュウマイ: pleated wrapper, meat on top and a green pea
-DRAW[4] = (ctx, r, e, T) => {
+DRAW.shumai = (ctx, r, e, T) => {
   const w = r * 1.76, h = r * 1.56, top = -h / 2 + r * 0.1;
   // body
   ctx.beginPath();
@@ -332,7 +332,7 @@ DRAW[4] = (ctx, r, e, T) => {
 };
 
 // 5 からあげ: lumpy crispy fried chicken, confident brows
-DRAW[5] = (ctx, r, e, T) => {
+DRAW.karaage = (ctx, r, e, T) => {
   const f = (a) => 0.94 + 0.04 * Math.sin(5 * a + 1) + 0.025 * Math.sin(9 * a + 2) + 0.015 * Math.sin(17 * a);
   blob(ctx, r, f);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill();
@@ -345,7 +345,7 @@ DRAW[5] = (ctx, r, e, T) => {
 };
 
 // 6 エビフライ: long golden panko body on a slant with a proud red tail
-DRAW[6] = (ctx, r, e, T) => {
+DRAW.ebi = (ctx, r, e, T) => {
   const ang = -0.62;
   // tail (behind) at the upper right end of the body
   ctx.save(); ctx.rotate(ang); ctx.translate(r * 0.92, 0); ctx.rotate(Math.PI / 2);
@@ -368,21 +368,8 @@ DRAW[6] = (ctx, r, e, T) => {
   face(ctx, r, e, { y: 0.04, gap: 0.27, s: 0.95, mouth: 'smile', sparkle: true, brows: 'soft' });
 };
 
-// 7 コロッケ: flat oval, fluffy crumbs, easy-going
-DRAW[7] = (ctx, r, e, T) => {
-  const f = (a) => (1 / Math.sqrt(Math.cos(a) ** 2 / 0.99 + Math.sin(a) ** 2 / 0.72)) * (0.97 + 0.025 * Math.sin(19 * a) + 0.015 * Math.sin(31 * a));
-  blob(ctx, r, f);
-  ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark, -0.3, -0.5); ctx.fill();
-  ctx.save(); ctx.clip();
-  crumbs(ctx, r, 31, 70, ['rgba(255,226,150,0.7)', 'rgba(150,90,30,0.3)', 'rgba(250,205,120,0.6)'], 0.98);
-  ctx.restore();
-  blob(ctx, r, f); outline(ctx, r, '#6b3f12');
-  gloss(ctx, r, -0.4, -0.38, 0.32, 0.12, 0.45);
-  face(ctx, r, e, { y: 0.02, gap: 0.3, s: 0.95, mouth: 'cat' });
-};
-
-// 8 ハンバーグ: glossy demi-glace sauce, gentle big brother
-DRAW[8] = (ctx, r, e, T) => {
+// 7 ハンバーグ: glossy demi-glace sauce, gentle big brother
+DRAW.hamburg = (ctx, r, e, T) => {
   const f = (a) => (1 / Math.sqrt(Math.cos(a) ** 2 / 0.98 + Math.sin(a) ** 2 / 0.8)) * (0.98 + 0.012 * Math.sin(7 * a));
   blob(ctx, r, f);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill();
@@ -411,8 +398,8 @@ DRAW[8] = (ctx, r, e, T) => {
   face(ctx, r, e, { y: 0.2, gap: 0.3, s: 0.92, mouth: 'smile', brows: 'soft', ink: '#2a1208', cheek: 'rgba(255,130,120,0.6)' });
 };
 
-// 9 おにぎり: rice triangle, nori band, pure smile
-DRAW[9] = (ctx, r, e, T) => {
+// 8 おにぎり: rice triangle, nori band, pure smile
+DRAW.onigiri = (ctx, r, e, T) => {
   const tri = () => blob(ctx, r, (a) => 0.88 + 0.13 * Math.cos(3 * (a + Math.PI / 2)));
   tri();
   ctx.fillStyle = radial(ctx, r, '#ffffff', '#fbfcff', '#d5dbe4', -0.25, -0.4); ctx.fill();
@@ -433,8 +420,8 @@ DRAW[9] = (ctx, r, e, T) => {
   face(ctx, r, e, { y: -0.08, gap: 0.29, s: 1.0, mouth: 'open', blush: 1.3 });
 };
 
-// 10 おべんとう王: round lacquer bento with crown and colorful okazu
-DRAW[10] = (ctx, r, e, T) => {
+// 9 おべんとう王: round lacquer bento with crown and colorful okazu
+DRAW.king = (ctx, r, e, T) => {
   // lacquer box
   ctx.beginPath(); ctx.arc(0, 0, r * 0.98, 0, Math.PI * 2);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill(); outline(ctx, r, '#6e1019', 0.06);
@@ -479,7 +466,7 @@ DRAW[10] = (ctx, r, e, T) => {
 export function drawChar(ctx, tier, r, expr = 'normal') {
   const T = TIERS[tier];
   ctx.save();
-  DRAW[tier](ctx, r, expr, T);
+  DRAW[T.id](ctx, r, expr, T);
   // gentle bottom shading for a soft 3D feel
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = shadow(ctx, r);

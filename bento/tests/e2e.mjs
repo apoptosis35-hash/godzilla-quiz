@@ -56,7 +56,7 @@ await shot(p, '02-play');
 await G(() => {
   const g = window.__obento.game;
   for (const b of [...g.foods]) g._remove(b);
-  let y = 600; for (const t of [5, 4, 3, 2, 1, 0, 0]) { const r = [13, 18, 25, 31, 38, 46][t]; y -= r; g.makeFood(t, 400 - r, y, { landed: true, born: -1e9 }); y -= r - 0.5; }
+  let y = 600; for (const t of [5, 4, 3, 2, 1, 0, 0]) { const r = [13, 18, 25, 32, 40, 49][t]; y -= r; g.makeFood(t, 400 - r, y, { landed: true, born: -1e9 }); y -= r - 0.5; }
 });
 await p.waitForTimeout(1200);
 const chain = await G(() => window.__obento.game.maxCombo);
@@ -104,7 +104,7 @@ check('one-tap retry starts a clean game', fresh.n === 0 && fresh.s === 0 && !fr
 // zukan
 await p.tap('#b-zukan'); await p.waitForTimeout(400);
 const z = await p.textContent('#z-count');
-check('encyclopedia lists discoveries', /\d+ \/ 11/.test(z), z);
+check('encyclopedia lists discoveries', /\d+ \/ 10/.test(z), z);
 await shot(p, '05-zukan');
 await p.tap('#s-zukan [data-close]');
 

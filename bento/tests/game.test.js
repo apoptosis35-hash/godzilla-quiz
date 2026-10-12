@@ -135,7 +135,7 @@ test('fast pieces never pass through walls, floor or each other', () => {
 });
 
 test('a big piece dropped on a small one barely squashes it', () => {
-  for (const big of [4, 7, 9]) {
+  for (const big of [4, 6, 7, 8, MAX_TIER]) {
     const g = new Game({ rng: seeded(3) });
     const e = place(g, 0, 200);
     g.makeFood(big, 203, WORLD.DROP_Y, { dropping: true });
@@ -145,7 +145,8 @@ test('a big piece dropped on a small one barely squashes it', () => {
       sink = Math.max(sink, e.position.y + e.circleRadius - WORLD.FLOOR);
       for (const b of g.foods) if (b !== e) overlap = Math.max(overlap, b.circleRadius + e.circleRadius - Math.hypot(b.position.x - e.position.x, b.position.y - e.position.y));
     }
-    assert.ok(sink < 4, `sink ${sink}`);
+    // the king is only ever made by merging; a full-speed hit can push a bean in for a moment, never through
+    assert.ok(sink < (big === MAX_TIER ? TIERS[0].r * 0.8 : 4), `tier ${big} sink ${sink}`);
     assert.ok(overlap < 7, `overlap ${overlap}`);
   }
 });

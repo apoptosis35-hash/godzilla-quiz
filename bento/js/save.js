@@ -2,7 +2,7 @@
 import { TIERS } from './config.js';
 
 const KEY = 'obento-pon:v1';
-const RESUME = 'obento-pon:resume';
+const RESUME = 'obento-pon:resume2'; // saved boards from the 11-okazu version are not restored
 
 function blank() {
   return {
@@ -24,6 +24,11 @@ export const store = {
         const d = JSON.parse(raw);
         const b = blank();
         this.data = { ...b, ...d, settings: { ...b.settings, ...(d.settings || {}) } };
+        // v1.0 had 11 okazu (コロッケ was No.8); drop its slot so the others keep their counts
+        if (Array.isArray(d.born) && d.born.length === 11 && TIERS.length === 10) {
+          d.born.splice(7, 1);
+          if (this.data.bestTier >= 7) this.data.bestTier--;
+        }
         if (!Array.isArray(this.data.born) || this.data.born.length !== TIERS.length) {
           const born = b.born; (d.born || []).forEach((v, i) => { if (i < born.length) born[i] = v | 0; }); this.data.born = born;
         }
