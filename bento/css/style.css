@@ -97,6 +97,7 @@ svg { width: 1em; height: 1em; }
 .banner.smash { font-size: 38px; --bc: #3d7bff; font-style: italic; letter-spacing: 0.03em; }
 .banner.smash2 { font-size: 40px; --bc: #8a3dff; font-style: italic; letter-spacing: 0.03em; }
 .banner.supersmash { font-size: 44px; --bc: #ff2f6d; font-style: italic; letter-spacing: 0.03em; animation-duration: 1.1s; }
+.banner.low { margin-top: 104px; }
 .banner.disc { font-size: 22px; --bc: #3fae86; top: 112px; animation-duration: 1.6s; }
 @keyframes banner {
   0% { transform: translate(-50%, -50%) scale(0.3) rotate(-6deg); opacity: 0; }

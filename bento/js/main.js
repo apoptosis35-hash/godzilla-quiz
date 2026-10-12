@@ -464,6 +464,8 @@ function banner(cls, html, ms) {
   const el = document.createElement('div');
   el.className = `banner ${cls}`;
   el.innerHTML = html;
+  // a second banner while one is still showing goes underneath instead of on top of it
+  if (cls !== 'disc' && layer.querySelector('.banner:not(.disc):not(.low)')) el.classList.add('low');
   layer.appendChild(el);
   setTimeout(() => el.remove(), ms + 50);
 }
