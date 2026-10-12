@@ -1,6 +1,6 @@
 // Canvas renderer: bento box, characters (interpolated between physics steps),
 // chopsticks holding the next piece, guide line and effects.
-import { WORLD, TIERS, POWER } from './config.js';
+import { WORLD, TIERS, POWER, tierInfo } from './config.js';
 import { Sprites } from './chars.js';
 
 const VIEW = { x0: -WORLD.VIEW_PAD, x1: WORLD.W + WORLD.VIEW_PAD, y0: 0, y1: WORLD.FLOOR + WORLD.VIEW_PAD };
@@ -209,7 +209,7 @@ export class Renderer {
       const w = (img.width / px) * s;
       const sq = v.sq;
       ctx.save();
-      ctx.translate(x, y + v.hop + sq * TIERS[f.tier].r * 0.5);
+      ctx.translate(x, y + v.hop + sq * tierInfo(f.tier).r * 0.5);
       ctx.scale(1 + sq * 0.6, 1 - sq);
       ctx.rotate(a);
       ctx.drawImage(img, -w / 2, -w / 2, w, w);

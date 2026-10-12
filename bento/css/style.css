@@ -264,3 +264,47 @@ svg { width: 1em; height: 1em; }
 #cameo-thumb { width: 48px; height: 64px; object-fit: cover; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 0 2px #ffd84a; flex: none; }
 .cameo-btns { margin-top: 6px; }
 .cameo-btns .btn { min-height: 42px; font-size: 14px; padding: 0 8px; }
+
+/* ---------------------------------------------------------- online battle */
+.vs-btn { background: linear-gradient(#a8e6ff, #6cc8f0); border-color: #3a9fd0; color: #fff; box-shadow: 0 4px 0 #2d86b3; text-shadow: 0 2px 0 rgba(30, 100, 140, 0.4); }
+.vs-btn svg { color: #fff; }
+.vs-time { font-size: 13px; font-weight: 900; color: #3a8fc4; font-variant-numeric: tabular-nums; }
+.vs-time.hurry { color: #e0566a; animation: bump 0.5s ease-in-out infinite alternate; }
+.vs-card { width: 86px; align-items: center; padding: 2px 4px; gap: 0; }
+.vs-card .lbl { line-height: 1.1; }
+.vs-card canvas { width: 50px; height: 50px; display: block; }
+.vs-score { font-size: 12px; font-weight: 900; color: #3a8fc4; font-variant-numeric: tabular-nums; line-height: 1; }
+.vs-card.danger { animation: vsdanger 0.4s ease-in-out infinite alternate; }
+@keyframes vsdanger { to { background: #ffe1e6; border-color: #ff7a8c; } }
+#ojama-warn { position: absolute; left: 50%; top: 18%; transform: translateX(-50%); z-index: 3; pointer-events: none; display: flex; align-items: center; gap: 4px; background: rgba(255, 255, 255, 0.92); border: 3px solid #d0355a; color: #b0203f; font-weight: 900; padding: 4px 12px; border-radius: 999px; box-shadow: 0 4px 12px rgba(180, 30, 60, 0.25); animation: bump 0.45s ease-in-out infinite alternate; }
+#ojama-warn b { font-size: 20px; }
+#ojama-warn small { font-size: 12px; }
+#ojama-warn .ume { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #ff9ab0, #d0355a 55%, #8a1534); }
+#countdown { position: absolute; inset: 0; z-index: 6; display: grid; place-items: center; pointer-events: none; font-size: 96px; font-weight: 900; color: #fff; text-shadow: 0 6px 0 #3a9fd0, 4px 0 0 #3a9fd0, -4px 0 0 #3a9fd0, 0 -4px 0 #3a9fd0, 0 12px 20px rgba(40, 90, 130, 0.35); }
+#countdown.go { font-size: 64px; color: #fff8d2; text-shadow: 0 6px 0 #f09a16, 4px 0 0 #f09a16, -4px 0 0 #f09a16, 0 -4px 0 #f09a16; }
+#countdown span { animation: banner 0.9s cubic-bezier(.2, .9, .3, 1.2) forwards; display: block; }
+.lobby { text-align: center; display: flex; flex-direction: column; gap: 10px; }
+.l-view { display: flex; flex-direction: column; gap: 10px; }
+.l-rule { font-size: 13.5px; line-height: 1.7; font-weight: 700; color: var(--ink2); background: #f0f9ff; border-radius: 14px; padding: 10px 12px; margin: 0; text-align: left; }
+.l-rule b { color: #d0355a; }
+.l-label { margin: 4px 0 0; font-weight: 900; color: var(--ink2); font-size: 14px; }
+.l-code { font-size: 46px; font-weight: 900; letter-spacing: 0.18em; color: #2d86b3; background: #f0f9ff; border: 3px dashed #8fd0f0; border-radius: 18px; padding: 6px 0 6px 0.18em; font-variant-numeric: tabular-nums; user-select: text; -webkit-user-select: text; }
+.l-input { font: inherit; font-size: 40px; font-weight: 900; letter-spacing: 0.18em; text-align: center; text-transform: uppercase; color: #2d86b3; border: 3px solid #8fd0f0; border-radius: 18px; padding: 6px 0; background: #fff; width: 100%; -webkit-user-select: text; user-select: text; }
+.l-input:focus { outline: none; border-color: #3a9fd0; }
+.l-help { margin: 0; font-size: 13px; font-weight: 700; color: var(--ink2); }
+.l-status { margin: 0; min-height: 1.4em; font-size: 14px; font-weight: 900; color: #3a8fc4; }
+.l-status.err { color: #d6334a; }
+.l-ok { font-size: 26px; font-weight: 900; color: #2f9e74; }
+.l-rec { margin: 0; font-size: 12.5px; font-weight: 700; color: var(--ink2); }
+.vr-head { font-size: 44px; font-weight: 900; color: #ff7a1f; }
+.vr-head.lose { color: #7a8aa0; }
+.vr-head.draw { color: #3a8fc4; }
+.vr-why { font-size: 14px; font-weight: 700; color: var(--ink2); min-height: 1.2em; }
+.vr-scores { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; }
+.vr-scores > div:not(.vr-vs) { background: #fff7ea; border-radius: 14px; padding: 8px; display: flex; flex-direction: column; font-weight: 700; }
+.vr-scores span { font-size: 12px; color: var(--ink2); }
+.vr-scores b { font-size: 26px; font-weight: 900; color: var(--pink-d); font-variant-numeric: tabular-nums; }
+.vr-vs { font-weight: 900; color: #3a8fc4; }
+.vr-rec { font-size: 13px; font-weight: 700; color: var(--ink2); }
+
+.bbtn:disabled { opacity: 0.4; box-shadow: none; transform: none; }

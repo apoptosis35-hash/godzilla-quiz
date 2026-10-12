@@ -1,4 +1,5 @@
-import { WORLD, TIERS, RULES, POWER, MAX_TIER, rankFor, comboMultiplier, smashBonus } from './config.js';
+import { WORLD, TIERS, RULES, POWER, MAX_TIER, VS, OJAMA_TIER, tierInfo, attackFor, KING_ATTACK, seeded, rankFor, comboMultiplier, smashBonus } from './config.js';
+import { Link, cleanCode, CODE_LEN } from './online.js';
 import { Game } from './game.js';
 import { Renderer } from './render.js';
 import { FX } from './fx.js';
@@ -33,7 +34,7 @@ let bestAtStart = 0;
 let bestShown = false;
 const DPR = () => Math.min(window.devicePixelRatio || 1, 2.5);
 
-window.__obento = { game, store, fx, renderer, sound }; // handy for debugging / automated tests
+window.__obento = { game, store, fx, renderer, sound, get vs() { return vs; } }; // handy for debugging / automated tests
 
 // ---------------------------------------------------------------- settings
 function applySettings() {
@@ -75,6 +76,7 @@ $('c-yes').addEventListener('click', () => { closeModal('s-confirm'); if (confir
 $('c-no').addEventListener('click', () => { closeModal('s-confirm'); confirmCb = null; });
 
 function toTitle() {
+  if (vs.on) { vsLeave(); return; }
   if (mode === 'play' && !game.over) store.saveResume(game.snapshot());
   mode = 'title'; paused = false;
   for (const m of [...modals, 's-over']) show(m, false);
@@ -92,11 +94,14 @@ function updateTitle() {
 }
 
 // ---------------------------------------------------------------- game flow
-function startGame(snapshot) {
+function startGame(snapshot, seed) {
   sound.unlock();
+  vs.on = seed != null;
+  game.rng = vs.on ? seeded(seed) : Math.random;
   game.reset();
+  vsHud();
   if (snapshot) game.restore(snapshot);
-  store.clearResume();
+  if (!vs.on) store.clearResume();
   fx.clear();
   mode = 'play'; paused = false;
   feverOn = false; feverLevel = 0; feverUntil = 0; renderer.fever = 0; endPull();
@@ -107,7 +112,7 @@ function startGame(snapshot) {
   retryArmedUntil = 0;
   renderer.heldShowAt = performance.now();
   renderer.aimX = WORLD.W / 2;
-  for (const m of [...modals, 's-over', 's-title']) show(m, false);
+  for (const m of [...modals, 's-over', 's-title', 's-lobby', 's-vsresult']) show(m, false);
   $('banners').innerHTML = '';
   $('fever-frame').classList.remove('on');
   $('cameo').classList.remove('peek');
@@ -123,8 +128,8 @@ $('t-play').addEventListener('click', () => { sound.unlock(); sound.click(); sta
 $('t-resume').addEventListener('click', () => { const s = store.loadResume(); sound.unlock(); sound.click(); startGame(s); });
 $('t-zukan').addEventListener('click', () => openModal('s-zukan'));
 $('t-settings').addEventListener('click', () => openModal('s-settings'));
-$('b-zukan').addEventListener('click', () => openModal('s-zukan'));
-$('b-settings').addEventListener('click', () => openModal('s-settings'));
+$('b-zukan').addEventListener('click', () => { if (!vs.on) openModal('s-zukan'); });
+$('b-settings').addEventListener('click', () => { if (!vs.on) openModal('s-settings'); });
 $('o-retry').addEventListener('click', () => { sound.click(); startGame(); });
 $('o-title').addEventListener('click', () => toTitle());
 $('o-zukan').addEventListener('click', () => openModal('s-zukan'));
@@ -134,6 +139,7 @@ $('set-reset').addEventListener('click', () => confirmBox('ハイスコアと図
 // one-tap retry; if a game with real progress is running, a second tap within 2s confirms
 $('b-retry').addEventListener('click', () => {
   sound.unlock();
+  if (vs.on) return;
   const now = performance.now();
   if (mode !== 'play') return;
   if (game.over || game.score < 300 || now < retryArmedUntil) { sound.click(); startGame(); return; }
@@ -243,7 +249,7 @@ game.on('impact', ({ a, b, speed }) => {
   for (const body of [a, b]) {
     if (!body.food) continue;
     const v = renderer.vis(body);
-    tier = Math.max(tier, body.food.tier);
+    if (!body.food.ojama) tier = Math.max(tier, body.food.tier);
     if (speed > 2.2) { v.hitUntil = now + 170; v.sq = Math.min(0.2, Math.max(v.sq, speed * 0.018)); }
   }
   if (speed > 2.5) sound.tap(speed, tier);
@@ -289,6 +295,7 @@ game.on('merge', (e) => {
   }
   setCombo(e.combo);
   checkBest();
+  if (vs.on) vsAttack(attackFor(e.tier, e.level, e.smash), e.x, e.y, e.combo);
   if (e.smash >= 2 && e.smash >= e.level) {
     onSmash(e);
   } else if (e.combo >= RULES.BIG_COMBO) {
@@ -335,6 +342,11 @@ game.on('smashImpact', (e) => {
   haptics.pulse(p > 0.7 ? 25 : 14);
   if (p > 0.7) fx.kick(1.2 + (p - 0.7) * 3);   // gentle: at most ~2 units
   const v = renderer.vis(e.body); v.sq = Math.min(0.24, 0.1 + p * 0.14); v.hitUntil = performance.now() + 220;
+});
+
+game.on('ojamaPop', ({ list }) => {
+  for (const o of list) { fx.burst(o.x, o.y, 14, '#ff7a9a', 1, 0); fx.popup(o.x, o.y - 10, 'パチン！', 13, '#d0355a'); }
+  sound.tap(6, 1);
 });
 
 game.on('smashEnd', (e) => { if (e.count > (store.data.maxSmash || 0)) { store.data.maxSmash = e.count; } });
@@ -400,6 +412,7 @@ game.on('king', (e) => {
   haptics.pulse(60);
   setCombo(e.combo);
   checkBest();
+  if (vs.on) { vsAttack(KING_ATTACK, e.x, e.y, e.combo); vsSend({ t: 'ev', k: 'king' }); }
   updateHud();
 });
 
@@ -408,7 +421,7 @@ game.on('comboEnd', () => {
   setTimeout(() => { if (game.combo === 0) setCombo(0); }, 400);
 });
 
-game.on('over', (e) => onGameOver(e));
+game.on('over', (e) => { if (vs.on) vsOver(); else onGameOver(e); });
 
 function checkBest() {
   if (bestShown || bestAtStart <= 0 || game.score <= bestAtStart) return;
@@ -534,6 +547,329 @@ function buildStats() {
   ].map(([k, v]) => `<span>${k}</span><b>${v}</b>`).join('');
 }
 
+// ---------------------------------------------------------------- online battle
+const vs = {
+  on: false, link: null, phase: 'idle',        // idle | lobby | count | play | done
+  startAt: 0, endAt: 0, pending: 0, pendingAt: 0, sentAt: 0, sent: 0, received: 0,
+  opp: { foods: [], score: 0, d: 0 }, me: null, them: null, again: false, oppAgain: false,
+  giveupArmed: 0, endTimer: 0,
+};
+function vsSend(msg) { if (vs.link) vs.link.send(msg); }
+
+function vsHud() {
+  $('vs-card').hidden = !vs.on; $('combo-card').hidden = vs.on;
+  $('vs-time').hidden = !vs.on; $('best-row').hidden = vs.on;
+  $('b-retry').hidden = vs.on; $('b-giveup').hidden = !vs.on;
+  $('b-settings').disabled = $('b-zukan').disabled = vs.on;
+  $('ojama-warn').hidden = true; $('countdown').hidden = true;
+  $('evo').style.visibility = vs.on ? 'hidden' : '';
+}
+
+function lobbyView(id) {
+  for (const v of ['l-choose', 'l-hostview', 'l-joinview', 'l-ready']) $(v).hidden = v !== id;
+  $('l-back').hidden = id === 'l-choose' || id === 'l-ready';
+}
+function lobbyStatus(text, err = false) { const el = $('l-status'); el.textContent = text; el.classList.toggle('err', err); }
+function vsRecordText() {
+  const d = store.data;
+  return (d.vsWins || d.vsLosses || d.vsDraws) ? `これまでの対戦 ${d.vsWins || 0}勝 ${d.vsLosses || 0}敗${d.vsDraws ? ` ${d.vsDraws}分` : ''}` : '';
+}
+function openLobby(code) {
+  sound.unlock(); sound.click();
+  vsDisconnect();
+  vs.phase = 'lobby';
+  lobbyView('l-choose'); lobbyStatus('');
+  $('l-rec').textContent = vsRecordText();
+  show('s-lobby');
+  if (typeof window.Peer !== 'function') { lobbyStatus('通信の部品を読みこめませんでした。ページを再読み込みしてください', true); return; }
+  if (code) { lobbyView('l-joinview'); $('l-input').value = code; }
+}
+function vsDisconnect() { if (vs.link) { vs.link.close(); vs.link = null; } }
+function newLink() {
+  vsDisconnect();
+  const link = new Link({
+    onStatus: (t) => {
+      if (link !== vs.link) return;
+      if (t === 'waiting') { $('l-code').textContent = link.code; lobbyStatus('相手を待っています…'); }
+      else lobbyStatus(t);
+    },
+    onOpen: () => {
+      if (link !== vs.link) return;
+      haptics.pulse(20); sound.firstDiscovery();
+      lobbyView('l-ready'); lobbyStatus('');
+      $('l-start').hidden = !link.isHost; $('l-wait').hidden = link.isHost;
+      vsSend({ t: 'hello', v: 1 });
+    },
+    onMessage: (m) => { if (link === vs.link) vsMessage(m); },
+    onClose: (reason) => { if (link === vs.link) vsLost(reason); },
+  });
+  vs.link = link;
+  return link;
+}
+$('t-vs').addEventListener('click', () => openLobby());
+$('l-close').addEventListener('click', () => { sound.click(); vsDisconnect(); vs.phase = 'idle'; show('s-lobby', false); });
+$('l-back').addEventListener('click', () => { sound.click(); vsDisconnect(); lobbyView('l-choose'); lobbyStatus(''); });
+$('l-host').addEventListener('click', () => { sound.click(); lobbyView('l-hostview'); $('l-code').textContent = '-----'; newLink().host(); });
+$('l-join-open').addEventListener('click', () => { sound.click(); lobbyView('l-joinview'); lobbyStatus(''); setTimeout(() => $('l-input').focus(), 50); });
+$('l-input').addEventListener('input', (e) => { e.target.value = cleanCode(e.target.value); });
+$('l-input').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('l-join').click(); });
+$('l-join').addEventListener('click', () => {
+  const code = cleanCode($('l-input').value);
+  if (code.length !== CODE_LEN) { lobbyStatus(`${CODE_LEN}文字のコードを入れてね`, true); return; }
+  sound.click(); $('l-input').blur();
+  newLink().join(code);
+});
+$('l-share').addEventListener('click', () => {
+  const code = vs.link && vs.link.code;
+  if (!code) return;
+  const url = `${shareURL()}?room=${code}`;
+  sound.click();
+  if (navigator.share) navigator.share({ title: 'おべんとうポン！ネット対戦', text: `おべんとうポン！で対戦しよう！ へやコード ${code}`, url }).catch(() => {});
+  else navigator.clipboard?.writeText(`おべんとうポン！で対戦しよう！ へやコード ${code}\n${url}`).then(() => toast('リンクをコピーしました'), () => toast(url));
+});
+$('l-start').addEventListener('click', () => {
+  sound.click();
+  const seed = (Math.random() * 4294967296) >>> 0;
+  vsSend({ t: 'start', seed });
+  vsBegin(seed);
+});
+
+function vsMessage(m) {
+  switch (m.t) {
+    case 'start': vsBegin(m.seed >>> 0); break;
+    case 's':
+      if (Array.isArray(m.f)) vs.opp.foods = m.f;
+      vs.opp.score = m.sc | 0; vs.opp.d = +m.d || 0;
+      break;
+    case 'atk': vsIncoming(Math.min(30, m.n | 0)); break;
+    case 'ev': if (vs.phase === 'play' && m.k === 'king') banner('disc', 'あいてが おべんとう王を完成！', 1400); else if (vs.phase === 'play' && m.k === 'chain') banner('disc', `あいてが ${m.n | 0}れんさ！`, 1100); break;
+    case 'end': vsTheyEnded(m); break;
+    case 'again': vs.oppAgain = true; vsMaybeRematch(); break;
+    case 'bye': vsLost('相手が対戦をやめました'); break;
+    default: break;
+  }
+}
+
+function vsBegin(seed) {
+  clearTimeout(vs.endTimer);
+  Object.assign(vs, { phase: 'count', pending: 0, pendingAt: 0, sent: 0, received: 0, me: null, them: null, again: false, oppAgain: false, opp: { foods: [], score: 0, d: 0 } });
+  startGame(null, seed);
+  paused = true;                       // frozen during the 3-2-1
+  $('hint').classList.add('off');
+  vs.startAt = performance.now() + 3000;
+  vs.endAt = vs.startAt + VS.TIME_MS;
+  vsCountdown();
+}
+function vsCountdown() {
+  const el = $('countdown');
+  el.hidden = false; el.classList.remove('go');
+  const steps = ['3', '2', '1'];
+  steps.forEach((n, i) => setTimeout(() => { if (vs.phase !== 'count') return; el.innerHTML = `<span>${n}</span>`; sound.charge(1 + (i === 2 ? 1 : 0)); }, i * 1000));
+  setTimeout(() => {
+    if (vs.phase !== 'count') return;
+    el.classList.add('go'); el.innerHTML = '<span>スタート！</span>';
+    sound.charge(3); haptics.pulse(25);
+    vs.phase = 'play'; paused = false; resetClock();
+    setTimeout(() => { el.hidden = true; }, 800);
+  }, 3000);
+}
+
+// my merges send うめぼし; they first cancel the ones heading my way
+function vsAttack(n, x, y, combo) {
+  if (vs.phase !== 'play' || n <= 0) return;
+  if (vs.pending > 0) {
+    const c = Math.min(vs.pending, n);
+    vs.pending -= c; n -= c;
+    fx.popup(x, y - 40, `そうさい −${c}`, 16, '#3a9fd0');
+    vsWarn();
+  }
+  if (n > 0) {
+    vsSend({ t: 'atk', n });
+    vs.sent += n;
+    fx.popup(x, y - 40, `うめぼし×${n} →`, 16, '#d0355a');
+  }
+  if (combo >= 3) vsSend({ t: 'ev', k: 'chain', n: combo });
+}
+function vsIncoming(n) {
+  if (vs.phase !== 'play' || n <= 0) return;
+  if (vs.pending === 0) vs.pendingAt = performance.now() + VS.ATTACK_DELAY;
+  vs.pending += n; vs.received += n;
+  sound.warn(); haptics.pulse(15);
+  vsWarn();
+}
+function vsWarn() {
+  $('ojama-warn').hidden = vs.pending <= 0;
+  $('ojama-n').textContent = `×${vs.pending}`;
+}
+
+let vsMiniCtx = null;
+function vsTick(now) {
+  if (vs.phase !== 'play') { if (vs.phase === 'done' || vs.phase === 'count') vsDrawOpp(); return; }
+  // うめぼし shower
+  if (vs.pending > 0 && now >= vs.pendingAt && !game.over) {
+    const n = Math.min(vs.pending, VS.RAIN_MAX);
+    for (let i = 0; i < n; i++) game.dropOjama(((i + 0.5) / n) * WORLD.W + (Math.random() - 0.5) * 50);
+    vs.pending -= n; vs.pendingAt = now + VS.RAIN_GAP;
+    vsWarn();
+  }
+  // board to the opponent
+  if (now - vs.sentAt > 1000 / VS.SEND_HZ) {
+    vs.sentAt = now;
+    const f = [];
+    for (const b of game.foods) f.push(b.food.tier, Math.round(b.position.x), Math.round(b.position.y));
+    vsSend({ t: 's', f, sc: game.score, d: +game.danger.toFixed(2) });
+  }
+  // timer
+  const left = Math.max(0, vs.endAt - now);
+  const sec = Math.ceil(left / 1000);
+  const el = $('vs-time');
+  el.textContent = `のこり ${Math.floor(sec / 60)}:${String(sec % 60).padStart(2, '0')}`;
+  el.classList.toggle('hurry', sec <= 10);
+  if (left <= 0 && !game.over) { game.stop(); vsMyEnd('time'); }
+  vsDrawOpp();
+}
+
+function vsDrawOpp() {
+  const cv = $('vs-cv');
+  const dpr = DPR();
+  const w = 50, h = 50;
+  if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); vsMiniCtx = null; }
+  const ctx = vsMiniCtx || (vsMiniCtx = cv.getContext('2d'));
+  ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.clearRect(0, 0, cv.width, cv.height);
+  const k = Math.min(w / (WORLD.W + 24), h / (WORLD.FLOOR - WORLD.TOP + 30)) * dpr;
+  ctx.setTransform(k, 0, 0, k, (cv.width - WORLD.W * k) / 2, cv.height - (WORLD.FLOOR + 8) * k);
+  ctx.fillStyle = vs.opp.d > 0.05 ? `rgba(255,${180 - 100 * vs.opp.d},${190 - 100 * vs.opp.d},1)` : '#fffaf0';
+  ctx.strokeStyle = '#ef6874'; ctx.lineWidth = 14;
+  ctx.beginPath(); ctx.rect(0, WORLD.TOP, WORLD.W, WORLD.FLOOR - WORLD.TOP); ctx.fill(); ctx.stroke();
+  const f = vs.opp.foods;
+  for (let i = 0; i + 2 < f.length; i += 3) {
+    const T = tierInfo(f[i]);
+    if (!T) continue;
+    ctx.fillStyle = T.color; ctx.strokeStyle = T.dark; ctx.lineWidth = 5;
+    ctx.beginPath(); ctx.arc(f[i + 1], f[i + 2], T.r, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+  }
+  $('vs-score').textContent = vs.opp.score.toLocaleString();
+  $('vs-card').classList.toggle('danger', vs.opp.d > 0.3 && vs.phase === 'play');
+}
+
+// ---- ending: whoever overflows first loses; otherwise the higher score wins
+function vsOver() { vsMyEnd('over'); }
+function vsMyEnd(why) {
+  if (vs.me) return;
+  vs.me = { score: game.score, why };
+  vsSend({ t: 'end', score: game.score, why });
+  vsSettle();
+}
+function vsTheyEnded(m) {
+  vs.them = { score: m.score | 0, why: m.why };
+  vs.opp.score = vs.them.score;
+  if (!vs.me) { game.stop(); vsMyEnd(m.why === 'over' ? 'stopped' : 'time'); }
+  else vsSettle();
+}
+function vsSettle() {
+  if (vs.phase === 'done') return;
+  vs.phase = 'done';
+  sound.fever = false; feverOn = false; $('fever-frame').classList.remove('on');
+  $('ojama-warn').hidden = true;
+  if (vs.them) { vsShowResult(); return; }
+  // wait a moment for their final score; fall back to the last one we heard
+  vs.endTimer = setTimeout(() => { if (!vs.them) vs.them = { score: vs.opp.score, why: 'time' }; vsShowResult(); }, 5000);
+  vs.waitThem = setInterval(() => { if (vs.them) { clearInterval(vs.waitThem); clearTimeout(vs.endTimer); vsShowResult(); } }, 100);
+}
+function vsOutcome(me, them) {
+  const meOver = me.why === 'over', themOver = them.why === 'over';
+  if (meOver && !themOver) return 'lose';
+  if (themOver && !meOver) return 'win';
+  return me.score > them.score ? 'win' : me.score < them.score ? 'lose' : 'draw';
+}
+function vsShowResult() {
+  clearInterval(vs.waitThem); clearTimeout(vs.endTimer);
+  if (mode !== 'play' && mode !== 'over') return;
+  if ($('s-vsresult').classList.contains('show')) return;
+  const me = vs.me, them = vs.them;
+  const res = vsOutcome(me, them);
+  const d = store.data;
+  if (res === 'win') d.vsWins = (d.vsWins || 0) + 1; else if (res === 'lose') d.vsLosses = (d.vsLosses || 0) + 1; else d.vsDraws = (d.vsDraws || 0) + 1;
+  store.save();
+  const head = $('vr-head');
+  head.textContent = res === 'win' ? 'かち！' : res === 'lose' ? 'まけ…' : 'ひきわけ';
+  head.className = `vr-head ${res === 'win' ? '' : res}`;
+  $('vr-why').textContent =
+    me.why === 'over' && them.why !== 'over' ? 'おかずが箱からあふれちゃった' :
+    them.why === 'over' && me.why !== 'over' ? '相手のおかずがあふれた！' : 'スコアで勝負！';
+  $('vr-me').textContent = me.score.toLocaleString();
+  $('vr-opp').textContent = them.score.toLocaleString();
+  $('vr-rec').textContent = `おくったうめぼし ${vs.sent}こ ・ ${vsRecordText()}`;
+  $('vr-again').disabled = false; $('vr-wait').hidden = true;
+  setTimeout(() => {
+    mode = 'over';
+    show('s-vsresult');
+    if (res === 'win') { sound.highscore(); fx.confetti(WORLD.W / 2, WORLD.TOP, WORLD.W, 80); } else sound.gameover();
+  }, 900);
+}
+$('vr-again').addEventListener('click', () => {
+  sound.click();
+  vs.again = true; vsSend({ t: 'again' });
+  $('vr-again').disabled = true; $('vr-wait').hidden = false;
+  vsMaybeRematch();
+});
+function vsMaybeRematch() {
+  if (!vs.again || !vs.oppAgain || !vs.link || !vs.link.isHost) return;
+  const seed = (Math.random() * 4294967296) >>> 0;
+  vsSend({ t: 'start', seed });
+  vsBegin(seed);
+}
+$('vr-quit').addEventListener('click', () => { sound.click(); vsLeave(); });
+function vsLeave() {
+  vsSend({ t: 'bye' });
+  setTimeout(vsDisconnect, 150);
+  vs.on = false; vs.phase = 'idle';
+  clearInterval(vs.waitThem); clearTimeout(vs.endTimer);
+  show('s-vsresult', false); show('s-lobby', false);
+  vsHud();
+  mode = 'title'; paused = false;
+  show('s-title'); updateTitle();
+}
+// the connection dropped (or the opponent left)
+function vsLost(reason) {
+  vs.link = null;
+  if (vs.phase === 'lobby' || vs.phase === 'idle') { lobbyStatus(reason, true); $('l-back').hidden = false; return; }
+  if (vs.phase === 'play' || vs.phase === 'count') {
+    game.stop();
+    vs.phase = 'done';
+    $('countdown').hidden = true; $('ojama-warn').hidden = true;
+    head2('しょうぶなし', reason);
+    return;
+  }
+  // already finished: just stop offering a rematch
+  $('vr-again').disabled = true; $('vr-wait').hidden = false; $('vr-wait').textContent = reason;
+}
+function head2(title, why) {
+  const head = $('vr-head');
+  head.textContent = title; head.className = 'vr-head draw';
+  $('vr-why').textContent = why;
+  $('vr-me').textContent = game.score.toLocaleString();
+  $('vr-opp').textContent = vs.opp.score.toLocaleString();
+  $('vr-rec').textContent = vsRecordText();
+  $('vr-again').disabled = true; $('vr-wait').hidden = false; $('vr-wait').textContent = '相手とつながっていないので、もう1回はできません';
+  mode = 'over';
+  show('s-vsresult');
+}
+// give up: tap twice
+$('b-giveup').addEventListener('click', () => {
+  if (!vs.on || vs.phase !== 'play') return;
+  const now = performance.now();
+  if (now < vs.giveupArmed) { vs.giveupArmed = 0; $('giveup-lbl').textContent = 'こうさん'; game.stop(); vsMyEnd('over'); return; }
+  vs.giveupArmed = now + 2000; $('giveup-lbl').textContent = 'もう一度で こうさん';
+  setTimeout(() => { if (performance.now() >= vs.giveupArmed) $('giveup-lbl').textContent = 'こうさん'; }, 2100);
+  sound.click();
+});
+// an invite link (?room=CODE) opens the lobby ready to join
+{
+  const room = cleanCode(new URLSearchParams(location.search).get('room'));
+  if (room.length === CODE_LEN) setTimeout(() => { if (mode === 'title') openLobby(room); }, 300);
+}
+
 // ---------------------------------------------------------------- input
 const stage = $('stage');
 let activePointer = null;
@@ -598,7 +934,7 @@ document.addEventListener('dblclick', (e) => e.preventDefault());
 for (const ev of ['pointerdown', 'touchend', 'keydown']) window.addEventListener(ev, () => sound.unlock(), { passive: true });
 
 // ---------------------------------------------------------------- lifecycle
-function saveProgress() { if (mode === 'play' && !game.over && game.dropCount > 0) store.saveResume(game.snapshot()); store.save(); }
+function saveProgress() { if (mode === 'play' && !vs.on && !game.over && game.dropCount > 0) store.saveResume(game.snapshot()); store.save(); }
 document.addEventListener('visibilitychange', () => {
   if (document.hidden) { saveProgress(); sound.suspend(); }
   else { sound.resume(); resetClock(); }
@@ -672,10 +1008,11 @@ function frame(now) {
   if (mode === 'title') {
     drawTitle(now, dt);
   } else {
+    if (vs.on && mode === 'play') vsTick(now);
     if (mode === 'play' && !paused) {
       alpha = game.update(dt);
       if (game.danger > 0.3 && !game.over && now - lastWarn > 650) { lastWarn = now; sound.warn(); }
-      if (now - lastSave > 5000) { lastSave = now; if (!game.over && game.dropCount > 0) store.saveResume(game.snapshot()); store.save(); }
+      if (now - lastSave > 5000) { lastSave = now; if (!vs.on && !game.over && game.dropCount > 0) store.saveResume(game.snapshot()); store.save(); }
     }
     if (!paused) fx.update(dt);
     updateVis(now);

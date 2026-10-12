@@ -1,6 +1,6 @@
 // Core game: physics world, dropping, merging, chains, score and game over.
 // No DOM access here, so the same code runs in the browser and in node tests.
-import { WORLD, PHYS, RULES, POWER, TIERS, MAX_TIER, scoreFor, kingScore, powerSpeed } from './config.js';
+import { WORLD, PHYS, RULES, POWER, TIERS, MAX_TIER, OJAMA_TIER, VS, tierInfo, scoreFor, kingScore, powerSpeed } from './config.js';
 
 const M = () => globalThis.Matter;
 
@@ -89,7 +89,7 @@ export class Game {
 
   makeFood(tier, x, y, extra = {}) {
     const { Bodies, Composite } = M();
-    const r = TIERS[tier].r;
+    const r = tierInfo(tier).r;
     const b = Bodies.circle(x, y, r, {
       restitution: PHYS.RESTITUTION, friction: PHYS.FRICTION, frictionStatic: PHYS.FRICTION_STATIC,
       frictionAir: PHYS.FRICTION_AIR, density: PHYS.DENSITY * Math.pow(TIERS[0].r / r, PHYS.DENSITY_FALLOFF), slop: 0.04, label: 'food',
@@ -98,10 +98,23 @@ export class Game {
     b.prevX = x; b.prevY = y; b.prevA = 0;
     Composite.add(this.engine.world, b);
     this.foods.push(b);
+    if (tier === OJAMA_TIER) { b.food.ojama = true; return b; }
     if (tier > this.highestTier) this.highestTier = tier;
     this.created[tier]++;
     return b;
   }
+
+  // a うめぼし sent by the opponent falls in at x
+  dropOjama(x) {
+    if (this.over) return null;
+    const r = tierInfo(OJAMA_TIER).r;
+    const b = this.makeFood(OJAMA_TIER, Math.max(r + 1, Math.min(WORLD.W - r - 1, x)), WORLD.DROP_Y - 10, { dropping: true });
+    M().Body.setVelocity(b, { x: 0, y: 2 });
+    return b;
+  }
+
+  // end the game without a game-over (time up in a battle)
+  stop() { this.over = true; }
 
   get canDrop() { return !this.over && this.cooldown <= 0; }
 
@@ -158,7 +171,7 @@ export class Game {
         const rv = Math.abs((a.velocity.x - b.velocity.x) * p.collision.normal.x + (a.velocity.y - b.velocity.y) * p.collision.normal.y);
         if (rv > 1.2) this.emit('impact', { a, b, speed: rv });
       }
-      if (!fa || !fb || fa.tier !== fb.tier) continue;
+      if (!fa || !fb || fa.tier !== fb.tier || fa.ojama) continue;
       if (fa.merging || fb.merging || fa.dead || fb.dead) continue;
       fa.merging = fb.merging = true;  // each body joins at most one merge
       this.pending.push([a, b]);
@@ -232,6 +245,7 @@ export class Game {
 
       if (tier === MAX_TIER) {
         // two kings: both vanish with a big bonus
+        this._popOjama(x, y, TIERS[MAX_TIER].r);
         const points = kingScore(level, smash);
         this.score += points;
         this.kings++;
@@ -250,10 +264,21 @@ export class Game {
       nb.food.scale = s0;
       nb.food.grow = { from: s0, t: 0 };
       Body.setVelocity(nb, { x: vx, y: vy });
+      this._popOjama(cx, cy, r);
       const points = scoreFor(nt, level, smash);
       this.score += points;
       this.emit('merge', { body: nb, tier: nt, from: tier, x: cx, y: cy, points, combo: this.combo, level, smash, parts, firstTime });
     }
+  }
+
+  _popOjama(x, y, r) {
+    const popped = [];
+    for (const b of [...this.foods]) {
+      if (!b.food.ojama || b.food.dead) continue;
+      if (Math.hypot(b.position.x - x, b.position.y - y) <= r + b.circleRadius + VS.POP_PAD) popped.push(b);
+    }
+    for (const b of popped) { this._remove(b); this.score += VS.POP_POINTS; }
+    if (popped.length) this.emit('ojamaPop', { list: popped.map((b) => ({ x: b.position.x, y: b.position.y })) });
   }
 
   _chainLevel(fa, fb) {

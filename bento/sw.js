@@ -1,9 +1,9 @@
 // Offline cache: serve from cache instantly, refresh the cache in the background.
-const CACHE = 'obento-pon-v6';
+const CACHE = 'obento-pon-v7';
 const CORE = [
-  './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'vendor/matter.min.js',
+  './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'vendor/matter.min.js', 'vendor/peerjs.min.js',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'img/cameo.jpg',
-  'js/main.js', 'js/config.js', 'js/game.js', 'js/render.js', 'js/chars.js', 'js/fx.js', 'js/audio.js', 'js/save.js',
+  'js/main.js', 'js/config.js', 'js/game.js', 'js/render.js', 'js/chars.js', 'js/fx.js', 'js/audio.js', 'js/save.js', 'js/online.js',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

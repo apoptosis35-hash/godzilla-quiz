@@ -100,6 +100,37 @@ export const TIERS = [
 
 export const MAX_TIER = TIERS.length - 1;
 
+// おじゃま piece for online battles: never merges, pops when a merge happens right next to it
+export const OJAMA_TIER = 99;
+export const OJAMA = { id: 'ume', name: 'うめぼし', r: 15, color: '#d0355a', light: '#ff8fa8', dark: '#8a1534', fx: '#ff7a9a' };
+export function tierInfo(t) { return t === OJAMA_TIER ? OJAMA : TIERS[t]; }
+
+// Online battle rules
+export const VS = {
+  TIME_MS: 180000,        // a match lasts 3 minutes; higher score wins if nobody overflows
+  ATTACK_DELAY: 2200,     // incoming うめぼし wait this long (so you can cancel them) before falling
+  RAIN_MAX: 5,            // at most this many fall at once
+  RAIN_GAP: 900,          // ms between showers
+  POP_PAD: 10,            // a merge this close (beyond touching) pops a うめぼし
+  POP_POINTS: 20,
+  SEND_HZ: 10,            // board updates sent to the opponent per second
+};
+
+// How many うめぼし a merge sends: bigger okazu and longer chains/smashes send more
+export function attackFor(tier, level = 1, smash = 0) {
+  let n = tier >= 3 ? Math.floor((tier - 1) / 2) : 0;   // tier 3-4: 1, 5-6: 2, 7-8: 3, 9: 4
+  if (level >= 2) n += level - 1;
+  if (smash >= 2) n += 1;
+  return n;
+}
+export const KING_ATTACK = 6;
+
+// deterministic RNG so both players get the same okazu order
+export function seeded(seed = 1) {
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+
 // Points for creating tier n: 10, 30, 60, ... 550
 export function basePoints(tier) { return 5 * tier * (tier + 1); }
 

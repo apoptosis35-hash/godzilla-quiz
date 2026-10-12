@@ -1,7 +1,7 @@
 // Original okazu characters, drawn procedurally so they stay crisp at any size.
 // Every character is drawn centred at (0,0) for collision radius r.
 // Expressions: normal, blink, surprised, hit, happy, sad, worried, power (determined, for power drops)
-import { TIERS } from './config.js';
+import { TIERS, tierInfo } from './config.js';
 
 export const EXPRESSIONS = ['normal', 'blink', 'surprised', 'hit', 'happy', 'sad', 'worried', 'power'];
 export const SPRITE_PAD = 1.3; // sprites are this many radii wide on each side (crowns, tails)
@@ -481,6 +481,22 @@ DRAW.king = (ctx, r, e, T) => {
 
 // Draw onto any canvas, even one that already has a background: the shading pass
 // needs a transparent layer, so the character is composed on its own sprite first.
+// おじゃま: a wrinkly, very sour umeboshi
+DRAW.ume = (ctx, r, e, T) => {
+  const f = (a) => 0.95 + 0.03 * Math.sin(6 * a + 0.5) + 0.02 * Math.sin(11 * a);
+  blob(ctx, r, f);
+  ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill();
+  ctx.save(); ctx.clip();
+  ctx.strokeStyle = 'rgba(110,10,40,0.35)'; ctx.lineWidth = r * 0.07; ctx.lineCap = 'round';
+  for (const [x0, y0, x1, y1] of [[-0.6, -0.5, -0.2, -0.65], [0.2, 0.55, 0.6, 0.35], [-0.65, 0.3, -0.35, 0.6], [0.45, -0.55, 0.7, -0.2]]) {
+    ctx.beginPath(); ctx.moveTo(x0 * r, y0 * r); ctx.quadraticCurveTo((x0 + x1) / 2 * r + r * 0.1, (y0 + y1) / 2 * r, x1 * r, y1 * r); ctx.stroke();
+  }
+  ctx.restore();
+  blob(ctx, r, f); outline(ctx, r, '#5e0c24');
+  gloss(ctx, r, -0.35, -0.4, 0.3, 0.16, 0.7);
+  face(ctx, r, e === 'normal' || e === 'blink' ? 'hit' : e, { y: 0.05, gap: 0.3, mouth: 'tiny', cheek: 'rgba(255,170,190,0.8)' });
+};
+
 export function drawChar(ctx, tier, r, expr = 'normal') {
   const img = renderSprite(tier, expr, r);
   ctx.drawImage(img, -img.width / 2, -img.height / 2);
@@ -488,7 +504,7 @@ export function drawChar(ctx, tier, r, expr = 'normal') {
 
 // Draws straight into ctx; ctx must be transparent around the character.
 function drawCharLayer(ctx, tier, r, expr) {
-  const T = TIERS[tier];
+  const T = tierInfo(tier);
   ctx.save();
   DRAW[T.id](ctx, r, expr, T);
   // gentle bottom shading for a soft 3D feel
@@ -514,7 +530,7 @@ export class Sprites {
   get(tier, expr) {
     const key = tier * 16 + EXPRESSIONS.indexOf(expr);
     let c = this.cache.get(key);
-    if (!c) { c = renderSprite(tier, expr, TIERS[tier].r * this.px); this.cache.set(key, c); }
+    if (!c) { c = renderSprite(tier, expr, tierInfo(tier).r * this.px); this.cache.set(key, c); }
     return c;
   }
 }
