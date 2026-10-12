@@ -340,12 +340,17 @@ game.on('smashImpact', (e) => {
 game.on('smashEnd', (e) => { if (e.count > (store.data.maxSmash || 0)) { store.data.maxSmash = e.count; } });
 
 // ---------------------------------------------------------------- reward photo (device-only)
-let cameoURL = store.loadCameo();
+// the family photo ships with the game; a photo picked in settings (kept on this device) replaces it
+const DEFAULT_CAMEO = 'img/cameo.jpg';
+let customCameo = store.loadCameo();
+let cameoURL = customCameo || DEFAULT_CAMEO;
 function refreshCameoUI() {
-  $('cameo-thumb').hidden = !cameoURL; if (cameoURL) $('cameo-thumb').src = cameoURL;
-  $('cameo-test').hidden = $('cameo-del').hidden = !cameoURL;
-  $('cameo-pick').textContent = cameoURL ? 'かえる' : '写真をえらぶ';
-  if (cameoURL) $('cameo').querySelector('img').src = cameoURL;
+  cameoURL = customCameo || DEFAULT_CAMEO;
+  $('cameo-thumb').hidden = false; $('cameo-thumb').src = cameoURL;
+  $('cameo-test').hidden = false;
+  $('cameo-del').hidden = !customCameo;
+  $('cameo-pick').textContent = 'かえる';
+  $('cameo').querySelector('img').src = cameoURL;
 }
 function showCameo() {
   if (!cameoURL) return;
@@ -377,11 +382,11 @@ $('cameo-file').addEventListener('change', async (e) => {
   try {
     const data = await shrinkImage(f);
     if (!store.saveCameo(data)) { toast('保存できませんでした'); return; }
-    cameoURL = data; refreshCameoUI(); toast('ごほうび写真をセットしました');
+    customCameo = data; refreshCameoUI(); toast('ごほうび写真をかえました');
   } catch (err) { toast('この画像は読みこめませんでした'); }
 });
 $('cameo-test').addEventListener('click', () => { sound.click(); closeModal('s-settings'); setTimeout(showCameo, 200); });
-$('cameo-del').addEventListener('click', () => confirmBox('ごほうび写真を消しますか？', () => { store.saveCameo(null); cameoURL = null; refreshCameoUI(); }));
+$('cameo-del').addEventListener('click', () => confirmBox('元の写真にもどしますか？', () => { store.saveCameo(null); customCameo = null; refreshCameoUI(); }));
 refreshCameoUI();
 
 game.on('king', (e) => {
@@ -390,7 +395,7 @@ game.on('king', (e) => {
   fx.confetti(e.x, e.y - 60, WORLD.W, 120);
   fx.popup(e.x, e.y, `+${e.points}`, 34, '#e09a12');
   fx.flash = 1; fx.kick(7);
-  if (cameoURL) setTimeout(showCameo, 350); else banner('king', 'おべんとう<br>だいかんせい！', 1800);
+  setTimeout(showCameo, 350);
   sound.king();
   haptics.pulse(60);
   setCombo(e.combo);

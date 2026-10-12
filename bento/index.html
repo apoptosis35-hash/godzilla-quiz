@@ -20,6 +20,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="おべんとうポン">
 <meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, noimageindex">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
@@ -136,13 +137,13 @@
         <label class="set"><span>演出をひかえめに</span><input type="checkbox" class="tog" id="set-fx"></label>
       </div>
       <div class="set cameo-set">
-        <div class="cameo-txt"><span>ごほうび写真</span><small>おべんとう王どうしを合体させると、ちょっとだけ出てきます。写真はこの端末の中だけに保存され、どこにも送られません。</small></div>
+        <div class="cameo-txt"><span>ごほうび写真</span><small>おべんとう王どうしを合体させると、ちょっとだけ出てきます。「かえる」で選んだ写真は、この端末の中だけに保存されます。</small></div>
         <img id="cameo-thumb" alt="" hidden>
       </div>
       <div class="row cameo-btns">
         <button class="btn sub" id="cameo-pick">写真をえらぶ</button>
         <button class="btn sub" id="cameo-test" hidden>ためす</button>
-        <button class="btn sub" id="cameo-del" hidden>けす</button>
+        <button class="btn sub" id="cameo-del" hidden>元にもどす</button>
       </div>
       <input type="file" id="cameo-file" accept="image/*" hidden>
       <div class="set-stats" id="set-stats"></div>

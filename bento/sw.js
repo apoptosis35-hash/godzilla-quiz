@@ -1,8 +1,8 @@
 // Offline cache: serve from cache instantly, refresh the cache in the background.
-const CACHE = 'obento-pon-v5';
+const CACHE = 'obento-pon-v6';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'vendor/matter.min.js',
-  'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png',
+  'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'img/cameo.jpg',
   'js/main.js', 'js/config.js', 'js/game.js', 'js/render.js', 'js/chars.js', 'js/fx.js', 'js/audio.js', 'js/save.js',
 ];
 self.addEventListener('install', (e) => {
