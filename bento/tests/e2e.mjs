@@ -10,7 +10,7 @@ const check = (name, ok, info = '') => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${
 const shot = (p, n) => SHOTS && p.screenshot({ path: `${SHOTS}/${n}.png` });
 
 const browser = await chromium.launch();
-const ctx = await browser.newContext({ ...devices['iPhone 13'] });
+const ctx = await browser.newContext({ ...devices['iPhone 13'], permissions: ['clipboard-read', 'clipboard-write'] });
 const p = await ctx.newPage();
 const errors = [];
 p.on('pageerror', (e) => errors.push(e.message));
@@ -21,6 +21,13 @@ await p.goto(URL);
 await p.waitForTimeout(500);
 await shot(p, '01-title');
 check('title screen shown', await p.isVisible('#t-play'));
+check('link preview tags present', await G(() => !!document.querySelector('meta[property="og:image"]')));
+
+// share: native share sheet where available, otherwise the link is copied
+await G(() => { window.__shared = null; if (navigator.share) navigator.share = (d) => { window.__shared = d; return Promise.resolve(); }; });
+await p.tap('#t-share'); await p.waitForTimeout(300);
+const shared = await G(async () => window.__shared || { text: await navigator.clipboard.readText().catch(() => ''), toast: document.getElementById('toast').classList.contains('on') });
+check('share passes the game link', JSON.stringify(shared).includes('/bento/'), JSON.stringify(shared).slice(0, 120));
 
 await p.tap('#t-play');
 await p.waitForTimeout(250);

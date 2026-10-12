@@ -463,7 +463,15 @@ DRAW.king = (ctx, r, e, T) => {
   face(ctx, r, e, { y: -0.08, gap: 0.24, s: 0.9, mouth: 'cat', sparkle: true, blush: 1.2 });
 };
 
+// Draw onto any canvas, even one that already has a background: the shading pass
+// needs a transparent layer, so the character is composed on its own sprite first.
 export function drawChar(ctx, tier, r, expr = 'normal') {
+  const img = renderSprite(tier, expr, r);
+  ctx.drawImage(img, -img.width / 2, -img.height / 2);
+}
+
+// Draws straight into ctx; ctx must be transparent around the character.
+function drawCharLayer(ctx, tier, r, expr) {
   const T = TIERS[tier];
   ctx.save();
   DRAW[T.id](ctx, r, expr, T);
@@ -491,7 +499,7 @@ export function renderSprite(tier, expr, pr, { silhouette = false, dom = false }
   const c = typeof OffscreenCanvas !== 'undefined' && !dom ? new OffscreenCanvas(size, size) : Object.assign(document.createElement('canvas'), { width: size, height: size });
   const ctx = c.getContext('2d');
   ctx.translate(size / 2, size / 2);
-  drawChar(ctx, tier, pr, expr);
+  drawCharLayer(ctx, tier, pr, expr);
   if (silhouette) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.globalCompositeOperation = 'source-in';

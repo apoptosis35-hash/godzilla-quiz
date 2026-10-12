@@ -5,6 +5,15 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>おべんとうポン！</title>
 <meta name="description" content="おかずを落として合体させる、かわいい物理パズル。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="おべんとうポン！">
+<meta property="og:description" content="おなじおかずをくっつけて、おべんとう王をめざそう！ iPhoneで遊べる無料の物理パズル">
+<meta property="og:url" content="https://apoptosis35-hash.github.io/godzilla-quiz/bento/">
+<meta property="og:image" content="https://apoptosis35-hash.github.io/godzilla-quiz/bento/icons/ogp.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="ja_JP">
+<meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#fff6e4">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -25,6 +34,7 @@
   <symbol id="i-home" viewBox="0 0 24 24"><path fill="currentColor" d="M12 3.2 2.8 11h2.7v9h5v-6h3v6h5v-9h2.7Z"/></symbol>
   <symbol id="i-close" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" d="M6 6l12 12M18 6 6 18"/></symbol>
   <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10-6.8c.6-.4.6-1.2 0-1.6l-10-6.8C8.9 3.9 8 4.4 8 5.2Z"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M12 15V3.5M7.5 8 12 3.5 16.5 8M5 12.5V19a1.5 1.5 0 0 0 1.5 1.5h11A1.5 1.5 0 0 0 19 19v-6.5"/></symbol>
   <symbol id="i-crown" viewBox="0 0 24 24"><path fill="currentColor" d="M3 8l4.5 3.5L12 5l4.5 6.5L21 8l-2 10H5Z"/></symbol>
 </svg>
 
@@ -74,6 +84,7 @@
           <button class="btn sub" id="t-zukan"><svg><use href="#i-book"/></svg>図鑑</button>
           <button class="btn sub" id="t-settings"><svg><use href="#i-gear"/></svg>設定</button>
         </div>
+        <button class="btn sub" id="t-share"><svg><use href="#i-share"/></svg>友だちにシェア</button>
       </div>
       <p class="install" id="install-tip">Safariの共有ボタン →「ホーム画面に追加」で<br>アプリのように遊べます</p>
     </div>
@@ -98,6 +109,7 @@
         <button class="btn sub" id="o-title"><svg><use href="#i-home"/></svg>タイトル</button>
         <button class="btn sub" id="o-zukan"><svg><use href="#i-book"/></svg>図鑑</button>
       </div>
+      <button class="btn sub" id="o-share"><svg><use href="#i-share"/></svg>スコアをシェア</button>
     </div>
   </section>
 
@@ -138,6 +150,7 @@
     </div>
   </section>
 
+  <div id="toast" role="status"></div>
   <div id="rotate-tip">縦向きのほうが遊びやすいよ</div>
 </div>
 

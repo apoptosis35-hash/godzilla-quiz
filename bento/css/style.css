@@ -234,3 +234,6 @@ svg { width: 1em; height: 1em; }
 @media (prefers-reduced-motion: reduce) {
   .logo .l2, .logo .l2 b, .hint { animation: none; }
 }
+
+#toast { position: absolute; left: 50%; bottom: calc(var(--sab) + 90px); transform: translate(-50%, 20px); z-index: 40; background: rgba(90, 54, 38, 0.9); color: #fff; font-weight: 700; font-size: 14px; padding: 10px 18px; border-radius: 999px; opacity: 0; pointer-events: none; transition: opacity 0.2s, transform 0.2s; white-space: nowrap; }
+#toast.on { opacity: 1; transform: translate(-50%, 0); }

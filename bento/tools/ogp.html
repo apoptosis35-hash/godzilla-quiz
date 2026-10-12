@@ -1,0 +1,25 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0">
+<script type="module">
+import { drawChar } from '../js/chars.js';
+// link-preview image (1200x630) for LINE / X / Messages
+window.makeOgp = () => {
+  const W = 1200, H = 630, c = document.createElement('canvas'); c.width = W; c.height = H;
+  const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#ffe4e8'); bg.addColorStop(0.5, '#fff6e4'); bg.addColorStop(1, '#e2f6e4');
+  g.fillStyle = bg; g.fillRect(0, 0, W, H);
+  g.fillStyle = 'rgba(255,170,160,0.3)';
+  for (let y = 13; y < H; y += 26) for (let x = 13; x < W; x += 26) { g.beginPath(); g.arc(x, y, 2.2, 0, 7); g.fill(); }
+  const put = (t, x, y, r, e, a = 0) => { g.save(); g.translate(x, y); g.rotate(a); drawChar(g, t, r, e); g.restore(); };
+  put(9, 1020, 390, 145, 'happy', 0.08); put(7, 1130, 575, 62, 'normal', -0.2); put(5, 1115, 120, 62, 'happy', 0.3);
+  put(2, 95, 565, 52, 'happy', -0.15); put(1, 225, 590, 36, 'normal'); put(3, 95, 120, 56, 'blink', 0.2); put(0, 370, 75, 30, 'happy');
+  put(6, 700, 580, 46, 'happy', 0.2); put(4, 470, 590, 38, 'normal', -0.1);
+  const font = '"Hiragino Maru Gothic ProN","M PLUS Rounded 1c","Noto Sans CJK JP",sans-serif';
+  const outlined = (txt, x, y, size, fill, stroke) => { g.font = `900 ${size}px ${font}`; g.textAlign = 'center'; g.lineJoin = 'round'; g.lineWidth = size * 0.16; g.strokeStyle = stroke; g.strokeText(txt, x, y); g.fillStyle = fill; g.fillText(txt, x, y); };
+  outlined('おべんとう', 500, 245, 110, '#ffffff', '#e0566a');
+  outlined('ポン！', 500, 405, 170, '#fff8d2', '#f09a16');
+  g.font = `700 32px ${font}`; g.fillStyle = '#8a6450'; g.textAlign = 'center';
+  g.fillText('おなじおかずをくっつけて、おべんとう王をめざそう！', 500, 495);
+  return c.toDataURL('image/png');
+};
+document.title = 'ready';
+</script>

@@ -157,7 +157,33 @@ function onGameOver(e) {
   setTimeout(() => showResult(e, isBest), 1100);
 }
 
+// ---------------------------------------------------------------- share
+const shareURL = () => location.origin + location.pathname.replace(/index\.html$/, '');
+let toastTimer = 0;
+function toast(msg) {
+  const el = $('toast');
+  el.textContent = msg; el.classList.add('on');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove('on'), 1800);
+}
+async function share(text) {
+  sound.unlock(); sound.click();
+  const url = shareURL();
+  if (navigator.share) {
+    try { await navigator.share({ title: 'おべんとうポン！', text, url }); return; }
+    catch (e) { if (e && e.name === 'AbortError') return; }
+  }
+  try { await navigator.clipboard.writeText(`${text}\n${url}`); toast('リンクをコピーしました'); }
+  catch (e) { toast(url); }
+}
+let lastResult = null;
+$('t-share').addEventListener('click', () => share('おなじおかずをくっつけて、おべんとう王をめざそう！'));
+$('o-share').addEventListener('click', () => {
+  const r = lastResult;
+  share(r ? `おべんとうポン！で ${r.score.toLocaleString()}点！ 最大${r.maxCombo}れんさ、${TIERS[r.highestTier].name}まで作ったよ。` : 'おべんとうポン！で遊んだよ！');
+});
+
 function showResult(e, isBest) {
+  lastResult = e;
   if (mode !== 'play') return;
   mode = 'over';
   $('r-head').textContent = isBest ? 'すごい！' : 'おしまい！';
