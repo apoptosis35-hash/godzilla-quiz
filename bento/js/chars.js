@@ -17,7 +17,7 @@ function radial(ctx, r, light, base, dark, ox = -0.35, oy = -0.42) {
   return g;
 }
 
-function outline(ctx, r, color = INK, w = 0.075) {
+function outline(ctx, r, color = INK, w = 0.062) {
   ctx.lineWidth = Math.max(1.2, r * w);
   ctx.strokeStyle = color;
   ctx.lineJoin = 'round';
@@ -69,10 +69,10 @@ function crumbs(ctx, r, seed, count, colors, inner = 0.9) {
 // ---------------------------------------------------------------- faces
 // opts: y (face centre), s (scale), gap (eye spacing), mouth, brows, sparkle, blush
 function face(ctx, r, expr, o = {}) {
-  const s = (o.s || 1) * r;
+  const s = (o.s || 1) * r * 1.15;   // big faces read as cute, even small on screen
   const fy = (o.y || 0) * r;
   const gap = (o.gap || 0.34) * s;
-  const ew = 0.12 * s, eh = 0.16 * s;
+  const ew = 0.14 * s, eh = 0.175 * s;
   const ink = o.ink || INK;
   ctx.save();
   ctx.translate(0, fy);
@@ -80,10 +80,16 @@ function face(ctx, r, expr, o = {}) {
 
   // cheeks
   const cheekA = expr === 'happy' ? 1 : expr === 'sad' ? 0.55 : 0.85;
-  ctx.globalAlpha = cheekA * (o.blush || 1);
-  ctx.fillStyle = o.cheek || CHEEK;
+  ctx.globalAlpha = Math.min(1, cheekA * (o.blush || 1));
   for (const sx of [-1, 1]) {
-    ctx.beginPath(); ctx.ellipse(sx * gap * 1.55, eh * 1.1, s * 0.14, s * 0.085, 0, 0, Math.PI * 2); ctx.fill();
+    // soft airbrushed blush with a tiny shine
+    const cx = sx * gap * 1.55, cy = eh * 1.05, rx = s * 0.15;
+    const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, rx);
+    g.addColorStop(0, o.cheek || 'rgba(255,105,135,0.75)'); g.addColorStop(0.6, o.cheek || 'rgba(255,120,145,0.45)'); g.addColorStop(1, 'rgba(255,140,160,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(cx, cy, rx, s * 0.1, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.beginPath(); ctx.arc(cx + sx * rx * 0.25, cy - s * 0.03, s * 0.018, 0, Math.PI * 2); ctx.fill();
   }
   ctx.globalAlpha = 1;
 
@@ -91,18 +97,28 @@ function face(ctx, r, expr, o = {}) {
   ctx.lineWidth = Math.max(1, s * 0.055);
 
   const openEye = (sx, scale = 1, look = 0) => {
-    const x = sx * gap;
+    const x = sx * gap, w = ew * scale, h = eh * scale;
+    // dark rim, then a warm brown iris that glows lighter at the bottom
     ctx.fillStyle = ink;
-    ctx.beginPath(); ctx.ellipse(x, 0, ew * scale, eh * scale, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x, 0, w, h, 0, 0, Math.PI * 2); ctx.fill();
+    const ig = ctx.createRadialGradient(x, h * 0.55, 0, x, h * 0.2, h * 1.05);
+    ig.addColorStop(0, o.iris || '#a8653a'); ig.addColorStop(0.55, '#5a2f1a'); ig.addColorStop(1, 'rgba(40,20,10,0)');
+    ctx.fillStyle = ig;
+    ctx.beginPath(); ctx.ellipse(x, h * 0.06, w * 0.82, h * 0.86, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff';
-    ctx.beginPath(); ctx.arc(x - ew * 0.3 * scale + look, -eh * 0.38 * scale, ew * 0.42 * scale, 0, Math.PI * 2); ctx.fill();
-    ctx.beginPath(); ctx.arc(x + ew * 0.35 * scale + look, eh * 0.35 * scale, ew * 0.2 * scale, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(x - w * 0.28 + look, -h * 0.36, w * 0.46, h * 0.36, -0.3, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(x + w * 0.38 + look, h * 0.38, w * 0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 0.8;
+    ctx.beginPath(); ctx.arc(x + w * 0.3 + look, -h * 0.55, w * 0.1, 0, Math.PI * 2); ctx.fill();
+    ctx.globalAlpha = 1;
     if (o.sparkle) {
       ctx.save(); ctx.translate(x + ew * 0.1 * scale, -eh * 0.05 * scale); ctx.fillStyle = 'rgba(255,255,255,0.9)';
-      star4(ctx, ew * 0.38 * scale); ctx.restore();
+      star4(ctx, w * 0.38); ctx.restore();
     }
     ctx.fillStyle = ink;
   };
+
+  const happyEye = (sx) => { ctx.beginPath(); ctx.moveTo(sx * gap - ew * 1.1, eh * 0.3); ctx.quadraticCurveTo(sx * gap, -eh * 1.2, sx * gap + ew * 1.1, eh * 0.3); ctx.stroke(); };
 
   switch (expr) {
     case 'blink':
@@ -153,7 +169,9 @@ function face(ctx, r, expr, o = {}) {
       ctx.fillStyle = ink;
       break;
     default:
-      for (const sx of [-1, 1]) openEye(sx, 1);
+      if (o.happyEyes) { for (const sx of [-1, 1]) happyEye(sx); }        // always-smiling eyes
+      else if (o.wink) { openEye(-1, 1.05); happyEye(1); }                 // signature wink
+      else for (const sx of [-1, 1]) openEye(sx, 1);
   }
 
   if (o.brows && expr !== 'sad' && expr !== 'worried' && expr !== 'power') {
@@ -177,10 +195,10 @@ function face(ctx, r, expr, o = {}) {
     ctx.fillStyle = '#fff'; ctx.fill(); ctx.strokeStyle = ink; ctx.stroke();
     ctx.beginPath(); ctx.moveTo(-s * 0.12, my + s * 0.03); ctx.lineTo(s * 0.12, my + s * 0.03); ctx.lineWidth = Math.max(0.8, s * 0.025); ctx.stroke();
   } else if (expr === 'happy') {
-    ctx.beginPath(); ctx.moveTo(-s * 0.15, my - s * 0.02); ctx.quadraticCurveTo(0, my + s * 0.28, s * 0.15, my - s * 0.02); ctx.closePath();
-    ctx.fillStyle = '#7a2b22'; ctx.fill();
-    ctx.save(); ctx.clip(); ctx.fillStyle = '#ff7b7b'; ctx.beginPath(); ctx.ellipse(0, my + s * 0.16, s * 0.09, s * 0.06, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
-    ctx.strokeStyle = ink; ctx.stroke();
+    const path = () => { ctx.beginPath(); ctx.moveTo(-s * 0.17, my - s * 0.03); ctx.quadraticCurveTo(0, my + s * 0.3, s * 0.17, my - s * 0.03); ctx.closePath(); };
+    path(); ctx.fillStyle = '#7a2b22'; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = '#ff7b7b'; ctx.beginPath(); ctx.ellipse(0, my + s * 0.12, s * 0.09, s * 0.06, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    path(); ctx.strokeStyle = ink; ctx.stroke();
   } else if (expr === 'surprised' || expr === 'hit' && mouth !== 'tako') {
     ctx.fillStyle = '#7a2b22';
     ctx.beginPath(); ctx.ellipse(0, my + s * 0.03, s * 0.055, s * (expr === 'hit' ? 0.04 : 0.07), 0, 0, Math.PI * 2); ctx.fill();
@@ -193,13 +211,23 @@ function face(ctx, r, expr, o = {}) {
     ctx.beginPath(); ctx.ellipse(0, my + s * 0.04, s * 0.085, s * 0.075, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
     ctx.fillStyle = '#7a2b22'; ctx.beginPath(); ctx.ellipse(0, my + s * 0.04, s * 0.03, s * 0.028, 0, 0, Math.PI * 2); ctx.fill();
   } else if (mouth === 'open') {
-    ctx.beginPath(); ctx.moveTo(-s * 0.1, my); ctx.quadraticCurveTo(0, my + s * 0.18, s * 0.1, my); ctx.closePath();
-    ctx.fillStyle = '#7a2b22'; ctx.fill(); ctx.stroke();
+    // wide happy mouth: flat-ish top, round bottom, pink tongue
+    const mw = s * 0.17, md = s * 0.22, top = my - s * 0.035;
+    const path = () => {
+      ctx.beginPath();
+      ctx.moveTo(-mw, top); ctx.quadraticCurveTo(0, top + s * 0.03, mw, top);
+      ctx.bezierCurveTo(mw * 0.95, top + md * 1.25, -mw * 0.95, top + md * 1.25, -mw, top);
+      ctx.closePath();
+    };
+    path(); ctx.fillStyle = '#6e1f1c'; ctx.fill();
+    ctx.save(); ctx.clip(); ctx.fillStyle = '#ff8c8c';
+    ctx.beginPath(); ctx.ellipse(0, top + md * 0.95, mw * 0.6, md * 0.36, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore();
+    path(); ctx.lineWidth = Math.max(1, s * 0.035); ctx.stroke();
   } else if (mouth === 'grin') {
     ctx.beginPath(); ctx.moveTo(-s * 0.17, my - s * 0.02); ctx.quadraticCurveTo(0, my + s * 0.2, s * 0.17, my - s * 0.02); ctx.closePath();
     ctx.fillStyle = '#7a2b22'; ctx.fill();
     ctx.save(); ctx.clip(); ctx.fillStyle = '#fff'; ctx.fillRect(-s * 0.17, my - s * 0.03, s * 0.34, s * 0.05); ctx.restore();
-    ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(-s * 0.17, my - s * 0.02); ctx.quadraticCurveTo(0, my + s * 0.2, s * 0.17, my - s * 0.02); ctx.closePath(); ctx.stroke();
   } else if (mouth === 'tiny') {
     ctx.beginPath(); ctx.moveTo(-s * 0.06, my); ctx.quadraticCurveTo(0, my + s * 0.07, s * 0.06, my); ctx.stroke();
   } else {
@@ -248,7 +276,7 @@ DRAW.edamame = (ctx, r, e, T) => {
   ctx.beginPath(); ctx.moveTo(r * 0.82, -r * 0.3); ctx.quadraticCurveTo(r * 1.0, -r * 0.55, r * 0.92, -r * 0.75); ctx.stroke();
   ctx.fillStyle = '#7fd04a';
   ctx.beginPath(); ctx.ellipse(r * 0.82, -r * 0.82, r * 0.18, r * 0.09, -0.9, 0, Math.PI * 2); ctx.fill();
-  face(ctx, r, e, { y: 0.02, s: 1.0, gap: 0.36, mouth: 'cat', sparkle: true });
+  face(ctx, r, e, { y: 0.0, s: 0.92, gap: 0.36, mouth: 'open', sparkle: true });
 };
 
 // 1 ミニトマト: glossy, shy, with a star calyx
@@ -270,7 +298,7 @@ DRAW.tomato = (ctx, r, e, T) => {
   ctx.closePath(); ctx.fill(); ctx.stroke();
   ctx.fillStyle = '#3b8a2c'; roundRect(ctx, -r * 0.05, -r * 0.24, r * 0.1, r * 0.24, r * 0.04); ctx.fill();
   ctx.restore();
-  face(ctx, r, e, { y: 0.08, gap: 0.32, mouth: 'tiny', blush: 1.5 });
+  face(ctx, r, e, { y: 0.08, gap: 0.32, mouth: 'open', wink: true, blush: 1.4 });
 };
 
 // 2 たまごやき: rolled omelette with layers
@@ -290,7 +318,7 @@ DRAW.tamago = (ctx, r, e, T) => {
   ctx.restore();
   roundRect(ctx, -w / 2, -h / 2, w, h, r * 0.42); outline(ctx, r, '#a86a14');
   gloss(ctx, r, -0.42, -0.45, 0.32, 0.14, 0.6);
-  face(ctx, r, e, { y: 0.0, gap: 0.3, mouth: 'open' });
+  face(ctx, r, e, { y: 0.0, gap: 0.3, mouth: 'open', sparkle: true });
 };
 
 // 3 タコさんウインナー: red dome with 4 curly legs and a pout
@@ -344,7 +372,7 @@ DRAW.shumai = (ctx, r, e, T) => {
   // pea
   ctx.beginPath(); ctx.arc(0, top - r * 0.05, r * 0.17, 0, Math.PI * 2);
   ctx.fillStyle = radial(ctx, r * 0.17, '#d6f7a8', '#7cc651', '#46902c'); ctx.fill(); outline(ctx, r, '#3b7a25', 0.05);
-  face(ctx, r, e, { y: 0.28, s: 0.92, gap: 0.33, mouth: 'cat', blush: 1.2 });
+  face(ctx, r, e, { y: 0.28, s: 0.95, gap: 0.33, mouth: 'cat', happyEyes: true, blush: 1.3 });
 };
 
 // 5 からあげ: lumpy crispy fried chicken, confident brows
@@ -353,10 +381,16 @@ DRAW.karaage = (ctx, r, e, T) => {
   blob(ctx, r, f);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill();
   ctx.save(); ctx.clip();
-  crumbs(ctx, r, 11, 40, ['rgba(255,220,140,0.55)', 'rgba(140,70,20,0.35)', 'rgba(255,200,100,0.5)'], 0.95);
+  crumbs(ctx, r, 11, 30, ['rgba(255,220,140,0.5)', 'rgba(140,70,20,0.28)', 'rgba(255,200,100,0.45)'], 0.95);
   ctx.restore();
   blob(ctx, r, f); outline(ctx, r, '#6e3a10');
   gloss(ctx, r, -0.36, -0.45, 0.3, 0.16, 0.55);
+  // freshly fried: little wisps of steam
+  ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,0.75)'; ctx.lineWidth = r * 0.06; ctx.lineCap = 'round';
+  for (const dx of [-0.28, 0.05, 0.36]) {
+    ctx.beginPath(); ctx.moveTo(dx * r, -r * 0.98); ctx.bezierCurveTo((dx - 0.1) * r, -r * 1.08, (dx + 0.1) * r, -r * 1.14, dx * r, -r * 1.25); ctx.stroke();
+  }
+  ctx.restore();
   face(ctx, r, e, { y: 0.05, gap: 0.32, mouth: 'grin', brows: 'bold' });
 };
 
@@ -377,11 +411,11 @@ DRAW.ebi = (ctx, r, e, T) => {
   blob(ctx, r, f);
   ctx.fillStyle = radial(ctx, r, '#fff0b8', '#f2b54f', '#b8701f'); ctx.fill();
   ctx.save(); ctx.clip();
-  crumbs(ctx, r, 21, 70, ['rgba(255,244,190,0.9)', 'rgba(180,105,30,0.35)', 'rgba(255,220,140,0.8)'], 1.0);
+  crumbs(ctx, r, 21, 46, ['rgba(255,244,190,0.85)', 'rgba(180,105,30,0.28)', 'rgba(255,220,140,0.7)'], 1.0);
   ctx.restore();
   blob(ctx, r, f); outline(ctx, r, '#83480f');
   gloss(ctx, r, -0.35, -0.2, 0.32, 0.1, 0.5);
-  face(ctx, r, e, { y: 0.04, gap: 0.27, s: 0.95, mouth: 'smile', sparkle: true, brows: 'soft' });
+  face(ctx, r, e, { y: 0.04, gap: 0.27, s: 0.98, mouth: 'open', sparkle: true, brows: 'soft' });
 };
 
 // 7 ハンバーグ: glossy demi-glace sauce, gentle big brother
@@ -422,8 +456,14 @@ DRAW.onigiri = (ctx, r, e, T) => {
   ctx.save(); ctx.clip();
   // rice grains
   const R = rng(51);
-  ctx.strokeStyle = 'rgba(180,190,205,0.45)'; ctx.lineWidth = r * 0.025;
-  for (let i = 0; i < 26; i++) { const x = (R() - 0.5) * r * 1.6, y = (R() - 0.5) * r * 1.5; ctx.beginPath(); ctx.ellipse(x, y, r * 0.06, r * 0.03, R() * 3, 0, Math.PI * 2); ctx.stroke(); }
+  for (let i = 0; i < 34; i++) {
+    // fluffy rice: soft grain-shaped highlights and shadows
+    const x = (R() - 0.5) * r * 1.7, y = (R() - 0.55) * r * 1.5, a = R() * 3;
+    ctx.fillStyle = 'rgba(205,212,225,0.35)';
+    ctx.beginPath(); ctx.ellipse(x + r * 0.015, y + r * 0.02, r * 0.07, r * 0.04, a, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(255,255,255,0.9)';
+    ctx.beginPath(); ctx.ellipse(x, y, r * 0.06, r * 0.032, a, 0, Math.PI * 2); ctx.fill();
+  }
   // nori
   const ng = ctx.createLinearGradient(-r * 0.4, 0, r * 0.4, 0); ng.addColorStop(0, '#1d2a28'); ng.addColorStop(0.5, '#2f4440'); ng.addColorStop(1, '#1d2a28');
   ctx.fillStyle = ng; roundRect(ctx, -r * 0.4, r * 0.34, r * 0.8, r * 0.8, r * 0.08); ctx.fill();
@@ -433,7 +473,7 @@ DRAW.onigiri = (ctx, r, e, T) => {
   tri(); outline(ctx, r, '#8d97a8', 0.06);
   // umeboshi peeking
   ctx.beginPath(); ctx.arc(0, -r * 0.66, r * 0.1, 0, Math.PI * 2); ctx.fillStyle = radial(ctx, r * 0.1, '#ff9aa6', '#e2465a', '#a8213a'); ctx.fill();
-  face(ctx, r, e, { y: -0.08, gap: 0.29, s: 1.0, mouth: 'open', blush: 1.3 });
+  face(ctx, r, e, { y: -0.2, gap: 0.29, s: 1.0, mouth: 'open', happyEyes: true, blush: 1.4 });
 };
 
 // 9 おべんとう王: round lacquer bento with crown and colorful okazu
@@ -510,6 +550,11 @@ function drawCharLayer(ctx, tier, r, expr) {
   // gentle bottom shading for a soft 3D feel
   ctx.globalCompositeOperation = 'source-atop';
   ctx.fillStyle = shadow(ctx, r);
+  ctx.fillRect(-r * 1.3, -r * 1.3, r * 2.6, r * 2.6);
+  // soft rim light around the edge (keeps the face untouched) for a plump, glossy look
+  const rim = ctx.createRadialGradient(r * 0.1, r * 0.15, r * 0.7, 0, 0, r * 1.05);
+  rim.addColorStop(0, 'rgba(255,255,255,0)'); rim.addColorStop(0.75, 'rgba(255,250,240,0.16)'); rim.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle = rim;
   ctx.fillRect(-r * 1.3, -r * 1.3, r * 2.6, r * 2.6);
   ctx.restore();
 }

@@ -1,0 +1,17 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff6e4">
+<canvas id="c"></canvas>
+<script type="module">
+import { drawChar } from '../js/chars.js';
+import { TIERS } from '../js/config.js';
+// the main ("normal") face of every okazu, large, in two rows
+const c = document.getElementById('c'), cell = 250;
+c.width = cell * 5; c.height = cell * 2 + 40;
+const ctx = c.getContext('2d');
+ctx.font = '700 22px sans-serif'; ctx.textAlign = 'center'; ctx.fillStyle = '#8a6450';
+TIERS.forEach((t, i) => {
+  const x = (i % 5) * cell + cell / 2, y = Math.floor(i / 5) * (cell + 20) + cell / 2 - 6;
+  ctx.save(); ctx.translate(x, y); drawChar(ctx, i, 92, new URLSearchParams(location.search).get('e') || 'normal'); ctx.restore();
+  ctx.fillText(t.name, x, y + 118);
+});
+document.title = 'done';
+</script>
