@@ -2,6 +2,7 @@
 import { TIERS } from './config.js';
 
 const KEY = 'obento-pon:v1';
+const CAMEO = 'obento-pon:cameo';     // the reward photo; stays on this device only
 const RESUME = 'obento-pon:resume2'; // saved boards from the 11-okazu version are not restored
 
 function blank() {
@@ -50,4 +51,6 @@ export const store = {
   saveResume(snap) { try { localStorage.setItem(RESUME, JSON.stringify(snap)); } catch (e) { /* ignore */ } },
   loadResume() { try { const s = localStorage.getItem(RESUME); return s ? JSON.parse(s) : null; } catch (e) { return null; } },
   clearResume() { try { localStorage.removeItem(RESUME); } catch (e) { /* ignore */ } },
+  saveCameo(dataURL) { try { if (dataURL) localStorage.setItem(CAMEO, dataURL); else localStorage.removeItem(CAMEO); return true; } catch (e) { return false; } },
+  loadCameo() { try { return localStorage.getItem(CAMEO); } catch (e) { return null; } },
 };

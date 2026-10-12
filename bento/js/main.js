@@ -110,6 +110,7 @@ function startGame(snapshot) {
   for (const m of [...modals, 's-over', 's-title']) show(m, false);
   $('banners').innerHTML = '';
   $('fever-frame').classList.remove('on');
+  $('cameo').classList.remove('peek');
   setCombo(0);
   $('hint').classList.toggle('off', !!store.data.tutorialDone);
   drawNext();
@@ -338,13 +339,58 @@ game.on('smashImpact', (e) => {
 
 game.on('smashEnd', (e) => { if (e.count > (store.data.maxSmash || 0)) { store.data.maxSmash = e.count; } });
 
+// ---------------------------------------------------------------- reward photo (device-only)
+let cameoURL = store.loadCameo();
+function refreshCameoUI() {
+  $('cameo-thumb').hidden = !cameoURL; if (cameoURL) $('cameo-thumb').src = cameoURL;
+  $('cameo-test').hidden = $('cameo-del').hidden = !cameoURL;
+  $('cameo-pick').textContent = cameoURL ? 'かえる' : '写真をえらぶ';
+  if (cameoURL) $('cameo').querySelector('img').src = cameoURL;
+}
+function showCameo() {
+  if (!cameoURL) return;
+  const el = $('cameo');
+  el.classList.remove('peek'); void el.offsetWidth; el.classList.add('peek');
+}
+// shrink to at most 480px so it fits comfortably in local storage
+function shrinkImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const k = Math.min(1, 480 / Math.max(img.naturalWidth, img.naturalHeight));
+      const c = document.createElement('canvas');
+      c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.85));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+    img.src = url;
+  });
+}
+$('cameo-pick').addEventListener('click', () => { sound.click(); $('cameo-file').click(); });
+$('cameo-file').addEventListener('change', async (e) => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    const data = await shrinkImage(f);
+    if (!store.saveCameo(data)) { toast('保存できませんでした'); return; }
+    cameoURL = data; refreshCameoUI(); toast('ごほうび写真をセットしました');
+  } catch (err) { toast('この画像は読みこめませんでした'); }
+});
+$('cameo-test').addEventListener('click', () => { sound.click(); closeModal('s-settings'); setTimeout(showCameo, 200); });
+$('cameo-del').addEventListener('click', () => confirmBox('ごほうび写真を消しますか？', () => { store.saveCameo(null); cameoURL = null; refreshCameoUI(); }));
+refreshCameoUI();
+
 game.on('king', (e) => {
   fx.burst(e.x, e.y, 110, '#ffd84a', 8, 10);
   fx.burst(e.x, e.y, 70, '#ff8fb1', 8, 10);
   fx.confetti(e.x, e.y - 60, WORLD.W, 120);
   fx.popup(e.x, e.y, `+${e.points}`, 34, '#e09a12');
   fx.flash = 1; fx.kick(7);
-  banner('king', 'おべんとう<br>だいかんせい！', 1800);
+  if (cameoURL) setTimeout(showCameo, 350); else banner('king', 'おべんとう<br>だいかんせい！', 1800);
   sound.king();
   haptics.pulse(60);
   setCombo(e.combo);

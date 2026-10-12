@@ -61,6 +61,7 @@
       <div id="banners" aria-live="polite"></div>
       <div id="hint" class="hint">ゆびで左右に動かして<br>はなすとポン！<small>下に引っぱるとパワードロップ</small></div>
       <div id="fever-frame"></div>
+      <div id="cameo" aria-hidden="true"><img alt=""></div>
     </div>
     <div id="evo"><canvas id="evo-cv"></canvas></div>
     <nav class="bar">
@@ -134,6 +135,16 @@
         <label class="set"><span>画面のゆれ</span><input type="checkbox" class="tog" id="set-shake"></label>
         <label class="set"><span>演出をひかえめに</span><input type="checkbox" class="tog" id="set-fx"></label>
       </div>
+      <div class="set cameo-set">
+        <div class="cameo-txt"><span>ごほうび写真</span><small>おべんとう王どうしを合体させると、ちょっとだけ出てきます。写真はこの端末の中だけに保存され、どこにも送られません。</small></div>
+        <img id="cameo-thumb" alt="" hidden>
+      </div>
+      <div class="row cameo-btns">
+        <button class="btn sub" id="cameo-pick">写真をえらぶ</button>
+        <button class="btn sub" id="cameo-test" hidden>ためす</button>
+        <button class="btn sub" id="cameo-del" hidden>けす</button>
+      </div>
+      <input type="file" id="cameo-file" accept="image/*" hidden>
       <div class="set-stats" id="set-stats"></div>
       <div class="set-actions">
         <button class="btn sub" id="set-title"><svg><use href="#i-home"/></svg>タイトルへ</button>
