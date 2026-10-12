@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0">
+<script type="module">
+import { drawChar } from '../js/chars.js';
+// app icon: a happy tamagoyaki + tomato + edamame on a pink lacquer bento background
+window.makeIcon = (size, maskable) => {
+  const c = document.createElement('canvas'); c.width = c.height = size;
+  const g = c.getContext('2d');
+  const bg = g.createLinearGradient(0, 0, 0, size); bg.addColorStop(0, '#fff6e4'); bg.addColorStop(1, '#ffe2c4');
+  g.fillStyle = bg; g.fillRect(0, 0, size, size);
+  const k = maskable ? 0.72 : 0.9, s = size * k, o = (size - s) / 2;
+  g.save(); g.translate(o, o);
+  // box
+  g.fillStyle = '#ef6874'; g.beginPath(); g.roundRect(s * 0.06, s * 0.2, s * 0.88, s * 0.74, s * 0.12); g.fill();
+  g.fillStyle = '#fffaf0'; g.beginPath(); g.roundRect(s * 0.12, s * 0.26, s * 0.76, s * 0.62, s * 0.08); g.fill();
+  const put = (t, x, y, r, e) => { g.save(); g.translate(x * s, y * s); drawChar(g, t, r * s, e); g.restore(); };
+  put(1, 0.27, 0.7, 0.13, 'happy');
+  put(0, 0.77, 0.74, 0.1, 'normal');
+  put(2, 0.52, 0.45, 0.26, 'happy');
+  g.restore();
+  return c.toDataURL('image/png');
+};
+document.title = 'ready';
+</script>
