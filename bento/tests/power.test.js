@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Game, seeded, run, TIERS, WORLD, PHYS, POWER, RULES, powerSpeed, smashBonus, scoreFor } from './helper.js';
 
-const M = globalThis.Matter;
 const place = (g, t, x, y = WORLD.FLOOR - TIERS[t].r) => g.makeFood(t, x, y, { landed: true, landedAt: -1e9, born: -1e9 });
 
 // a settled, half-full box built by ordinary drops
