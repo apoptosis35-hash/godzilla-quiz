@@ -1,6 +1,6 @@
 // Core game: physics world, dropping, merging, chains, score and game over.
 // No DOM access here, so the same code runs in the browser and in node tests.
-import { WORLD, PHYS, RULES, POWER, TIERS, MAX_TIER, OJAMA_TIER, VS, tierInfo, scoreFor, kingScore, powerSpeed } from './config.js';
+import { WORLD, PHYS, RULES, POWER, TIERS, MAX_TIER, OJAMA_TIER, RARE_TIER, VS, tierInfo, scoreFor, kingScore, powerSpeed } from './config.js';
 
 const M = () => globalThis.Matter;
 
@@ -44,6 +44,8 @@ export class Game {
     this.created = new Array(TIERS.length).fill(0); // tiers born this game
     this.history = [];        // last spawned tiers
     this.spawned = 0;
+    this.lastRare = -1e9;
+    this.rares = 0;
     this.current = this._rollSpawn();
     this.next = this._rollSpawn();
     this.lastDropped = null;
@@ -70,6 +72,14 @@ export class Game {
   }
 
   _rollSpawn() {
+    // the rare piece (one rng draw per spawn, so both battle players stay in step)
+    const rare = this.rng();
+    if (this.spawned >= RULES.RARE_AFTER && this.spawned - this.lastRare >= RULES.RARE_GAP && rare < RULES.RARE_CHANCE) {
+      this.lastRare = this.spawned++;
+      this.history.push(RARE_TIER);
+      if (this.history.length > 8) this.history.shift();
+      return RARE_TIER;
+    }
     const maxT = this.spawned++ < RULES.OPENING_DROPS ? 3 : RULES.SPAWN_TIERS;
     let t = 0;
     for (let tries = 0; tries < 6; tries++) {
@@ -99,6 +109,7 @@ export class Game {
     Composite.add(this.engine.world, b);
     this.foods.push(b);
     if (tier === OJAMA_TIER) { b.food.ojama = true; return b; }
+    if (tier === RARE_TIER) { b.food.rare = true; return b; }
     if (tier > this.highestTier) this.highestTier = tier;
     this.created[tier]++;
     return b;
@@ -119,7 +130,7 @@ export class Game {
   get canDrop() { return !this.over && this.cooldown <= 0; }
 
   clampX(x, tier = this.current) {
-    const r = TIERS[tier].r;
+    const r = tierInfo(tier).r;
     return Math.max(r + 1, Math.min(WORLD.W - r - 1, x));
   }
 
@@ -171,6 +182,16 @@ export class Game {
         const rv = Math.abs((a.velocity.x - b.velocity.x) * p.collision.normal.x + (a.velocity.y - b.velocity.y) * p.collision.normal.y);
         if (rv > 1.2) this.emit('impact', { a, b, speed: rv });
       }
+      if (fa && fb && (fa.rare || fb.rare)) {
+        // the レアキャラ powers up the first okazu it touches
+        const [rb, ob] = fa.rare ? [a, b] : [b, a];
+        const fr = rb.food, fo = ob.food;
+        if (!fr.merging && !fr.dead && !fo.merging && !fo.dead && !fo.ojama && !fo.rare) {
+          fr.merging = fo.merging = true;
+          this.pending.push([rb, ob, 'rare']);
+        }
+        continue;
+      }
       if (!fa || !fb || fa.tier !== fb.tier || fa.ojama) continue;
       if (fa.merging || fb.merging || fa.dead || fb.dead) continue;
       fa.merging = fb.merging = true;  // each body joins at most one merge
@@ -214,11 +235,21 @@ export class Game {
     const { Body } = M();
     const list = this.pending;
     this.pending = [];
-    for (const [a, b] of list) {
+    for (const [a, b, kind] of list) {
       if (a.food.dead || b.food.dead) continue;
-      const tier = a.food.tier;
-      const x = (a.position.x + b.position.x) / 2;
-      const y = (a.position.y + b.position.y) / 2;
+      const rareHit = kind === 'rare';          // a = the レアキャラ, b = the okazu it touched
+      if (rareHit && b.food.tier === MAX_TIER) {
+        // the king cannot grow: the レアキャラ turns into a bonus instead
+        const pos = { x: a.position.x, y: a.position.y };
+        this._remove(a);
+        this.rares++;
+        this.score += RULES.RARE_KING_BONUS;
+        this.emit('rare', { x: pos.x, y: pos.y, points: RULES.RARE_KING_BONUS, king: true });
+        continue;
+      }
+      const tier = b.food.tier;
+      const x = rareHit ? b.position.x : (a.position.x + b.position.x) / 2;
+      const y = rareHit ? b.position.y : (a.position.y + b.position.y) / 2;
       const vx = (a.velocity.x + b.velocity.x) * 0.25;
       const vy = (a.velocity.y + b.velocity.y) * 0.25;
       const parts = [{ x: a.position.x, y: a.position.y, a: a.angle }, { x: b.position.x, y: b.position.y, a: b.angle }];
@@ -227,7 +258,8 @@ export class Game {
       // chain level: a merge caused by a fresh merge (or by its push) continues the chain,
       // a merge started by a newly dropped piece begins a new one.
       a.food.x = a.position.x; a.food.y = a.position.y;
-      const level = this._chainLevel(a.food, b.food);
+      const level = rareHit ? 1 : this._chainLevel(a.food, b.food);
+      if (rareHit) this.rares++;
       // smash: a merge of pieces moved by the current power-drop impact (or of a piece born from one)
       let smash = 0;
       const sm = this.smash;
@@ -265,9 +297,9 @@ export class Game {
       nb.food.grow = { from: s0, t: 0 };
       Body.setVelocity(nb, { x: vx, y: vy });
       this._popOjama(cx, cy, r);
-      const points = scoreFor(nt, level, smash);
+      const points = scoreFor(nt, level, smash) + (rareHit ? RULES.RARE_BONUS : 0);
       this.score += points;
-      this.emit('merge', { body: nb, tier: nt, from: tier, x: cx, y: cy, points, combo: this.combo, level, smash, parts, firstTime });
+      this.emit('merge', { body: nb, tier: nt, from: tier, x: cx, y: cy, points, combo: this.combo, level, smash, parts, firstTime, rare: rareHit });
     }
   }
 
@@ -409,7 +441,7 @@ export class Game {
 
   // Where would a piece dropped at x come to rest first? (for the guide line)
   landingY(x, tier = this.current) {
-    const r = TIERS[tier].r;
+    const r = tierInfo(tier).r;
     let best = WORLD.FLOOR - r;
     for (const b of this.foods) {
       const dx = Math.abs(b.position.x - x), rr = r + b.circleRadius;

@@ -1,10 +1,10 @@
-import { WORLD, TIERS, RULES, POWER, MAX_TIER, VS, OJAMA_TIER, tierInfo, attackFor, KING_ATTACK, seeded, rankFor, comboMultiplier, smashBonus } from './config.js';
+import { WORLD, TIERS, RULES, POWER, MAX_TIER, VS, OJAMA_TIER, RARE_TIER, RARE, tierInfo, attackFor, KING_ATTACK, seeded, rankFor, comboMultiplier, smashBonus } from './config.js';
 import { Link, cleanCode, CODE_LEN } from './online.js';
 import { Game } from './game.js';
 import { Renderer } from './render.js';
 import { FX } from './fx.js';
 import { Sound, Haptics } from './audio.js';
-import { Sprites, renderSprite, EXPRESSIONS } from './chars.js';
+import { Sprites, renderSprite, EXPRESSIONS, onRareReady } from './chars.js';
 import { store } from './save.js';
 
 const $ = (id) => document.getElementById(id);
@@ -224,12 +224,13 @@ function showResult(e, isBest) {
 const COMBO_WORDS = { 3: 'ナイス！', 4: 'すごい！', 6: 'とまらない！', 7: 'おみごと！', 8: 'さいこう！', 9: 'かみわざ！', 10: 'でんせつ級！' };
 
 game.on('drop', ({ tier, power }) => {
-  if (power >= POWER.SMASH_MIN) sound.powerDrop(power); else sound.drop(tier);
+  if (power >= POWER.SMASH_MIN) sound.powerDrop(power); else sound.drop(Math.min(tier, 4));
   haptics.pulse(8);
   renderer.dropAnim = performance.now();
   if (!store.data.tutorialDone) { store.data.tutorialDone = true; store.save(); $('hint').classList.add('off'); }
-  noteBorn(tier);
+  if (tier <= MAX_TIER) noteBorn(tier);
   drawNext(true);
+  if (game.next === RARE_TIER) { banner('disc', 'つぎは レアキャラ！', 1600); sound.firstDiscovery(); haptics.pulse(20); }
   if (power >= POWER.SMASH_MIN && !store.data.powerTipDone) { store.data.powerTipDone = true; store.save(); }
   if (!store.data.powerTipDone && game.dropCount === 6) showHint('下に引っぱると<br>パワードロップ！', 3200);
 });
@@ -249,7 +250,7 @@ game.on('impact', ({ a, b, speed }) => {
   for (const body of [a, b]) {
     if (!body.food) continue;
     const v = renderer.vis(body);
-    if (!body.food.ojama) tier = Math.max(tier, body.food.tier);
+    if (!body.food.ojama && !body.food.rare) tier = Math.max(tier, body.food.tier);
     if (speed > 2.2) { v.hitUntil = now + 170; v.sq = Math.min(0.2, Math.max(v.sq, speed * 0.018)); }
   }
   if (speed > 2.5) sound.tap(speed, tier);
@@ -258,8 +259,14 @@ game.on('impact', ({ a, b, speed }) => {
 game.on('merge', (e) => {
   const now = performance.now();
   const T = TIERS[e.tier], r = T.r;
-  fx.ghost(e.parts, e.from, TIERS[e.from].r);
+  fx.ghost(e.rare ? [e.parts[1], e.parts[1]] : e.parts, e.from, TIERS[e.from].r);
   fx.burst(e.x, e.y, r, T.fx, e.combo, e.tier);
+  if (e.rare) {
+    fx.burst(e.x, e.y, r * 1.2, '#ffd84a', 6, 8);
+    banner('disc', `レアパワー！<small>${TIERS[e.from].name}が進化！</small>`, 1600);
+    sound.firstDiscovery(); haptics.pulse(30);
+    store.data.rareFound = (store.data.rareFound || 0) + 1; store.save();
+  }
   const v = renderer.vis(e.body);
   v.bornAt = now; v.happyUntil = now + 700;
   // neighbours cheer; on a big chain everybody does
@@ -347,6 +354,15 @@ game.on('smashImpact', (e) => {
 game.on('ojamaPop', ({ list }) => {
   for (const o of list) { fx.burst(o.x, o.y, 14, '#ff7a9a', 1, 0); fx.popup(o.x, o.y - 10, 'パチン！', 13, '#d0355a'); }
   sound.tap(6, 1);
+});
+
+game.on('rare', (e) => {
+  fx.burst(e.x, e.y, 60, '#ffd84a', 8, 9);
+  fx.popup(e.x, e.y - 20, `+${e.points}`, 26, '#e09a12');
+  banner('disc', 'レアパワー！<small>王さまボーナス +1000</small>', 1600);
+  sound.highscore(); haptics.pulse(30);
+  store.data.rareFound = (store.data.rareFound || 0) + 1; store.save();
+  updateHud();
 });
 
 game.on('smashEnd', (e) => { if (e.count > (store.data.maxSmash || 0)) { store.data.maxSmash = e.count; } });
@@ -525,12 +541,29 @@ function buildZukan() {
     el.addEventListener('click', () => { zSel = i; zExpr = 0; sound.click(); list.querySelectorAll('.z-item').forEach((x, k) => x.classList.toggle('sel', k === i)); zDetail(); });
     list.appendChild(el);
   });
+  {
+    const known = (store.data.rareFound || 0) > 0;
+    const el = document.createElement('button');
+    el.className = `z-item rare${known ? '' : ' locked'}${zSel === TIERS.length ? ' sel' : ''}`;
+    el.innerHTML = `<canvas></canvas><span class="no">レア</span><span class="n">${known ? RARE.name : '？？？'}</span>`;
+    el.addEventListener('click', () => { zSel = TIERS.length; sound.click(); list.querySelectorAll('.z-item').forEach((x) => x.classList.toggle('sel', x === el)); zDetail(); });
+    list.appendChild(el);
+  }
   requestAnimationFrame(() => {
-    list.querySelectorAll('.z-item canvas').forEach((cv, i) => paintSprite(cv, i, 'normal', !(born[i] > 0)));
+    list.querySelectorAll('.z-item canvas').forEach((cv, i) => {
+      if (i === TIERS.length) paintSprite(cv, RARE_TIER, 'normal', !((store.data.rareFound || 0) > 0));
+      else paintSprite(cv, i, 'normal', !(born[i] > 0));
+    });
     zDetail();
   });
 }
 function zDetail() {
+  if (zSel === TIERS.length) {
+    const known = (store.data.rareFound || 0) > 0, box = $('z-detail');
+    box.innerHTML = `<canvas></canvas><div><h3>${known ? RARE.name : '？？？'}</h3><p>${known ? RARE.desc : 'めったに出ない、ひみつのおかず。ずっと遊んでいると出会えるかも…？'}</p><div class="meta">${known ? `つかった回数 ${store.data.rareFound} 回` : ''}</div></div>`;
+    requestAnimationFrame(() => paintSprite(box.querySelector('canvas'), RARE_TIER, 'normal', !known));
+    return;
+  }
   const i = zSel, t = TIERS[i], known = store.data.born[i] > 0;
   const box = $('z-detail');
   box.innerHTML = `<canvas title="タップで表情がかわるよ"></canvas><div><h3>${known ? t.name : '？？？'}</h3><p>${known ? t.desc : 'まだ見つけていないおかず。合体させて見つけよう！'}</p>` +
@@ -1041,6 +1074,8 @@ function frame(now) {
   }
   requestAnimationFrame(frame);
 }
+
+onRareReady(() => { renderer.sprites.cache.clear(); titleSprites.cache.clear(); spritesWarm = false; if (mode !== 'title') drawNext(); });
 
 // ---------------------------------------------------------------- boot
 sizeTitle();

@@ -143,7 +143,7 @@ export class Renderer {
 
     // guide line + landing ghost (it heats up with the pull)
     if (held && held.visible) {
-      const tier = held.tier, r = TIERS[tier].r;
+      const tier = held.tier, r = tierInfo(tier).r;
       const x = game.clampX(this.aimX, tier);
       const ly = game.landingY(x, tier);
       const p = this.charging ? this.power : 0;
@@ -233,7 +233,7 @@ export class Renderer {
   }
 
   _drawHeld(ctx, game, held, now) {
-    const tier = held.tier, r = TIERS[tier].r;
+    const tier = held.tier, r = tierInfo(tier).r;
     const x = game.clampX(this.aimX, tier);
     const y = WORLD.DROP_Y + Math.sin(now / 380) * 1.6;
     const since = now - this.dropAnim;

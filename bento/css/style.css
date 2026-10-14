@@ -309,3 +309,6 @@ svg { width: 1em; height: 1em; }
 .vr-rec { font-size: 13px; font-weight: 700; color: var(--ink2); }
 
 .bbtn:disabled { opacity: 0.4; box-shadow: none; transform: none; }
+
+.z-item.rare { background: linear-gradient(#fff6c8, #ffe9a0); }
+.z-item.rare.locked { background: #fff7ea; }

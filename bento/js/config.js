@@ -43,6 +43,11 @@ export const RULES = {
   SPAWN_TIERS: 5,         // tiers 0..4 can be dropped
   SPAWN_WEIGHTS: [30, 28, 22, 14, 6],
   OPENING_DROPS: 3,       // the first drops only use tiers 0..2
+  RARE_CHANCE: 0.02,      // about 1 in 50 pieces is the レアキャラ ...
+  RARE_AFTER: 10,         // ... but never in the first 10 ...
+  RARE_GAP: 15,           // ... and never twice within 15 pieces
+  RARE_BONUS: 500,
+  RARE_KING_BONUS: 1000,  // touching the king (it cannot grow) gives this instead
 };
 
 // Power drop: pull down to throw the piece harder.
@@ -103,7 +108,11 @@ export const MAX_TIER = TIERS.length - 1;
 // おじゃま piece for online battles: never merges, pops when a merge happens right next to it
 export const OJAMA_TIER = 99;
 export const OJAMA = { id: 'ume', name: 'うめぼし', r: 15, color: '#d0355a', light: '#ff8fa8', dark: '#8a1534', fx: '#ff7a9a' };
-export function tierInfo(t) { return t === OJAMA_TIER ? OJAMA : TIERS[t]; }
+// レアキャラ: a rare drop; whatever okazu it touches grows one size
+export const RARE_TIER = 98;
+export const RARE = { id: 'rare', name: 'レアキャラ', r: 24, color: '#ffd84a', light: '#fff6b8', dark: '#c98a10', fx: '#ffd84a',
+  desc: 'めったに出ないレアキャラ。ぶつかったおかずを1段階進化させる、ふしぎなパワーの持ち主。' };
+export function tierInfo(t) { return t === OJAMA_TIER ? OJAMA : t === RARE_TIER ? RARE : TIERS[t]; }
 
 // Online battle rules
 export const VS = {

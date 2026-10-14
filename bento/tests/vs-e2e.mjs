@@ -78,11 +78,10 @@ const popped = await G(B, async () => {
   const g = window.__obento.game;
   const u = g.foods.find((b) => b.food.ojama && b.food.landed);
   if (!u) return -1;
-  const before = g.foods.filter((b) => b.food.ojama).length;
   g.makeFood(1, u.position.x - 18, u.position.y - 45, { landed: true, born: -1e9 });
   g.makeFood(1, u.position.x + 17, u.position.y - 45, { landed: true, born: -1e9 });
   await new Promise((r) => setTimeout(r, 700));
-  return before - g.foods.filter((b) => b.food.ojama).length;
+  return u.food.dead ? 1 : 0;   // that very うめぼし is gone (more may have rained in meanwhile)
 });
 check('a merge next to a うめぼし pops it', popped >= 1, String(popped));
 

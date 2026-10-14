@@ -12,7 +12,7 @@ function blank() {
     recent: [],                                // last scores
     settings: { bgm: true, se: true, vib: true, shake: true, fx: 'normal' },
     tutorialDone: false,
-    maxSmash: 0, powerTipDone: false,
+    maxSmash: 0, powerTipDone: false, rareFound: 0,
   };
 }
 

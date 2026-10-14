@@ -178,7 +178,7 @@ test('spawns are small pieces only, opening drops are the smallest', () => {
   const seen = new Set();
   const first = [g.current, g.next];
   for (let i = 0; i < 300; i++) { seen.add(g.current); g.current = g.next; g.next = g._rollSpawn(); }
-  assert.ok([...seen].every((t) => t >= 0 && t < RULES.SPAWN_TIERS));
+  assert.ok([...seen].every((t) => (t >= 0 && t < RULES.SPAWN_TIERS) || t === 98), 'small okazu (or the rare piece)');
   assert.ok(first.every((t) => t <= 2));
   assert.ok(seen.has(0) && seen.has(4));
 });

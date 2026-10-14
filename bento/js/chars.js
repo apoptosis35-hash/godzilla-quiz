@@ -537,6 +537,44 @@ DRAW.ume = (ctx, r, e, T) => {
   face(ctx, r, e === 'normal' || e === 'blink' ? 'hit' : e, { y: 0.05, gap: 0.3, mouth: 'tiny', cheek: 'rgba(255,170,190,0.8)' });
 };
 
+// レアキャラ: the family photo in a shining gold frame
+let rareImg = null, rareReady = false;
+const rareWaiters = [];
+if (typeof Image !== 'undefined') {
+  rareImg = new Image();
+  rareImg.onload = () => { rareReady = true; rareWaiters.splice(0).forEach((f) => f()); };
+  rareImg.src = new URL('../img/rare.png', import.meta.url).href;
+}
+export function onRareReady(f) { if (rareReady) f(); else rareWaiters.push(f); }
+DRAW.rare = (ctx, r, e, T) => {
+  // soft golden glow behind
+  const glow = ctx.createRadialGradient(0, 0, r * 0.8, 0, 0, r * 1.28);
+  glow.addColorStop(0, 'rgba(255,220,90,0.9)'); glow.addColorStop(1, 'rgba(255,220,90,0)');
+  ctx.fillStyle = glow; ctx.beginPath(); ctx.arc(0, 0, r * 1.28, 0, Math.PI * 2); ctx.fill();
+  // the photo
+  ctx.save();
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.88, 0, Math.PI * 2); ctx.clip();
+  if (rareReady) ctx.drawImage(rareImg, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
+  else { ctx.fillStyle = '#ffe9a0'; ctx.fillRect(-r, -r, 2 * r, 2 * r); }
+  if (e === 'sad') { ctx.fillStyle = 'rgba(90,100,130,0.35)'; ctx.fillRect(-r, -r, 2 * r, 2 * r); }
+  ctx.restore();
+  // gold frame
+  const ring = ctx.createLinearGradient(-r, -r, r, r);
+  ring.addColorStop(0, '#fff3a0'); ring.addColorStop(0.35, '#ffcf3a'); ring.addColorStop(0.7, '#e09a12'); ring.addColorStop(1, '#ffe27a');
+  ctx.beginPath(); ctx.arc(0, 0, r * 0.94, 0, Math.PI * 2);
+  ctx.lineWidth = r * 0.14; ctx.strokeStyle = ring; ctx.stroke();
+  ctx.lineWidth = Math.max(1, r * 0.04); ctx.strokeStyle = '#9a6206';
+  ctx.beginPath(); ctx.arc(0, 0, r * 1.01, 0, Math.PI * 2); ctx.stroke();
+  // sparkles and a little star badge
+  ctx.fillStyle = '#ffffff';
+  for (const [x, y, k] of [[-0.78, -0.62, 0.2], [0.82, 0.5, 0.16], [-0.6, 0.86, 0.12]]) { ctx.save(); ctx.translate(x * r, y * r); star4(ctx, k * r); ctx.restore(); }
+  ctx.save(); ctx.translate(r * 0.66, -r * 0.7);
+  ctx.beginPath();
+  for (let i = 0; i < 10; i++) { const a = -Math.PI / 2 + (i * Math.PI) / 5, rr = (i % 2 ? 0.13 : 0.3) * r; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+  ctx.closePath(); ctx.fillStyle = '#ff5f7e'; ctx.fill(); ctx.lineWidth = Math.max(1, r * 0.04); ctx.strokeStyle = '#fff'; ctx.stroke();
+  ctx.restore();
+};
+
 export function drawChar(ctx, tier, r, expr = 'normal') {
   const img = renderSprite(tier, expr, r);
   ctx.drawImage(img, -img.width / 2, -img.height / 2);
