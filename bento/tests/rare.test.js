@@ -5,19 +5,19 @@ import { RARE_TIER, RARE, seeded } from '../js/config.js';
 
 const place = (g, t, x, y = WORLD.FLOOR - (t === RARE_TIER ? RARE.r : TIERS[t].r)) => g.makeFood(t, x, y, { landed: true, landedAt: -1e9, born: -1e9 });
 
-test('the rare piece appears about 1 in 50, never early, never back to back', () => {
+test('the rare piece is rare (about RARE_CHANCE), never early, never back to back', () => {
   let total = 0, rare = 0;
-  for (let seed = 1; seed <= 40; seed++) {
+  for (let seed = 1; seed <= 120; seed++) {
     const g = new Game({ rng: seeded(seed) });
     const seq = [g.current, g.next];
-    for (let i = 0; i < 200; i++) seq.push(g._rollSpawn());
+    for (let i = 0; i < 400; i++) seq.push(g._rollSpawn());
     seq.slice(0, RULES.RARE_AFTER).forEach((t) => assert.notEqual(t, RARE_TIER, 'not in the first spawns'));
     let last = -1e9;
     seq.forEach((t, i) => { if (t === RARE_TIER) { assert.ok(i - last >= RULES.RARE_GAP, 'spaced out'); last = i; rare++; } });
     total += seq.length;
   }
   const rate = rare / total;
-  assert.ok(rate > 0.008 && rate < 0.03, `rate ${(rate * 100).toFixed(2)}%`);
+  assert.ok(rate > RULES.RARE_CHANCE * 0.4 && rate < RULES.RARE_CHANCE * 1.6, `rate ${(rate * 100).toFixed(2)}%`);
 });
 
 test('the same seed gives the rare piece at the same moment (fair battles)', () => {
