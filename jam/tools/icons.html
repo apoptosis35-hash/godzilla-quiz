@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000">
+<canvas id="c"></canvas>
+<script>
+// App icon: a ring road seen from above with a stop-and-go wave (green -> red cars)
+const q = new URLSearchParams(location.search), S = +(q.get('s') || 512), mask = q.get('m') === '1';
+const c = document.getElementById('c'); c.width = c.height = S; const x = c.getContext('2d');
+const g = x.createLinearGradient(0, 0, 0, S); g.addColorStop(0, '#13304d'); g.addColorStop(1, '#081424');
+x.fillStyle = g; x.fillRect(0, 0, S, S);
+const k = mask ? 0.78 : 1;
+x.translate(S / 2, S / 2); x.scale(k, k);
+const R = S * 0.33;
+x.strokeStyle = '#2b3542'; x.lineWidth = S * 0.13; x.beginPath(); x.arc(0, 0, R, 0, Math.PI * 2); x.stroke();
+x.strokeStyle = 'rgba(255,255,255,.55)'; x.lineWidth = S * 0.006; x.setLineDash([S * 0.03, S * 0.03]);
+x.beginPath(); x.arc(0, 0, R, 0, Math.PI * 2); x.stroke(); x.setLineDash([]);
+const N = 18;
+function col(r) { const st = [[0, [230, 46, 58]], [0.5, [255, 170, 50]], [1, [61, 220, 132]]]; for (let i = 0; i < 2; i++) { const [a, ca] = st[i], [b, cb] = st[i + 1]; if (r <= b) { const f = (r - a) / (b - a); return `rgb(${ca.map((v, j) => Math.round(v + (cb[j] - v) * f)).join(',')})`; } } }
+let ang = -Math.PI / 2;
+for (let i = 0; i < N; i++) {
+  const sp = 0.5 + 0.5 * Math.sin(i / N * Math.PI * 2);   // wave
+  const gap = 0.16 + 0.28 * sp;
+  ang += gap;
+  x.save(); x.rotate(ang); x.translate(R, 0); x.rotate(Math.PI / 2);
+  x.fillStyle = col(sp); const w = S * 0.05, l = S * 0.085;
+  x.beginPath(); x.roundRect(-w / 2, -l / 2, w, l, S * 0.012); x.fill();
+  if (sp < 0.3) { x.fillStyle = 'rgba(255,40,50,.9)'; x.shadowColor = '#ff2a3a'; x.shadowBlur = S * 0.03; x.fillRect(-w / 2, l / 2 - S * 0.008, w, S * 0.01); x.shadowBlur = 0; }
+  x.restore();
+}
+x.fillStyle = '#ffffff'; x.font = `900 ${S * 0.2}px system-ui, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+x.fillText('JAM', 0, -S * 0.02);
+x.fillStyle = '#3fe0ff'; x.font = `800 ${S * 0.085}px system-ui, sans-serif`; x.fillText('LAB', 0, S * 0.12);
+document.title = 'ready';
+</script>

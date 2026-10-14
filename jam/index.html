@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>JAM LAB — 渋滞の科学</title>
+<meta name="description" content="1台1台の車を計算する本格交通シミュレーション。渋滞が生まれる仕組みを、遊びながら発見しよう。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="JAM LAB — 渋滞の科学">
+<meta property="og:description" content="たった1台のブレーキが渋滞を生む？ iPhoneで遊べる交通シミュレーションゲーム">
+<meta property="og:image" content="https://apoptosis35-hash.github.io/godzilla-quiz/jam/icons/icon-512.png">
+<meta name="theme-color" content="#0b1626">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="JAM LAB">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, noimageindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-back" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></symbol>
+  <symbol id="i-play" viewBox="0 0 24 24"><path fill="currentColor" d="M8 5.2v13.6c0 .8.9 1.3 1.6.8l10-6.8c.6-.4.6-1.2 0-1.6l-10-6.8C8.9 3.9 8 4.4 8 5.2Z"/></symbol>
+  <symbol id="i-pause" viewBox="0 0 24 24"><path fill="currentColor" d="M7 5h3.5v14H7zM13.5 5H17v14h-3.5z"/></symbol>
+  <symbol id="i-reset" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" d="M19 12a7 7 0 1 1-2.1-5M19 4v4h-4"/></symbol>
+  <symbol id="i-chart" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 4v16h16M8 15l3-4 3 2 5-6"/></symbol>
+  <symbol id="i-eye" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" d="M2 12s3.6-6.5 10-6.5S22 12 22 12s-3.6 6.5-10 6.5S2 12 2 12Z"/><circle cx="12" cy="12" r="3" fill="currentColor"/></symbol>
+  <symbol id="i-sound" viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16 9a4 4 0 0 1 0 6M18.5 6.5a7.5 7.5 0 0 1 0 11"/></symbol>
+  <symbol id="i-mute" viewBox="0 0 24 24"><path fill="currentColor" d="M4 9h4l5-4v14l-5-4H4z"/><path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" d="M16.5 9.5l5 5m0-5-5 5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-minus" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" d="M5 12h14"/></symbol>
+  <symbol id="i-fit" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></symbol>
+  <symbol id="i-moon" viewBox="0 0 24 24"><path fill="currentColor" d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5Z"/></symbol>
+  <symbol id="i-star" viewBox="0 0 24 24"><path fill="currentColor" d="m12 2.8 2.8 5.8 6.3.9-4.6 4.4 1.1 6.3L12 17.2l-5.6 3 1.1-6.3-4.6-4.4 6.3-.9Z"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><path fill="currentColor" d="M7 10V8a5 5 0 0 1 10 0v2h1a1 1 0 0 1 1 1v9a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1v-9a1 1 0 0 1 1-1Zm2 0h6V8a3 3 0 0 0-6 0Z"/></symbol>
+  <symbol id="i-ff" viewBox="0 0 24 24"><path fill="currentColor" d="M3 6v12l8.5-6zM12.5 6v12L21 12z"/></symbol>
+  <symbol id="i-follow" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7" fill="none" stroke="currentColor" stroke-width="2.2"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/></symbol>
+</svg>
+
+<div id="app">
+  <!-- HOME -->
+  <section id="home" class="screen on">
+    <div class="home-bg"><canvas id="home-cv"></canvas></div>
+    <div class="home-inner">
+      <div class="logo">
+        <div class="logo-mark">JAM<span>LAB</span></div>
+        <div class="logo-sub">渋滞の科学</div>
+      </div>
+      <nav class="menu">
+        <button class="menu-btn primary" data-go="lab"><b>渋滞の実験室</b><small>円形道路で自然渋滞を起こしてみよう</small></button>
+        <button class="menu-btn" data-go="missions"><b>ミッション</b><small>8つのステージに挑戦<span id="home-stars"></span></small></button>
+        <button class="menu-btn" data-go="sandbox"><b>渋滞を解消せよ！</b><small>交通管制官になって施策を試す</small></button>
+        <button class="menu-btn" data-go="quiz"><b>原因を見抜け！</b><small>渋滞の原因を当てるクイズ</small></button>
+        <div class="menu-row">
+          <button class="menu-btn small" data-go="learn"><b>しくみ・図鑑</b></button>
+          <button class="menu-btn small" data-go="records"><b>記録・実績</b></button>
+        </div>
+      </nav>
+      <div class="home-foot"><button id="home-sound" class="icon-btn" aria-label="サウンド"><svg><use href="#i-sound"/></svg></button><span>1台1台の車を計算する交通シミュレーション</span></div>
+    </div>
+  </section>
+
+  <!-- MISSION LIST -->
+  <section id="missions" class="screen">
+    <header class="bar"><button class="icon-btn" data-back aria-label="もどる"><svg><use href="#i-back"/></svg></button><h1>ミッション</h1><div class="bar-r" id="mission-total"></div></header>
+    <div class="scroll"><div id="mission-list" class="cards"></div></div>
+  </section>
+
+  <!-- SANDBOX PICKER -->
+  <section id="sandbox" class="screen">
+    <header class="bar"><button class="icon-btn" data-back aria-label="もどる"><svg><use href="#i-back"/></svg></button><h1>渋滞を解消せよ！</h1></header>
+    <div class="scroll">
+      <p class="lead">交通管制官として、渋滞している道路に施策を投入しよう。同じ条件・同じ乱数で「対策なし」の道路も裏で同時に計算し、効果をリアルタイムで比べます。</p>
+      <div id="sandbox-list" class="cards"></div>
+    </div>
+  </section>
+
+  <!-- LEARN -->
+  <section id="learn" class="screen">
+    <header class="bar"><button class="icon-btn" data-back aria-label="もどる"><svg><use href="#i-back"/></svg></button><h1>しくみ・図鑑</h1></header>
+    <div class="tabs" id="learn-tabs"><button class="on" data-t="how">しくみ</button><button data-t="trivia">豆知識</button></div>
+    <div class="scroll" id="learn-body"></div>
+  </section>
+
+  <!-- RECORDS -->
+  <section id="records" class="screen">
+    <header class="bar"><button class="icon-btn" data-back aria-label="もどる"><svg><use href="#i-back"/></svg></button><h1>記録・実績</h1></header>
+    <div class="scroll" id="records-body"></div>
+  </section>
+
+  <!-- PLAY (shared by lab / mission / sandbox / quiz) -->
+  <section id="play" class="screen">
+    <header class="bar play-bar">
+      <button class="icon-btn" id="p-back" aria-label="もどる"><svg><use href="#i-back"/></svg></button>
+      <div class="p-title"><b id="p-title">渋滞の実験室</b><small id="p-sub"></small></div>
+      <button class="icon-btn" id="p-sound" aria-label="サウンド"><svg><use href="#i-sound"/></svg></button>
+    </header>
+    <div class="stage" id="stage">
+      <canvas id="road"></canvas>
+      <div class="hud" id="hud"></div>
+      <div class="progress" id="p-progress"><i></i></div>
+      <div class="cmp" id="p-cmp"></div>
+      <div class="zoom">
+        <button class="icon-btn sm" id="z-in" aria-label="拡大"><svg><use href="#i-plus"/></svg></button>
+        <button class="icon-btn sm" id="z-out" aria-label="縮小"><svg><use href="#i-minus"/></svg></button>
+        <button class="icon-btn sm" id="z-fit" aria-label="全体表示"><svg><use href="#i-fit"/></svg></button>
+      </div>
+      <div class="toasts" id="toasts"></div>
+      <div class="guide" id="guide"></div>
+      <div class="vcard" id="vcard"></div>
+      <div class="legend" id="legend"></div>
+      <div class="quiz-ans" id="quiz-ans"></div>
+    </div>
+    <div class="sheet" id="sheet">
+      <div class="handle" id="handle"><i></i></div>
+      <div class="transport">
+        <button class="tbtn main" id="t-play" aria-label="再生・一時停止"><svg><use href="#i-pause"/></svg></button>
+        <div class="seg" id="t-speed"><button data-s="0.25">¼</button><button data-s="1" class="on">1×</button><button data-s="2">2×</button><button data-s="4">4×</button></div>
+        <button class="tbtn" id="t-reset" aria-label="リセット"><svg><use href="#i-reset"/></svg></button>
+        <button class="tbtn" id="t-view" aria-label="表示切替"><svg><use href="#i-eye"/></svg><span id="t-view-l">リアル</span></button>
+        <button class="tbtn" id="t-night" aria-label="夜間"><svg><use href="#i-moon"/></svg></button>
+      </div>
+      <div class="action-row" id="action-row"></div>
+      <div class="tabs sheet-tabs" id="sheet-tabs"><button class="on" data-t="ctl">条件</button><button data-t="graph">グラフ</button><button data-t="info">指標</button></div>
+      <div class="sheet-body">
+        <div class="pane on" data-p="ctl" id="pane-ctl"></div>
+        <div class="pane" data-p="graph" id="pane-graph">
+          <div class="seg graph-seg" id="graph-seg"><button data-g="st" class="on">時空間図</button><button data-g="fd">基本図</button><button data-g="ts">速度の推移</button></div>
+          <canvas id="graph"></canvas>
+          <p class="note" id="graph-note"></p>
+        </div>
+        <div class="pane" data-p="info" id="pane-info"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MODAL -->
+  <div class="modal" id="modal"><div class="modal-card" id="modal-card"></div></div>
+</div>
+<script type="module" src="js/ui/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "JAM LAB — 渋滞の科学",
+  "short_name": "JAM LAB",
+  "description": "1台1台の車を計算する交通シミュレーションで、渋滞のしくみを遊びながら学ぶ。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#0b1626",
+  "theme_color": "#0b1626",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
