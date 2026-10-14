@@ -1,0 +1,23 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#000">
+<canvas id="c"></canvas>
+<script>
+// App icon: a blue crowd charging through a golden ×2 gate on a sky-blue background
+const q = new URLSearchParams(location.search), S = +(q.get('s') || 512), mask = q.get('m') === '1';
+const c = document.getElementById('c'); c.width = c.height = S; const x = c.getContext('2d');
+const g = x.createLinearGradient(0, 0, 0, S); g.addColorStop(0, '#46b6ff'); g.addColorStop(1, '#1f7fe0');
+x.fillStyle = g; x.fillRect(0, 0, S, S);
+const k = mask ? 0.8 : 1; x.translate(S / 2, S / 2); x.scale(k, k); x.translate(-S / 2, -S / 2);
+// road
+x.fillStyle = '#eef3fa'; x.beginPath(); x.moveTo(S * 0.38, S * 0.2); x.lineTo(S * 0.62, S * 0.2); x.lineTo(S * 1.05, S * 1.05); x.lineTo(-S * 0.05, S * 1.05); x.fill();
+// gate
+x.fillStyle = 'rgba(255,196,40,.55)'; x.fillRect(S * 0.16, S * 0.2, S * 0.68, S * 0.36);
+x.strokeStyle = '#ffd23f'; x.lineWidth = S * 0.025; x.strokeRect(S * 0.16, S * 0.2, S * 0.68, S * 0.36);
+x.fillStyle = '#fff'; x.fillRect(S * 0.14, S * 0.18, S * 0.04, S * 0.4); x.fillRect(S * 0.82, S * 0.18, S * 0.04, S * 0.4);
+x.font = `900 ${S * 0.24}px system-ui, sans-serif`; x.textAlign = 'center'; x.textBaseline = 'middle';
+x.lineWidth = S * 0.03; x.strokeStyle = '#0d2350'; x.lineJoin = 'round'; x.strokeText('×2', S / 2, S * 0.39); x.fillStyle = '#fff'; x.fillText('×2', S / 2, S * 0.39);
+// crowd
+const man = (cx, cy, s) => { x.fillStyle = '#2f8cff'; x.strokeStyle = '#1a5fc4'; x.beginPath(); x.arc(cx, cy - s * 0.75, s * 0.22, 0, 7); x.fill(); x.beginPath(); x.roundRect(cx - s * 0.2, cy - s * 0.52, s * 0.4, s * 0.55, s * 0.15); x.fill(); x.lineCap = 'round'; x.lineWidth = s * 0.14; x.strokeStyle = '#2f8cff'; x.beginPath(); x.moveTo(cx - s * 0.08, cy); x.lineTo(cx - s * 0.18, cy + s * 0.32); x.moveTo(cx + s * 0.08, cy); x.lineTo(cx + s * 0.2, cy + s * 0.3); x.stroke(); };
+const pts = []; for (let i = 0; i < 26; i++) { const r = Math.sqrt(i + 0.5) * S * 0.052, a = i * 2.39996; pts.push([S / 2 + r * Math.cos(a), S * 0.8 + r * Math.sin(a) * 0.5]); }
+pts.sort((a, b) => a[1] - b[1]).forEach(([px, py]) => man(px, py, S * 0.16 * (0.75 + (py - S * 0.6) / S)));
+document.title = 'ready';
+</script>
