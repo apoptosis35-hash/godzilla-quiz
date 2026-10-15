@@ -1,0 +1,17 @@
+{
+  "name": "ゲートラッシュ",
+  "short_name": "ゲートラッシュ",
+  "description": "×2か＋50か？ ゲートを選んで仲間を増やし、敵の大群とボスを倒せ！",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#46b6ff",
+  "theme_color": "#46b6ff",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

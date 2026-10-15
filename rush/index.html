@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ゲートラッシュ</title>
+<meta name="description" content="×2か＋50か？ ゲートを選んで仲間を増やし、敵の大群とボスを倒せ！">
+<meta property="og:type" content="website">
+<meta property="og:title" content="ゲートラッシュ">
+<meta property="og:description" content="×2か＋50か？ ゲートを選んで仲間を増やし、敵の大群とボスを倒せ！">
+<meta property="og:image" content="https://apoptosis35-hash.github.io/godzilla-quiz/rush/icons/icon-512.png">
+<meta name="theme-color" content="#46b6ff">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ゲートラッシュ">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, noimageindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<div id="hud">
+  <div class="hud-top">
+    <button id="mute" class="chip icon" aria-label="サウンド"><span class="on-ic">🔊</span><span class="off-ic">🔇</span></button>
+    <div class="lvbox">
+      <div id="hud-lv">LEVEL 1</div>
+      <div class="prog"><div id="prog-fill"></div></div>
+    </div>
+    <div id="coin-chip" class="chip"><i class="coin"></i><b id="coins">0</b></div>
+  </div>
+</div>
+
+<section id="home" class="ov on">
+  <div class="title">
+    <div class="logo">GATE<span>RUSH</span></div>
+    <div class="lv">LEVEL <b id="lv-no">1</b> <em id="lv-tag"></em></div>
+  </div>
+  <div class="hint">
+    <div class="hand">👆</div>
+    <div class="hint-t">ドラッグしてスタート</div>
+  </div>
+  <div class="ups">
+    <button id="up-start" class="up">
+      <span class="up-ic">👥</span><span class="up-n">人数</span><span id="up-start-lv" class="up-lv"></span>
+      <span id="up-start-v" class="up-v"></span>
+      <span class="up-c"><i class="coin"></i><b id="up-start-c"></b></span>
+    </button>
+    <button id="up-inc" class="up">
+      <span class="up-ic">💰</span><span class="up-n">収入</span><span id="up-inc-lv" class="up-lv"></span>
+      <span id="up-inc-v" class="up-v"></span>
+      <span class="up-c"><i class="coin"></i><b id="up-inc-c"></b></span>
+    </button>
+  </div>
+</section>
+
+<section id="win" class="ov dim">
+  <div class="card">
+    <div id="win-title" class="big">LEVEL CLEAR!</div>
+    <div id="win-mult" class="mult">×1.0</div>
+    <div id="win-perfect" class="perf"></div>
+    <div class="rw"><i class="coin"></i><b id="win-reward">0</b></div>
+    <div class="roul">
+      <div class="seg s2">×2</div><div class="seg s3">×3</div><div class="seg s5">×5</div><div class="seg s3">×3</div><div class="seg s2">×2</div>
+      <div id="needle"></div>
+    </div>
+    <button id="spin" class="btn go"><span>ストップ！</span></button>
+    <div class="spinv"><i class="coin"></i><b id="spin-val">0</b></div>
+    <button id="claim" class="link" hidden>そのまま受け取る</button>
+  </div>
+</section>
+
+<section id="lose" class="ov dim">
+  <div class="card">
+    <div class="big red">FAILED…</div>
+    <div id="lose-msg" class="msg"></div>
+    <div class="lprog"><div id="lose-bar"></div></div>
+    <div class="lpct">進行度 <b id="lose-pct">0%</b></div>
+    <button id="retry" class="btn go">もう一回！</button>
+  </div>
+</section>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
