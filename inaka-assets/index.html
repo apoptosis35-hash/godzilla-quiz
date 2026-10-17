@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>田舎3Dモデル集</title>
+<style>
+  :root { --bg: #eef1e6; --card: #fff; --ink: #24301f; --sub: #66705e; --line: #d5dacb; --accent: #4f7a2a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #161a14; --card: #20261d; --ink: #e6ebdf; --sub: #9aa491; --line: #343c2f; --accent: #9ccc65; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font-family: system-ui, -apple-system, "Hiragino Sans", sans-serif; }
+  header { padding: 20px 16px 8px; max-width: 1100px; margin: 0 auto; }
+  h1 { font-size: 22px; margin: 0 0 4px; }
+  header p { margin: 0; color: var(--sub); font-size: 13px; line-height: 1.6; }
+  .bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px; max-width: 1100px; margin: 0 auto; }
+  .bar button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
+  .bar button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .bar .village { margin-left: auto; font-weight: 600; }
+  main { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 6px 16px 32px; max-width: 1100px; margin: 0 auto; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; display: flex; flex-direction: column; justify-content: flex-start; }
+  .card img { width: 100%; aspect-ratio: 1; display: block; object-fit: cover; }
+  .card div { padding: 6px 8px 8px; }
+  .card b { display: block; font-size: 14px; }
+  .card small { color: var(--sub); font-size: 11px; }
+  #viewer { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.55); display: none; align-items: center; justify-content: center; padding: 12px; }
+  #viewer.open { display: flex; }
+  .panel { background: var(--card); border-radius: 12px; width: min(900px, 100%); height: min(640px, 100%); display: flex; flex-direction: column; overflow: hidden; }
+  .panel header { display: flex; align-items: center; gap: 8px; padding: 10px 12px; margin: 0; max-width: none; border-bottom: 1px solid var(--line); }
+  .panel h2 { font-size: 16px; margin: 0; flex: 1; }
+  .panel header a, .panel header button { font-size: 13px; color: var(--accent); background: none; border: 0; cursor: pointer; text-decoration: none; }
+  #gl { flex: 1; min-height: 0; display: block; width: 100%; touch-action: none; }
+  .info { padding: 8px 12px; font-size: 12px; color: var(--sub); border-top: 1px solid var(--line); }
+</style>
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }</script>
+</head>
+<body>
+<header>
+  <h1>田舎3Dモデル集</h1>
+  <p>田舎ゲーム用に Blender で作ったローポリモデルです。1単位 = 1m、Y軸が上、原点は足元の中央、正面は +Z。カードを押すと3Dで回して見られます。</p>
+</header>
+<div class="bar" id="bar"></div>
+<main id="grid"></main>
+<div id="viewer">
+  <div class="panel">
+    <header><h2 id="vtitle"></h2><a id="vdl" download>GLBをダウンロード</a><button id="vclose">閉じる ✕</button></header>
+    <canvas id="gl"></canvas>
+    <div class="info" id="vinfo"></div>
+  </div>
+</div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+const models = await (await fetch('models.json')).json();
+const cats = ['すべて', ...new Set(models.map((m) => m.category))];
+let cat = 'すべて';
+const bar = document.getElementById('bar'), grid = document.getElementById('grid');
+
+function drawBar() {
+  bar.innerHTML = '';
+  for (const c of cats) {
+    const b = document.createElement('button'); b.textContent = c; b.className = c === cat ? 'on' : '';
+    b.onclick = () => { cat = c; drawBar(); drawGrid(); }; bar.append(b);
+  }
+  const v = document.createElement('button'); v.textContent = '🏡 村に並べてみる'; v.className = 'village';
+  v.onclick = openVillage; bar.append(v);
+}
+function drawGrid() {
+  grid.innerHTML = '';
+  for (const m of models.filter((m) => cat === 'すべて' || m.category === cat)) {
+    const b = document.createElement('button'); b.className = 'card';
+    b.innerHTML = `<img loading="lazy" src="preview/${m.name}.jpg" alt=""><div><b>${m.jp}</b><small>${m.name}.glb · ${m.size_m.join('×')}m</small></div>`;
+    b.onclick = () => openModel(m); grid.append(b);
+  }
+}
+
+// ---- 3D viewer
+const canvas = document.getElementById('gl');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbcd3e6);
+scene.fog = new THREE.Fog(0xbcd3e6, 60, 160);
+scene.add(new THREE.HemisphereLight(0xdfefff, 0x5a6b3a, 1.4));
+const sun = new THREE.DirectionalLight(0xfff2dd, 2.6); sun.position.set(-20, 30, 15); sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048); Object.assign(sun.shadow.camera, { left: -40, right: 40, top: 40, bottom: -40, far: 120 });
+scene.add(sun);
+const ground = new THREE.Mesh(new THREE.CircleGeometry(200, 48), new THREE.MeshStandardMaterial({ color: 0x5d8a35, roughness: 1 }));
+ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
+const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49;
+const loader = new GLTFLoader(), cache = {};
+const load = (n) => (cache[n] ??= loader.loadAsync(`glb/${n}.glb`).then((g) => { g.scene.traverse((o) => { o.castShadow = o.receiveShadow = true; }); return g.scene; }));
+let holder = new THREE.Group(); scene.add(holder);
+const viewer = document.getElementById('viewer');
+let running = false;
+
+function frame(size, center) {
+  const d = Math.max(size, 1.5);
+  camera.position.set(center.x - d * 0.9, center.y + d * 0.6, center.z + d * 1.3);
+  controls.target.copy(center); controls.update();
+}
+function show() {
+  viewer.classList.add('open'); resize();
+  if (!running) { running = true; requestAnimationFrame(loop); }
+}
+async function openModel(m) {
+  document.getElementById('vtitle').textContent = m.jp;
+  const dl = document.getElementById('vdl'); dl.style.display = ''; dl.href = `glb/${m.name}.glb`;
+  document.getElementById('vinfo').textContent = `${m.name}.glb · 幅×高さ×奥行 ${m.size_m.join(' × ')} m · ${m.tris} 三角形 · ${m.kb} KB · 色: ${m.materials.join(', ')}`;
+  scene.remove(holder); holder = new THREE.Group(); scene.add(holder);
+  show();
+  const obj = (await load(m.name)).clone(); holder.add(obj);
+  const box = new THREE.Box3().setFromObject(obj);
+  frame(box.getSize(new THREE.Vector3()).length(), box.getCenter(new THREE.Vector3()));
+}
+
+// a little sample village: shows every model together at true scale
+const LAYOUT = [
+  ['kominka', 0, -6, 0], ['kura', 10, -8, -0.3], ['naya', -10, -5, 0.4], ['ido', 5, 0, 0], ['kaki_tree', -5, 1, 0],
+  ['tanbo', -9, 10, 0], ['tanbo', 0, 10, 0], ['kakashi', 0, 10, 0.5], ['hasakake', 9, 9, Math.PI / 2], ['rock', 8, 3, 0],
+  ['take_gaki', 3, -1.5, 0], ['take_gaki', 6.5, -1.5, 0], ['ishigaki', -15.5, 0, Math.PI / 2], ['ishigaki', -15.5, 4, Math.PI / 2],
+  ['denchu', 14, 2, 0], ['denchu', 14, 20, 0], ['jihanki', 15.5, 5.5, -Math.PI / 2], ['post', 15.4, 7.2, -Math.PI / 2],
+  ['bus_stop', 18, 12, -Math.PI / 2], ['keitora', 12, 15, 0.2], ['kounki', -4, 4.5, 2.2], ['hashi', 15, -16, 0],
+  ['torii', -4, -18, 0], ['hokora', -4, -22, 0], ['ishidoro', -6, -20, 0], ['ishidoro', -2, -20, 0], ['jizo', 13, -3, -Math.PI / 2],
+  ['tanuki', 2, -2.6, 0.4], ['sakura', -9, -14, 0], ['sakura', 2, -14, 1], ['sugi', -12, -20, 0], ['sugi', -16, -17, 1],
+  ['sugi', 6, -21, 2], ['take', 20, -6, 0], ['take', 22, -2, 1], ['bush', 4, 3.5, 0], ['bush', -14, -9, 1], ['bush', 12, -12, 2],
+];
+async function openVillage() {
+  document.getElementById('vtitle').textContent = '村に並べてみる';
+  document.getElementById('vdl').style.display = 'none';
+  document.getElementById('vinfo').textContent = `${new Set(LAYOUT.map((l) => l[0])).size}種類のモデルを実寸で配置したサンプルです。ドラッグで回転、ピンチ/ホイールで拡大縮小。`;
+  scene.remove(holder); holder = new THREE.Group(); scene.add(holder);
+  show(); frame(30, new THREE.Vector3(2, 0, 0));
+  const objs = await Promise.all(LAYOUT.map((l) => load(l[0])));
+  LAYOUT.forEach(([, x, z, ry], i) => { const o = objs[i].clone(); o.position.set(x, 0, z); o.rotation.y = ry; holder.add(o); });
+}
+
+function resize() {
+  const w = canvas.clientWidth, h = canvas.clientHeight;
+  if (!w || !h) return;
+  renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+addEventListener('resize', resize);
+function loop() {
+  if (!viewer.classList.contains('open')) { running = false; return; }
+  controls.update(); renderer.render(scene, camera); requestAnimationFrame(loop);
+}
+const close = () => viewer.classList.remove('open');
+document.getElementById('vclose').onclick = close;
+viewer.onclick = (e) => { if (e.target === viewer) close(); };
+addEventListener('keydown', (e) => { if (e.key === 'Escape') close(); });
+drawBar(); drawGrid();
+</script>
+</body>
+</html>
