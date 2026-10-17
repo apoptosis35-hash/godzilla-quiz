@@ -34,21 +34,27 @@ h1 span { color: var(--ember); }
 .bar button[aria-pressed="true"] { border-color: var(--ember); color: var(--ember); }
 .bar button:focus-visible, .ar:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
 .ar { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(110px + env(safe-area-inset-top, 0px)); }
+.fallback { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center 70%; }
+.status { position: absolute; left: 0; right: 0; top: 46%; text-align: center; font-size: 14px; color: var(--ink);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.status span { display: inline-block; background: var(--chip); border: 1px solid var(--chip-line); border-radius: 12px; padding: 10px 14px; max-width: 32em; }
 .hint { position: absolute; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 12px; color: var(--ink-soft); pointer-events: none; }
 </style>
 
 <div class="stage">
+  <img class="fallback" id="fallback" src="poster.jpg" alt="シン・ゴジラのレンダリング画像">
   <model-viewer id="mv" src="shin_godzilla.gltf.json" alt="シン・ゴジラ第4形態の3Dモデル"
     camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="0" rotation-per-second="18deg"
     camera-orbit="-30deg 82deg auto" field-of-view="32deg" min-camera-orbit="auto 20deg 2m" max-camera-orbit="auto 100deg auto"
     shadow-intensity="1" shadow-softness="0.9" exposure="1.15" tone-mapping="agx" environment-image="neutral"
-    ar ar-modes="webxr scene-viewer quick-look" interaction-prompt="none">
+    ar ar-modes="webxr scene-viewer quick-look" interaction-prompt="none" poster="poster.jpg">
     <button slot="ar-button" class="ar" id="ar">ARで置く</button>
   </model-viewer>
   <header>
     <h1>シン・<span>ゴジラ</span></h1>
     <p class="sub">第4形態 ・ Blenderで制作した3Dモデル</p>
   </header>
+  <p class="status" id="status"><span id="statusText">3Dモデルを読み込み中…</span></p>
   <p class="hint" id="hint">指でドラッグして回す ・ ピンチで拡大</p>
   <div class="bar">
     <button id="spin" aria-pressed="true">自動回転</button>
@@ -77,5 +83,13 @@ for (const [id, v] of Object.entries(views)) {
   });
 }
 mv.addEventListener('camera-change', e => { if (e.detail.source === 'user') document.getElementById('hint').hidden = true; });
+const status = document.getElementById('status'), statusText = document.getElementById('statusText');
+mv.addEventListener('progress', e => { if (status.dataset.err) return;
+  statusText.textContent = `3Dモデルを読み込み中… ${Math.round(e.detail.totalProgress * 100)}%`; });
+mv.addEventListener('load', () => { status.hidden = true; document.getElementById('fallback').hidden = true; });
+mv.addEventListener('error', e => { status.dataset.err = 1;
+  statusText.textContent = '3Dモデルを表示できませんでした(' + (e.detail?.type || '不明なエラー') + ')。画像だけ表示しています。'; });
+setTimeout(() => { if (!customElements.get('model-viewer')) { status.dataset.err = 1;
+  statusText.textContent = '3D表示の部品を読み込めませんでした。通信状況を確かめて、ページを開き直してください。'; } }, 10000);
 if (matchMedia('(prefers-reduced-motion: reduce)').matches) { mv.autoRotate = false; spin.setAttribute('aria-pressed', 'false'); }
 </script>

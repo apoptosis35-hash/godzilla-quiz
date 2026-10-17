@@ -9,7 +9,7 @@ import make_model as mm
 import bpy
 import numpy as np
 
-TARGET_TRIS = 300_000
+TARGET_TRIS = 90_000  # light enough for iPhone Safari and in-app browsers
 
 bpy.ops.wm.open_mainfile(filepath=os.path.join(HERE, 'shin_godzilla.blend'))
 ob = bpy.data.objects['shin_godzilla']
