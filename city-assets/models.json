@@ -1,0 +1,823 @@
+[
+ {
+  "name": "tower_glass_blue",
+  "jp": "超高層ビル(青ガラス・150m)",
+  "category": "超高層ビル",
+  "size_m": [
+   41.6,
+   169.15,
+   41.6
+  ],
+  "tris": 452,
+  "materials": [
+   "glass_blue",
+   "mullion",
+   "red_light",
+   "roof",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 81.0
+ },
+ {
+  "name": "tower_setback",
+  "jp": "超高層ビル(段々の石張り・アールデコ)",
+  "category": "超高層ビル",
+  "size_m": [
+   39.6,
+   180.05,
+   39.6
+  ],
+  "tris": 228,
+  "materials": [
+   "paint_white",
+   "red_light",
+   "roof",
+   "steel",
+   "steel_dark",
+   "stone_office",
+   "storefront_lit"
+  ],
+  "kb": 78.8
+ },
+ {
+  "name": "tower_cylinder",
+  "jp": "超高層ビル(円筒形・緑ガラス)",
+  "category": "超高層ビル",
+  "size_m": [
+   40.0,
+   131.85,
+   40.0
+  ],
+  "tris": 2148,
+  "materials": [
+   "glass_green",
+   "mullion",
+   "red_light",
+   "roof",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 163.1
+ },
+ {
+  "name": "tower_twist",
+  "jp": "超高層ビル(ねじれ・黒ガラス)",
+  "category": "超高層ビル",
+  "size_m": [
+   47.69,
+   136.75,
+   47.69
+  ],
+  "tris": 988,
+  "materials": [
+   "glass_dark",
+   "red_light",
+   "roof",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 116.8
+ },
+ {
+  "name": "tower_bronze",
+  "jp": "超高層ビル(ブロンズ・斜めの頂部)",
+  "category": "超高層ビル",
+  "size_m": [
+   35.6,
+   121.35,
+   35.6
+  ],
+  "tris": 136,
+  "materials": [
+   "glass_bronze",
+   "mullion",
+   "red_light",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 57.2
+ },
+ {
+  "name": "office_mid",
+  "jp": "オフィスビル(コンクリート・60m)",
+  "category": "中層ビル",
+  "size_m": [
+   25.6,
+   63.3,
+   19.6
+  ],
+  "tris": 292,
+  "materials": [
+   "concrete_office",
+   "red_light",
+   "roof",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 77.6
+ },
+ {
+  "name": "office_brick",
+  "jp": "オフィスビル(れんが・36m)",
+  "category": "中層ビル",
+  "size_m": [
+   21.6,
+   39.1,
+   17.6
+  ],
+  "tris": 252,
+  "materials": [
+   "brick_office",
+   "paint_white",
+   "roof",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 73.6
+ },
+ {
+  "name": "apartment_tower",
+  "jp": "タワーマンション(80m)",
+  "category": "中層ビル",
+  "size_m": [
+   34.0,
+   84.3,
+   16.0
+  ],
+  "tris": 148,
+  "materials": [
+   "apartment",
+   "red_light",
+   "roof",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 60.6
+ },
+ {
+  "name": "apartment_mid",
+  "jp": "マンション(30m)",
+  "category": "中層ビル",
+  "size_m": [
+   20.0,
+   30.8,
+   15.5
+  ],
+  "tris": 96,
+  "materials": [
+   "apartment",
+   "paint_white",
+   "roof"
+  ],
+  "kb": 33.7
+ },
+ {
+  "name": "dept_store",
+  "jp": "百貨店(大型ビジョン付き)",
+  "category": "中層ビル",
+  "size_m": [
+   51.6,
+   36.1,
+   41.6
+  ],
+  "tris": 420,
+  "materials": [
+   "ad0_lit",
+   "ad1_lit",
+   "roof",
+   "steel",
+   "steel_dark",
+   "stone_office",
+   "storefront_lit"
+  ],
+  "kb": 270.8
+ },
+ {
+  "name": "station_building",
+  "jp": "駅ビル(シティ中央駅)",
+  "category": "中層ビル",
+  "size_m": [
+   80.2,
+   20.1,
+   39.1
+  ],
+  "tris": 516,
+  "materials": [
+   "glass_dark",
+   "roof",
+   "sign_station_lit",
+   "steel",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 102.7
+ },
+ {
+  "name": "parking_garage",
+  "jp": "立体駐車場",
+  "category": "中層ビル",
+  "size_m": [
+   30.12,
+   17.0,
+   40.91
+  ],
+  "tris": 476,
+  "materials": [
+   "barrier",
+   "konbini_b",
+   "led_white",
+   "yellow_line"
+  ],
+  "kb": 28.8
+ },
+ {
+  "name": "shop_row",
+  "jp": "商店建築(3階建て)",
+  "category": "低層",
+  "size_m": [
+   25.6,
+   11.3,
+   13.97
+  ],
+  "tris": 132,
+  "materials": [
+   "brick_office",
+   "car_red",
+   "konbini_a",
+   "konbini_b",
+   "roof",
+   "steel_dark",
+   "storefront_lit"
+  ],
+  "kb": 67.6
+ },
+ {
+  "name": "konbini",
+  "jp": "コンビニ(ブランドなし)",
+  "category": "低層",
+  "size_m": [
+   16.4,
+   4.5,
+   12.15
+  ],
+  "tris": 144,
+  "materials": [
+   "glass_car",
+   "konbini_a",
+   "konbini_b",
+   "led_white",
+   "paint_white",
+   "steel",
+   "storefront_lit.001"
+  ],
+  "kb": 36.0
+ },
+ {
+  "name": "broadcast_tower",
+  "jp": "電波塔(200m)",
+  "category": "タワー・工事",
+  "size_m": [
+   28.39,
+   201.0,
+   32.58
+  ],
+  "tris": 2148,
+  "materials": [
+   "car_red",
+   "glass_dark",
+   "paint_white",
+   "red_light",
+   "steel",
+   "steel_dark"
+  ],
+  "kb": 162.2
+ },
+ {
+  "name": "tower_crane",
+  "jp": "タワークレーン",
+  "category": "タワー・工事",
+  "size_m": [
+   66.63,
+   72.88,
+   3.0
+  ],
+  "tris": 1740,
+  "materials": [
+   "barrier",
+   "crane_yellow",
+   "glass_car",
+   "red_light",
+   "steel_dark"
+  ],
+  "kb": 96.0
+ },
+ {
+  "name": "construction_frame",
+  "jp": "建設中の鉄骨ビル",
+  "category": "タワー・工事",
+  "size_m": [
+   26.0,
+   40.36,
+   23.35
+  ],
+  "tris": 1852,
+  "materials": [
+   "barrier",
+   "crane_yellow",
+   "net",
+   "paint_white",
+   "steel_dark"
+  ],
+  "kb": 101.2
+ },
+ {
+  "name": "road_straight",
+  "jp": "道路(4車線・20m)",
+  "category": "道路",
+  "size_m": [
+   14.0,
+   0.11,
+   20.0
+  ],
+  "tris": 180,
+  "materials": [
+   "asphalt",
+   "yellow_line",
+   "zebra"
+  ],
+  "kb": 75.4
+ },
+ {
+  "name": "road_crossing",
+  "jp": "交差点(横断歩道付き)",
+  "category": "道路",
+  "size_m": [
+   14.0,
+   0.11,
+   14.0
+  ],
+  "tris": 396,
+  "materials": [
+   "asphalt",
+   "zebra"
+  ],
+  "kb": 89.3
+ },
+ {
+  "name": "sidewalk",
+  "jp": "歩道(4m・縁石つき)",
+  "category": "道路",
+  "size_m": [
+   4.12,
+   0.22,
+   20.0
+  ],
+  "tris": 24,
+  "materials": [
+   "barrier",
+   "pavers"
+  ],
+  "kb": 33.8
+ },
+ {
+  "name": "highway",
+  "jp": "高架道路(40m・橋脚つき)",
+  "category": "道路",
+  "size_m": [
+   20.08,
+   23.7,
+   40.0
+  ],
+  "tris": 356,
+  "materials": [
+   "asphalt",
+   "barrier",
+   "led_white",
+   "steel",
+   "zebra"
+  ],
+  "kb": 88.7
+ },
+ {
+  "name": "rail_viaduct",
+  "jp": "鉄道の高架橋(40m)",
+  "category": "道路",
+  "size_m": [
+   11.0,
+   17.6,
+   40.0
+  ],
+  "tris": 1740,
+  "materials": [
+   "asphalt",
+   "barrier",
+   "steel",
+   "steel_dark"
+  ],
+  "kb": 182.1
+ },
+ {
+  "name": "ped_bridge",
+  "jp": "歩道橋(道路をまたぐ)",
+  "category": "道路",
+  "size_m": [
+   3.05,
+   6.9,
+   37.9
+  ],
+  "tris": 756,
+  "materials": [
+   "car_blue",
+   "paint_white",
+   "steel"
+  ],
+  "kb": 42.3
+ },
+ {
+  "name": "subway_entrance",
+  "jp": "地下鉄の入口",
+  "category": "道路",
+  "size_m": [
+   3.7,
+   6.69,
+   7.3
+  ],
+  "tris": 276,
+  "materials": [
+   "barrier",
+   "glass_car",
+   "paint_white",
+   "sign_subway_lit",
+   "soil_dark",
+   "steel"
+  ],
+  "kb": 36.8
+ },
+ {
+  "name": "traffic_light",
+  "jp": "信号機(車両・歩行者)",
+  "category": "街の小物",
+  "size_m": [
+   0.53,
+   6.2,
+   5.44
+  ],
+  "tris": 368,
+  "materials": [
+   "paint_white",
+   "sig_green",
+   "sig_off",
+   "sig_red",
+   "steel_dark"
+  ],
+  "kb": 20.9
+ },
+ {
+  "name": "street_light",
+  "jp": "街灯(LED・二灯)",
+  "category": "街の小物",
+  "size_m": [
+   5.9,
+   9.16,
+   0.35
+  ],
+  "tris": 132,
+  "materials": [
+   "led_white",
+   "steel"
+  ],
+  "kb": 8.3
+ },
+ {
+  "name": "road_sign",
+  "jp": "道路案内標識",
+  "category": "街の小物",
+  "size_m": [
+   4.2,
+   6.5,
+   5.14
+  ],
+  "tris": 68,
+  "materials": [
+   "sign_road_lit",
+   "steel"
+  ],
+  "kb": 32.2
+ },
+ {
+  "name": "bus_shelter",
+  "jp": "バス停(ガラスの屋根)",
+  "category": "街の小物",
+  "size_m": [
+   5.44,
+   3.0,
+   1.8
+  ],
+  "tris": 188,
+  "materials": [
+   "ad3_lit",
+   "car_blue",
+   "glass_car",
+   "steel"
+  ],
+  "kb": 101.8
+ },
+ {
+  "name": "bench_city",
+  "jp": "ベンチ(街)",
+  "category": "街の小物",
+  "size_m": [
+   1.8,
+   0.49,
+   0.5
+  ],
+  "tris": 72,
+  "materials": [
+   "steel_dark",
+   "wood_light"
+  ],
+  "kb": 5.6
+ },
+ {
+  "name": "tree_planter",
+  "jp": "街路樹(植え込み)",
+  "category": "街の小物",
+  "size_m": [
+   3.2,
+   5.72,
+   2.95
+  ],
+  "tris": 132,
+  "materials": [
+   "bark",
+   "barrier",
+   "leaf",
+   "soil_dark"
+  ],
+  "kb": 11.7
+ },
+ {
+  "name": "fire_hydrant",
+  "jp": "消火栓",
+  "category": "街の小物",
+  "size_m": [
+   0.45,
+   0.8,
+   0.34
+  ],
+  "tris": 196,
+  "materials": [
+   "hydrant"
+  ],
+  "kb": 12.3
+ },
+ {
+  "name": "recycle_bins",
+  "jp": "分別ゴミ箱",
+  "category": "街の小物",
+  "size_m": [
+   1.45,
+   1.0,
+   0.47
+  ],
+  "tris": 72,
+  "materials": [
+   "konbini_a",
+   "konbini_b",
+   "paint_white",
+   "steel_dark"
+  ],
+  "kb": 6.6
+ },
+ {
+  "name": "vending_row",
+  "jp": "自動販売機の列",
+  "category": "街の小物",
+  "size_m": [
+   3.2,
+   1.85,
+   0.85
+  ],
+  "tris": 108,
+  "materials": [
+   "car_red",
+   "konbini_b",
+   "led_white",
+   "paint_white",
+   "steel_dark"
+  ],
+  "kb": 9.1
+ },
+ {
+  "name": "bollards",
+  "jp": "車止め",
+  "category": "街の小物",
+  "size_m": [
+   4.17,
+   0.9,
+   0.17
+  ],
+  "tris": 440,
+  "materials": [
+   "car_red",
+   "steel",
+   "zebra"
+  ],
+  "kb": 22.0
+ },
+ {
+  "name": "big_screen",
+  "jp": "大型ビジョン(壁掛け 12m)",
+  "category": "街の小物",
+  "size_m": [
+   12.6,
+   7.4,
+   0.9
+  ],
+  "tris": 24,
+  "materials": [
+   "ad2_lit",
+   "steel_dark"
+  ],
+  "kb": 92.5
+ },
+ {
+  "name": "rooftop_billboard",
+  "jp": "屋上の看板",
+  "category": "屋上",
+  "size_m": [
+   14.0,
+   11.92,
+   3.87
+  ],
+  "tris": 228,
+  "materials": [
+   "ad1_lit.001",
+   "led_white",
+   "steel_dark"
+  ],
+  "kb": 107.7
+ },
+ {
+  "name": "rooftop_hvac",
+  "jp": "屋上の空調設備",
+  "category": "屋上",
+  "size_m": [
+   9.0,
+   2.9,
+   5.76
+  ],
+  "tris": 572,
+  "materials": [
+   "steel",
+   "steel_dark"
+  ],
+  "kb": 26.8
+ },
+ {
+  "name": "helipad",
+  "jp": "ヘリポート(屋上)",
+  "category": "屋上",
+  "size_m": [
+   22.0,
+   0.55,
+   22.0
+  ],
+  "tris": 948,
+  "materials": [
+   "barrier",
+   "roof",
+   "sig_green",
+   "zebra"
+  ],
+  "kb": 44.9
+ },
+ {
+  "name": "car_sedan",
+  "jp": "乗用車(セダン)",
+  "category": "乗り物",
+  "size_m": [
+   1.8,
+   1.48,
+   4.66
+  ],
+  "tris": 300,
+  "materials": [
+   "brake",
+   "car_silver",
+   "glass_car",
+   "lamp_white",
+   "tire"
+  ],
+  "kb": 17.9
+ },
+ {
+  "name": "car_red",
+  "jp": "乗用車(赤・ハッチバック)",
+  "category": "乗り物",
+  "size_m": [
+   1.7,
+   1.53,
+   4.06
+  ],
+  "tris": 300,
+  "materials": [
+   "brake",
+   "car_red",
+   "glass_car",
+   "lamp_white",
+   "tire"
+  ],
+  "kb": 17.9
+ },
+ {
+  "name": "taxi",
+  "jp": "タクシー",
+  "category": "乗り物",
+  "size_m": [
+   1.7,
+   1.75,
+   4.76
+  ],
+  "tris": 324,
+  "materials": [
+   "brake",
+   "glass_car",
+   "lamp_white",
+   "paint_white",
+   "taxi",
+   "tire"
+  ],
+  "kb": 20.2
+ },
+ {
+  "name": "city_bus",
+  "jp": "路線バス",
+  "category": "乗り物",
+  "size_m": [
+   2.57,
+   3.3,
+   11.09
+  ],
+  "tris": 516,
+  "materials": [
+   "brake",
+   "bus_body",
+   "bus_stripe",
+   "glass_car",
+   "lamp_white",
+   "led_white",
+   "steel",
+   "tire"
+  ],
+  "kb": 30.6
+ },
+ {
+  "name": "box_truck",
+  "jp": "トラック(箱型)",
+  "category": "乗り物",
+  "size_m": [
+   2.42,
+   3.5,
+   7.75
+  ],
+  "tris": 444,
+  "materials": [
+   "glass_car",
+   "konbini_b",
+   "lamp_white",
+   "paint_white",
+   "steel_dark",
+   "tire"
+  ],
+  "kb": 24.3
+ },
+ {
+  "name": "commuter_train",
+  "jp": "通勤電車(1両・20m)",
+  "category": "乗り物",
+  "size_m": [
+   2.96,
+   5.23,
+   20.08
+  ],
+  "tris": 740,
+  "materials": [
+   "glass_car",
+   "lamp_white",
+   "steel",
+   "steel_dark",
+   "tire",
+   "train_body",
+   "train_stripe"
+  ],
+  "kb": 41.6
+ }
+]

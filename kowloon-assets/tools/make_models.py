@@ -54,7 +54,7 @@ def _take_m(o, m, kind='box'):
     K.CUR.append(o); return o
 
 def tbox(m, size, loc, rot=(0, 0, 0), tile=2.0):
-    """Box with per-face UVs: textures repeat every `tile` metres, or tile='fit' stretches the image over each face."""
+    """Box with per-face UVs: textures repeat every `tile` metres (or (u, v) metres), or tile='fit' stretches the image over each face."""
     sx, sy, sz = size; hx, hy = sx / 2, sy / 2
     faces = [  # (4 corners, face width, face height)
         ([(-hx, -hy, 0), (hx, -hy, 0), (hx, -hy, sz), (-hx, -hy, sz)], sx, sz),  # front (-Y)
@@ -67,7 +67,8 @@ def tbox(m, size, loc, rot=(0, 0, 0), tile=2.0):
     verts, polys, uvs = [], [], []
     for corners, fw, fh in faces:
         i = len(verts); verts += corners; polys.append((i, i + 1, i + 2, i + 3))
-        u, v = (1, 1) if tile == 'fit' else (fw / tile, fh / tile)
+        tu, tv = tile if isinstance(tile, tuple) else (tile, tile)
+        u, v = (1, 1) if tile == 'fit' else (fw / tu, fh / tv)
         uvs += [(0, 0), (u, 0), (u, v), (0, v)]
     me = bpy.data.meshes.new('tbox'); me.from_pydata(verts, [], polys)
     lay = me.uv_layers.new()

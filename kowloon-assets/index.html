@@ -52,6 +52,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 
 const hiRes = await fetch('models_hi.json');
 const SETS = { lo: await (await fetch('models.json')).json(), hi: hiRes.ok ? await hiRes.json() : null };
@@ -91,6 +92,8 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 const scene = new THREE.Scene();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; // so metal reflects something instead of going black
+scene.environmentIntensity = 0.6;
 scene.background = new THREE.Color(0x3a4258);
 scene.fog = new THREE.Fog(0x3a4258, 70, 180);
 scene.add(new THREE.HemisphereLight(0xcfd8ff, 0x4a4038, 1.5));
