@@ -1,6 +1,7 @@
 # シン・ゴジラ(第4形態)— a procedural Shin Godzilla built with Blender's Python API.
 #   pip install bpy
 #   python3 make_model.py [--preview]   # builds shin_godzilla.blend and renders render.png (Cycles)
+#   python3 export_glb.py               # shin_godzilla.glb for phones and the web (see that file)
 # Blender coordinates: Z up, the creature faces -Y and stands about 13 units tall (feet at z = 0).
 # The body is a metaball sculpture (torso, neck, head, legs, arms, tail) fused with the dorsal plates by a voxel
 # remesh; a geometry-nodes modifier then carves the keloid folds and the glowing red cracks.
@@ -366,7 +367,8 @@ def camera_and_render():
     r.image_settings.file_format = 'PNG'
     r.filepath = os.path.join(HERE, 'render_preview.png' if PREVIEW else 'render.png')
 
-build(); stage(); camera_and_render()
-bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'shin_godzilla.blend' if not PREVIEW else 'preview.blend'), compress=True)
-bpy.ops.render.render(write_still=True)
-print('rendered', scene.render.filepath)
+if __name__ == '__main__':
+    build(); stage(); camera_and_render()
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'shin_godzilla.blend' if not PREVIEW else 'preview.blend'), compress=True)
+    bpy.ops.render.render(write_still=True)
+    print('rendered', scene.render.filepath)

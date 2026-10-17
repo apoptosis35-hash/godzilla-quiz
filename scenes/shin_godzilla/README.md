@@ -12,7 +12,13 @@ pip install bpy
 python3 make_model.py --preview          # 低解像度・少ないサンプル数で試しにレンダリング(約1分)
 python3 make_model.py --preview --head   # 顔と手のアップで確認
 python3 make_model.py                    # 本番(render.png と shin_godzilla.blend)
+python3 export_glb.py                    # スマホ・Web用の shin_godzilla.glb と viewer/shin_godzilla.gltf.json
 ```
+
+## iPhoneで見る
+
+`viewer/index.html` は、指で回したり拡大したりできる3Dビューアです(model-viewer を使用)。iPhoneのSafariで開けば、「ARで置く」から部屋に置くこともできます。
+glTFには手続き的なシェーダーを入れられないので、皮膚の模様と赤い亀裂は頂点カラーに焼き込み、メッシュは約21万面まで減らしています。
 
 ## 作り方
 

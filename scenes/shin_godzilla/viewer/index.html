@@ -1,0 +1,81 @@
+<title>シン・ゴジラ 3Dモデル</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@700;900&family=Zen+Kaku+Gothic+New:wght@400;500&display=swap">
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.5.0/dist/model-viewer.min.js"></script>
+<style>
+/* Layout: one full-height stage; the model fills it, a slim title block and control row float over the overcast sky. */
+:root {
+  --sky-top: #e9ebee; --sky-low: #c9ccd2; --ink: #1d1a1b; --ink-soft: #5d5759;
+  --ember: #c4280f; --chip: rgba(255,255,255,.72); --chip-line: rgba(29,26,27,.14);
+  --display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+  --body: "Zen Kaku Gothic New", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --sky-top: #24262b; --sky-low: #111215; --ink: #eceae8; --ink-soft: #a29c9a;
+  --ember: #ff5a36; --chip: rgba(20,20,23,.7); --chip-line: rgba(236,234,232,.16); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --sky-top: #24262b; --sky-low: #111215; --ink: #eceae8; --ink-soft: #a29c9a;
+  --ember: #ff5a36; --chip: rgba(20,20,23,.7); --chip-line: rgba(236,234,232,.16); color-scheme: dark }
+html, body { height: 100%; }
+body { background: linear-gradient(var(--sky-top), var(--sky-low)); background-color: var(--sky-low); color: var(--ink);
+  font-family: var(--body); overflow: hidden; }
+.stage { position: relative; height: 100%; }
+model-viewer { width: 100%; height: 100%; --poster-color: transparent; --progress-bar-color: var(--ember); }
+header { position: absolute; top: 0; left: 0; right: 0; pointer-events: none;
+  padding-block: 18px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { margin: 0; font-family: var(--display); font-weight: 900; font-size: clamp(30px, 8vw, 52px); line-height: 1; letter-spacing: .02em; text-wrap: balance; }
+h1 span { color: var(--ember); }
+.sub { margin: 8px 0 0; font-size: 12px; letter-spacing: .14em; color: var(--ink-soft); }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  padding-block: 0 calc(18px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar button, .ar { font: 500 14px/1 var(--body); color: var(--ink); background: var(--chip); border: 1px solid var(--chip-line);
+  border-radius: 999px; padding: 10px 13px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; }
+.bar button[aria-pressed="true"] { border-color: var(--ember); color: var(--ember); }
+.bar button:focus-visible, .ar:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.ar { position: absolute; right: max(16px, env(safe-area-inset-right, 0px)); top: calc(110px + env(safe-area-inset-top, 0px)); }
+.hint { position: absolute; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); text-align: center; font-size: 12px; color: var(--ink-soft); pointer-events: none; }
+</style>
+
+<div class="stage">
+  <model-viewer id="mv" src="shin_godzilla.gltf.json" alt="シン・ゴジラ第4形態の3Dモデル"
+    camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="0" rotation-per-second="18deg"
+    camera-orbit="-30deg 82deg auto" field-of-view="32deg" min-camera-orbit="auto 20deg 2m" max-camera-orbit="auto 100deg auto"
+    shadow-intensity="1" shadow-softness="0.9" exposure="1.15" tone-mapping="agx" environment-image="neutral"
+    ar ar-modes="webxr scene-viewer quick-look" interaction-prompt="none">
+    <button slot="ar-button" class="ar" id="ar">ARで置く</button>
+  </model-viewer>
+  <header>
+    <h1>シン・<span>ゴジラ</span></h1>
+    <p class="sub">第4形態 ・ Blenderで制作した3Dモデル</p>
+  </header>
+  <p class="hint" id="hint">指でドラッグして回す ・ ピンチで拡大</p>
+  <div class="bar">
+    <button id="spin" aria-pressed="true">自動回転</button>
+    <button id="front">正面</button>
+    <button id="face">顔</button>
+    <button id="back">背びれ</button>
+  </div>
+</div>
+
+<script>
+const mv = document.getElementById('mv');
+const spin = document.getElementById('spin');
+const views = {
+  front: { orbit: '-30deg 82deg auto', target: 'auto auto auto' },
+  face:  { orbit: '-25deg 80deg 4.5m',  target: '0m 9.0m 2.2m' },
+  back:  { orbit: '160deg 70deg auto', target: 'auto auto auto' },
+};
+spin.addEventListener('click', () => {
+  const on = spin.getAttribute('aria-pressed') !== 'true';
+  spin.setAttribute('aria-pressed', on); mv.autoRotate = on;
+});
+for (const [id, v] of Object.entries(views)) {
+  document.getElementById(id).addEventListener('click', () => {
+    mv.autoRotate = false; spin.setAttribute('aria-pressed', 'false'); document.getElementById('hint').hidden = true;
+    mv.cameraTarget = v.target; mv.cameraOrbit = v.orbit;
+  });
+}
+mv.addEventListener('camera-change', e => { if (e.detail.source === 'user') document.getElementById('hint').hidden = true; });
+if (matchMedia('(prefers-reduced-motion: reduce)').matches) { mv.autoRotate = false; spin.setAttribute('aria-pressed', 'false'); }
+</script>
