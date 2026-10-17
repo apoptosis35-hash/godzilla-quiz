@@ -10,15 +10,16 @@
   ],
   "tris": 364,
   "materials": [
-   "stone_dark",
    "plaster",
-   "wood_dark",
    "shoji",
-   "wood_light",
+   "stone",
+   "stone_dark",
    "thatch",
    "thatch_dark",
-   "stone"
+   "wood_dark",
+   "wood_light"
   ],
+  "parts": [],
   "kb": 24.5
  },
  {
@@ -32,12 +33,13 @@
   ],
   "tris": 152,
   "materials": [
-   "stone_dark",
-   "white",
-   "plaster",
    "black",
-   "tile"
+   "plaster",
+   "stone_dark",
+   "tile",
+   "white"
   ],
+  "parts": [],
   "kb": 11.7
  },
  {
@@ -51,12 +53,13 @@
   ],
   "tris": 240,
   "materials": [
-   "wood",
-   "wood_dark",
    "black",
    "tin",
+   "wood",
+   "wood_dark",
    "wood_light"
   ],
+  "parts": [],
   "kb": 16.4
  },
  {
@@ -71,10 +74,11 @@
   "tris": 80,
   "materials": [
    "stone",
+   "white",
    "wood",
-   "wood_dark",
-   "white"
+   "wood_dark"
   ],
+  "parts": [],
   "kb": 7.2
  },
  {
@@ -88,9 +92,10 @@
   ],
   "tris": 248,
   "materials": [
-   "vermilion",
-   "black"
+   "black",
+   "vermilion"
   ],
+  "parts": [],
   "kb": 13.1
  },
  {
@@ -105,14 +110,15 @@
   "tris": 256,
   "materials": [
    "concrete",
-   "wood",
-   "tin",
-   "wood_light",
-   "wood_dark",
    "metal",
    "red",
-   "white"
+   "tin",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light"
   ],
+  "parts": [],
   "kb": 18.2
  },
  {
@@ -126,10 +132,11 @@
   ],
   "tris": 128,
   "materials": [
-   "stone_dark",
+   "red",
    "stone",
-   "red"
+   "stone_dark"
   ],
+  "parts": [],
   "kb": 9.2
  },
  {
@@ -143,9 +150,10 @@
   ],
   "tris": 152,
   "materials": [
-   "stone",
-   "lamp"
+   "lamp",
+   "stone"
   ],
+  "parts": [],
   "kb": 9.9
  },
  {
@@ -159,12 +167,13 @@
   ],
   "tris": 360,
   "materials": [
-   "stone",
    "black",
+   "stone",
    "wood",
    "wood_dark",
    "wood_light"
   ],
+  "parts": [],
   "kb": 21.6
  },
  {
@@ -183,6 +192,7 @@
    "white",
    "yellow"
   ],
+  "parts": [],
   "kb": 10.9
  },
  {
@@ -196,15 +206,16 @@
   ],
   "tris": 276,
   "materials": [
-   "white",
-   "red",
-   "glow",
+   "black",
    "blue",
-   "yellow",
-   "leaf_light",
+   "glow",
    "kaki",
-   "black"
+   "leaf_light",
+   "red",
+   "white",
+   "yellow"
   ],
+  "parts": [],
   "kb": 19.5
  },
  {
@@ -218,11 +229,12 @@
   ],
   "tris": 252,
   "materials": [
-   "stone_dark",
-   "red",
    "black",
+   "red",
+   "stone_dark",
    "white"
   ],
+  "parts": [],
   "kb": 16.9
  },
  {
@@ -236,12 +248,13 @@
   ],
   "tris": 192,
   "materials": [
-   "wood",
+   "black",
    "cloth",
    "skin_cloth",
-   "black",
-   "straw"
+   "straw",
+   "wood"
   ],
+  "parts": [],
   "kb": 13.6
  },
  {
@@ -255,9 +268,10 @@
   ],
   "tris": 460,
   "materials": [
-   "wood",
-   "straw"
+   "straw",
+   "wood"
   ],
+  "parts": [],
   "kb": 23.9
  },
  {
@@ -271,10 +285,11 @@
   ],
   "tris": 544,
   "materials": [
-   "water",
    "grass",
-   "rice"
+   "rice",
+   "water"
   ],
+  "parts": [],
   "kb": 42.5
  },
  {
@@ -288,9 +303,10 @@
   ],
   "tris": 304,
   "materials": [
-   "wood",
-   "bamboo"
+   "bamboo",
+   "wood"
   ],
+  "parts": [],
   "kb": 16.8
  },
  {
@@ -302,13 +318,14 @@
    1.22,
    0.7
   ],
-  "tris": 624,
+  "tris": 664,
   "materials": [
+   "moss",
    "stone",
-   "stone_dark",
-   "moss"
+   "stone_dark"
   ],
-  "kb": 49.4
+  "parts": [],
+  "kb": 52.5
  },
  {
   "name": "hashi",
@@ -321,9 +338,10 @@
   ],
   "tris": 312,
   "materials": [
-   "wood_light",
-   "wood"
+   "wood",
+   "wood_light"
   ],
+  "parts": [],
   "kb": 18.2
  },
  {
@@ -337,14 +355,15 @@
   ],
   "tris": 464,
   "materials": [
-   "white",
+   "black",
    "glass",
-   "metal",
    "glow",
+   "metal",
    "red",
    "rubber",
-   "black"
+   "white"
   ],
+  "parts": [],
   "kb": 27.5
  },
  {
@@ -358,11 +377,12 @@
   ],
   "tris": 204,
   "materials": [
-   "red",
    "black",
    "metal",
+   "red",
    "rubber"
   ],
+  "parts": [],
   "kb": 12.7
  },
  {
@@ -379,6 +399,7 @@
    "bark",
    "leaf_dark"
   ],
+  "parts": [],
   "kb": 6.2
  },
  {
@@ -386,16 +407,17 @@
   "jp": "柿の木",
   "category": "自然",
   "size_m": [
-   3.65,
+   3.47,
    3.92,
-   3.27
+   3.14
   ],
   "tris": 624,
   "materials": [
    "bark",
-   "leaf",
-   "kaki"
+   "kaki",
+   "leaf"
   ],
+  "parts": [],
   "kb": 47.7
  },
  {
@@ -412,6 +434,7 @@
    "bark",
    "sakura"
   ],
+  "parts": [],
   "kb": 13.4
  },
  {
@@ -419,15 +442,16 @@
   "jp": "竹やぶ",
   "category": "自然",
   "size_m": [
-   2.75,
-   8.92,
-   3.18
+   3.31,
+   9.18,
+   3.16
   ],
   "tris": 540,
   "materials": [
    "bamboo",
    "leaf_light"
   ],
+  "parts": [],
   "kb": 37.9
  },
  {
@@ -441,10 +465,11 @@
   ],
   "tris": 60,
   "materials": [
+   "moss",
    "stone",
-   "stone_dark",
-   "moss"
+   "stone_dark"
   ],
+  "parts": [],
   "kb": 7.1
  },
  {
@@ -458,9 +483,10 @@
   ],
   "tris": 80,
   "materials": [
-   "leaf_light",
-   "leaf"
+   "leaf",
+   "leaf_light"
   ],
+  "parts": [],
   "kb": 7.9
  },
  {
@@ -474,13 +500,569 @@
   ],
   "tris": 532,
   "materials": [
-   "stone_dark",
+   "black",
    "brown",
+   "stone_dark",
    "straw",
    "white",
-   "black",
    "wood_light"
   ],
+  "parts": [],
   "kb": 40.6
+ },
+ {
+  "name": "minka",
+  "jp": "民家(トタン屋根)",
+  "category": "建物",
+  "size_m": [
+   8.72,
+   5.45,
+   8.1
+  ],
+  "tris": 260,
+  "materials": [
+   "black",
+   "concrete",
+   "glass",
+   "shoji",
+   "tin",
+   "tin_blue",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 19.1
+ },
+ {
+  "name": "dagashiya",
+  "jp": "駄菓子屋",
+  "category": "建物",
+  "size_m": [
+   5.42,
+   4.34,
+   5.73
+  ],
+  "tris": 800,
+  "materials": [
+   "blue",
+   "concrete",
+   "kaki",
+   "leaf_light",
+   "pink",
+   "red",
+   "tile",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 49.4
+ },
+ {
+  "name": "kousha",
+  "jp": "木造校舎",
+  "category": "建物",
+  "size_m": [
+   20.72,
+   9.76,
+   13.85
+  ],
+  "tris": 916,
+  "materials": [
+   "black",
+   "concrete",
+   "glass",
+   "tile",
+   "white",
+   "wood",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 52.5
+ },
+ {
+  "name": "eki",
+  "jp": "無人駅",
+  "category": "建物",
+  "size_m": [
+   20.85,
+   3.76,
+   6.3
+  ],
+  "tris": 504,
+  "materials": [
+   "blue",
+   "concrete",
+   "lamp",
+   "metal",
+   "stone_dark",
+   "tin",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 34.3
+ },
+ {
+  "name": "honden",
+  "jp": "神社の本殿",
+  "category": "建物",
+  "size_m": [
+   6.8,
+   6.65,
+   7.47
+  ],
+  "tris": 624,
+  "materials": [
+   "gold",
+   "red",
+   "stone",
+   "straw",
+   "tile",
+   "vermilion",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 37.9
+ },
+ {
+  "name": "suisha",
+  "jp": "水車小屋",
+  "category": "建物",
+  "size_m": [
+   6.3,
+   7.93,
+   9.0
+  ],
+  "tris": 828,
+  "materials": [
+   "stone",
+   "stone_dark",
+   "thatch",
+   "water",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [
+   "suisha_body",
+   "suisha_wheel"
+  ],
+  "kb": 49.2
+ },
+ {
+  "name": "yatai",
+  "jp": "夏祭りの屋台",
+  "category": "建物",
+  "size_m": [
+   2.8,
+   2.7,
+   2.58
+  ],
+  "tris": 468,
+  "materials": [
+   "chochin",
+   "metal",
+   "pink",
+   "red",
+   "white",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 31.1
+ },
+ {
+  "name": "densha",
+  "jp": "ローカル線の電車",
+  "category": "乗り物",
+  "size_m": [
+   16.09,
+   3.83,
+   2.86
+  ],
+  "tris": 960,
+  "materials": [
+   "black",
+   "blue",
+   "glass",
+   "glow",
+   "metal",
+   "orange",
+   "rubber",
+   "white"
+  ],
+  "parts": [],
+  "kb": 52.2
+ },
+ {
+  "name": "curve_mirror",
+  "jp": "カーブミラー",
+  "category": "道路",
+  "size_m": [
+   0.84,
+   3.18,
+   0.4
+  ],
+  "tris": 172,
+  "materials": [
+   "concrete",
+   "glass",
+   "orange"
+  ],
+  "parts": [],
+  "kb": 10.3
+ },
+ {
+  "name": "ishidan",
+  "jp": "石段",
+  "category": "道路",
+  "size_m": [
+   3.8,
+   1.2,
+   3.95
+  ],
+  "tris": 108,
+  "materials": [
+   "moss",
+   "stone"
+  ],
+  "parts": [],
+  "kb": 7.4
+ },
+ {
+  "name": "monohoshi",
+  "jp": "物干し",
+  "category": "小物",
+  "size_m": [
+   3.1,
+   1.8,
+   0.3
+  ],
+  "tris": 176,
+  "materials": [
+   "bamboo",
+   "blue",
+   "concrete",
+   "metal",
+   "pink",
+   "white",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 13.6
+ },
+ {
+  "name": "jitensha",
+  "jp": "自転車",
+  "category": "乗り物",
+  "size_m": [
+   0.5,
+   1.05,
+   1.88
+  ],
+  "tris": 592,
+  "materials": [
+   "black",
+   "metal",
+   "red",
+   "rubber"
+  ],
+  "parts": [],
+  "kb": 33.2
+ },
+ {
+  "name": "bench",
+  "jp": "ベンチ",
+  "category": "小物",
+  "size_m": [
+   1.6,
+   0.87,
+   0.47
+  ],
+  "tris": 72,
+  "materials": [
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 5.6
+ },
+ {
+  "name": "chochin_post",
+  "jp": "提灯の柱",
+  "category": "小物",
+  "size_m": [
+   1.26,
+   2.8,
+   0.34
+  ],
+  "tris": 208,
+  "materials": [
+   "black",
+   "chochin",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 13.8
+ },
+ {
+  "name": "road",
+  "jp": "道路(8m・舗装)",
+  "category": "道路",
+  "size_m": [
+   8.0,
+   0.05,
+   4.0
+  ],
+  "tris": 84,
+  "materials": [
+   "asphalt",
+   "white"
+  ],
+  "parts": [],
+  "kb": 6.1
+ },
+ {
+  "name": "michi",
+  "jp": "田舎道(8m・土)",
+  "category": "道路",
+  "size_m": [
+   8.0,
+   0.08,
+   2.95
+  ],
+  "tris": 48,
+  "materials": [
+   "grass",
+   "leaf_light",
+   "soil"
+  ],
+  "parts": [],
+  "kb": 4.7
+ },
+ {
+  "name": "kawa",
+  "jp": "小川(8m)",
+  "category": "自然",
+  "size_m": [
+   8.0,
+   0.64,
+   4.03
+  ],
+  "tris": 412,
+  "materials": [
+   "stone",
+   "stone_dark",
+   "water"
+  ],
+  "parts": [],
+  "kb": 33.6
+ },
+ {
+  "name": "hatake",
+  "jp": "畑(野菜)",
+  "category": "農地",
+  "size_m": [
+   6.07,
+   0.69,
+   4.08
+  ],
+  "tris": 1528,
+  "materials": [
+   "leaf",
+   "leaf_light",
+   "soil",
+   "white",
+   "wood"
+  ],
+  "parts": [],
+  "kb": 114.8
+ },
+ {
+  "name": "suika",
+  "jp": "スイカ",
+  "category": "農地",
+  "size_m": [
+   0.45,
+   0.44,
+   0.45
+  ],
+  "tris": 572,
+  "materials": [
+   "leaf",
+   "leaf_dark",
+   "suika"
+  ],
+  "parts": [],
+  "kb": 45.9
+ },
+ {
+  "name": "himawari",
+  "jp": "ひまわり",
+  "category": "自然",
+  "size_m": [
+   1.64,
+   2.37,
+   0.85
+  ],
+  "tris": 1200,
+  "materials": [
+   "brown",
+   "leaf",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 88.5
+ },
+ {
+  "name": "kabuto",
+  "jp": "カブトムシ",
+  "category": "小物",
+  "size_m": [
+   0.12,
+   0.06,
+   0.16
+  ],
+  "tris": 196,
+  "materials": [
+   "beetle",
+   "black"
+  ],
+  "parts": [],
+  "kb": 14.5
+ },
+ {
+  "name": "ushi",
+  "jp": "牛",
+  "category": "動物",
+  "size_m": [
+   1.04,
+   1.77,
+   2.64
+  ],
+  "tris": 488,
+  "materials": [
+   "black",
+   "pink",
+   "white"
+  ],
+  "parts": [],
+  "kb": 33.9
+ },
+ {
+  "name": "niwatori",
+  "jp": "ニワトリ",
+  "category": "動物",
+  "size_m": [
+   0.26,
+   0.65,
+   0.51
+  ],
+  "tris": 162,
+  "materials": [
+   "black",
+   "red",
+   "white",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 14.8
+ },
+ {
+  "name": "neko",
+  "jp": "ねこ",
+  "category": "動物",
+  "size_m": [
+   0.28,
+   0.51,
+   0.4
+  ],
+  "tris": 260,
+  "materials": [
+   "black",
+   "pink",
+   "tan",
+   "white"
+  ],
+  "parts": [],
+  "kb": 22.3
+ },
+ {
+  "name": "shiba",
+  "jp": "柴犬",
+  "category": "動物",
+  "size_m": [
+   0.24,
+   0.76,
+   0.75
+  ],
+  "tris": 376,
+  "materials": [
+   "black",
+   "tan",
+   "white"
+  ],
+  "parts": [],
+  "kb": 27.8
+ },
+ {
+  "name": "kodomo",
+  "jp": "子ども(プレイヤー)",
+  "category": "人",
+  "size_m": [
+   0.56,
+   1.32,
+   0.54
+  ],
+  "tris": 624,
+  "materials": [
+   "black",
+   "blue",
+   "leaf",
+   "leaf_light",
+   "pink",
+   "red",
+   "skin",
+   "straw",
+   "white"
+  ],
+  "parts": [
+   "kodomo_body",
+   "kodomo_arm_l",
+   "kodomo_leg_l",
+   "kodomo_arm_r",
+   "kodomo_leg_r"
+  ],
+  "kb": 47.7
+ },
+ {
+  "name": "obaachan",
+  "jp": "おばあちゃん",
+  "category": "人",
+  "size_m": [
+   0.6,
+   1.26,
+   0.48
+  ],
+  "tris": 368,
+  "materials": [
+   "black",
+   "cloth",
+   "pink",
+   "skin",
+   "white",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 29.3
  }
 ]

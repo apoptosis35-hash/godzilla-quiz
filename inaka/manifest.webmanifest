@@ -1,0 +1,17 @@
+{
+  "name": "いなかのなつやすみ",
+  "short_name": "なつやすみ",
+  "description": "麦わら帽子で田舎の村を探検。18時のチャイムまでに、なつやすみスタンプを集めよう。",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "fullscreen",
+  "orientation": "any",
+  "background_color": "#6fb6e8",
+  "theme_color": "#6fb6e8",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

@@ -26,6 +26,10 @@ PALETTE = {
     'glass': ((0.12, 0.2, 0.28), 0.05), 'blue': ((0.12, 0.3, 0.7), 0.5), 'cloth': ((0.25, 0.35, 0.6), 0.9),
     'skin_cloth': ((0.95, 0.92, 0.85), 0.9), 'yellow': ((1.0, 0.8, 0.1), 0.5), 'brown': ((0.45, 0.3, 0.18), 0.85),
     'concrete': ((0.62, 0.62, 0.6), 0.95),
+    'tin_blue': ((0.2, 0.38, 0.55), 0.55), 'pink': ((1.0, 0.6, 0.65), 0.7), 'skin': ((1.0, 0.78, 0.62), 0.7),
+    'asphalt': ((0.25, 0.25, 0.26), 0.95), 'orange': ((1.0, 0.45, 0.08), 0.5), 'suika': ((0.16, 0.5, 0.16), 0.45),
+    'tan': ((0.85, 0.55, 0.28), 0.8), 'gold': ((0.95, 0.7, 0.2), 0.3, 1.0), 'beetle': ((0.18, 0.08, 0.04), 0.25),
+    'chochin': ((0.95, 0.2, 0.1), 0.6, 0.0, (1.0, 0.45, 0.2), 1.5),
     'glow': ((1.0, 0.97, 0.9), 0.4, 0.0, (1.0, 0.95, 0.85), 2.0), 'lamp': ((1.0, 0.85, 0.5), 0.4, 0.0, (1.0, 0.75, 0.35), 3.0),
 }
 MATS = {}
@@ -44,9 +48,14 @@ def M(name):
 
 # ---------------------------------------------------------------- primitive helpers (Blender coords: Z up, front = -Y)
 CUR = []
+PART = {'name': None, 'pivots': {}}
+
+def part(name, pivot=(0, 0, 0)):
+    """Following primitives go into a separate node `name` whose origin is `pivot` (for animated limbs, wheels...)."""
+    PART['name'] = name; PART['pivots'][name] = Vector(pivot)
 
 def _take(o, mat):
-    o.data.materials.clear(); o.data.materials.append(M(mat)); CUR.append(o); return o
+    o.data.materials.clear(); o.data.materials.append(M(mat)); o['part'] = PART['name'] or ''; CUR.append(o); return o
 
 def mesh(mat, verts, faces, name='part'):
     me = bpy.data.meshes.new(name); me.from_pydata([tuple(v) for v in verts], [], faces); me.update()
@@ -125,14 +134,10 @@ def model(name, jp, cat):
     def deco(fn): MODELS[name] = (fn, jp, cat); return fn
     return deco
 
-def build(name):
-    CUR.clear()
-    fn, jp, cat = MODELS[name]
-    random.seed(hash(name) & 0xffff)
-    fn()
+def _join(objs, name):
     for o in bpy.context.view_layer.objects.selected: o.select_set(False)
-    for o in CUR: o.select_set(True)
-    bpy.context.view_layer.objects.active = CUR[0]
+    for o in objs: o.select_set(True)
+    bpy.context.view_layer.objects.active = objs[0]
     bpy.ops.object.join()
     o = bpy.context.object; o.name = name; o.data.name = name
     bpy.ops.object.transform_apply(location=True, rotation=True, scale=True)
@@ -140,10 +145,30 @@ def build(name):
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(o.data); bm.free()
     bpy.ops.object.shade_flat()
-    col = bpy.data.collections.new(name); bpy.context.scene.collection.children.link(col)
-    for c in o.users_collection: c.objects.unlink(o)
-    col.objects.link(o)
     return o
+
+def build(name):
+    """Returns (node to export, [mesh objects]). Single-part models are one mesh; multi-part ones an empty with mesh children."""
+    CUR.clear(); PART['name'] = None; PART['pivots'] = {}
+    fn, jp, cat = MODELS[name]
+    random.seed(hash(name) & 0xffff)
+    fn()
+    col = bpy.data.collections.new(name); bpy.context.scene.collection.children.link(col)
+    groups = {}
+    for o in CUR: groups.setdefault(o['part'], []).append(o)
+    if list(groups) == ['']:
+        o = _join(CUR, name); meshes = [o]; top = o
+    else:
+        top = bpy.data.objects.new(name, None); col.objects.link(top); meshes = []
+        for pn, objs in groups.items():
+            o = _join(objs, f"{name}_{pn or 'body'}")  # unique node names, e.g. kodomo_arm_l
+            pv = PART['pivots'].get(pn, Vector())
+            o.data.transform(Matrix.Translation(-pv)); o.location = pv
+            o.parent = top; meshes.append(o)
+    for o in meshes:
+        for c in o.users_collection: c.objects.unlink(o)
+        col.objects.link(o)
+    return top, meshes
 
 # ================================================================= buildings
 
@@ -456,11 +481,402 @@ def tanuki():
     ico('black', 0.04, (0, -0.2, 0.8), sub=1)
     cyl('wood_light', 0.07, 0.16, (0.3, -0.05, 0.35), verts=8)  # sake flask
 
+# ================================================================= more buildings
+
+@model('minka', '民家(トタン屋根)', '建物')
+def minka():
+    W, D, H = 8.0, 6.0, 2.7
+    box('concrete', (W + 0.3, D + 0.3, 0.35), (0, 0, 0))
+    box('wood_light', (W, D, H), (0, 0, 0.35))
+    for x in (-W / 2, 0, W / 2):
+        for y in (-D / 2, D / 2): box('wood_dark', (0.18, 0.18, H), (x, y, 0.35))
+    for x in (-2.6, 2.4): box('glass', (1.6, 0.06, 1.1), (x, -D / 2 - 0.03, 1.2)); box('wood_dark', (1.75, 0.08, 0.08), (x, -D / 2 - 0.05, 2.32))
+    box('shoji', (1.4, 0.06, 2.0), (-0.1, -D / 2 - 0.03, 0.35)); box('wood_dark', (0.06, 0.08, 2.0), (-0.1, -D / 2 - 0.05, 0.35))
+    gable('tin_blue', W, D, 1.9, t=0.12, z=H + 0.35, over=0.6)
+    prism('tin', [(-D / 2 - 1.5, 2.35), (-D / 2, 2.6), (-D / 2, 2.66), (-D / 2 - 1.5, 2.41)], 2.6, loc=(-0.1, 0, 0))  # porch roof
+    for x in (-1.35, 1.15): box('wood_dark', (0.1, 0.1, 2.3), (x, -D / 2 - 1.4, 0))
+    box('concrete', (1.8, 0.8, 0.18), (-0.1, -D / 2 - 0.5, 0))
+    for y in (-1.0, 1.0): box('black', (0.06, 0.8, 0.9), (W / 2 + 0.03, y, 1.3))  # side windows (dark)
+
+@model('dagashiya', '駄菓子屋', '建物')
+def dagashiya():
+    W, D, H = 5.0, 4.0, 2.7
+    box('concrete', (W + 0.2, D + 0.2, 0.12), (0, 0, 0))
+    box('wood', (W, D, H), (0, 0.15, 0.12))
+    box('wood_dark', (W - 0.6, 0.1, 2.1), (0, -D / 2 + 0.2, 0.12))  # dark shop interior
+    for i in range(4):  # shelves full of sweets
+        for j in range(9):
+            box(['red', 'yellow', 'blue', 'kaki', 'pink', 'leaf_light'][(i * 3 + j) % 6], (0.4, 0.12, 0.2), (-W / 2 + 0.55 + j * 0.49, -D / 2 + 0.12, 0.35 + i * 0.45))
+        box('wood_light', (W - 0.6, 0.3, 0.04), (0, -D / 2 + 0.15, 0.32 + i * 0.45))
+    box('wood_light', (2.2, 0.7, 0.7), (-0.9, -D / 2 - 0.3, 0.12))  # front counter / candy box
+    for i in range(4): box(['red', 'yellow', 'blue', 'pink'][i], (0.4, 0.4, 0.12), (-1.6 + i * 0.48, -D / 2 - 0.3, 0.82))
+    for i in range(10):  # striped awning
+        x = -W / 2 + 0.25 + i * W / 10
+        prism('red' if i % 2 == 0 else 'white', [(-D / 2 - 0.9, 2.3), (-D / 2 + 0.1, 2.75), (-D / 2 + 0.1, 2.8), (-D / 2 - 0.9, 2.35)], W / 10, loc=(x, 0, 0))
+    box('white', (2.8, 0.1, 0.55), (0, -D / 2 + 0.05, 2.85))  # sign board
+    box('red', (2.6, 0.12, 0.35), (0, -D / 2 + 0.03, 2.95))
+    gable('tile', W, D + 0.3, 1.2, t=0.12, z=H + 0.12, over=0.35, loc=(0, 0.15))
+    box('wood_light', (1.4, 0.35, 0.05), (1.6, -D / 2 - 0.9, 0.45))  # bench
+    for x in (1.0, 2.2): box('wood_dark', (0.08, 0.3, 0.45), (x, -D / 2 - 0.9, 0))
+    box('blue', (0.7, 0.45, 0.75), (2.1, -D / 2 - 0.15, 0.12))  # ice-cream freezer
+    box('white', (0.72, 0.47, 0.06), (2.1, -D / 2 - 0.15, 0.87))
+
+@model('kousha', '木造校舎', '建物')
+def kousha():
+    W, D, H = 20.0, 7.0, 6.4
+    box('concrete', (W + 0.4, D + 0.4, 0.4), (0, 0, 0))
+    box('wood', (W, D, H), (0, 0, 0.4))
+    box('wood_dark', (W + 0.05, D + 0.05, 0.2), (0, 0, 3.3))
+    for fl in (0, 1):
+        for i in range(10):
+            x = -W / 2 + 1.0 + i * (W - 2) / 9
+            if fl == 0 and abs(x) < 1.5: continue
+            box('glass', (1.5, 0.06, 1.6), (x, -D / 2 - 0.03, 1.3 + fl * 3.0))
+            box('white', (1.6, 0.08, 0.08), (x, -D / 2 - 0.05, 2.9 + fl * 3.0))
+            box('white', (0.06, 0.08, 1.6), (x, -D / 2 - 0.05, 1.3 + fl * 3.0))
+    box('wood_dark', (1.8, 0.08, 2.3), (0, -D / 2 - 0.04, 0.4))  # entrance
+    gable('tile', 3.0, 2.2, 0.7, t=0.12, z=2.9, over=0.2, loc=(0, -D / 2 - 1.0)).location.y = -D / 2 - 1.0
+    for x in (-1.3, 1.3): box('wood_dark', (0.15, 0.15, 2.9), (x, -D / 2 - 1.9, 0.4))
+    gable('tile', W, D, 2.4, t=0.15, z=H + 0.4, over=0.6)
+    cyl('white', 0.45, 0.08, (0, -D / 2 - 0.05, 5.2), verts=16, rot=(math.pi / 2, 0, 0))  # clock
+    cyl('black', 0.38, 0.1, (0, -D / 2 - 0.05, 5.2), verts=16, rot=(math.pi / 2, 0, 0)).scale = (0.15, 1, 1)
+    box('white', (0.6, 0.08, 1.6), (W / 2 - 1.5, -D / 2 - 3.0, 0))  # name board on a post... (gate pillar)
+    box('concrete', (0.5, 0.5, 1.6), (-3.5, -D / 2 - 6.0, 0)); box('concrete', (0.5, 0.5, 1.6), (3.5, -D / 2 - 6.0, 0))  # school gate
+
+@model('eki', '無人駅', '建物')
+def eki():
+    L = 14.0
+    box('concrete', (L, 3.0, 0.9), (0, 0, 0))
+    box('white', (L, 0.25, 0.02), (0, 1.25, 0.9))  # yellow-ish edge line
+    box('yellow', (L, 0.3, 0.02), (0, 0.9, 0.9))
+    box('concrete', (1.6, 2.0, 0.9), (-L / 2 - 0.8, -0.5, 0))  # landing
+    prism('concrete', [(-1.5, 0), (1.5, 0.9), (1.5, 0)], 2.0, loc=(-L / 2 - 1.6 - 1.5, -0.5, 0), axis='Y')  # ramp up to the landing
+    W = 4.0
+    box('wood', (W, 0.12, 2.3), (1.5, -1.3, 0.9))  # shelter back wall (towards the road side)
+    for x in (1.5 - W / 2, 1.5 + W / 2): box('wood', (0.12, 1.4, 2.3), (x, -0.65, 0.9))
+    prism('tin', [(-1.6, 3.15), (0.6, 3.35), (0.6, 3.42), (-1.6, 3.22)], W + 0.6, loc=(1.5, 0, 0))
+    box('wood_light', (W - 0.4, 0.4, 0.06), (1.5, -1.0, 1.35)); box('wood_dark', (W - 0.4, 0.06, 0.45), (1.5, -1.2, 0.9))
+    for x in (-3.6, -2.0): box('metal', (0.08, 0.08, 2.4), (x, 0.2, 0.9))
+    box('white', (2.0, 0.08, 0.6), (-2.8, 0.2, 2.6)); box('blue', (2.0, 0.1, 0.12), (-2.8, 0.2, 2.65))  # station name board
+    box('metal', (0.08, 0.08, 2.8), (5.5, 0.4, 0.9)); cyl('lamp', 0.18, 0.25, (5.5, 0.2, 3.5), verts=8)  # platform lamp
+    box('metal', (0.6, 0.06, 0.06), (5.5, 0.3, 3.7))
+    for i in range(20):  # track behind the platform
+        box('wood_dark', (0.25, 2.4, 0.12), (-L / 2 - 2 + i * (L + 4) / 19, 3.2, 0))
+    for y in (2.65, 3.75): box('metal', (L + 4.5, 0.08, 0.14), (0, y, 0.12))
+    box('stone_dark', (L + 4.5, 3.0, 0.02), (0, 3.2, 0))
+
+@model('honden', '神社の本殿', '建物')
+def honden():
+    W, D, H = 5.0, 4.2, 2.6
+    box('stone', (W + 1.6, D + 1.6, 0.6), (0, 0, 0))
+    for i in range(3): box('stone', (2.0, 0.4, 0.2 * (i + 1)), (0, -D / 2 - 1.2 + i * 0.4, 0))  # steps
+    box('wood_dark', (W + 0.6, D + 0.6, 0.15), (0, 0, 0.6))  # veranda
+    box('wood', (W, D, H), (0, 0, 0.75))
+    for x in (-W / 2, -W / 6, W / 6, W / 2):
+        for y in (-D / 2, D / 2): cyl('vermilion', 0.14, H, (x, y, 0.75), verts=8)
+    box('vermilion', (W + 0.3, D + 0.3, 0.25), (0, 0, 0.75 + H - 0.25))
+    for i in range(3): box('wood_dark', (W / 3 - 0.3, 0.06, 2.0), (-W / 3 + i * W / 3, -D / 2 - 0.03, 0.75))
+    for i in range(3): box('gold', (0.05, 0.08, 0.9), (-W / 3 + i * W / 3 - 0.3, -D / 2 - 0.06, 1.5))
+    gable('tile', W + 0.6, D, 1.9, t=0.22, z=0.75 + H, over=1.0)
+    prism('tile', [(-D / 2 - 2.2, 2.6), (-D / 2 - 0.6, 3.2), (-D / 2 - 0.6, 3.4), (-D / 2 - 2.2, 2.8)], 3.2)  # front eave (kohai)
+    for x in (-1.4, 1.4): cyl('vermilion', 0.11, 2.0, (x, -D / 2 - 2.0, 0.6), verts=8)
+    box('tile', (0.4, D + 2.6, 0.35), (0, 0, 0.75 + H + 1.9 + 1.0 * 1.9 / (D / 2) + 0.15)).rotation_euler = (0, 0, math.pi / 2)
+    cyl('straw', 0.12, 3.2, (-1.6, -D / 2 - 2.15, 2.45), verts=8, rot=(0, math.pi / 2, 0))  # shimenawa
+    for x in (-0.8, 0, 0.8): box('white', (0.12, 0.02, 0.35), (x, -D / 2 - 2.2, 2.05))
+    box('wood_dark', (1.2, 0.6, 0.6), (0, -D / 2 - 1.7, 0.6))  # offering box
+    box('wood_light', (1.2, 0.6, 0.06), (0, -D / 2 - 1.7, 1.2))
+    cyl('gold', 0.18, 0.25, (0, -D / 2 - 2.0, 2.15), verts=10)  # suzu bell
+    cyl('red', 0.03, 1.4, (0, -D / 2 - 2.0, 0.75), verts=6)
+
+@model('suisha', '水車小屋', '建物')
+def suisha():
+    W, D, H = 4.0, 3.5, 2.6
+    box('stone_dark', (W + 0.2, D + 0.2, 0.3), (0, 0, 0))
+    box('wood', (W, D, H), (0, 0, 0.3))
+    box('wood_dark', (1.0, 0.06, 1.8), (-0.8, -D / 2 - 0.03, 0.3))
+    gable('thatch', W, D, 1.6, t=0.35, z=H + 0.3, over=0.5)
+    box('wood_dark', (0.2, 0.2, 2.2), (W / 2 + 1.1, 0, 0)); box('wood_dark', (0.6, 0.2, 0.2), (W / 2 + 0.85, 0, 2.0))  # axle support
+    box('water', (1.4, D + 3, 0.05), (W / 2 + 1.0, 0, 0)); box('stone', (0.3, D + 3, 0.4), (W / 2 + 1.85, 0, 0))
+    box('wood', (0.5, 0.25, 0.25), (W / 2 + 1.0, -D / 2 - 1.3, 3.8))  # water chute
+    box('wood', (0.5, 2.8, 0.06), (W / 2 + 1.0, -D / 2 - 2.6, 3.7))
+    part('wheel', (W / 2 + 1.0, 0, 2.0))
+    cx, cz, R = W / 2 + 1.0, 2.0, 1.9
+    cyl('wood_dark', 0.25, 0.8, (cx - 0.4, 0, cz), verts=8, rot=(0, math.pi / 2, 0))
+    for s in (-0.3, 0.3):
+        for i in range(16):
+            a = i / 16 * math.tau
+            box('wood', (0.08, 0.75, 0.12), (cx + s, R * math.sin(a), cz + R * math.cos(a) - 0.06), rot=(-a, 0, 0))
+        for i in range(4):
+            box('wood', (0.06, 0.1, 2 * R), (cx + s, 0, cz - R), rot=(0, 0, 0)).rotation_euler = (i * math.pi / 4, 0, 0)
+    for i in range(16):  # paddles
+        a = (i + 0.5) / 16 * math.tau
+        box('wood_light', (0.7, 0.05, 0.45), (cx, (R - 0.1) * math.sin(a), cz + (R - 0.1) * math.cos(a) - 0.22), rot=(-a, 0, 0))
+
+@model('yatai', '夏祭りの屋台', '建物')
+def yatai():
+    W, D = 2.6, 1.6
+    box('wood_light', (W, D, 0.9), (0, 0, 0))
+    box('white', (W + 0.02, 0.04, 0.5), (0, -D / 2 - 0.02, 0.3))
+    for x in (-W / 2, W / 2):
+        for y in (-D / 2, D / 2): box('wood_dark', (0.08, 0.08, 2.4), (x, y, 0))
+    for i in range(8):
+        x = -W / 2 + W / 16 + i * W / 8
+        prism('red' if i % 2 == 0 else 'white', [(-D / 2 - 0.4, 2.2), (0, 2.65), (D / 2 + 0.4, 2.2), (D / 2 + 0.4, 2.25), (0, 2.7), (-D / 2 - 0.4, 2.25)], W / 8 + 0.01, loc=(x, 0, 0))
+    box('red', (W + 0.2, 0.05, 0.35), (0, -D / 2 - 0.42, 1.85))  # noren banner
+    for i in range(4): cyl('chochin', 0.13, 0.32, (-W / 2 + 0.35 + i * (W - 0.7) / 3, -D / 2 - 0.45, 1.45), verts=8)
+    for i in range(5): ico('white' if i % 2 else 'pink', 0.12, (-0.8 + i * 0.4, -0.2, 1.0), sub=1)  # cotton candy / goods
+    box('metal', (0.9, 0.5, 0.05), (0.6, 0.2, 0.9))
+
+@model('densha', 'ローカル線の電車', '乗り物')
+def densha():
+    """One-car local train; origin on the rail top, runs along X. Gauge matches the eki track (1.1 m)."""
+    L, W, H = 16.0, 2.8, 3.3
+    box('white', (L, W, H - 0.9), (0, 0, 0.9))
+    box('blue', (L + 0.02, W + 0.02, 0.35), (0, 0, 1.35))
+    box('orange', (L + 0.02, W + 0.02, 0.12), (0, 0, 1.75))
+    prism('white', [(-W / 2, H), (-W / 2 + 0.3, H + 0.3), (W / 2 - 0.3, H + 0.3), (W / 2, H)], L - 0.2)  # roof
+    box('metal', (1.6, 0.9, 0.3), (2.5, 0, H + 0.25))  # aircon
+    for s in (-1, 1):
+        for i in range(7):
+            x = -L / 2 + 2.3 + i * (L - 4.6) / 6
+            if i in (1, 5): box('glass', (0.9, 0.04, 2.0), (x, s * (W / 2 + 0.01), 0.95)); continue  # doors
+            box('glass', (1.3, 0.04, 0.85), (x, s * (W / 2 + 0.01), 2.0))
+        box('glass', (0.04, 2.2, 0.95), (s * (L / 2 + 0.01), 0, 1.95))  # front/back windows
+        for y in (-0.9, 0.9): box('glow', (0.05, 0.3, 0.18), (s * (L / 2 + 0.02), y, 1.2))
+        box('black', (0.04, 0.6, 0.25), (s * (L / 2 + 0.02), 0, 3.0))  # destination board
+        for bx in (-L / 2 + 2.5, L / 2 - 2.5):  # bogies
+            box('black', (2.4, 2.0, 0.5), (s * 0 + bx, 0, 0.35))
+            for wx in (-0.75, 0.75):
+                for y in (-0.55, 0.55): cyl('rubber', 0.43, 0.1, (bx + wx, y + (0.05 if y > 0 else -0.05), 0.43), verts=10, rot=(math.pi / 2, 0, 0))
+    box('black', (L - 1.0, W - 0.6, 0.35), (0, 0, 0.55))
+
+# ================================================================= more small things
+
+@model('curve_mirror', 'カーブミラー', '道路')
+def curve_mirror():
+    cyl('orange', 0.05, 2.6, (0, 0, 0), verts=8)
+    cyl('orange', 0.42, 0.08, (0, -0.06, 2.75), verts=16, rot=(math.pi / 2 - 0.15, 0, 0))
+    cyl('glass', 0.36, 0.1, (0, -0.07, 2.75), verts=16, rot=(math.pi / 2 - 0.15, 0, 0))
+    box('orange', (0.08, 0.15, 0.4), (0, -0.04, 2.3))
+    box('concrete', (0.35, 0.35, 0.1), (0, 0, 0))
+
+@model('ishidan', '石段', '道路')
+def ishidan():
+    for i in range(6): box('stone', (3.0, 0.45, 0.2 * (i + 1)), (0, -1.1 + i * 0.45, 0))
+    box('stone', (3.0, 1.2, 1.2), (0, 2.0, 0))
+    for s in (-1, 1): box('moss', (0.4, 3.9, 0.15), (s * 1.7, 0.6, 0)).scale = (1, 1, 1)
+
+@model('monohoshi', '物干し', '小物')
+def monohoshi():
+    for x in (-1.4, 1.4): cyl('metal', 0.03, 1.8, (x, 0, 0), verts=6); cyl('concrete', 0.15, 0.15, (x, 0, 0), verts=8)
+    cyl('bamboo', 0.025, 3.0, (-1.5, 0, 1.75), verts=6, rot=(0, math.pi / 2, 0))
+    for i, (c, w, h) in enumerate([('white', 0.5, 0.6), ('blue', 0.5, 0.4), ('pink', 0.45, 0.55), ('yellow', 0.6, 0.35), ('white', 0.35, 0.35)]):
+        box(c, (w, 0.03, h), (-1.0 + i * 0.5, 0, 1.75 - h))
+
+@model('jitensha', '自転車', '乗り物')
+def jitensha():
+    for y in (-0.55, 0.55):
+        for i in range(14):
+            a = i / 14 * math.tau
+            box('rubber', (0.04, 0.17, 0.05), (0, y + 0.33 * math.sin(a), 0.36 + 0.33 * math.cos(a) - 0.025), rot=(-a, 0, 0))
+        cyl('metal', 0.04, 0.06, (-0.03, y, 0.36), verts=8, rot=(0, math.pi / 2, 0))
+    def bar(a, b, r=0.02, m='red'):
+        a, b = Vector(a), Vector(b); d = b - a
+        o = cyl(m, r, d.length, tuple(a), verts=6)
+        o.rotation_euler = Vector((0, 0, 1)).rotation_difference(d).to_euler()
+    bar((0, -0.55, 0.36), (0, -0.4, 0.95)); bar((0, -0.42, 0.85), (0, 0.15, 0.82)); bar((0, -0.42, 0.85), (0, 0.05, 0.4))
+    bar((0, 0.05, 0.4), (0, 0.15, 0.85)); bar((0, 0.05, 0.4), (0, 0.55, 0.36)); bar((0, 0.15, 0.85), (0, 0.55, 0.36))
+    bar((-0.25, -0.4, 0.98), (0.25, -0.4, 0.98), m='metal')
+    box('black', (0.14, 0.24, 0.06), (0, 0.15, 0.88))
+    box('metal', (0.32, 0.25, 0.2), (0, -0.62, 0.72))  # front basket
+    cyl('metal', 0.06, 0.04, (0, 0.05, 0.38), verts=10, rot=(0, math.pi / 2, 0))
+
+@model('bench', 'ベンチ', '小物')
+def bench():
+    box('wood_light', (1.6, 0.4, 0.06), (0, 0, 0.42))
+    box('wood_light', (1.6, 0.05, 0.3), (0, 0.2, 0.55), rot=(-0.15, 0, 0))
+    for x in (-0.65, 0.65):
+        box('wood_dark', (0.06, 0.4, 0.42), (x, 0, 0)); box('wood_dark', (0.06, 0.05, 0.45), (x, 0.2, 0.42))
+
+@model('chochin_post', '提灯の柱', '小物')
+def chochin_post():
+    cyl('wood_dark', 0.06, 2.8, (0, 0, 0), verts=6)
+    box('wood_dark', (1.2, 0.06, 0.06), (0, 0, 2.6))
+    for x in (-0.45, 0.45):
+        cyl('black', 0.012, 0.2, (x, 0, 2.4), verts=4)
+        ico('chochin', 0.2, (x, 0, 2.2), scale=(1, 1, 1.25), sub=1)
+        cyl('black', 0.12, 0.04, (x, 0, 1.94), verts=8); cyl('black', 0.12, 0.04, (x, 0, 2.43), verts=8)
+
+@model('road', '道路(8m・舗装)', '道路')
+def road():
+    box('asphalt', (8.0, 4.0, 0.04), (0, 0, 0))
+    for i in range(4): box('white', (1.2, 0.12, 0.01), (-3.2 + i * 2.15, 0, 0.04))
+    for s in (-1, 1): box('white', (8.0, 0.1, 0.01), (0, s * 1.8, 0.04))
+
+@model('michi', '田舎道(8m・土)', '道路')
+def michi():
+    box('soil', (8.0, 2.6, 0.03), (0, 0, 0))
+    box('grass', (8.0, 0.3, 0.05), (0, 0, 0.0))  # grass strip in the middle
+    for s in (-1, 1): box('leaf_light', (8.0, 0.25, 0.08), (0, s * 1.35, 0))
+
+@model('kawa', '小川(8m)', '自然')
+def kawa():
+    box('water', (8.0, 3.0, 0.04), (0, 0, 0.0))  # sits on the ground plane, banks of stones on both sides
+    for s in (-1, 1):
+        for i in range(10):
+            ico('stone' if i % 3 else 'stone_dark', 0.45, (-3.6 + i * 0.8 + random.uniform(-0.1, 0.1), s * 1.65, 0.05), scale=(1.0, 0.8, 0.6), sub=1, jitter=0.2, seed=i + (10 if s > 0 else 0))
+
+@model('hatake', '畑(野菜)', '農地')
+def hatake():
+    W, D = 6.0, 4.0
+    box('soil', (W, D, 0.06), (0, 0, 0))
+    for r in range(4):
+        y = -D / 2 + 0.5 + r * (D - 1) / 3
+        prism('soil', [(-0.35, 0.05), (-0.2, 0.25), (0.2, 0.25), (0.35, 0.05)], W - 0.4, loc=(0, y, 0))
+        for i in range(9):
+            x = -W / 2 + 0.6 + i * (W - 1.2) / 8
+            if r % 2 == 0:  # cabbages
+                ico('leaf_light', 0.22, (x, y, 0.38), scale=(1, 1, 0.8), sub=1, jitter=0.1, seed=i + r)
+                ico('leaf', 0.3, (x, y, 0.3), scale=(1.1, 1.1, 0.35), sub=1, jitter=0.2, seed=i + r + 20)
+            else:  # daikon tops
+                ico('white', 0.07, (x, y, 0.28), sub=1)
+                for a in (0, 2.1, 4.2): cyl('leaf', 0.08, 0.45, (x, y, 0.28), verts=4, r2=0.0, rot=(0.4 * math.cos(a), 0.4 * math.sin(a), 0))
+    for x in (-W / 2, W / 2):
+        for y in (-D / 2, D / 2): cyl('wood', 0.04, 0.6, (x, y, 0), verts=5)
+
+@model('suika', 'スイカ', '農地')
+def suika():
+    ico('suika', 0.2, (0, 0, 0.17), scale=(1.15, 1, 0.9), sub=2)
+    for i in range(6):
+        o = ico('leaf_dark', 0.205, (0, 0, 0.17), scale=(1.15, 0.12, 0.905), sub=2)
+        o.rotation_euler.z = i / 6 * math.pi
+    cyl('leaf', 0.015, 0.08, (0, 0, 0.34), verts=4)
+
+@model('himawari', 'ひまわり', '自然')
+def himawari():
+    for k, (x, y, h) in enumerate([(0, 0, 2.0), (0.5, 0.3, 1.7), (-0.45, 0.25, 1.85)]):
+        cyl('leaf', 0.03, h, (x, y, 0), verts=5)
+        for a in (0.5, 2.6, 4.4): ico('leaf', 0.2, (x + 0.18 * math.cos(a + k), y + 0.18 * math.sin(a + k), h * 0.55), scale=(1.2, 0.6, 0.15), sub=1)
+        c = Vector((x, y - 0.06, h + 0.05))
+        cyl('brown', 0.16, 0.08, tuple(c), verts=12, rot=(math.pi / 2 - 0.3, 0, 0))
+        for i in range(14):
+            a = i / 14 * math.tau
+            d = Vector((math.cos(a), 0, math.sin(a)))
+            ico('yellow', 0.09, tuple(c + Matrix.Rotation(-0.3, 3, 'X') @ d * 0.23 + Vector((0, -0.02, 0))), scale=(1.3, 0.3, 0.6), sub=1).rotation_euler = (-0.3, -a, 0)
+
+@model('kabuto', 'カブトムシ', '小物')
+def kabuto():
+    ico('beetle', 0.04, (0, 0.01, 0.025), scale=(0.8, 1.2, 0.55), sub=2)
+    ico('beetle', 0.02, (0, -0.045, 0.025), scale=(1, 0.8, 0.7), sub=1)
+    cyl('beetle', 0.006, 0.05, (0, -0.06, 0.03), verts=4, rot=(-1.1, 0, 0))
+    box('beetle', (0.022, 0.006, 0.006), (0, -0.098, 0.05))
+    for s in (-1, 1):
+        for y in (-0.025, 0.0, 0.03): cyl('black', 0.003, 0.04, (s * 0.02, y, 0.02), verts=4, rot=(0, s * 1.9, 0))
+
+# ================================================================= animals & people
+
+@model('ushi', '牛', '動物')
+def ushi():
+    ico('white', 0.6, (0, 0, 1.15), scale=(0.75, 1.5, 0.7), sub=1)
+    for i, (x, y, z) in enumerate([(0.42, -0.3, 1.2), (-0.4, 0.4, 1.25), (0.38, 0.55, 1.0), (-0.3, -0.5, 1.0), (0.0, 0.2, 1.62)]):
+        ico('black', 0.25, (x, y, z), scale=(0.5 if x else 1.2, 1, 0.8 if x else 0.25), sub=1, seed=i)
+    ico('white', 0.3, (0, -1.05, 1.4), scale=(0.8, 1.1, 0.9), sub=1)
+    ico('pink', 0.17, (0, -1.32, 1.3), scale=(1.2, 0.8, 0.8), sub=1)
+    for s in (-1, 1):
+        cyl('white', 0.04, 0.15, (s * 0.14, -1.0, 1.65), verts=5, r2=0.015, rot=(0, s * 0.8, 0))
+        ico('black', 0.09, (s * 0.27, -1.0, 1.55), scale=(1.3, 0.4, 0.6), sub=1)
+        ico('black', 0.04, (s * 0.13, -1.27, 1.5), sub=1)
+        for y in (-0.6, 0.6): cyl('white', 0.1, 0.85, (s * 0.25, y, 0), verts=6, r2=0.12); cyl('black', 0.105, 0.1, (s * 0.25, y, 0), verts=6)
+    ico('pink', 0.15, (0, 0.45, 0.72), scale=(1, 1, 0.6), sub=1)
+    cyl('white', 0.03, 0.7, (0, 1.0, 0.65), verts=5, rot=(-0.25, 0, 0)); ico('black', 0.06, (0, 1.02, 0.62), sub=1)
+
+@model('niwatori', 'ニワトリ', '動物')
+def niwatori():
+    ico('white', 0.17, (0, 0.02, 0.3), scale=(0.85, 1.15, 0.9), sub=1)
+    ico('white', 0.15, (0, 0.15, 0.4), scale=(0.6, 0.7, 1.2), sub=1)  # tail
+    ico('white', 0.09, (0, -0.13, 0.5), sub=1)
+    box('red', (0.03, 0.12, 0.08), (0, -0.13, 0.57))
+    ico('red', 0.03, (0, -0.2, 0.43), scale=(0.6, 0.6, 1.2), sub=1)
+    cyl('yellow', 0.03, 0.07, (0, -0.2, 0.5), verts=4, r2=0.0, rot=(math.pi / 2, 0, 0))
+    for s in (-1, 1):
+        ico('black', 0.015, (s * 0.07, -0.18, 0.53), sub=1)
+        cyl('yellow', 0.013, 0.17, (s * 0.06, 0.02, 0), verts=4)
+
+@model('neko', 'ねこ', '動物')
+def neko():
+    ico('tan', 0.15, (0, 0.05, 0.15), scale=(0.85, 1.2, 1.05), sub=1)
+    ico('white', 0.09, (0, -0.06, 0.15), scale=(0.9, 0.7, 1.1), sub=1)
+    ico('tan', 0.1, (0, -0.07, 0.36), scale=(1.1, 1, 0.95), sub=1)
+    for s in (-1, 1):
+        cyl('tan', 0.035, 0.07, (s * 0.06, -0.07, 0.43), verts=3, r2=0.0)
+        ico('black', 0.014, (s * 0.04, -0.165, 0.38), sub=1)
+        cyl('white', 0.025, 0.12, (s * 0.05, -0.1, 0.0), verts=5)
+    ico('pink', 0.01, (0, -0.17, 0.35), sub=1)
+    for i in range(5):  # curled tail
+        a = i / 4 * 2.2
+        ico('tan', 0.025, (0.12 * math.sin(a) + 0.02, 0.2 - 0.04 * i, 0.02 + 0.01 * i), sub=1)
+
+@model('shiba', '柴犬', '動物')
+def shiba():
+    ico('tan', 0.18, (0, 0.03, 0.4), scale=(0.75, 1.4, 0.8), sub=1)
+    ico('white', 0.12, (0, -0.15, 0.36), scale=(0.8, 0.8, 0.9), sub=1)
+    ico('tan', 0.12, (0, -0.25, 0.58), sub=1)
+    ico('white', 0.07, (0, -0.35, 0.54), scale=(0.9, 1.1, 0.7), sub=1)
+    ico('black', 0.025, (0, -0.41, 0.56), sub=1)
+    for s in (-1, 1):
+        cyl('tan', 0.045, 0.09, (s * 0.06, -0.24, 0.67), verts=3, r2=0.0)
+        ico('black', 0.016, (s * 0.05, -0.34, 0.62), sub=1)
+        for y in (-0.15, 0.18): cyl('tan', 0.04, 0.32, (s * 0.08, y, 0), verts=5); cyl('white', 0.042, 0.06, (s * 0.08, y, 0), verts=5)
+    for i in range(5):
+        a = i / 4 * math.pi * 1.4
+        ico('tan', 0.04, (0.05 * math.sin(a), 0.25 + 0.06 * math.cos(a) * 0.5, 0.52 + 0.08 * math.sin(a * 0.7)), sub=1)
+
+@model('kodomo', '子ども(プレイヤー)', '人')
+def kodomo():
+    """Animatable: nodes kodomo_body / kodomo_arm_l / kodomo_arm_r / kodomo_leg_l / kodomo_leg_r (pivots at shoulders and hips)."""
+    part(None)
+    box('white', (0.32, 0.2, 0.36), (0, 0, 0.58))  # T-shirt
+    box('blue', (0.3, 0.19, 0.14), (0, 0, 0.5))  # shorts top
+    cyl('skin', 0.05, 0.06, (0, 0, 0.94), verts=6)
+    ico('skin', 0.145, (0, -0.02, 1.09), scale=(1, 0.95, 1.05), sub=2)
+    ico('black', 0.15, (0, 0.05, 1.14), scale=(1.02, 0.9, 0.95), sub=2)  # hair at the back, face sticks out in front
+    for s in (-1, 1):
+        ico('black', 0.018, (s * 0.05, -0.15, 1.1), sub=1)
+        ico('pink', 0.022, (s * 0.085, -0.13, 1.05), scale=(1, 0.5, 0.7), sub=1)
+    cyl('straw', 0.27, 0.03, (0, 0, 1.2), verts=16); cyl('straw', 0.15, 0.12, (0, 0, 1.2), verts=14, r2=0.13)  # straw hat
+    cyl('red', 0.152, 0.035, (0, 0, 1.23), verts=14)
+    box('leaf', (0.05, 0.2, 0.3), (0.19, 0.08, 0.55), rot=(0, -0.3, 0))  # insect cage strap / cage
+    box('leaf_light', (0.14, 0.12, 0.12), (0.22, 0.08, 0.45))
+    for s, n in ((1, 'l'), (-1, 'r')):
+        part('arm_' + n, (s * 0.2, 0, 0.9))
+        box('white', (0.1, 0.12, 0.13), (s * 0.21, 0, 0.8))
+        cyl('skin', 0.04, 0.3, (s * 0.21, 0, 0.5), verts=6)
+        part('leg_' + n, (s * 0.08, 0, 0.5))
+        box('blue', (0.13, 0.17, 0.14), (s * 0.08, 0, 0.38))
+        cyl('skin', 0.045, 0.34, (s * 0.08, 0, 0.05), verts=6)
+        box('red', (0.1, 0.17, 0.06), (s * 0.08, -0.02, 0))  # sandals
+
+@model('obaachan', 'おばあちゃん', '人')
+def obaachan():
+    cyl('cloth', 0.22, 0.85, (0, 0, 0), verts=10, r2=0.18)
+    box('pink', (0.3, 0.05, 0.5), (0, -0.2, 0.25))  # apron
+    ico('cloth', 0.17, (0, 0.02, 0.88), scale=(1.2, 1, 0.6), sub=1)
+    ico('skin', 0.13, (0, -0.06, 1.05), sub=2)
+    ico('white', 0.12, (0, 0.03, 1.1), scale=(1, 0.95, 0.9), sub=2)
+    ico('white', 0.06, (0, 0.1, 1.2), sub=1)  # bun
+    for s in (-1, 1):
+        box('black', (0.04, 0.01, 0.008), (s * 0.045, -0.18, 1.07))
+        ico('pink', 0.02, (s * 0.075, -0.16, 1.01), scale=(1, 0.5, 0.7), sub=1)
+        cyl('cloth', 0.05, 0.32, (s * 0.2, -0.05, 0.55), verts=6, rot=(0.6, s * 0.2, 0))
+    cyl('wood_dark', 0.02, 0.85, (0.26, -0.2, 0), verts=5)  # walking stick
+
+
 # ---------------------------------------------------------------- export / preview
 
-def export(o, path):
+def export(top, meshes, path):
     for s in bpy.context.view_layer.objects.selected: s.select_set(False)
-    o.select_set(True); bpy.context.view_layer.objects.active = o
+    for o in {top, *meshes}: o.select_set(True)
+    bpy.context.view_layer.objects.active = top
     bpy.ops.export_scene.gltf(filepath=path, export_format='GLB', use_selection=True, export_apply=True, export_yup=True,
                               export_cameras=False, export_lights=False, export_materials='EXPORT')
 
@@ -478,11 +894,15 @@ def setup_render():
     bm = bmesh.new(); bmesh.ops.create_grid(bm, x_segments=1, y_segments=1, size=500); bm.to_mesh(fl.data); bm.free()
     fl.data.materials.append(M('grass'))
 
-def render(o, path):
+def bounds(meshes):
+    bpy.context.view_layer.update()
+    pts = [o.matrix_world @ Vector(b) for o in meshes for b in o.bound_box]
+    return Vector([min(p[i] for p in pts) for i in range(3)]), Vector([max(p[i] for p in pts) for i in range(3)])
+
+def render(name, meshes, path):
     sc = bpy.context.scene
-    for c in sc.view_layers[0].layer_collection.children: c.exclude = c.name != o.name
-    pts = [o.matrix_world @ Vector(b) for b in o.bound_box]
-    lo = Vector([min(p[i] for p in pts) for i in range(3)]); hi = Vector([max(p[i] for p in pts) for i in range(3)])
+    for c in sc.view_layers[0].layer_collection.children: c.exclude = c.name != name
+    lo, hi = bounds(meshes)
     ctr, size = (lo + hi) / 2, (hi - lo).length
     d = Vector((-0.6, -1.0, 0.5)).normalized()
     sc.camera.location = ctr + d * size * 1.45
@@ -501,17 +921,18 @@ if __name__ == '__main__':
     meta = {m['name']: m for m in json.load(open(meta_path))} if os.path.exists(meta_path) else {}
     objs = {}
     for n in names:
-        o = objs[n] = build(n)
-        export(o, os.path.join(GLB, n + '.glb'))
-        dims = [round(v, 2) for v in (o.dimensions.x, o.dimensions.z, o.dimensions.y)]  # glTF x, y(up), z
-        tris = sum(len(p.vertices) - 2 for p in o.data.polygons)
+        top, meshes = objs[n] = build(n)
+        export(top, meshes, os.path.join(GLB, n + '.glb'))
+        lo, hi = bounds(meshes); ext = hi - lo
+        dims = [round(v, 2) for v in (ext.x, ext.z, ext.y)]  # glTF x, y(up), z
+        tris = sum(len(p.vertices) - 2 for o in meshes for p in o.data.polygons)
         _, jp, cat = MODELS[n]
         meta[n] = {'name': n, 'jp': jp, 'category': cat, 'size_m': dims, 'tris': tris,
-                   'materials': [m.name for m in o.data.materials], 'kb': round(os.path.getsize(os.path.join(GLB, n + '.glb')) / 1024, 1)}
+                   'materials': sorted({m.name for o in meshes for m in o.data.materials}), 'parts': [o.name for o in meshes] if len(meshes) > 1 else [], 'kb': round(os.path.getsize(os.path.join(GLB, n + '.glb')) / 1024, 1)}
         print(f'{n:12s} {jp:12s} {tris:6d} tris  {dims}')
     order = list(MODELS)
     json.dump([meta[k] for k in order if k in meta], open(meta_path, 'w'), ensure_ascii=False, indent=1)
     if '--render' in argv:
         os.makedirs(PREVIEW, exist_ok=True); setup_render()
-        for n, o in objs.items(): render(o, os.path.join(PREVIEW, n + '.jpg'))
+        for n, (top, meshes) in objs.items(): render(n, meshes, os.path.join(PREVIEW, n + '.jpg'))
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'inaka.blend'), compress=True)
