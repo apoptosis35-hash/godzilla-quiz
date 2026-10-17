@@ -1,6 +1,7 @@
 // Battle stages: procedural cities/ports/volcano with destructible buildings, props and weather.
 import * as THREE from 'three';
 import { facadeTextures, groundTextures, skyTexture, scaleMaps, panelMaps } from './textures.js';
+import { PropSet, propSpots } from './props.js';
 
 export const STAGES = [
   {
@@ -8,6 +9,7 @@ export const STAGES = [
     sky: ['#02040c', '#0b1430', '#2a2448'], fog: [0x141a33, 0.0065], ground: 'city',
     hemi: [0x7080c0, 0x202028, 0.7], sun: [0xa8b8ff, 2.4, [-40, 60, 30]], rim: [0xff60c0, 1.6], exposure: 1.05,
     buildings: { minH: 18, maxH: 46, lit: 0.5, styles: [0, 2, 3], neon: true }, far: { minH: 20, maxH: 90 }, cars: 34, lamps: true,
+    props: ['donut', 'mug', 'clock'],
     env: ['#0b1430', '#ff60c0', '#60c0ff'],
   },
   {
@@ -15,6 +17,7 @@ export const STAGES = [
     sky: ['#2a2350', '#d0603a', '#ffc070'], fog: [0xd08860, 0.0055], ground: 'harbor',
     hemi: [0xffc8a0, 0x403040, 0.9], sun: [0xffa060, 3.2, [80, 25, -20]], rim: [0xffd0a0, 1.2], exposure: 1.0,
     buildings: { minH: 8, maxH: 22, lit: 0.15, styles: [1, 3], containers: true }, far: { minH: 10, maxH: 40 }, cars: 18, lamps: true, water: true, cranes: true,
+    props: ['duck', 'mug', 'cactus'],
     env: ['#d0603a', '#ffc070', '#2a2350'],
   },
   {
@@ -22,6 +25,7 @@ export const STAGES = [
     sky: ['#05070a', '#1a2026', '#2d343a'], fog: [0x252c32, 0.011], ground: 'industrial',
     hemi: [0x8090a0, 0x15181a, 0.6], sun: [0xc8d8ff, 1.6, [-30, 70, -40]], rim: [0x80ffd0, 1.2], exposure: 1.1,
     buildings: { minH: 9, maxH: 24, lit: 0.3, styles: [1, 2], tanks: true }, far: { minH: 12, maxH: 45 }, cars: 14, lamps: true, rain: true, stacks: true,
+    props: ['mug', 'clock', 'duck'],
     env: ['#1a2026', '#80ffd0', '#ffa040'],
   },
   {
@@ -29,6 +33,7 @@ export const STAGES = [
     sky: ['#120404', '#4a1208', '#a03010'], fog: [0x3a1008, 0.008], ground: 'volcano',
     hemi: [0xff8050, 0x401008, 0.8], sun: [0xff9060, 2.4, [30, 50, 50]], rim: [0xffa040, 2.0], exposure: 1.0,
     buildings: { rock: true, minH: 8, maxH: 20 }, far: null, cars: 0, lamps: false, embers: true, volcano: true,
+    props: ['cactus', 'clock', 'cactus'],
     env: ['#4a1208', '#ff6020', '#a03010'],
   },
   {
@@ -36,6 +41,7 @@ export const STAGES = [
     sky: ['#3a3a40', '#6a6460', '#a09080'], fog: [0x7a7068, 0.009], ground: 'city',
     hemi: [0xc0b8b0, 0x40383a, 1.0], sun: [0xfff0d8, 2.0, [50, 70, 20]], rim: [0xffe0c0, 0.8], exposure: 1.0,
     buildings: { minH: 10, maxH: 34, lit: 0.0, styles: [1, 3], ruined: true }, far: { minH: 10, maxH: 50, ruined: true }, cars: 20, lamps: false, fires: true,
+    props: ['clock', 'duck', 'donut'],
     env: ['#6a6460', '#ffc080', '#3a3a40'],
   },
 ];
@@ -118,7 +124,9 @@ export class Stage {
     ground.receiveShadow = q.shadows;
     root.add(ground);
     if (c.water) this.makeWater();
+    this.propSpots = c.props ? propSpots(c.props, q.level >= 1 ? 16 : 12, c.water) : [];
     this.makeBuildings();
+    this.props = new PropSet(root, this.propSpots, q, this.fx);
     if (c.far) this.makeFar();
     if (c.cars) this.makeCars(c.cars);
     if (c.lamps) this.makeLamps();
@@ -222,6 +230,7 @@ export class Stage {
   }
 
   addBuilding(x, z, w, d, h, kind) {
+    if (this.propSpots.some((s) => s.r && Math.abs(x - s.x) < w / 2 + s.r && Math.abs(z - s.z) < d / 2 + s.r)) return null;
     const c = this.cfg.buildings;
     const b = { x, z, w, d, h, kind, chunks: [], alive: true, collapsing: false, group: new THREE.Group(), hpMax: 0 };
     b.group.position.set(x, 0, z);
@@ -631,6 +640,7 @@ export class Stage {
     }
     this.updateCars(dt);
     this.updateLamps(dt);
+    this.props.update(dt);
     if (this.waterNormal) { this.waterNormal.offset.x += dt * 0.02; this.waterNormal.offset.y += dt * 0.013; }
     if (this.lavaGround) this.lavaGround.emissiveIntensity = 0.35 + Math.sin(this.time * 1.3) * 0.12;
     if (this.rain) {
