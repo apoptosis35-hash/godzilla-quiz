@@ -63,37 +63,46 @@ TAIL = [  # root behind the hips -> tip, sweeping back and then rising behind th
     (0.85, 7.9, 6.3, 0.52), (0.95, 8.3, 8.2, 0.43), (0.95, 8.3, 10.1, 0.36), (0.85, 8.0, 11.7, 0.31),
     (0.7, 7.5, 12.9, 0.3), (0.6, 7.0, 13.6, 0.26)]
 
+HEAD_PIVOT = Vector((0, -1.15, 9.6))
+HEAD_ROT = Matrix.Rotation(math.radians(-12), 3, 'X')  # snout raised, as in the reference shot
+def head_xf(p):
+    return HEAD_PIVOT + HEAD_ROT @ (Vector(p) - HEAD_PIVOT)
+
+def head_ball(p, r, scale=(1, 1, 1), neg=False):
+    e = ball(head_xf(p), r, scale, neg)
+    e.rotation = HEAD_ROT.to_quaternion()
+
 def body():
     chain(TORSO, scale=(1.1, 0.95, 1.0))
     chain(TAIL)
     # the belly sags forward, the chest is a little keeled
     ball((0, -0.9, 4.0), 1.55, (1.15, 1.0, 1.25)); ball((0, -0.95, 5.6), 1.0, (1.2, 0.9, 1.1))
     # head: skull, long snout, heavy protruding lower jaw, mouth carved out with a negative ellipsoid
-    ball((0, -1.55, 9.75), 0.55, (0.95, 1.25, 0.8)); ball((0, -2.25, 9.68), 0.38, (1.05, 1.5, 0.75))
-    ball((0, -2.75, 9.62), 0.26, (1.1, 1.2, 0.8))
-    ball((0, -1.7, 9.3), 0.5, (1.05, 1.3, 0.62)); ball((0, -2.4, 9.25), 0.35, (1.15, 1.45, 0.65))
-    ball((0, -2.85, 9.27), 0.22, (1.2, 1.1, 0.8))
+    head_ball((0, -1.55, 9.75), 0.55, (0.95, 1.25, 0.8)); head_ball((0, -2.25, 9.68), 0.38, (1.05, 1.5, 0.75))
+    head_ball((0, -2.75, 9.62), 0.26, (1.1, 1.2, 0.8))
+    head_ball((0, -1.7, 9.3), 0.5, (1.05, 1.3, 0.62)); head_ball((0, -2.4, 9.25), 0.35, (1.15, 1.45, 0.65))
+    head_ball((0, -2.85, 9.27), 0.22, (1.2, 1.1, 0.8))
     for s in (-1, 1):  # gill-like cheek bulges and brow ridges
-        ball((s * 0.42, -1.4, 9.55), 0.3, (0.8, 1.2, 1.0)); ball((s * 0.3, -2.05, 9.92), 0.16, (1.0, 2.0, 0.7))
-    ball((0, -2.45, 9.46), 0.33, (1.0, 2.1, 0.24), neg=True)
+        head_ball((s * 0.42, -1.4, 9.55), 0.3, (0.8, 1.2, 1.0)); head_ball((s * 0.3, -2.05, 9.92), 0.16, (1.0, 2.0, 0.7))
+    head_ball((0, -2.45, 9.46), 0.33, (1.0, 2.1, 0.19), neg=True)
     # legs: elephantine thighs and short shins, splayed feet
     for s in (-1, 1):
         chain([(s * 1.05, 0.4, 3.2, 1.5), (s * 1.45, 0.0, 2.1, 1.25), (s * 1.6, -0.25, 1.1, 0.95), (s * 1.62, -0.2, 0.45, 0.85)])
         ball((s * 1.65, -0.55, 0.32), 0.62, (1.25, 1.6, 0.6))
     # arms: tiny, held forward, palms up with long splayed fingers
     for s in (-1, 1):
-        chain([(s * 1.05, -1.05, 6.45, 0.42), (s * 1.42, -1.45, 5.75, 0.3), (s * 1.38, -2.05, 5.85, 0.22),
-               (s * 1.3, -2.45, 6.05, 0.18)], step=0.07)
-        ball((s * 1.3, -2.5, 6.08), 0.19, (1.1, 1.0, 0.6))
+        chain([(s * 1.05, -1.05, 6.45, 0.46), (s * 1.42, -1.45, 5.75, 0.34), (s * 1.38, -2.05, 5.85, 0.27),
+               (s * 1.3, -2.45, 6.05, 0.22)], step=0.06)
+        ball((s * 1.3, -2.5, 6.08), 0.23, (1.15, 1.0, 0.65))
         for f in range(5):
-            a = math.radians(-60 + f * 30) * s
+            a = math.radians(-64 + f * 32) * s
             d = Vector((math.sin(a), -math.cos(a), 0))
-            base = Vector((s * 1.3, -2.5, 6.1)) + d * 0.12
+            base = Vector((s * 1.3, -2.5, 6.12)) + d * 0.14
             pts = []
             for k in range(4):
-                L = 0.17 * (k + 1)
-                pts.append((*(base + d * L + Vector((0, 0, 0.08 * k * k))), 0.1 - 0.012 * k))
-            chain([(*base, 0.11)] + pts, step=0.025)
+                L = 0.21 * (k + 1)
+                pts.append((*(base + d * L + Vector((0, 0, 0.09 * k * k))), 0.105 - 0.012 * k))
+            chain([(*base, 0.125)] + pts, step=0.025)
     # random lumps over the torso and thighs so the silhouette is not too clean
     for _ in range(70):
         z = random.uniform(1.8, 7.6)
@@ -129,7 +138,7 @@ def add_plate(bm, origin, T, D, N, w, h, thick):
     out = plate_outline(w, h, random.uniform(-0.35, 0.05))
     front, back = [], []
     for u, v in out:
-        t = thick * max(0.35, 1 - 0.65 * max(v, 0) / h)
+        t = thick * max(0.5, 1 - 0.5 * max(v, 0) / h)
         bend = 0.12 * h * (max(v, 0) / h) ** 2 * random.uniform(-1, 1)
         p = origin + T * u + D * v + N * bend
         front.append(bm.verts.new(p + N * t / 2)); back.append(bm.verts.new(p - N * t / 2))
@@ -153,20 +162,21 @@ def plates(body_me):
         p = path[i]; T = (path[min(i + 1, len(path) - 1)] - path[max(i - 1, 0)]).normalized()
         D = (ref - T * ref.dot(T)).normalized()
         f = s / total  # 0 at the skull, 1 at the tail tip
-        size = (0.6 + 2.8 * f / 0.12) if f < 0.12 else (3.4 if f < 0.3 else 3.4 - 3.1 * (f - 0.3) / 0.7)
+        size = (0.7 + 3.5 * f / 0.12) if f < 0.12 else (4.2 if f < 0.3 else 4.2 - 3.8 * (f - 0.3) / 0.7)
         size *= random.uniform(0.8, 1.1)
-        for row in (0, -1, 1):
-            if row and size < 0.45: continue
-            sc = 1.0 if row == 0 else 0.62
-            N0 = T.cross(D).normalized()
-            Dr = (Matrix.Rotation(math.radians(38) * row, 3, T) @ D).normalized()
+        for row in (0, -1, 1, -2, 2):
+            if (row and size < 0.45) or (abs(row) == 2 and size < 1.2): continue
+            sc, ang = ((1.0, 0), (0.72, 30), (0.4, 62))[abs(row)]
+            Dr = (Matrix.Rotation(math.radians(ang) * (1 if row > 0 else -1), 3, T) @ D).normalized()
             hit = bvh.ray_cast(p + Dr * 6, -Dr, 12)
             if hit[0] is None: continue
             Nr = T.cross(Dr).normalized()
-            rot = Matrix.Rotation(random.uniform(-0.2, 0.2), 3, Dr)
-            add_plate(bm, hit[0] - Dr * 0.05, rot @ T, Dr, rot @ Nr,
-                      size * sc * random.uniform(0.7, 0.95), size * sc * random.uniform(0.8, 1.15), 0.06 + 0.07 * size * sc)
-        s += size * random.uniform(0.32, 0.45)
+            for layer in ((0, 1.0), (1, 0.62)) if row == 0 else ((0, 1.0),):  # a smaller plate leaning on each big one
+                rot = Matrix.Rotation(random.uniform(-0.25, 0.25) + 0.3 * layer[0] * random.choice((-1, 1)), 3, Dr)
+                k = sc * layer[1]
+                add_plate(bm, hit[0] - Dr * 0.08 + T * (0.18 * size * layer[0]), rot @ T, Dr, rot @ Nr,
+                          size * k * random.uniform(0.75, 1.0), size * k * random.uniform(0.85, 1.15), 0.12 + 0.1 * size * k)
+        s += size * random.uniform(0.24, 0.34)
     me = bpy.data.meshes.new('plates')
     bm.to_mesh(me); bm.free()
     return me
@@ -187,9 +197,9 @@ def crack_net(nt, vec):
     stretch = node('ShaderNodeVectorMath'); stretch.operation = 'MULTIPLY'; stretch.inputs[1].default_value = (1.0, 1.0, 0.55)
     L.new(wv.outputs['Vector'], stretch.inputs[0])  # veins run mostly up and down the body
     masks = []
-    for scale, width in ((1.3, 0.05), (4.0, 0.1)):
+    for scale, width in ((1.5, 0.025), (5.0, 0.04)):
         vo = node('ShaderNodeTexVoronoi', Scale=scale); vo.feature = 'DISTANCE_TO_EDGE'
-        vo.inputs['Randomness'].default_value = 0.9
+        vo.inputs['Randomness'].default_value = 0.7
         L.new(stretch.outputs['Vector'], vo.inputs['Vector'])
         mr = node('ShaderNodeMapRange'); mr.interpolation_type = 'SMOOTHSTEP'
         mr.inputs['From Min'].default_value = width; mr.inputs['From Max'].default_value = 0.0
@@ -204,19 +214,33 @@ def crack_net(nt, vec):
     gm2 = node('ShaderNodeMapRange'); gm2.inputs['From Min'].default_value = 0.38; gm2.inputs['From Max'].default_value = 0.62
     gm2.inputs['To Min'].default_value = 0.15; L.new(gate2.outputs['Fac'], gm2.inputs['Value'])
     big = node('ShaderNodeMath'); big.operation = 'MULTIPLY'; L.new(masks[0], big.inputs[0]); L.new(gm2.outputs['Result'], big.inputs[1])
-    crack = node('ShaderNodeMath'); crack.operation = 'MAXIMUM'; L.new(big.outputs[0], crack.inputs[0]); L.new(fg.outputs[0], crack.inputs[1])
+    net = node('ShaderNodeMath'); net.operation = 'MAXIMUM'; L.new(big.outputs[0], net.inputs[0]); L.new(fg.outputs[0], net.inputs[1])
     lumps = node('ShaderNodeTexNoise', Scale=2.8, Detail=10.0, Roughness=0.68, Distortion=0.8); L.new(vec, lumps.inputs['Vector'])
-    ridge = node('ShaderNodeTexNoise', Scale=3.6, Detail=5.0, Roughness=0.55, Distortion=0.3); ridge.noise_type = 'RIDGED_MULTIFRACTAL'
-    L.new(stretch.outputs['Vector'], ridge.inputs['Vector'])  # keloid ridges, also mostly vertical
-    rr = node('ShaderNodeMapRange'); rr.inputs['From Min'].default_value = 0.0; rr.inputs['From Max'].default_value = 1.6
+    ridge = node('ShaderNodeTexNoise', Scale=2.2, Detail=6.0, Roughness=0.6, Distortion=0.5); ridge.noise_type = 'RIDGED_MULTIFRACTAL'
+    L.new(stretch.outputs['Vector'], ridge.inputs['Vector'])  # thick keloid folds, mostly vertical
+    rr = node('ShaderNodeMapRange'); rr.inputs['From Min'].default_value = 0.25; rr.inputs['From Max'].default_value = 0.0  # 1 on the swollen folds, 0 in the creases
     L.new(ridge.outputs['Fac'], rr.inputs['Value'])
+    # red sits at the bottom of the grooves between folds (plus the vein network), mostly on the chest, belly and neck
+    valley = node('ShaderNodeMapRange'); valley.interpolation_type = 'SMOOTHSTEP'
+    valley.inputs['From Min'].default_value = 0.22; valley.inputs['From Max'].default_value = 0.45; valley.inputs['To Max'].default_value = 0.85
+    L.new(ridge.outputs['Fac'], valley.inputs['Value'])  # only the deepest creases, and never fully saturated
+    red = node('ShaderNodeMath'); red.operation = 'MAXIMUM'; L.new(valley.outputs['Result'], red.inputs[0]); L.new(net.outputs[0], red.inputs[1])
+    xyz = node('ShaderNodeSeparateXYZ'); L.new(vec, xyz.inputs[0])
+    front = node('ShaderNodeMapRange'); front.inputs['From Min'].default_value = 0.8; front.inputs['From Max'].default_value = -0.9
+    L.new(xyz.outputs['Y'], front.inputs['Value'])
+    high = node('ShaderNodeMapRange'); high.inputs['From Min'].default_value = 3.0; high.inputs['From Max'].default_value = 6.0
+    L.new(xyz.outputs['Z'], high.inputs['Value'])
+    region = node('ShaderNodeMath'); region.operation = 'MULTIPLY_ADD'
+    L.new(front.outputs['Result'], region.inputs[0]); L.new(high.outputs['Result'], region.inputs[1]); region.inputs[2].default_value = 0.22
+    rc = node('ShaderNodeMath'); rc.operation = 'MINIMUM'; L.new(region.outputs[0], rc.inputs[0]); rc.inputs[1].default_value = 1.0
+    crack = node('ShaderNodeMath'); crack.operation = 'MULTIPLY'; L.new(red.outputs[0], crack.inputs[0]); L.new(rc.outputs[0], crack.inputs[1])
     return crack.outputs[0], lumps.outputs['Fac'], rr.outputs['Result']
 
 def skin_nodes():
     ng = bpy.data.node_groups.new('skin_folds_and_cracks', 'GeometryNodeTree')
     ng.interface.new_socket('Geometry', in_out='INPUT', socket_type='NodeSocketGeometry')
     ng.interface.new_socket('Geometry', in_out='OUTPUT', socket_type='NodeSocketGeometry')
-    for name, val in (('Crack Depth', 0.07), ('Lump Height', 0.2), ('Fold Height', 0.09)):
+    for name, val in (('Crack Depth', 0.05), ('Lump Height', 0.18), ('Fold Height', 0.13)):
         s = ng.interface.new_socket(name, in_out='INPUT', socket_type='NodeSocketFloat'); s.default_value = val
     N, L = ng.nodes, ng.links
     gi = N.new('NodeGroupInput'); go = N.new('NodeGroupOutput')
@@ -231,6 +255,11 @@ def skin_nodes():
     h = math('ADD', math('MULTIPLY', math('SUBTRACT', lumps, 0.5), gi.outputs['Lump Height']),
              math('MULTIPLY', math('SUBTRACT', folds, 0.5), gi.outputs['Fold Height']))
     h = math('SUBTRACT', h, math('MULTIPLY', crack, gi.outputs['Crack Depth']))
+    hd = N.new('ShaderNodeVectorMath'); hd.operation = 'DISTANCE'; hd.inputs[1].default_value = (0, -2.0, 9.7)
+    L.new(pos.outputs['Position'], hd.inputs[0])
+    calm = N.new('ShaderNodeMapRange'); calm.inputs['From Min'].default_value = 0.7; calm.inputs['From Max'].default_value = 1.8
+    calm.inputs['To Min'].default_value = 0.3; L.new(hd.outputs['Value'], calm.inputs['Value'])  # keep the face readable
+    h = math('MULTIPLY', h, calm.outputs['Result'])
     off = N.new('ShaderNodeVectorMath'); off.operation = 'SCALE'
     L.new(nor.outputs['Normal'], off.inputs[0]); L.new(h, off.inputs['Scale'])
     rest = N.new('GeometryNodeStoreNamedAttribute'); rest.data_type = 'FLOAT_VECTOR'; rest.inputs['Name'].default_value = 'rest'
@@ -250,15 +279,15 @@ def skin_material():
     L.new(folds, tone.inputs[0]); tone.inputs[1].default_value = 0.5; L.new(lumps, tone.inputs[2])
     ramp = N.new('ShaderNodeValToRGB')
     ramp.color_ramp.elements[0].position = 0.45; ramp.color_ramp.elements[0].color = (0.012, 0.01, 0.01, 1)
-    ramp.color_ramp.elements[1].position = 0.8; ramp.color_ramp.elements[1].color = (0.075, 0.07, 0.07, 1)
+    ramp.color_ramp.elements[1].position = 0.8; ramp.color_ramp.elements[1].color = (0.085, 0.08, 0.08, 1)
     sc = N.new('ShaderNodeMath'); sc.operation = 'DIVIDE'; L.new(tone.outputs[0], sc.inputs[0]); sc.inputs[1].default_value = 1.5
     L.new(sc.outputs[0], ramp.inputs['Fac'])
     red = N.new('ShaderNodeMix'); red.data_type = 'RGBA'
-    L.new(crack, red.inputs['Factor']); L.new(ramp.outputs['Color'], red.inputs['A']); red.inputs['B'].default_value = (0.3, 0.01, 0.006, 1)
+    L.new(crack, red.inputs['Factor']); L.new(ramp.outputs['Color'], red.inputs['A']); red.inputs['B'].default_value = (0.15, 0.006, 0.004, 1)
     L.new(red.outputs['Result'], p.inputs['Base Color'])
     p.inputs['Emission Color'].default_value = (1.0, 0.09, 0.02, 1)
     glow = N.new('ShaderNodeMath'); glow.operation = 'POWER'; L.new(crack, glow.inputs[0]); glow.inputs[1].default_value = 2.0
-    gs = N.new('ShaderNodeMath'); gs.operation = 'MULTIPLY'; L.new(glow.outputs[0], gs.inputs[0]); gs.inputs[1].default_value = 0.35
+    gs = N.new('ShaderNodeMath'); gs.operation = 'MULTIPLY'; L.new(glow.outputs[0], gs.inputs[0]); gs.inputs[1].default_value = 0.12
     L.new(gs.outputs[0], p.inputs['Emission Strength'])
     rough = N.new('ShaderNodeMapRange'); L.new(lumps, rough.inputs['Value'])
     rough.inputs['To Min'].default_value = 0.78; rough.inputs['To Max'].default_value = 0.42
@@ -287,14 +316,15 @@ def cone(bm, base, tip, r, sides=6):
 def teeth_and_claws():
     bm = bmesh.new()
     for upper in (True, False):  # crooked, uneven rows; some teeth jut outward past the lips
-        for k in range(-15, 16):
-            t = k / 15 * 1.4 + random.uniform(-0.04, 0.04)
+        for k in range(-17, 18):
+            if random.random() < 0.15: continue  # gaps
+            t = k / 17 * 1.4 + random.uniform(-0.05, 0.05)
             x, y = 0.3 * math.sin(t), -2.45 - 0.62 * math.cos(t) + 0.05
-            z0 = 9.53 if upper else 9.41
-            L = random.uniform(0.04, 0.14) * (1.15 if abs(k) < 8 else 0.75)
-            out = Vector((math.sin(t), -math.cos(t), 0)) * random.uniform(-0.01, 0.05)
-            tip = Vector((x, y, z0 + (-L if upper else L))) + out + Vector((random.uniform(-0.02, 0.02), random.uniform(-0.02, 0.02), 0))
-            cone(bm, Vector((x, y, z0 + (0.06 if upper else -0.06))), tip, random.uniform(0.016, 0.032), 5)
+            z0 = (9.53 if upper else 9.41) + random.uniform(-0.015, 0.015)
+            L = random.uniform(0.03, 0.18) * (1.15 if abs(k) < 9 else 0.7)
+            out = Vector((math.sin(t), -math.cos(t), 0)) * random.uniform(-0.02, 0.08)
+            tip = Vector((x, y, z0 + (-L if upper else L))) + out + Vector((random.uniform(-0.04, 0.04), random.uniform(-0.03, 0.03), 0))
+            cone(bm, head_xf((x, y, z0 + (0.06 if upper else -0.06))), head_xf(tip), random.uniform(0.014, 0.04), 5)
     for s in (-1, 1):  # toe claws
         for k in range(4):
             a = math.radians(-50 + 33 * k)
@@ -302,11 +332,11 @@ def teeth_and_claws():
             cone(bm, base, base + Vector((math.sin(a) * 0.35, -math.cos(a) * 0.35, -0.17)), 0.12, 7)
     me = bpy.data.meshes.new('teeth_claws'); bm.to_mesh(me); bm.free()
     ob = link(bpy.data.objects.new('teeth_claws', me))
-    ob.data.materials.append(simple_mat('tooth', (0.22, 0.18, 0.13), 0.5))
+    ob.data.materials.append(simple_mat('tooth', (0.26, 0.21, 0.13), 0.55))
     for poly in me.polygons: poly.use_smooth = False
     eye = simple_mat('eye', (0.004, 0.003, 0.003), 0.15)
     for s in (-1, 1):  # tiny dull eyes set far back on the head
-        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.065, location=(s * 0.4, -1.95, 9.86), segments=16, ring_count=10)
+        bpy.ops.mesh.primitive_uv_sphere_add(radius=0.065, location=head_xf((s * 0.4, -1.95, 9.86)), segments=16, ring_count=10)
         bpy.context.object.name = 'eye'; bpy.context.object.data.materials.append(eye)
         bpy.ops.object.shade_smooth()
 
@@ -350,9 +380,9 @@ def stage():
 
 def camera_and_render():
     cam = link(bpy.data.objects.new('camera', bpy.data.cameras.new('camera'))); scene.camera = cam
-    cam.data.lens = 40
-    cam.location = (5.5, -15.5, 2.2)
-    target = Vector((0.6, -1.0, 7.6))
+    cam.data.lens = 30  # close and low, chest up, like the reference photo
+    cam.location = (3.0, -8.8, 3.0)
+    target = Vector((0.5, -1.0, 7.2))
     if '--head' in sys.argv:  # close-up for checking the face and hands
         cam.data.lens = 70; cam.location = (2.5, -9.5, 8.0); target = Vector((-0.6, -2.0, 8.4))
     cam.rotation_euler = (target - cam.location).to_track_quat('-Z', 'Y').to_euler()

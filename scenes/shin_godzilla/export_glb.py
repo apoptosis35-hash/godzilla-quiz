@@ -49,10 +49,10 @@ def attr(name):
 crack, tone = attr('crack'), attr('tone')
 # skin_material()'s colour ramp, a little brighter because a phone viewer has no emission or bounce light
 t = np.clip((tone / 1.5 - 0.45) / (0.8 - 0.45), 0, 1)[:, None]
-skin = (1 - t) * np.array([0.02, 0.017, 0.017]) + t * np.array([0.13, 0.12, 0.12])
-c = np.clip((crack - 0.45) / 0.4, 0, 1)[:, None]
+skin = (1 - t) * np.array([0.012, 0.01, 0.01]) + t * np.array([0.065, 0.06, 0.06])
+c = np.clip((crack - 0.3) / 0.4, 0, 1)[:, None]
 c = c * c * (3 - 2 * c)  # vertices are coarser than the shader's pixels, so keep only the cores of the cracks
-rgb = (1 - c) * skin + c * np.array([0.7, 0.035, 0.012])
+rgb = (1 - c) * skin + c * np.array([0.45, 0.02, 0.01])
 col = me.color_attributes.new('Col', 'FLOAT_COLOR', 'POINT')
 col.data.foreach_set('color', np.hstack([rgb, np.ones((len(rgb), 1))]).astype(np.float32).ravel())
 for name in ('rest', 'crack', 'tone'):
