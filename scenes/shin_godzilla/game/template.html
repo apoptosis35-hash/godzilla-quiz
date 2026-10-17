@@ -1,0 +1,577 @@
+<title>シン・ゴジラ 首都進撃</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: full-screen WebGL city; HUD as government-alert bands top and bottom, joystick bottom-left, attack buttons bottom-right.
+   Single deliberate look (overcast Tokyo daytime), so no dark variant. Built by export_glb.py: the model is inlined. */
+:root {
+  --sky: #c9ccd1; --ink: #141213; --paper: rgba(246,246,244,.86); --line: rgba(20,18,19,.18);
+  --alert: #c41e10; --beam: #8a5cff; --hp: #d8341f; --en: #8a5cff;
+  --display: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --body: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+  --mono: ui-monospace, "SF Mono", Menlo, monospace;
+  color-scheme: light;
+}
+[hidden] { display: none !important; }
+html, body { height: 100%; }
+body { background: var(--sky); color: var(--ink); font-family: var(--body); overflow: hidden; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.stage { position: relative; height: 100%; overflow: hidden; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; }
+.top { position: absolute; top: 0; left: 0; right: 0; display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; pointer-events: none;
+  padding-block: 10px 0; padding-left: max(12px, env(safe-area-inset-left, 0px)); padding-right: max(12px, env(safe-area-inset-right, 0px)); }
+.panel { background: var(--paper); border: 1px solid var(--line); border-radius: 6px; padding: 8px 10px; min-width: 0; }
+.bars { display: grid; gap: 6px; width: min(52vw, 260px); }
+.bar { display: grid; grid-template-columns: 2.6em 1fr; align-items: center; gap: 6px; font-size: 11px; letter-spacing: .08em; }
+.bar i { display: block; height: 8px; background: rgba(20,18,19,.12); border-radius: 4px; overflow: hidden; }
+.bar b { display: block; height: 100%; width: 100%; border-radius: 4px; transform-origin: left; }
+#hpFill { background: var(--hp); } #enFill { background: var(--en); }
+.score { text-align: right; font-family: var(--mono); font-variant-numeric: tabular-nums; }
+.score .big { font-size: 22px; font-weight: 700; line-height: 1; }
+.score .small { font-size: 11px; margin-top: 4px; letter-spacing: .04em; white-space: nowrap; }
+.ticker { position: absolute; left: 0; right: 0; top: calc(78px + env(safe-area-inset-top, 0px)); text-align: center; pointer-events: none; }
+.ticker span { display: inline-block; background: var(--alert); color: #fff; font-size: 13px; font-weight: 700; letter-spacing: .1em; padding: 5px 12px; border-radius: 3px; }
+.stick { position: absolute; left: max(18px, env(safe-area-inset-left, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); width: 132px; height: 132px; border-radius: 50%;
+  background: rgba(246,246,244,.35); border: 1px solid var(--line); pointer-events: none; }
+.knob { position: absolute; left: 41px; top: 41px; width: 50px; height: 50px; border-radius: 50%; background: var(--paper); border: 1px solid var(--line); }
+.btns { position: absolute; right: max(18px, env(safe-area-inset-right, 0px)); bottom: calc(22px + env(safe-area-inset-bottom, 0px)); display: grid; grid-template-columns: auto auto; gap: 12px; align-items: end; }
+.btns button { font-family: var(--body); font-weight: 700; color: var(--ink); background: var(--paper); border: 1px solid var(--line); border-radius: 50%; touch-action: none; cursor: pointer; }
+#beamBtn { width: 92px; height: 92px; font-size: 17px; border: 2px solid var(--beam); color: #4b2bb0; }
+#beamBtn.on { background: var(--beam); color: #fff; }
+#tailBtn { width: 68px; height: 68px; font-size: 14px; }
+#tailBtn:disabled { opacity: .45; }
+.btns button:focus-visible, .card button:focus-visible { outline: 2px solid var(--alert); outline-offset: 2px; }
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(201,204,209,.55);
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.card { background: var(--paper); border: 1px solid var(--line); border-top: 6px solid var(--alert); border-radius: 6px; padding: 20px 20px 18px; width: min(100%, 420px); display: grid; gap: 12px; }
+.card .eyebrow { font-size: 11px; letter-spacing: .2em; color: var(--alert); font-weight: 700; }
+.card h1 { margin: 0; font-family: var(--display); font-size: clamp(30px, 9vw, 44px); line-height: 1.05; font-weight: 800; text-wrap: balance; }
+.card p { margin: 0; line-height: 1.6; font-size: 14px; }
+.card ul { margin: 0; padding-left: 1.2em; line-height: 1.7; font-size: 13px; }
+.card .stats { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14px; line-height: 1.8; }
+.card button { font: 700 16px/1 var(--body); background: var(--ink); color: #fff; border: 0; border-radius: 6px; padding: 14px; cursor: pointer; }
+.err { position: absolute; left: 0; right: 0; top: 40%; text-align: center; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.err span { display: inline-block; background: var(--paper); border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; max-width: 30em; }
+</style>
+
+<div class="stage">
+  <canvas id="gl" aria-label="ゲーム画面"></canvas>
+  <div class="top">
+    <div class="panel bars">
+      <div class="bar"><span>体力</span><i><b id="hpFill"></b></i></div>
+      <div class="bar"><span>熱線</span><i><b id="enFill"></b></i></div>
+    </div>
+    <div class="panel score">
+      <div class="big" id="score">0</div>
+      <div class="small" id="time">残り 120秒</div>
+      <div class="small" id="count">破壊 0棟 ・ 撃墜 0機</div>
+    </div>
+  </div>
+  <div class="ticker" id="ticker" hidden><span id="tickerText"></span></div>
+  <div class="stick" id="stick"><div class="knob" id="knob"></div></div>
+  <div class="btns">
+    <button id="tailBtn" aria-label="尻尾で薙ぎ払う">尻尾</button>
+    <button id="beamBtn" aria-label="押している間、熱線を吐く">熱線</button>
+  </div>
+  <div class="overlay" id="title">
+    <div class="card">
+      <div class="eyebrow">緊急災害対策本部 ・ 巨大不明生物 東京都内に上陸</div>
+      <h1>シン・ゴジラ<br>首都進撃</h1>
+      <p>120秒のあいだに、できるだけ多くのビルを壊してください。周りを飛ぶヘリがミサイルを撃ってきます。</p>
+      <ul>
+        <li>左下を指でなぞって歩く(キーボードは WASD / 矢印)</li>
+        <li>「熱線」を押している間、紫の熱線を吐く(スペース)</li>
+        <li>「尻尾」で周りをまとめて薙ぎ払う(E)</li>
+        <li>高いビルは体当たりでは壊れません。熱線か尻尾で</li>
+      </ul>
+      <button id="startBtn">上陸する</button>
+    </div>
+  </div>
+  <div class="overlay" id="result" hidden>
+    <div class="card">
+      <div class="eyebrow" id="resultEyebrow">作戦終了</div>
+      <h1 id="resultTitle">活動限界</h1>
+      <div class="stats" id="resultStats"></div>
+      <button id="retryBtn">もう一度</button>
+    </div>
+  </div>
+  <p class="err" id="err" hidden><span id="errText"></span></p>
+</div>
+
+<script id="model" type="application/octet-stream">__MODEL_B64__</script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const fail = msg => { $('err').hidden = false; $('errText').textContent = msg; $('title').hidden = true; };
+try { main(); } catch (e) { fail('ゲームを起動できませんでした(' + (e && e.message || e) + ')'); }
+
+function main() {
+// ------------------------------------------------------------------ WebGL setup
+const canvas = $('gl');
+let gl = canvas.getContext('webgl2', { antialias: true }), gl2 = !!gl;
+if (!gl) gl = canvas.getContext('webgl', { antialias: true });
+if (!gl) throw new Error('この端末ではWebGLが使えません');
+if (!gl2 && !gl.getExtension('OES_element_index_uint')) throw new Error('この端末のWebGLは大きなモデルに対応していません');
+
+const compile = (vs, fs, attrs) => {
+  const sh = (t, s) => { const o = gl.createShader(t); gl.shaderSource(o, s); gl.compileShader(o);
+    if (!gl.getShaderParameter(o, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(o)); return o; };
+  const p = gl.createProgram(); gl.attachShader(p, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(p, sh(gl.FRAGMENT_SHADER, fs));
+  attrs.forEach((a, i) => gl.bindAttribLocation(p, i, a)); gl.linkProgram(p);
+  if (!gl.getProgramParameter(p, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(p));
+  const u = {}; const n = gl.getProgramParameter(p, gl.ACTIVE_UNIFORMS);
+  for (let i = 0; i < n; i++) { const nm = gl.getActiveUniform(p, i).name; u[nm] = gl.getUniformLocation(p, nm); }
+  return { p, u: new Proxy(u, { get: (o, k) => o[k] ?? null }) };
+};
+const MESH = compile(`
+  attribute vec3 aPos; attribute vec3 aNor; attribute vec3 aCol;
+  uniform mat4 uVP, uM; uniform vec3 uCenter, uHalf, uScale;
+  varying vec3 vN, vW, vC, vL;
+  void main() {
+    vec3 p = uCenter + aPos * uHalf; vL = p * uScale;
+    vec4 w = uM * vec4(p, 1.0); vW = w.xyz; vN = mat3(uM) * aNor; vC = pow(aCol, vec3(2.2));
+    gl_Position = uVP * w;
+  }`, `
+  precision highp float;
+  uniform vec3 uEye, uSun, uFog, uTint, uEmit, uPlayer, uScale; uniform float uMode, uGlow;
+  varying vec3 vN, vW, vC, vL;
+  float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
+  void main() {
+    vec3 n = normalize(vN); vec3 v = normalize(uEye - vW);
+    if (dot(n, v) < 0.0 && uMode < 1.5) n = -n;
+    vec3 alb = vC * uTint;
+    float spec = 0.12;
+    if (uMode > 0.5 && uMode < 1.5) {          // building: concrete frame with a grid of windows
+      vec2 q = abs(n.x) > 0.5 ? vec2(vL.z, vL.y) : vec2(vL.x, vL.y);
+      vec2 cell = floor(q / vec2(0.55, 0.5)); vec2 f = fract(q / vec2(0.55, 0.5));
+      float win = step(0.18, f.x) * step(f.x, 0.82) * step(0.22, f.y) * step(f.y, 0.78) * step(0.5, abs(n.y) < 0.5 ? 1.0 : 0.0);
+      float h = hash(cell + floor(n.xz * 3.0 + 3.0) * 17.0 + uScale.xy);
+      vec3 glass = mix(vec3(0.05, 0.07, 0.09), vec3(0.18, 0.21, 0.25), h);
+      alb = mix(alb, glass, win); spec = mix(0.08, 0.5, win);
+    } else if (uMode > 1.5) {                    // ground: asphalt blocks, roads, lane marks, and the kaiju's shadow
+      vec2 g = vW.xz / 14.0; vec2 d = abs(fract(g) - 0.5) * 14.0;
+      float road = step(5.0, max(d.x, d.y));
+      vec3 side = vec3(0.1, 0.1, 0.098), asph = vec3(0.03, 0.03, 0.033);
+      float lane = step(6.85, max(d.x, d.y)) * step(0.5, fract((d.x > d.y ? vW.z : vW.x) * 0.25));
+      alb = mix(side, asph, road); alb = mix(alb, vec3(0.3), lane * 0.6);
+      float sh = 1.0 - 0.55 * (1.0 - smoothstep(2.0, 8.0, distance(vW.xz, uPlayer.xz)));
+      alb *= sh; spec = 0.03;
+    }
+    vec3 hemi = mix(vec3(0.17, 0.165, 0.16), vec3(0.85, 0.88, 0.93), n.y * 0.5 + 0.5);
+    float key = max(dot(n, uSun), 0.0);
+    float sp = pow(max(dot(n, normalize(uSun + v)), 0.0), 40.0) * spec;
+    vec3 c = alb * (hemi * 0.62 + key * vec3(1.0, 0.96, 0.9) * 1.1) + sp;
+    float red = clamp((vC.r - max(vC.g, vC.b)) * 2.0, 0.0, 1.0);
+    c += vec3(1.0, 0.16, 0.05) * red * 0.25 + vec3(0.55, 0.25, 1.0) * red * uGlow * 3.0 + uEmit;
+    float fog = 1.0 - exp(-distance(uEye, vW) * 0.0045);
+    c = mix(c, uFog, fog);
+    c = c / (c + vec3(0.6)) * 1.5;
+    gl_FragColor = vec4(pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
+  }`, ['aPos', 'aNor', 'aCol']);
+const PTS = compile(`
+  attribute vec3 aP; attribute float aS; attribute vec4 aC;
+  uniform mat4 uVP; uniform float uPx; varying vec4 vC;
+  void main() { gl_Position = uVP * vec4(aP, 1.0); gl_PointSize = clamp(aS * uPx / gl_Position.w, 1.0, 256.0); vC = aC; }`, `
+  precision mediump float; varying vec4 vC;
+  void main() { vec2 d = gl_PointCoord - 0.5; float a = smoothstep(0.5, 0.2, length(d)); gl_FragColor = vec4(vC.rgb * vC.a * a, vC.a * a); }`, ['aP', 'aS', 'aC']);
+
+function meshFrom(pos, posType, nor, norType, col, idx, center = [0, 0, 0], half = [1, 1, 1]) {
+  const mk = (data, target = gl.ARRAY_BUFFER) => { const b = gl.createBuffer(); gl.bindBuffer(target, b); gl.bufferData(target, data, gl.STATIC_DRAW); return b; };
+  return { pos: mk(pos), posType, nor: mk(nor), norType, col: col && mk(col), idx: mk(idx, gl.ELEMENT_ARRAY_BUFFER),
+    count: idx.length, idxType: idx instanceof Uint32Array ? gl.UNSIGNED_INT : gl.UNSIGNED_SHORT, center, half };
+}
+// the kaiju, inlined by export_glb.py
+const bin = atob($('model').textContent.trim()); const buf = new ArrayBuffer(bin.length); const u8 = new Uint8Array(buf);
+for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+const hd = new DataView(buf), nv = hd.getUint32(0, true), nt = hd.getUint32(4, true);
+const mc = [0, 1, 2].map(i => hd.getFloat32(8 + 4 * i, true)), mh = [0, 1, 2].map(i => hd.getFloat32(20 + 4 * i, true));
+const al = n => (n + 3) & ~3; let o = 32;
+const mPos = new Int16Array(buf, o, nv * 3); o += al(nv * 6); const mNor = new Int8Array(buf, o, nv * 3); o += al(nv * 3);
+const mCol = new Uint8Array(buf, o, nv * 3); o += al(nv * 3); const mIdx = new Uint32Array(buf, o, nt * 3);
+const KAIJU = meshFrom(mPos, gl.SHORT, mNor, gl.BYTE, mCol, mIdx, mc, mh);
+// unit box centred on the origin
+const BOX = (() => {
+  const P = [], N = [], I = [];
+  const faces = [[0, 1], [0, -1], [1, 1], [1, -1], [2, 1], [2, -1]];
+  for (const [ax, s] of faces) {
+    const u = (ax + 1) % 3, w = (ax + 2) % 3, b = P.length / 3;
+    for (const [a, c] of [[-1, -1], [1, -1], [1, 1], [-1, 1]]) {
+      const p = [0, 0, 0]; p[ax] = 0.5 * s; p[u] = 0.5 * a; p[w] = 0.5 * c * s; P.push(...p);
+      const n = [0, 0, 0]; n[ax] = s; N.push(...n);
+    }
+    I.push(b, b + 1, b + 2, b, b + 2, b + 3);
+  }
+  return meshFrom(new Float32Array(P), gl.FLOAT, new Float32Array(N), gl.FLOAT, null, new Uint16Array(I));
+})();
+const GROUND = meshFrom(new Float32Array([-1, 0, -1, 1, 0, -1, 1, 0, 1, -1, 0, 1]), gl.FLOAT, new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0, 0, 1, 0]), gl.FLOAT,
+  null, new Uint16Array([0, 2, 1, 0, 3, 2]), [0, 0, 0], [200, 1, 200]);
+
+// ------------------------------------------------------------------ small matrix kit (column-major)
+const M4 = {
+  mul(a, b) { const r = new Float32Array(16); for (let c = 0; c < 4; c++) for (let i = 0; i < 4; i++) { let s = 0; for (let k = 0; k < 4; k++) s += a[k * 4 + i] * b[c * 4 + k]; r[c * 4 + i] = s; } return r; },
+  T(x, y, z) { return new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]); },
+  S(x, y, z) { return new Float32Array([x, 0, 0, 0, 0, y, 0, 0, 0, 0, z, 0, 0, 0, 0, 1]); },
+  RY(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, 0, -s, 0, 0, 1, 0, 0, s, 0, c, 0, 0, 0, 0, 1]); },
+  RX(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([1, 0, 0, 0, 0, c, s, 0, 0, -s, c, 0, 0, 0, 0, 1]); },
+  RZ(a) { const c = Math.cos(a), s = Math.sin(a); return new Float32Array([c, s, 0, 0, -s, c, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]); },
+  chain(...ms) { return ms.reduce((a, b) => M4.mul(a, b)); },
+  persp(fy, asp, n, f) { const t = 1 / Math.tan(fy / 2); return new Float32Array([t / asp, 0, 0, 0, 0, t, 0, 0, 0, 0, (f + n) / (n - f), -1, 0, 0, 2 * f * n / (n - f), 0]); },
+  look(e, t) {
+    const sub = (a, b) => a.map((x, i) => x - b[i]), nrm = a => { const l = Math.hypot(...a); return a.map(x => x / l); };
+    const cr = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]], dt = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const z = nrm(sub(e, t)), x = nrm(cr([0, 1, 0], z)), y = cr(z, x);
+    return new Float32Array([x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dt(x, e), -dt(y, e), -dt(z, e), 1]);
+  },
+};
+
+// ------------------------------------------------------------------ world
+const rnd = (a, b) => a + Math.random() * (b - a);
+const PALETTE = [[0.55, 0.54, 0.51], [0.48, 0.49, 0.51], [0.6, 0.56, 0.48], [0.38, 0.41, 0.46], [0.64, 0.63, 0.61], [0.44, 0.42, 0.39]];
+let buildings, helis, missiles, parts, P, cam, game, stats;
+function buildCity() {
+  buildings = [];
+  for (let bx = -6; bx <= 6; bx++) for (let bz = -6; bz <= 6; bz++) {
+    if (Math.abs(bx) <= 0 && Math.abs(bz) <= 1) continue;  // the landing plaza
+    if (Math.random() < 0.08) continue;                     // a park
+    const cx = bx * 14, cz = bz * 14, centre = Math.max(0, 1 - Math.hypot(bx, bz) / 8);
+    for (const [lx, lz] of [[-2.5, -2.5], [2.5, -2.5], [-2.5, 2.5], [2.5, 2.5]]) {
+      if (Math.random() < 0.15) continue;
+      const w = rnd(3.2, 4.6), d = rnd(3.2, 4.6), h = rnd(2.0, 5.5) + centre * rnd(0, 9) + (Math.random() < 0.06 ? 8 : 0);
+      const c = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+      buildings.push({ x: cx + lx, z: cz + lz, w, d, h, hp: h * 6, col: c, state: 0, t: 0, tilt: [rnd(-0.4, 0.4), rnd(-0.4, 0.4)] });
+    }
+  }
+}
+function reset() {
+  buildCity();
+  helis = []; missiles = []; parts = [];
+  P = { x: 0, z: -4, yaw: 0, hp: 100, en: 100, walk: 0, speed: 0, beam: false, beamT: 0, tail: 0, tailCd: 0, hit: 0 };
+  cam = { yaw: 0 };
+  game = { on: false, time: 120, spawn: 4, over: false, ticker: 0 };
+  stats = { score: 0, smashed: 0, downed: 0 };
+}
+reset();
+
+// ------------------------------------------------------------------ particles
+function burst(x, y, z, n, kind) {
+  for (let i = 0; i < n && parts.length < 900; i++) {
+    const a = Math.random() * Math.PI * 2, s = kind === 'dust' ? rnd(1, 4) : rnd(3, 12);
+    const col = kind === 'fire' ? [1, rnd(0.35, 0.65), 0.15, 1] : kind === 'beam' ? [0.75, 0.55, 1, 1] : kind === 'debris' ? [0.35, 0.34, 0.33, 1] : [0.62, 0.6, 0.58, 0.55];
+    parts.push({ x, y, z, vx: Math.cos(a) * s, vy: kind === 'dust' ? rnd(0.5, 3) : rnd(2, 12), vz: Math.sin(a) * s,
+      life: 0, max: kind === 'dust' ? rnd(1.5, 3) : rnd(0.5, 1.4), size: kind === 'dust' ? rnd(2.5, 5) : kind === 'debris' ? rnd(0.4, 0.9) : rnd(1, 2.6),
+      grow: kind === 'dust' ? 1.6 : kind === 'fire' ? 0.8 : 0, g: kind === 'debris' ? 18 : kind === 'dust' ? -0.4 : 3, col });
+  }
+}
+const ptsBuf = gl.createBuffer(); const ptsData = new Float32Array(900 * 8);
+
+// ------------------------------------------------------------------ audio (starts from the start button)
+let ac = null;
+function sound(kind) {
+  if (!ac) return;
+  const t = ac.currentTime, g = ac.createGain(); g.connect(ac.destination);
+  if (kind === 'boom' || kind === 'crash') {
+    const len = kind === 'boom' ? 0.6 : 1.1, b = ac.createBuffer(1, ac.sampleRate * len, ac.sampleRate), d = b.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / d.length, 2);
+    const s = ac.createBufferSource(); s.buffer = b; const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = kind === 'boom' ? 900 : 400;
+    s.connect(f); f.connect(g); g.gain.value = kind === 'boom' ? 0.35 : 0.45; s.start(t);
+  } else if (kind === 'roar') {
+    const o1 = ac.createOscillator(), o2 = ac.createOscillator(); o1.type = 'sawtooth'; o2.type = 'square';
+    o1.frequency.setValueAtTime(180, t); o1.frequency.exponentialRampToValueAtTime(70, t + 2.2);
+    o2.frequency.setValueAtTime(184, t); o2.frequency.exponentialRampToValueAtTime(68, t + 2.2);
+    const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900;
+    o1.connect(f); o2.connect(f); f.connect(g); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.25, t + 0.25); g.gain.exponentialRampToValueAtTime(0.0001, t + 2.4);
+    o1.start(t); o2.start(t); o1.stop(t + 2.5); o2.stop(t + 2.5);
+  } else if (kind === 'hit') {
+    const o = ac.createOscillator(); o.type = 'triangle'; o.frequency.setValueAtTime(120, t); o.frequency.exponentialRampToValueAtTime(40, t + 0.3);
+    o.connect(g); g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.35); o.start(t); o.stop(t + 0.4);
+  }
+}
+let beamHum = null;
+function setBeamSound(on) {
+  if (!ac) return;
+  if (on && !beamHum) {
+    const o = ac.createOscillator(), o2 = ac.createOscillator(), g = ac.createGain(); o.type = 'sawtooth'; o.frequency.value = 55; o2.type = 'sine'; o2.frequency.value = 880;
+    const g2 = ac.createGain(); g2.gain.value = 0.04; o2.connect(g2); g2.connect(g);
+    o.connect(g); g.connect(ac.destination); g.gain.value = 0.12; o.start(); o2.start(); beamHum = { o, o2, g };
+  } else if (!on && beamHum) { beamHum.o.stop(); beamHum.o2.stop(); beamHum = null; }
+}
+
+// ------------------------------------------------------------------ input
+const input = { x: 0, y: 0, beam: false, tail: false, keys: new Set() };
+let stickId = null, stickO = [0, 0];
+const stickEl = $('stick'), knob = $('knob');
+canvas.addEventListener('pointerdown', e => {
+  if (stickId !== null || e.clientX > innerWidth * 0.55) return;
+  stickId = e.pointerId; canvas.setPointerCapture(e.pointerId);
+  stickO = [e.clientX, e.clientY];
+  const r = stickEl.getBoundingClientRect();
+  stickEl.style.left = (e.clientX - r.width / 2) + 'px'; stickEl.style.top = (e.clientY - r.height / 2) + 'px'; stickEl.style.bottom = 'auto';
+});
+canvas.addEventListener('pointermove', e => {
+  if (e.pointerId !== stickId) return;
+  let dx = e.clientX - stickO[0], dy = e.clientY - stickO[1]; const l = Math.hypot(dx, dy), m = 56;
+  if (l > m) { dx *= m / l; dy *= m / l; }
+  input.x = dx / m; input.y = -dy / m; knob.style.transform = `translate(${dx}px, ${dy}px)`;
+});
+const stickUp = e => { if (e.pointerId !== stickId) return; stickId = null; input.x = input.y = 0; knob.style.transform = '';
+  stickEl.style.left = ''; stickEl.style.top = ''; stickEl.style.bottom = ''; };
+canvas.addEventListener('pointerup', stickUp); canvas.addEventListener('pointercancel', stickUp);
+const hold = (el, key) => {
+  el.addEventListener('pointerdown', e => { e.preventDefault(); el.setPointerCapture(e.pointerId); input[key] = true; });
+  const off = () => { input[key] = false; };
+  el.addEventListener('pointerup', off); el.addEventListener('pointercancel', off); el.addEventListener('lostpointercapture', off);
+};
+hold($('beamBtn'), 'beam'); hold($('tailBtn'), 'tail');
+addEventListener('keydown', e => { input.keys.add(e.code); if (e.code === 'Space') e.preventDefault(); });
+addEventListener('keyup', e => input.keys.delete(e.code));
+addEventListener('blur', () => { input.keys.clear(); input.beam = input.tail = false; });
+
+function start() {
+  try { ac = ac || new (window.AudioContext || window.webkitAudioContext)(); ac.resume(); } catch (e) { ac = null; }
+  reset(); game.on = true; $('title').hidden = true; $('result').hidden = true; sound('roar'); say('巨大不明生物、上陸');
+}
+$('startBtn').onclick = start; $('retryBtn').onclick = start;
+function say(t) { $('tickerText').textContent = t; $('ticker').hidden = false; game.ticker = 2.4; }
+
+// ------------------------------------------------------------------ gameplay
+const angDiff = (a, b) => ((b - a) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+const MOUTH = [0, 9.85, 2.9];
+function mouthWorld() {
+  const c = Math.cos(P.yaw), s = Math.sin(P.yaw);
+  return [P.x + MOUTH[2] * s, MOUTH[1] + bob(), P.z + MOUTH[2] * c];
+}
+const bob = () => Math.abs(Math.sin(P.walk)) * 0.25 * Math.min(1, P.speed / 3);
+function boxHit(b) { return b.state === 0; }
+function destroy(b, how) {
+  if (b.state !== 0) return;
+  b.state = 1; b.t = 0; stats.smashed++; stats.score += Math.round(b.w * b.d * b.h * (how === 'beam' ? 1.5 : 1));
+  burst(b.x, b.h * 0.5, b.z, 26, 'debris'); burst(b.x, 1, b.z, 18, 'dust'); if (how !== 'step') burst(b.x, b.h * 0.7, b.z, 14, 'fire');
+  sound('crash');
+}
+function rayBox(o, d, b) {
+  let t0 = 0, t1 = 1e9; const lo = [b.x - b.w / 2, 0, b.z - b.d / 2], hi = [b.x + b.w / 2, b.h, b.z + b.d / 2];
+  for (let i = 0; i < 3; i++) {
+    if (Math.abs(d[i]) < 1e-6) { if (o[i] < lo[i] || o[i] > hi[i]) return -1; continue; }
+    let a = (lo[i] - o[i]) / d[i], c = (hi[i] - o[i]) / d[i]; if (a > c) [a, c] = [c, a];
+    t0 = Math.max(t0, a); t1 = Math.min(t1, c); if (t0 > t1) return -1;
+  }
+  return t0;
+}
+let beamEnd = null;
+window.__shin = () => ({ x: P.x, z: P.z, yaw: P.yaw, beam: P.beam, end: beamEnd, helis: helis.length });  // for automated play-tests
+function update(dt) {
+  game.ticker -= dt; if (game.ticker <= 0) $('ticker').hidden = true;
+  if (!game.on) { P.walk += dt * 0.5; return; }
+  game.time -= dt;
+  // movement, relative to the camera
+  let ix = input.x, iy = input.y;
+  const K = input.keys;
+  if (K.has('KeyW') || K.has('ArrowUp')) iy = 1; if (K.has('KeyS') || K.has('ArrowDown')) iy = -1;
+  if (K.has('KeyA') || K.has('ArrowLeft')) ix = -1; if (K.has('KeyD') || K.has('ArrowRight')) ix = 1;
+  const beamHeld = input.beam || K.has('Space'), tailHeld = input.tail || K.has('KeyE');
+  const mag = Math.min(1, Math.hypot(ix, iy));
+  const slow = P.beam ? 0.35 : P.tail > 0 ? 0.2 : 1;
+  if (mag > 0.15) {
+    const fx = Math.sin(cam.yaw), fz = Math.cos(cam.yaw), rx = -Math.cos(cam.yaw), rz = Math.sin(cam.yaw);
+    const dx = fx * iy + rx * ix, dz = fz * iy + rz * ix;
+    const target = Math.atan2(dx, dz);
+    P.yaw += Math.max(-1, Math.min(1, angDiff(P.yaw, target) * 3)) * dt * 1.6 * (P.beam ? 0.6 : 1);
+    P.speed += (6.5 * mag * slow - P.speed) * Math.min(1, dt * 3);
+  } else P.speed += (0 - P.speed) * Math.min(1, dt * 4);
+  const nx = P.x + Math.sin(P.yaw) * P.speed * dt, nz = P.z + Math.cos(P.yaw) * P.speed * dt;
+  // stepping into buildings: low ones crumble, tall ones block
+  let blocked = false;
+  for (const b of buildings) {
+    if (b.state !== 0) continue;
+    const cx = Math.max(b.x - b.w / 2, Math.min(nx, b.x + b.w / 2)), cz = Math.max(b.z - b.d / 2, Math.min(nz, b.z + b.d / 2));
+    if (Math.hypot(nx - cx, nz - cz) < 2.4) { if (b.h < 7.5) destroy(b, 'step'); else blocked = true; }
+  }
+  if (!blocked) { P.x = Math.max(-95, Math.min(95, nx)); P.z = Math.max(-95, Math.min(95, nz)); }
+  P.walk += P.speed * dt * 0.55;
+  // beam
+  P.beam = beamHeld && (P.beam ? P.en > 0 : P.en > 12) && P.tail <= 0;
+  P.en = Math.max(0, Math.min(100, P.en + (P.beam ? -28 : 11) * dt));
+  P.beamT = P.beam ? Math.min(1, P.beamT + dt * 3) : Math.max(0, P.beamT - dt * 4);
+  setBeamSound(P.beam);
+  beamEnd = null;
+  if (P.beam) {
+    const o = mouthWorld(), pitch = -0.27, d = [Math.sin(P.yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(P.yaw) * Math.cos(pitch)];
+    let tHit = o[1] / -d[1], hitB = null, hitH = null;
+    for (const b of buildings) { if (!boxHit(b)) continue; const t = rayBox(o, d, b); if (t > 0 && t < tHit) { tHit = t; hitB = b; } }
+    for (const h of helis) {  // helicopters are spheres of radius 2.5
+      const oc = [h.x - o[0], h.y - o[1], h.z - o[2]], tc = oc[0] * d[0] + oc[1] * d[1] + oc[2] * d[2];
+      if (tc > 0 && tc < tHit && Math.hypot(oc[0] - d[0] * tc, oc[1] - d[1] * tc, oc[2] - d[2] * tc) < 2.5) { tHit = tc; hitH = h; hitB = null; }
+    }
+    beamEnd = [o[0] + d[0] * tHit, o[1] + d[1] * tHit, o[2] + d[2] * tHit];
+    if (hitB) { hitB.hp -= 70 * dt; if (hitB.hp <= 0) destroy(hitB, 'beam'); }
+    if (hitH) { hitH.dead = true; }
+    if (Math.random() < dt * 30) burst(beamEnd[0], beamEnd[1], beamEnd[2], 3, Math.random() < 0.5 ? 'beam' : 'fire');
+  }
+  // tail sweep
+  P.tailCd = Math.max(0, P.tailCd - dt);
+  if (tailHeld && P.tail <= 0 && P.tailCd <= 0) { P.tail = 0.8; P.tailCd = 4; sound('hit'); }
+  if (P.tail > 0) {
+    const before = P.tail; P.tail = Math.max(0, P.tail - dt);
+    P.yaw += (2 * Math.PI / 0.8) * (before - P.tail);
+    for (const b of buildings) if (b.state === 0 && Math.hypot(b.x - P.x, b.z - P.z) < 13) destroy(b, 'tail');
+    for (const h of helis) if (Math.hypot(h.x - P.x, h.z - P.z) < 13 && h.y < 13) h.dead = true;
+  }
+  $('tailBtn').disabled = P.tailCd > 0;
+  // helicopters
+  game.spawn -= dt;
+  const maxH = 2 + Math.floor((120 - game.time) / 25);
+  if (game.spawn <= 0 && helis.length < maxH) {
+    const a = Math.random() * Math.PI * 2;
+    helis.push({ x: P.x + Math.cos(a) * 75, z: P.z + Math.sin(a) * 75, y: rnd(10, 14), ang: a, orbit: rnd(22, 30), dir: Math.random() < 0.5 ? 1 : -1, fire: rnd(2, 4), rot: 0 });
+    game.spawn = rnd(3, 6); if (helis.length === 1) say('攻撃ヘリ部隊、接近');
+  }
+  for (const h of helis) {
+    const dx = h.x - P.x, dz = h.z - P.z, r = Math.hypot(dx, dz);
+    h.ang = Math.atan2(dz, dx) + h.dir * dt * 0.35;
+    const rr = r + (h.orbit - r) * Math.min(1, dt * 0.6);
+    h.x = P.x + Math.cos(h.ang) * rr; h.z = P.z + Math.sin(h.ang) * rr; h.rot += dt * 40;
+    h.fire -= dt;
+    if (h.fire <= 0 && r < 45) {
+      h.fire = rnd(2.5, 4.5);
+      missiles.push({ x: h.x, y: h.y - 0.6, z: h.z, life: 0 });
+    }
+    if (h.dead) { stats.downed++; stats.score += 300; burst(h.x, h.y, h.z, 30, 'fire'); burst(h.x, h.y, h.z, 18, 'debris'); sound('boom'); }
+  }
+  helis = helis.filter(h => !h.dead);
+  for (const m of missiles) {
+    const tx = P.x, ty = 7.5, tz = P.z, dx = tx - m.x, dy = ty - m.y, dz = tz - m.z, l = Math.hypot(dx, dy, dz);
+    m.x += dx / l * 26 * dt; m.y += dy / l * 26 * dt; m.z += dz / l * 26 * dt; m.life += dt;
+    if (Math.random() < dt * 40) parts.push({ x: m.x, y: m.y, z: m.z, vx: 0, vy: 0.5, vz: 0, life: 0, max: 0.7, size: 0.8, grow: 1.4, g: 0, col: [0.8, 0.8, 0.8, 0.5] });
+    if (l < 2.5) {
+      m.done = true; P.hp -= 4; P.hit = 0.25; burst(m.x, m.y, m.z, 14, 'fire'); sound('boom');
+    }
+    if (m.life > 6) m.done = true;
+  }
+  missiles = missiles.filter(m => !m.done);
+  P.hit = Math.max(0, P.hit - dt);
+  // collapsing buildings
+  for (const b of buildings) if (b.state === 1) {
+    b.t += dt; if (Math.random() < dt * 8) burst(b.x + rnd(-1, 1), 0.5, b.z + rnd(-1, 1), 1, 'dust');
+    if (b.t > 1.6) b.state = 2;
+  }
+  if (game.time <= 0 || P.hp <= 0) end(P.hp <= 0);
+}
+function end(frozen) {
+  game.on = false; setBeamSound(false); P.beam = false;
+  $('resultEyebrow').textContent = frozen ? '作戦成功 ・ ヤシオリ作戦' : '作戦終了 ・ 120秒経過';
+  $('resultTitle').textContent = frozen ? '凍結' : '首都壊滅';
+  $('resultStats').innerHTML = `得点 ${stats.score.toLocaleString()}<br>破壊したビル ${stats.smashed}棟<br>撃墜したヘリ ${stats.downed}機<br>残り体力 ${Math.max(0, Math.round(P.hp))}`;
+  $('result').hidden = false;
+}
+
+// ------------------------------------------------------------------ rendering
+function bindMesh(m) {
+  gl.bindBuffer(gl.ARRAY_BUFFER, m.pos); gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, m.posType, m.posType !== gl.FLOAT, 0, 0);
+  gl.bindBuffer(gl.ARRAY_BUFFER, m.nor); gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 3, m.norType, m.norType !== gl.FLOAT, 0, 0);
+  if (m.col) { gl.bindBuffer(gl.ARRAY_BUFFER, m.col); gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 3, gl.UNSIGNED_BYTE, true, 0, 0); }
+  else gl.disableVertexAttribArray(2);
+  gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, m.idx);
+  gl.uniform3fv(MESH.u.uCenter, m.center); gl.uniform3fv(MESH.u.uHalf, m.half);
+}
+function draw(m, M, { col = [1, 1, 1], tint = [1, 1, 1], emit = [0, 0, 0], mode = 0, scale = [1, 1, 1], glow = 0 } = {}) {
+  gl.uniformMatrix4fv(MESH.u.uM, false, M);
+  if (!m.col) gl.vertexAttrib3f(2, col[0], col[1], col[2]);
+  gl.uniform3fv(MESH.u.uTint, tint); gl.uniform3fv(MESH.u.uEmit, emit); gl.uniform1f(MESH.u.uMode, mode);
+  gl.uniform3fv(MESH.u.uScale, scale); gl.uniform1f(MESH.u.uGlow, glow);
+  gl.drawElements(gl.TRIANGLES, m.count, m.idxType, 0);
+}
+const FOG = [0.47, 0.49, 0.52];
+gl.clearColor(0.79, 0.8, 0.82, 1); gl.enable(gl.DEPTH_TEST);
+function render(t) {
+  const dpr = Math.min(window.devicePixelRatio || 1, 1.5);
+  const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+  if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+  gl.viewport(0, 0, w, h); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+  const asp = w / Math.max(1, h), portrait = asp < 1;
+  // camera trails behind the kaiju, low and looking up at it
+  if (P.tail <= 0) cam.yaw += angDiff(cam.yaw, P.yaw) * Math.min(1, 1 / 60 * 2.2);  // hold still through the tail spin
+  // over the right shoulder and a little above the head, so the beam and the street ahead stay in view
+  const dist = portrait ? 24 : 21, side = portrait ? 3.5 : 5, shake = P.hit > 0 ? (Math.random() - 0.5) * 0.6 : 0;
+  const fx = Math.sin(cam.yaw), fz = Math.cos(cam.yaw), rx = -fz, rz = fx;
+  const eye = [P.x - fx * dist + rx * side + shake, (portrait ? 15 : 12.5) + shake, P.z - fz * dist + rz * side];
+  const tgt = [P.x + fx * 12 + rx * side * 0.3, 5.5, P.z + fz * 12 + rz * side * 0.3];
+  const VP = M4.mul(M4.persp(portrait ? 1.05 : 0.85, asp, 0.5, 400), M4.look(eye, tgt));
+  gl.useProgram(MESH.p);
+  gl.uniformMatrix4fv(MESH.u.uVP, false, VP); gl.uniform3fv(MESH.u.uEye, eye);
+  const sun = [-0.45, 0.78, -0.43], sl = Math.hypot(...sun); gl.uniform3fv(MESH.u.uSun, sun.map(x => x / sl));
+  gl.uniform3fv(MESH.u.uFog, FOG); gl.uniform3fv(MESH.u.uPlayer, [P.x, 0, P.z]);
+  // ground
+  bindMesh(GROUND); draw(GROUND, M4.T(P.x - (P.x % 14), 0, P.z - (P.z % 14)), { col: [0.5, 0.5, 0.5], mode: 2 });
+  // buildings
+  bindMesh(BOX);
+  for (const b of buildings) {
+    const dx = b.x - eye[0], dz = b.z - eye[2]; if (dx * dx + dz * dz > 150 * 150 || dx * fx + dz * fz < -12) continue;  // far or behind the camera
+    if (b.state === 2) { draw(BOX, M4.chain(M4.T(b.x, 0.35, b.z), M4.S(b.w * 1.15, 0.7, b.d * 1.15)), { col: [0.3, 0.29, 0.28] }); continue; }
+    const k = b.state === 1 ? Math.min(1, b.t / 1.6) : 0, e = k * k;
+    const dmg = b.state === 0 ? 1 - Math.max(0, b.hp) / (b.h * 6) : 1;
+    const M = M4.chain(M4.T(b.x, b.h / 2 - b.h * e * 0.95, b.z), M4.RX(b.tilt[0] * e), M4.RZ(b.tilt[1] * e), M4.S(b.w, b.h, b.d));
+    draw(BOX, M, { col: b.col, mode: 1, scale: [b.w, b.h, b.d], emit: [dmg * 0.6, dmg * 0.18, dmg * 0.05] });
+  }
+  // helicopters and missiles
+  for (const h of helis) {
+    const face = Math.atan2(P.x - h.x, P.z - h.z), base = M4.chain(M4.T(h.x, h.y, h.z), M4.RY(face));
+    draw(BOX, M4.mul(base, M4.S(1.1, 1.0, 2.6)), { col: [0.3, 0.33, 0.27] });
+    draw(BOX, M4.chain(base, M4.T(0, 0.2, -2.4), M4.S(0.35, 0.35, 2.6)), { col: [0.3, 0.33, 0.27] });
+    draw(BOX, M4.chain(base, M4.T(0, 0.65, 0), M4.RY(h.rot), M4.S(5.2, 0.06, 0.25)), { col: [0.12, 0.12, 0.12] });
+  }
+  for (const m of missiles) draw(BOX, M4.chain(M4.T(m.x, m.y, m.z), M4.S(0.35, 0.35, 0.35)), { col: [0.2, 0.2, 0.2], emit: [1.5, 0.8, 0.3] });
+  // the kaiju
+  bindMesh(KAIJU);
+  const sway = Math.sin(P.walk) * 0.035 * Math.min(1, P.speed / 3);
+  const KM = M4.chain(M4.T(P.x, bob(), P.z), M4.RY(P.yaw), M4.RZ(sway), M4.RX(P.beam ? 0.04 : 0));
+  draw(KAIJU, KM, { glow: P.beamT, emit: P.hit > 0 ? [0.25, 0.08, 0.02] : [0, 0, 0] });
+  // beam: additive purple core and halo from mouth to impact
+  if (P.beam && beamEnd) {
+    const o = mouthWorld(), d = [beamEnd[0] - o[0], beamEnd[1] - o[1], beamEnd[2] - o[2]], L = Math.hypot(...d);
+    const yaw = Math.atan2(d[0], d[2]), pitch = Math.asin(d[1] / L);
+    const base = M4.chain(M4.T((o[0] + beamEnd[0]) / 2, (o[1] + beamEnd[1]) / 2, (o[2] + beamEnd[2]) / 2), M4.RY(yaw), M4.RX(-pitch));
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE); gl.depthMask(false); bindMesh(BOX);
+    const fl = 0.85 + Math.random() * 0.3;
+    draw(BOX, M4.mul(base, M4.S(1.3 * fl, 1.3 * fl, L)), { col: [0, 0, 0], emit: [0.22, 0.07, 0.6] });
+    draw(BOX, M4.mul(base, M4.S(0.45, 0.45, L)), { col: [0, 0, 0], emit: [0.8, 0.55, 1.5] });
+    gl.depthMask(true); gl.disable(gl.BLEND);
+  }
+  // particles
+  let n = 0;
+  for (const p of parts) {
+    const a = 1 - p.life / p.max, i = n * 8;
+    ptsData[i] = p.x; ptsData[i + 1] = p.y; ptsData[i + 2] = p.z; ptsData[i + 3] = p.size * (1 + p.grow * (1 - a));
+    ptsData[i + 4] = p.col[0]; ptsData[i + 5] = p.col[1]; ptsData[i + 6] = p.col[2]; ptsData[i + 7] = p.col[3] * a; n++;
+  }
+  if (n) {
+    gl.useProgram(PTS.p); gl.uniformMatrix4fv(PTS.u.uVP, false, VP); gl.uniform1f(PTS.u.uPx, h * 0.9);
+    gl.bindBuffer(gl.ARRAY_BUFFER, ptsBuf); gl.bufferData(gl.ARRAY_BUFFER, ptsData.subarray(0, n * 8), gl.DYNAMIC_DRAW);
+    gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 32, 0);
+    gl.enableVertexAttribArray(1); gl.vertexAttribPointer(1, 1, gl.FLOAT, false, 32, 12);
+    gl.enableVertexAttribArray(2); gl.vertexAttribPointer(2, 4, gl.FLOAT, false, 32, 16);
+    gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA); gl.depthMask(false);
+    gl.drawArrays(gl.POINTS, 0, n);
+    gl.depthMask(true); gl.disable(gl.BLEND);
+  }
+}
+function stepParts(dt) {
+  for (const p of parts) { p.life += dt; p.vy -= p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; if (p.y < 0.1) { p.y = 0.1; p.vx *= 0.6; p.vz *= 0.6; p.vy = 0; } }
+  parts = parts.filter(p => p.life < p.max);
+}
+function hud() {
+  $('hpFill').style.transform = `scaleX(${Math.max(0, P.hp) / 100})`;
+  $('enFill').style.transform = `scaleX(${P.en / 100})`;
+  $('score').textContent = stats.score.toLocaleString();
+  $('time').textContent = `残り ${Math.max(0, Math.ceil(game.time))}秒`;
+  $('count').textContent = `破壊 ${stats.smashed}棟 ・ 撃墜 ${stats.downed}機`;
+  $('beamBtn').classList.toggle('on', P.beam);
+}
+let last = performance.now();
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  update(dt); stepParts(dt); render(now / 1000); hud();
+  requestAnimationFrame(frame);
+}
+canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); fail('画面の描画が中断されました。ページを開き直してください。'); });
+requestAnimationFrame(frame);
+}
+})();
+</script>
