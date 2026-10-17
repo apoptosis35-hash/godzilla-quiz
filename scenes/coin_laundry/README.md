@@ -3,6 +3,7 @@
 雨の夜、通りに面したコインランドリーの店内を、Blenderで作ったシーンです。参考画像の雰囲気(蛍光灯の青白い光、ステンレスの洗濯機と乾燥機、ガラス越しの濡れた道路と街灯)をもとに、すべてPythonスクリプトで組み立てています。
 
 - 完成画像: `render.png`(1536×1024、Cycles)
+- 動画: `coin_laundry.mp4`(8秒・1280×720・24fps。ゆっくり店内へ進むカメラ、降り続く雨、奥の蛍光灯のちらつき)
 - Blenderファイル: `coin_laundry.blend`(開いてカメラや照明を動かせます。看板の画像は `textures/` を参照します)
 
 ## 作り直す
@@ -12,6 +13,7 @@ pip install bpy pillow
 python3 make_textures.py          # 看板・操作パネル・ステッカー・時計の画像(IPAゴシック)
 python3 make_scene.py --preview   # 半分の解像度・少ないサンプル数で試しにレンダリング(約1分)
 python3 make_scene.py             # 本番(render.png、CPUで十数分)
+python3 make_video.py             # 動画(coin_laundry.mp4。192フレーム、CPUで約2時間。途中で止まっても再実行で続きから)
 ```
 
 日本語フォントは IPAゴシック(`fonts-ipafont-gothic`)を使います。
