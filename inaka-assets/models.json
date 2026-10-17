@@ -1,0 +1,1068 @@
+[
+ {
+  "name": "kominka",
+  "jp": "古民家(茅葺き)",
+  "category": "建物",
+  "size_m": [
+   13.0,
+   7.95,
+   10.6
+  ],
+  "tris": 364,
+  "materials": [
+   "plaster",
+   "shoji",
+   "stone",
+   "stone_dark",
+   "thatch",
+   "thatch_dark",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 24.5
+ },
+ {
+  "name": "kura",
+  "jp": "蔵",
+  "category": "建物",
+  "size_m": [
+   5.4,
+   6.81,
+   6.9
+  ],
+  "tris": 152,
+  "materials": [
+   "black",
+   "plaster",
+   "stone_dark",
+   "tile",
+   "white"
+  ],
+  "parts": [],
+  "kb": 11.7
+ },
+ {
+  "name": "naya",
+  "jp": "納屋",
+  "category": "建物",
+  "size_m": [
+   6.25,
+   3.6,
+   5.1
+  ],
+  "tris": 240,
+  "materials": [
+   "black",
+   "tin",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 16.4
+ },
+ {
+  "name": "hokora",
+  "jp": "祠",
+  "category": "建物",
+  "size_m": [
+   1.4,
+   2.11,
+   1.4
+  ],
+  "tris": 80,
+  "materials": [
+   "stone",
+   "white",
+   "wood",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 7.2
+ },
+ {
+  "name": "torii",
+  "jp": "鳥居",
+  "category": "建物",
+  "size_m": [
+   4.6,
+   4.32,
+   0.5
+  ],
+  "tris": 248,
+  "materials": [
+   "black",
+   "vermilion"
+  ],
+  "parts": [],
+  "kb": 13.1
+ },
+ {
+  "name": "bus_stop",
+  "jp": "バス停(待合小屋)",
+  "category": "建物",
+  "size_m": [
+   4.4,
+   2.82,
+   2.3
+  ],
+  "tris": 256,
+  "materials": [
+   "concrete",
+   "metal",
+   "red",
+   "tin",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 18.2
+ },
+ {
+  "name": "jizo",
+  "jp": "お地蔵さん",
+  "category": "小物",
+  "size_m": [
+   0.6,
+   1.01,
+   0.7
+  ],
+  "tris": 128,
+  "materials": [
+   "red",
+   "stone",
+   "stone_dark"
+  ],
+  "parts": [],
+  "kb": 9.2
+ },
+ {
+  "name": "ishidoro",
+  "jp": "石灯籠",
+  "category": "小物",
+  "size_m": [
+   1.1,
+   2.12,
+   0.95
+  ],
+  "tris": 152,
+  "materials": [
+   "lamp",
+   "stone"
+  ],
+  "parts": [],
+  "kb": 9.9
+ },
+ {
+  "name": "ido",
+  "jp": "井戸",
+  "category": "小物",
+  "size_m": [
+   2.28,
+   2.52,
+   1.44
+  ],
+  "tris": 360,
+  "materials": [
+   "black",
+   "stone",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 21.6
+ },
+ {
+  "name": "denchu",
+  "jp": "電柱",
+  "category": "道路",
+  "size_m": [
+   1.8,
+   9.0,
+   0.78
+  ],
+  "tris": 160,
+  "materials": [
+   "concrete",
+   "metal",
+   "white",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 10.9
+ },
+ {
+  "name": "jihanki",
+  "jp": "自動販売機",
+  "category": "道路",
+  "size_m": [
+   1.02,
+   2.05,
+   0.81
+  ],
+  "tris": 276,
+  "materials": [
+   "black",
+   "blue",
+   "glow",
+   "kaki",
+   "leaf_light",
+   "red",
+   "white",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 19.5
+ },
+ {
+  "name": "post",
+  "jp": "郵便ポスト(丸型)",
+  "category": "道路",
+  "size_m": [
+   0.56,
+   1.27,
+   0.56
+  ],
+  "tris": 252,
+  "materials": [
+   "black",
+   "red",
+   "stone_dark",
+   "white"
+  ],
+  "parts": [],
+  "kb": 16.9
+ },
+ {
+  "name": "kakashi",
+  "jp": "案山子",
+  "category": "農地",
+  "size_m": [
+   1.4,
+   1.84,
+   0.84
+  ],
+  "tris": 192,
+  "materials": [
+   "black",
+   "cloth",
+   "skin_cloth",
+   "straw",
+   "wood"
+  ],
+  "parts": [],
+  "kb": 13.6
+ },
+ {
+  "name": "hasakake",
+  "jp": "稲架掛け",
+  "category": "農地",
+  "size_m": [
+   4.4,
+   1.86,
+   0.64
+  ],
+  "tris": 460,
+  "materials": [
+   "straw",
+   "wood"
+  ],
+  "parts": [],
+  "kb": 23.9
+ },
+ {
+  "name": "tanbo",
+  "jp": "田んぼ(8m区画)",
+  "category": "農地",
+  "size_m": [
+   8.6,
+   0.5,
+   8.6
+  ],
+  "tris": 544,
+  "materials": [
+   "grass",
+   "rice",
+   "water"
+  ],
+  "parts": [],
+  "kb": 42.5
+ },
+ {
+  "name": "take_gaki",
+  "jp": "竹垣(2m)",
+  "category": "農地",
+  "size_m": [
+   2.12,
+   1.3,
+   0.13
+  ],
+  "tris": 304,
+  "materials": [
+   "bamboo",
+   "wood"
+  ],
+  "parts": [],
+  "kb": 16.8
+ },
+ {
+  "name": "ishigaki",
+  "jp": "石垣(4m)",
+  "category": "農地",
+  "size_m": [
+   4.0,
+   1.22,
+   0.7
+  ],
+  "tris": 664,
+  "materials": [
+   "moss",
+   "stone",
+   "stone_dark"
+  ],
+  "parts": [],
+  "kb": 52.5
+ },
+ {
+  "name": "hashi",
+  "jp": "木の橋",
+  "category": "道路",
+  "size_m": [
+   6.0,
+   1.65,
+   1.95
+  ],
+  "tris": 312,
+  "materials": [
+   "wood",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 18.2
+ },
+ {
+  "name": "keitora",
+  "jp": "軽トラ",
+  "category": "乗り物",
+  "size_m": [
+   1.53,
+   1.85,
+   3.53
+  ],
+  "tris": 464,
+  "materials": [
+   "black",
+   "glass",
+   "glow",
+   "metal",
+   "red",
+   "rubber",
+   "white"
+  ],
+  "parts": [],
+  "kb": 27.5
+ },
+ {
+  "name": "kounki",
+  "jp": "耕運機",
+  "category": "乗り物",
+  "size_m": [
+   0.98,
+   1.22,
+   1.66
+  ],
+  "tris": 204,
+  "materials": [
+   "black",
+   "metal",
+   "red",
+   "rubber"
+  ],
+  "parts": [],
+  "kb": 12.7
+ },
+ {
+  "name": "sugi",
+  "jp": "杉",
+  "category": "自然",
+  "size_m": [
+   3.4,
+   9.0,
+   3.4
+  ],
+  "tris": 80,
+  "materials": [
+   "bark",
+   "leaf_dark"
+  ],
+  "parts": [],
+  "kb": 6.2
+ },
+ {
+  "name": "kaki_tree",
+  "jp": "柿の木",
+  "category": "自然",
+  "size_m": [
+   3.47,
+   3.92,
+   3.14
+  ],
+  "tris": 624,
+  "materials": [
+   "bark",
+   "kaki",
+   "leaf"
+  ],
+  "parts": [],
+  "kb": 47.7
+ },
+ {
+  "name": "sakura",
+  "jp": "桜",
+  "category": "自然",
+  "size_m": [
+   4.8,
+   4.68,
+   4.23
+  ],
+  "tris": 184,
+  "materials": [
+   "bark",
+   "sakura"
+  ],
+  "parts": [],
+  "kb": 13.4
+ },
+ {
+  "name": "take",
+  "jp": "竹やぶ",
+  "category": "自然",
+  "size_m": [
+   3.31,
+   9.18,
+   3.16
+  ],
+  "tris": 540,
+  "materials": [
+   "bamboo",
+   "leaf_light"
+  ],
+  "parts": [],
+  "kb": 37.9
+ },
+ {
+  "name": "rock",
+  "jp": "岩",
+  "category": "自然",
+  "size_m": [
+   2.36,
+   1.27,
+   1.53
+  ],
+  "tris": 60,
+  "materials": [
+   "moss",
+   "stone",
+   "stone_dark"
+  ],
+  "parts": [],
+  "kb": 7.1
+ },
+ {
+  "name": "bush",
+  "jp": "茂み",
+  "category": "自然",
+  "size_m": [
+   1.88,
+   1.27,
+   1.36
+  ],
+  "tris": 80,
+  "materials": [
+   "leaf",
+   "leaf_light"
+  ],
+  "parts": [],
+  "kb": 7.9
+ },
+ {
+  "name": "tanuki",
+  "jp": "信楽たぬき",
+  "category": "小物",
+  "size_m": [
+   0.72,
+   1.15,
+   0.67
+  ],
+  "tris": 532,
+  "materials": [
+   "black",
+   "brown",
+   "stone_dark",
+   "straw",
+   "white",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 40.6
+ },
+ {
+  "name": "minka",
+  "jp": "民家(トタン屋根)",
+  "category": "建物",
+  "size_m": [
+   8.72,
+   5.45,
+   8.1
+  ],
+  "tris": 260,
+  "materials": [
+   "black",
+   "concrete",
+   "glass",
+   "shoji",
+   "tin",
+   "tin_blue",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 19.1
+ },
+ {
+  "name": "dagashiya",
+  "jp": "駄菓子屋",
+  "category": "建物",
+  "size_m": [
+   5.42,
+   4.34,
+   5.73
+  ],
+  "tris": 800,
+  "materials": [
+   "blue",
+   "concrete",
+   "kaki",
+   "leaf_light",
+   "pink",
+   "red",
+   "tile",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 49.4
+ },
+ {
+  "name": "kousha",
+  "jp": "木造校舎",
+  "category": "建物",
+  "size_m": [
+   20.72,
+   9.76,
+   13.85
+  ],
+  "tris": 916,
+  "materials": [
+   "black",
+   "concrete",
+   "glass",
+   "tile",
+   "white",
+   "wood",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 52.5
+ },
+ {
+  "name": "eki",
+  "jp": "無人駅",
+  "category": "建物",
+  "size_m": [
+   20.85,
+   3.76,
+   6.3
+  ],
+  "tris": 504,
+  "materials": [
+   "blue",
+   "concrete",
+   "lamp",
+   "metal",
+   "stone_dark",
+   "tin",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 34.3
+ },
+ {
+  "name": "honden",
+  "jp": "神社の本殿",
+  "category": "建物",
+  "size_m": [
+   6.8,
+   6.65,
+   7.47
+  ],
+  "tris": 624,
+  "materials": [
+   "gold",
+   "red",
+   "stone",
+   "straw",
+   "tile",
+   "vermilion",
+   "white",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 37.9
+ },
+ {
+  "name": "suisha",
+  "jp": "水車小屋",
+  "category": "建物",
+  "size_m": [
+   6.3,
+   7.93,
+   9.0
+  ],
+  "tris": 828,
+  "materials": [
+   "stone",
+   "stone_dark",
+   "thatch",
+   "water",
+   "wood",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [
+   "suisha_body",
+   "suisha_wheel"
+  ],
+  "kb": 49.2
+ },
+ {
+  "name": "yatai",
+  "jp": "夏祭りの屋台",
+  "category": "建物",
+  "size_m": [
+   2.8,
+   2.7,
+   2.58
+  ],
+  "tris": 468,
+  "materials": [
+   "chochin",
+   "metal",
+   "pink",
+   "red",
+   "white",
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 31.1
+ },
+ {
+  "name": "densha",
+  "jp": "ローカル線の電車",
+  "category": "乗り物",
+  "size_m": [
+   16.09,
+   3.83,
+   2.86
+  ],
+  "tris": 960,
+  "materials": [
+   "black",
+   "blue",
+   "glass",
+   "glow",
+   "metal",
+   "orange",
+   "rubber",
+   "white"
+  ],
+  "parts": [],
+  "kb": 52.2
+ },
+ {
+  "name": "curve_mirror",
+  "jp": "カーブミラー",
+  "category": "道路",
+  "size_m": [
+   0.84,
+   3.18,
+   0.4
+  ],
+  "tris": 172,
+  "materials": [
+   "concrete",
+   "glass",
+   "orange"
+  ],
+  "parts": [],
+  "kb": 10.3
+ },
+ {
+  "name": "ishidan",
+  "jp": "石段",
+  "category": "道路",
+  "size_m": [
+   3.8,
+   1.2,
+   3.95
+  ],
+  "tris": 108,
+  "materials": [
+   "moss",
+   "stone"
+  ],
+  "parts": [],
+  "kb": 7.4
+ },
+ {
+  "name": "monohoshi",
+  "jp": "物干し",
+  "category": "小物",
+  "size_m": [
+   3.1,
+   1.8,
+   0.3
+  ],
+  "tris": 176,
+  "materials": [
+   "bamboo",
+   "blue",
+   "concrete",
+   "metal",
+   "pink",
+   "white",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 13.6
+ },
+ {
+  "name": "jitensha",
+  "jp": "自転車",
+  "category": "乗り物",
+  "size_m": [
+   0.5,
+   1.05,
+   1.88
+  ],
+  "tris": 592,
+  "materials": [
+   "black",
+   "metal",
+   "red",
+   "rubber"
+  ],
+  "parts": [],
+  "kb": 33.2
+ },
+ {
+  "name": "bench",
+  "jp": "ベンチ",
+  "category": "小物",
+  "size_m": [
+   1.6,
+   0.87,
+   0.47
+  ],
+  "tris": 72,
+  "materials": [
+   "wood_dark",
+   "wood_light"
+  ],
+  "parts": [],
+  "kb": 5.6
+ },
+ {
+  "name": "chochin_post",
+  "jp": "提灯の柱",
+  "category": "小物",
+  "size_m": [
+   1.26,
+   2.8,
+   0.34
+  ],
+  "tris": 208,
+  "materials": [
+   "black",
+   "chochin",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 13.8
+ },
+ {
+  "name": "road",
+  "jp": "道路(8m・舗装)",
+  "category": "道路",
+  "size_m": [
+   8.0,
+   0.05,
+   4.0
+  ],
+  "tris": 84,
+  "materials": [
+   "asphalt",
+   "white"
+  ],
+  "parts": [],
+  "kb": 6.1
+ },
+ {
+  "name": "michi",
+  "jp": "田舎道(8m・土)",
+  "category": "道路",
+  "size_m": [
+   8.0,
+   0.08,
+   2.95
+  ],
+  "tris": 48,
+  "materials": [
+   "grass",
+   "leaf_light",
+   "soil"
+  ],
+  "parts": [],
+  "kb": 4.7
+ },
+ {
+  "name": "kawa",
+  "jp": "小川(8m)",
+  "category": "自然",
+  "size_m": [
+   8.0,
+   0.64,
+   4.03
+  ],
+  "tris": 412,
+  "materials": [
+   "stone",
+   "stone_dark",
+   "water"
+  ],
+  "parts": [],
+  "kb": 33.6
+ },
+ {
+  "name": "hatake",
+  "jp": "畑(野菜)",
+  "category": "農地",
+  "size_m": [
+   6.07,
+   0.69,
+   4.08
+  ],
+  "tris": 1528,
+  "materials": [
+   "leaf",
+   "leaf_light",
+   "soil",
+   "white",
+   "wood"
+  ],
+  "parts": [],
+  "kb": 114.8
+ },
+ {
+  "name": "suika",
+  "jp": "スイカ",
+  "category": "農地",
+  "size_m": [
+   0.45,
+   0.44,
+   0.45
+  ],
+  "tris": 572,
+  "materials": [
+   "leaf",
+   "leaf_dark",
+   "suika"
+  ],
+  "parts": [],
+  "kb": 45.9
+ },
+ {
+  "name": "himawari",
+  "jp": "ひまわり",
+  "category": "自然",
+  "size_m": [
+   1.64,
+   2.37,
+   0.85
+  ],
+  "tris": 1200,
+  "materials": [
+   "brown",
+   "leaf",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 88.5
+ },
+ {
+  "name": "kabuto",
+  "jp": "カブトムシ",
+  "category": "小物",
+  "size_m": [
+   0.12,
+   0.06,
+   0.16
+  ],
+  "tris": 196,
+  "materials": [
+   "beetle",
+   "black"
+  ],
+  "parts": [],
+  "kb": 14.5
+ },
+ {
+  "name": "ushi",
+  "jp": "牛",
+  "category": "動物",
+  "size_m": [
+   1.04,
+   1.77,
+   2.64
+  ],
+  "tris": 488,
+  "materials": [
+   "black",
+   "pink",
+   "white"
+  ],
+  "parts": [],
+  "kb": 33.9
+ },
+ {
+  "name": "niwatori",
+  "jp": "ニワトリ",
+  "category": "動物",
+  "size_m": [
+   0.26,
+   0.65,
+   0.51
+  ],
+  "tris": 162,
+  "materials": [
+   "black",
+   "red",
+   "white",
+   "yellow"
+  ],
+  "parts": [],
+  "kb": 14.8
+ },
+ {
+  "name": "neko",
+  "jp": "ねこ",
+  "category": "動物",
+  "size_m": [
+   0.28,
+   0.51,
+   0.4
+  ],
+  "tris": 260,
+  "materials": [
+   "black",
+   "pink",
+   "tan",
+   "white"
+  ],
+  "parts": [],
+  "kb": 22.3
+ },
+ {
+  "name": "shiba",
+  "jp": "柴犬",
+  "category": "動物",
+  "size_m": [
+   0.24,
+   0.76,
+   0.75
+  ],
+  "tris": 376,
+  "materials": [
+   "black",
+   "tan",
+   "white"
+  ],
+  "parts": [],
+  "kb": 27.8
+ },
+ {
+  "name": "kodomo",
+  "jp": "子ども(プレイヤー)",
+  "category": "人",
+  "size_m": [
+   0.56,
+   1.32,
+   0.54
+  ],
+  "tris": 624,
+  "materials": [
+   "black",
+   "blue",
+   "leaf",
+   "leaf_light",
+   "pink",
+   "red",
+   "skin",
+   "straw",
+   "white"
+  ],
+  "parts": [
+   "kodomo_body",
+   "kodomo_arm_l",
+   "kodomo_leg_l",
+   "kodomo_arm_r",
+   "kodomo_leg_r"
+  ],
+  "kb": 47.7
+ },
+ {
+  "name": "obaachan",
+  "jp": "おばあちゃん",
+  "category": "人",
+  "size_m": [
+   0.6,
+   1.26,
+   0.48
+  ],
+  "tris": 368,
+  "materials": [
+   "black",
+   "cloth",
+   "pink",
+   "skin",
+   "white",
+   "wood_dark"
+  ],
+  "parts": [],
+  "kb": 29.3
+ }
+]

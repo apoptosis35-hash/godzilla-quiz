@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>いなかのなつやすみ</title>
+<meta name="description" content="麦わら帽子で田舎の村を探検。18時のチャイムまでに、なつやすみスタンプを集めよう。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="いなかのなつやすみ">
+<meta property="og:description" content="麦わら帽子で田舎の村を探検。18時のチャイムまでに、なつやすみスタンプを集めよう。">
+<meta property="og:image" content="https://apoptosis35-hash.github.io/godzilla-quiz/inaka/icons/icon-512.png">
+<meta name="theme-color" content="#6fb6e8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="なつやすみ">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, noimageindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{ "imports": { "three": "../inaka-assets/vendor/three.module.min.js", "three/addons/": "../inaka-assets/vendor/addons/" } }</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="hud" hidden>
+  <div class="top">
+    <div class="chip" id="clock">8:00</div>
+    <div class="chip">💰 <span id="money">0円</span></div>
+    <div class="chip">🪲 <span id="beetle">0</span></div>
+    <button class="chip btn" id="cardbtn">📒 0/12</button>
+    <button class="chip btn" id="mute" aria-label="サウンド">🔊</button>
+  </div>
+  <canvas id="map" width="240" height="240"></canvas>
+  <button id="act">しらべる</button>
+  <div id="help"></div>
+</div>
+<div id="stick"><div id="knob"></div></div>
+<div id="toast"></div>
+<div id="stamppop"></div>
+
+<div id="loading" class="screen">
+  <h1>いなかのなつやすみ</h1>
+  <div class="bar"><div id="loadbar"></div></div>
+  <p>村をつくっています…</p>
+</div>
+
+<div id="start" class="screen" hidden>
+  <h1>いなかのなつやすみ</h1>
+  <p class="lead">夏休みに、おばあちゃんの村へやってきた。<br>18時のチャイムが鳴るまで、村じゅうを探検しよう!</p>
+  <ul class="rules">
+    <li>📒 なつやすみスタンプ12こを集めよう(ミニマップの黄色い点がヒント)</li>
+    <li>💰 道に落ちている10円玉でお菓子やジュースが買える</li>
+    <li>🪲 木の幹のキラキラはカブトムシ</li>
+  </ul>
+  <button id="startbtn" class="big">あそびにいく</button>
+  <p id="record"></p>
+</div>
+
+<div id="card" class="modal" hidden>
+  <div class="sheet">
+    <h2>なつやすみスタンプ</h2>
+    <div id="cardgrid"></div>
+    <button id="cardclose" class="big">つづける</button>
+  </div>
+</div>
+
+<div id="diary" class="modal" hidden>
+  <div class="sheet paper">
+    <h2>えにっき</h2>
+    <div id="diarydate"></div>
+    <div id="diarytext"></div>
+    <div id="diaryscore"></div>
+    <button id="again" class="big">もう一日あそぶ</button>
+  </div>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>

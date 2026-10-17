@@ -1,5 +1,5 @@
 // Offline cache for the game (cache-first for app files, network fallback).
-const CACHE = 'kaiju-fighters-v4';
+const CACHE = 'kaiju-fighters-v5';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png',
@@ -7,8 +7,9 @@ const CORE = [
   'vendor/addons/postprocessing/EffectComposer.js', 'vendor/addons/postprocessing/RenderPass.js', 'vendor/addons/postprocessing/UnrealBloomPass.js',
   'vendor/addons/postprocessing/OutputPass.js', 'vendor/addons/postprocessing/ShaderPass.js', 'vendor/addons/postprocessing/Pass.js', 'vendor/addons/postprocessing/MaskPass.js',
   'vendor/addons/shaders/CopyShader.js', 'vendor/addons/shaders/LuminosityHighPassShader.js', 'vendor/addons/shaders/OutputShader.js',
-  'vendor/addons/geometries/RoundedBoxGeometry.js',
-  'js/main.js', 'js/story.js', 'js/game.js', 'js/fighter.js', 'js/rig.js', 'js/textures.js', 'js/fx.js', 'js/stage.js', 'js/camera.js', 'js/audio.js',
+  'vendor/addons/geometries/RoundedBoxGeometry.js', 'vendor/addons/loaders/GLTFLoader.js', 'vendor/addons/utils/BufferGeometryUtils.js',
+  'models/duck.glb', 'models/donut.glb', 'models/mug.glb', 'models/cactus.glb', 'models/clock.glb',
+  'js/main.js', 'js/story.js', 'js/game.js', 'js/fighter.js', 'js/rig.js', 'js/textures.js', 'js/fx.js', 'js/stage.js', 'js/props.js', 'js/camera.js', 'js/audio.js',
   'js/input.js', 'js/ai.js', 'js/quality.js', 'js/save.js',
   'js/kaiju/index.js', 'js/kaiju/biped.js', 'js/kaiju/reptile.js', 'js/kaiju/ragnos.js', 'js/kaiju/vorthar.js', 'js/kaiju/mutagon.js', 'js/kaiju/primordon.js', 'js/kaiju/gorvath.js', 'js/kaiju/vespera.js', 'js/kaiju/trivern.js', 'js/kaiju/kurogane.js',
 ];
