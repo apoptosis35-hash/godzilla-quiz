@@ -254,28 +254,22 @@ const DRAW = {}; // keyed by TIERS[].id
 
 // 0 えだまめ: a plump two-bean pod with a little sprout
 DRAW.edamame = (ctx, r, e, T) => {
-  const pod = () => {
-    ctx.beginPath();
-    ctx.arc(-r * 0.4, r * 0.04, r * 0.6, Math.PI * 0.55, Math.PI * 1.45);
-    ctx.quadraticCurveTo(0, -r * 0.42, r * 0.4 - r * 0.6 * Math.cos(Math.PI * 0.45), r * 0.04 - r * 0.6 * Math.sin(Math.PI * 0.45));
-    ctx.arc(r * 0.4, r * 0.04, r * 0.6, Math.PI * 1.55, Math.PI * 0.45);
-    ctx.quadraticCurveTo(0, r * 0.5, -r * 0.4 - r * 0.6 * Math.cos(Math.PI * 0.55), r * 0.04 + r * 0.6 * Math.sin(Math.PI * 0.55));
-    ctx.closePath();
-  };
+  // a plump two-bean pod, shaped to fill the round hit area (slight waist at the top and bottom)
+  const pod = () => blob(ctx, r, (a) => 0.95 + 0.05 * Math.cos(2 * a) - 0.07 * Math.exp(-((Math.abs(Math.sin(a)) - 1) ** 2) / 0.004));
   pod();
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark, -0.3, -0.35); ctx.fill();
   ctx.save(); ctx.clip();
   // bean bulges
-  for (const x of [-0.4, 0.4]) { ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.beginPath(); ctx.arc(r * (x - 0.12), -r * 0.14, r * 0.3, 0, Math.PI * 2); ctx.fill(); }
+  for (const x of [-0.45, 0.45]) { ctx.fillStyle = 'rgba(255,255,255,0.22)'; ctx.beginPath(); ctx.arc(r * (x - 0.12), -r * 0.2, r * 0.36, 0, Math.PI * 2); ctx.fill(); }
   ctx.strokeStyle = 'rgba(60,120,30,0.35)'; ctx.lineWidth = r * 0.05;
-  ctx.beginPath(); ctx.moveTo(0, -r * 0.38); ctx.quadraticCurveTo(r * 0.06, r * 0.05, 0, r * 0.46); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(0, -r * 0.8); ctx.quadraticCurveTo(r * 0.08, 0, 0, r * 0.8); ctx.stroke();
   ctx.restore();
   pod(); outline(ctx, r, '#3c7a22', 0.08);
   // sprout
   ctx.strokeStyle = '#3c7a22'; ctx.lineWidth = r * 0.1; ctx.lineCap = 'round';
-  ctx.beginPath(); ctx.moveTo(r * 0.82, -r * 0.3); ctx.quadraticCurveTo(r * 1.0, -r * 0.55, r * 0.92, -r * 0.75); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(r * 0.7, -r * 0.6); ctx.quadraticCurveTo(r * 0.86, -r * 0.8, r * 0.8, -r * 0.98); ctx.stroke();
   ctx.fillStyle = '#7fd04a';
-  ctx.beginPath(); ctx.ellipse(r * 0.82, -r * 0.82, r * 0.18, r * 0.09, -0.9, 0, Math.PI * 2); ctx.fill();
+  ctx.beginPath(); ctx.ellipse(r * 0.7, -r * 1.02, r * 0.16, r * 0.08, -0.9, 0, Math.PI * 2); ctx.fill();
   face(ctx, r, e, { y: 0.0, s: 0.92, gap: 0.36, mouth: 'open', sparkle: true });
 };
 
@@ -303,8 +297,8 @@ DRAW.tomato = (ctx, r, e, T) => {
 
 // 2 たまごやき: rolled omelette with layers
 DRAW.tamago = (ctx, r, e, T) => {
-  const w = r * 1.72, h = r * 1.5;
-  roundRect(ctx, -w / 2, -h / 2, w, h, r * 0.42);
+  const w = r * 1.86, h = r * 1.74;
+  roundRect(ctx, -w / 2, -h / 2, w, h, r * 0.6);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark, -0.3, -0.5); ctx.fill();
   ctx.save(); ctx.clip();
   // roll layers on the right side
@@ -316,7 +310,7 @@ DRAW.tamago = (ctx, r, e, T) => {
   crumbs(ctx, r, 7, 8, ['rgba(220,140,40,0.35)', 'rgba(240,170,60,0.3)'], 0.8);
   ctx.fillStyle = 'rgba(255,255,255,0.25)'; ctx.fillRect(-w / 2, -h / 2, w, h * 0.18);
   ctx.restore();
-  roundRect(ctx, -w / 2, -h / 2, w, h, r * 0.42); outline(ctx, r, '#a86a14');
+  roundRect(ctx, -w / 2, -h / 2, w, h, r * 0.6); outline(ctx, r, '#a86a14');
   gloss(ctx, r, -0.42, -0.45, 0.32, 0.14, 0.6);
   face(ctx, r, e, { y: 0.0, gap: 0.3, mouth: 'open', sparkle: true });
 };
@@ -326,7 +320,8 @@ DRAW.tako = (ctx, r, e, T) => {
   // legs
   ctx.fillStyle = T.color; ctx.strokeStyle = '#a32a40'; ctx.lineWidth = Math.max(1.2, r * 0.07);
   for (let i = 0; i < 4; i++) {
-    const x = (-0.6 + i * 0.4) * r;
+    const x = (-0.54 + i * 0.36) * r;
+    ctx.save(); ctx.translate(x, r * 0.3); ctx.scale(0.92, 0.82); ctx.translate(-x, -r * 0.3);
     const curl = i < 2 ? -1 : 1;
     ctx.beginPath();
     ctx.moveTo(x - r * 0.15, r * 0.3);
@@ -337,9 +332,10 @@ DRAW.tako = (ctx, r, e, T) => {
     ctx.fillStyle = '#ffe4c2';
     ctx.beginPath(); ctx.ellipse(x + curl * r * 0.12, r * 0.84, r * 0.06, r * 0.04, 0, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = T.color;
+    ctx.restore();
   }
   // head
-  ctx.beginPath(); ctx.ellipse(0, -r * 0.08, r * 0.9, r * 0.78, 0, 0, Math.PI * 2);
+  ctx.beginPath(); ctx.ellipse(0, -r * 0.12, r * 0.97, r * 0.86, 0, 0, Math.PI * 2);
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark); ctx.fill(); outline(ctx, r, '#a32a40');
   // cut marks
   ctx.strokeStyle = 'rgba(160,30,50,0.45)'; ctx.lineWidth = r * 0.05;
@@ -350,15 +346,19 @@ DRAW.tako = (ctx, r, e, T) => {
 
 // 4 シュウマイ: pleated wrapper, meat on top and a green pea
 DRAW.shumai = (ctx, r, e, T) => {
-  const w = r * 1.76, h = r * 1.56, top = -h / 2 + r * 0.1;
+  const w = r * 1.84, h = r * 1.76, top = -h / 2 + r * 0.12;
   // body
   ctx.beginPath();
-  ctx.moveTo(-w / 2, top + r * 0.2);
-  for (let i = 0; i <= 8; i++) { const x = -w / 2 + (w * i) / 8; ctx.quadraticCurveTo(x - w / 16, top + (i % 2 ? -r * 0.12 : r * 0.08), x, top + r * 0.05); }
-  ctx.lineTo(w / 2, h / 2 - r * 0.4);
-  ctx.quadraticCurveTo(w / 2, h / 2, w / 2 - r * 0.4, h / 2);
-  ctx.lineTo(-w / 2 + r * 0.4, h / 2);
-  ctx.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r * 0.4);
+  // rounded shoulders keep the top corners inside the round hit area
+  const sx = w / 2 - r * 0.3;
+  ctx.moveTo(-w / 2, top + r * 0.5);
+  ctx.quadraticCurveTo(-w / 2, top + r * 0.05, -sx, top + r * 0.05);
+  for (let i = 1; i <= 8; i++) { const x = -sx + (2 * sx * i) / 8; ctx.quadraticCurveTo(x - sx / 8, top + (i % 2 ? -r * 0.12 : r * 0.08), x, top + r * 0.05); }
+  ctx.quadraticCurveTo(w / 2, top + r * 0.05, w / 2, top + r * 0.5);
+  ctx.lineTo(w / 2, h / 2 - r * 0.55);
+  ctx.quadraticCurveTo(w / 2, h / 2, w / 2 - r * 0.55, h / 2);
+  ctx.lineTo(-w / 2 + r * 0.55, h / 2);
+  ctx.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - r * 0.55);
   ctx.closePath();
   ctx.fillStyle = radial(ctx, r, T.light, T.color, T.dark, -0.3, -0.2); ctx.fill();
   outline(ctx, r, '#a98e45');
@@ -398,7 +398,7 @@ DRAW.karaage = (ctx, r, e, T) => {
 DRAW.ebi = (ctx, r, e, T) => {
   const ang = -0.62;
   // tail (behind) at the upper right end of the body
-  ctx.save(); ctx.rotate(ang); ctx.translate(r * 0.92, 0); ctx.rotate(Math.PI / 2);
+  ctx.save(); ctx.rotate(ang); ctx.translate(r * 0.84, 0); ctx.rotate(Math.PI / 2); ctx.scale(0.8, 0.8);
   ctx.beginPath(); ctx.moveTo(-r * 0.12, r * 0.1); ctx.quadraticCurveTo(-r * 0.42, -r * 0.2, -r * 0.3, -r * 0.5);
   ctx.lineTo(0, -r * 0.34); ctx.lineTo(r * 0.3, -r * 0.5); ctx.quadraticCurveTo(r * 0.42, -r * 0.2, r * 0.12, r * 0.1); ctx.closePath();
   const tg = ctx.createLinearGradient(0, 0, 0, -r * 0.5); tg.addColorStop(0, '#ff8a4a'); tg.addColorStop(1, '#ff3b3b');
@@ -407,7 +407,7 @@ DRAW.ebi = (ctx, r, e, T) => {
   ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(-r * 0.2, -r * 0.36); ctx.moveTo(0, 0); ctx.lineTo(r * 0.2, -r * 0.36); ctx.stroke();
   ctx.restore();
   // breaded body: a slanted capsule with spiky panko edge
-  const f = (a) => (1 / Math.sqrt(Math.cos(a - ang) ** 2 / 0.92 + Math.sin(a - ang) ** 2 / 0.5)) * (0.95 + 0.05 * Math.abs(Math.sin(11 * a)) + 0.02 * Math.sin(29 * a));
+  const f = (a) => (1 / Math.sqrt(Math.cos(a - ang) ** 2 / 0.92 + Math.sin(a - ang) ** 2 / 0.7)) * (0.95 + 0.05 * Math.abs(Math.sin(11 * a)) + 0.02 * Math.sin(29 * a));
   blob(ctx, r, f);
   ctx.fillStyle = radial(ctx, r, '#fff0b8', '#f2b54f', '#b8701f'); ctx.fill();
   ctx.save(); ctx.clip();
@@ -450,7 +450,7 @@ DRAW.hamburg = (ctx, r, e, T) => {
 
 // 8 おにぎり: rice triangle, nori band, pure smile
 DRAW.onigiri = (ctx, r, e, T) => {
-  const tri = () => blob(ctx, r, (a) => 0.88 + 0.13 * Math.cos(3 * (a + Math.PI / 2)));
+  const tri = () => blob(ctx, r, (a) => 0.93 + 0.08 * Math.cos(3 * (a + Math.PI / 2)));
   tri();
   ctx.fillStyle = radial(ctx, r, '#ffffff', '#fbfcff', '#d5dbe4', -0.25, -0.4); ctx.fill();
   ctx.save(); ctx.clip();
