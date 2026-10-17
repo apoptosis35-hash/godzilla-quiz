@@ -1,0 +1,32 @@
+<!doctype html><meta charset="utf-8"><body style="margin:0;background:#fff6e4">
+<canvas id="c"></canvas>
+<script type="module">
+// Hit area check: each character's normal sprite with its collision circle (red dashed)
+// and the measured edge of the drawing in every direction.
+import { renderSprite } from '../js/chars.js';
+import { TIERS } from '../js/config.js';
+const R = 90, cell = 240, out = [];
+const c = document.getElementById('c'); c.width = cell * 5; c.height = cell * 2;
+const ctx = c.getContext('2d');
+TIERS.forEach((t, i) => {
+  const sp = renderSprite(i, 'normal', R, { dom: true });
+  const g = sp.getContext('2d'), d = g.getImageData(0, 0, sp.width, sp.height).data, m = sp.width / 2;
+  // outermost opaque pixel along 72 rays, ignoring thin bits (needs 3 opaque px in a row)
+  const radii = [];
+  for (let k = 0; k < 72; k++) {
+    const a = (k / 72) * Math.PI * 2; let edge = 0, run = 0;
+    for (let s = 0; s < sp.width / 2; s += 0.5) {
+      const x = Math.round(m + Math.cos(a) * s), y = Math.round(m + Math.sin(a) * s);
+      const A = d[(y * sp.width + x) * 4 + 3];
+      if (A > 128) { run++; if (run >= 6) edge = s; } else run = 0;
+    }
+    radii.push(edge / R);
+  }
+  out.push({ id: t.id, min: Math.min(...radii), max: Math.max(...radii), mean: radii.reduce((a, b) => a + b) / 72, radii });
+  const x = (i % 5) * cell + cell / 2, y = Math.floor(i / 5) * cell + cell / 2;
+  ctx.drawImage(sp, x - sp.width / 2, y - sp.height / 2);
+  ctx.setLineDash([6, 5]); ctx.strokeStyle = 'red'; ctx.lineWidth = 2;
+  ctx.beginPath(); ctx.arc(x, y, R, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+});
+window.__hit = out; document.title = 'done';
+</script>
