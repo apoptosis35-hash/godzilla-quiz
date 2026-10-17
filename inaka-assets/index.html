@@ -15,7 +15,8 @@
   .bar { display: flex; flex-wrap: wrap; gap: 6px; padding: 10px 16px; max-width: 1100px; margin: 0 auto; }
   .bar button { border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 6px 12px; font-size: 13px; cursor: pointer; }
   .bar button.on { background: var(--accent); border-color: var(--accent); color: #fff; }
-  .bar .village { margin-left: auto; font-weight: 600; }
+  .bar .village { font-weight: 600; }
+  .bar .mode { margin-left: auto; }
   main { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; padding: 6px 16px 32px; max-width: 1100px; margin: 0 auto; }
   .card { background: var(--card); border: 1px solid var(--line); border-radius: 10px; overflow: hidden; cursor: pointer; text-align: left; padding: 0; color: inherit; font: inherit; display: flex; flex-direction: column; justify-content: flex-start; }
   .card img { width: 100%; aspect-ratio: 1; display: block; object-fit: cover; }
@@ -36,7 +37,7 @@
 <body>
 <header>
   <h1>田舎3Dモデル集</h1>
-  <p>田舎ゲーム用に Blender で作ったローポリモデルです。1単位 = 1m、Y軸が上、原点は足元の中央、正面は +Z。カードを押すと3Dで回して見られます。</p>
+  <p>田舎ゲーム用に Blender で作ったモデル集です。軽いローポリ版と、面取り・曲面・凹凸を入れたハイポリ版があります。1単位 = 1m、Y軸が上、原点は足元の中央、正面は +Z。カードを押すと3Dで回して見られます。</p>
 </header>
 <div class="bar" id="bar"></div>
 <main id="grid"></main>
@@ -52,7 +53,10 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-const models = await (await fetch('models.json')).json();
+const SETS = { lo: await (await fetch('models.json')).json(), hi: await (await fetch('models_hi.json').then((r) => (r.ok ? r : fetch('models.json')))).json() };
+let mode = location.hash === '#hi' ? 'hi' : 'lo';
+let models = SETS[mode];
+const sfx = () => (mode === 'hi' ? '_hi' : '');
 const cats = ['すべて', ...new Set(models.map((m) => m.category))];
 let cat = 'すべて';
 const bar = document.getElementById('bar'), grid = document.getElementById('grid');
@@ -63,6 +67,10 @@ function drawBar() {
     const b = document.createElement('button'); b.textContent = c; b.className = c === cat ? 'on' : '';
     b.onclick = () => { cat = c; drawBar(); drawGrid(); }; bar.append(b);
   }
+  for (const [k, label] of [['lo', 'ローポリ'], ['hi', 'ハイポリ']]) {
+    const b = document.createElement('button'); b.textContent = label; b.className = (k === mode ? 'on ' : '') + (k === 'lo' ? 'mode' : '');
+    b.onclick = () => { mode = k; models = SETS[k]; history.replaceState(null, '', k === 'hi' ? '#hi' : '#'); drawBar(); drawGrid(); }; bar.append(b);
+  }
   const v = document.createElement('button'); v.textContent = '🏡 村に並べてみる'; v.className = 'village';
   v.onclick = openVillage; bar.append(v);
 }
@@ -70,7 +78,7 @@ function drawGrid() {
   grid.innerHTML = '';
   for (const m of models.filter((m) => cat === 'すべて' || m.category === cat)) {
     const b = document.createElement('button'); b.className = 'card';
-    b.innerHTML = `<img loading="lazy" src="preview/${m.name}.jpg" alt=""><div><b>${m.jp}</b><small>${m.name}.glb · ${m.size_m.join('×')}m</small></div>`;
+    b.innerHTML = `<img loading="lazy" src="preview${sfx()}/${m.name}.jpg" alt=""><div><b>${m.jp}</b><small>${m.name}.glb · ${m.size_m.join('×')}m</small></div>`;
     b.onclick = () => openModel(m); grid.append(b);
   }
 }
@@ -93,7 +101,7 @@ ground.rotation.x = -Math.PI / 2; ground.receiveShadow = true; scene.add(ground)
 const camera = new THREE.PerspectiveCamera(45, 1, 0.05, 500);
 const controls = new OrbitControls(camera, canvas); controls.enableDamping = true; controls.maxPolarAngle = Math.PI * 0.49;
 const loader = new GLTFLoader(), cache = {};
-const load = (n) => (cache[n] ??= loader.loadAsync(`glb/${n}.glb`).then((g) => { g.scene.traverse((o) => { o.castShadow = o.receiveShadow = true; }); return g.scene; }));
+const load = (n) => (cache[sfx() + n] ??= loader.loadAsync(`glb${sfx()}/${n}.glb`).then((g) => { g.scene.traverse((o) => { o.castShadow = o.receiveShadow = true; }); return g.scene; }));
 let holder = new THREE.Group(); scene.add(holder);
 const viewer = document.getElementById('viewer');
 let running = false;
@@ -109,8 +117,8 @@ function show() {
 }
 async function openModel(m) {
   document.getElementById('vtitle').textContent = m.jp;
-  const dl = document.getElementById('vdl'); dl.style.display = ''; dl.href = `glb/${m.name}.glb`;
-  document.getElementById('vinfo').textContent = `${m.name}.glb · 幅×高さ×奥行 ${m.size_m.join(' × ')} m · ${m.tris} 三角形 · ${m.kb} KB · 色: ${m.materials.join(', ')}`;
+  const dl = document.getElementById('vdl'); dl.style.display = ''; dl.href = `glb${sfx()}/${m.name}.glb`;
+  document.getElementById('vinfo').textContent = `${mode === 'hi' ? 'ハイポリ' : 'ローポリ'} · ${m.name}.glb · 幅×高さ×奥行 ${m.size_m.join(' × ')} m · ${m.tris} 三角形 · ${m.kb} KB · 色: ${m.materials.join(', ')}`;
   scene.remove(holder); holder = new THREE.Group(); scene.add(holder);
   show();
   const obj = (await load(m.name)).clone(); holder.add(obj);
