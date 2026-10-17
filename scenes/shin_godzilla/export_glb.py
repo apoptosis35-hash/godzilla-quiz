@@ -76,13 +76,39 @@ bpy.ops.export_scene.gltf(filepath=out, export_format='GLB', use_selection=True,
                           export_vertex_color='ACTIVE', export_yup=True)
 print('exported', out, len(me.polygons), 'faces', os.path.getsize(out) // 1024, 'KB')
 
-# the same model as glTF JSON with its buffer embedded, for hosts that only serve web types (viewer/index.html loads it)
-import base64, json, struct
-with open(out, 'rb') as f: glb = f.read()
-jlen = struct.unpack_from('<I', glb, 12)[0]
-gltf = json.loads(glb[20:20 + jlen])
-blen = struct.unpack_from('<I', glb, 20 + jlen)[0]
-gltf['buffers'][0]['uri'] = 'data:application/octet-stream;base64,' + base64.b64encode(glb[28 + jlen:28 + jlen + blen]).decode()
-web = os.path.join(HERE, 'viewer', 'shin_godzilla.gltf.json')
-with open(web, 'w') as f: json.dump(gltf, f, separators=(',', ':'))
-print('wrote', web, os.path.getsize(web) // 1024, 'KB')
+import base64, struct
+
+# a compact packed mesh for viewer/index.html, which draws it with plain WebGL (no library, no network):
+# u32 nverts, u32 ntris, f32 center[3], f32 half[3]; i16 positions (normalised to the box), i8 normals, u8 sRGB colours,
+# u32 triangle indices. The page is built from viewer/template.html with the data inlined as base64.
+dg = bpy.context.evaluated_depsgraph_get()
+P, Nn, C, I = [], [], [], []
+base = 0
+FIXED = {'teeth_claws': (0.55, 0.5, 0.42), 'eye': (0.01, 0.01, 0.01)}
+for o in bpy.data.objects:
+    if o.type != 'MESH': continue
+    m = o.evaluated_get(dg).to_mesh(); m.transform(o.matrix_world); m.calc_loop_triangles()
+    n = len(m.vertices)
+    co = np.empty(n * 3, np.float32); m.vertices.foreach_get('co', co); co = co.reshape(-1, 3)
+    nr = np.empty(n * 3, np.float32); m.vertices.foreach_get('normal', nr); nr = nr.reshape(-1, 3)
+    if 'Col' in m.color_attributes:
+        cl = np.empty(n * 4, np.float32); m.color_attributes['Col'].data.foreach_get('color', cl); cl = cl.reshape(-1, 4)[:, :3]
+    else:
+        cl = np.tile(np.array(next(v for k, v in FIXED.items() if o.name.startswith(k)), np.float32) ** 2.2, (n, 1))
+    tri = np.empty(len(m.loop_triangles) * 3, np.int64); m.loop_triangles.foreach_get('vertices', tri)
+    P.append(co[:, [0, 2, 1]] * [1, 1, -1]); Nn.append(nr[:, [0, 2, 1]] * [1, 1, -1]); C.append(cl); I.append(tri + base)
+    base += n
+    o.evaluated_get(dg).to_mesh_clear()
+P, Nn, C, I = (np.concatenate(a) for a in (P, Nn, C, I))
+lo, hi = P.min(0), P.max(0); center, half = (lo + hi) / 2, (hi - lo) / 2
+q = np.round((P - center) / half * 32767).astype('<i2')
+nq = np.round(np.clip(Nn, -1, 1) * 127).astype('i1')
+cq = np.round(np.clip(C, 0, 1) ** (1 / 2.2) * 255).astype('u1')
+pad = lambda b: b + b'\0' * (-len(b) % 4)
+blob = (struct.pack('<II6f', len(P), len(I) // 3, *center, *half) + pad(q.tobytes()) + pad(nq.tobytes()) + pad(cq.tobytes())
+        + I.astype('<u4').tobytes())
+with open(os.path.join(HERE, 'viewer', 'poster.jpg'), 'rb') as f: poster = base64.b64encode(f.read()).decode()
+with open(os.path.join(HERE, 'viewer', 'template.html'), encoding='utf-8') as f: page = f.read()
+page = page.replace('__MODEL_B64__', base64.b64encode(blob).decode()).replace('__POSTER_B64__', poster)
+with open(os.path.join(HERE, 'viewer', 'index.html'), 'w', encoding='utf-8') as f: f.write(page)
+print('viewer', len(P), 'verts', len(I) // 3, 'tris', len(page) // 1024, 'KB')

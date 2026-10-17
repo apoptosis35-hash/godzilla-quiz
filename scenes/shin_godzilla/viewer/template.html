@@ -1,0 +1,189 @@
+<title>シン・ゴジラ 3Dモデル</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<style>
+/* Layout: one full-height stage; the model fills it, a slim title block and control row float over the overcast sky.
+   Built by export_glb.py: the mesh and the poster are inlined, so the page needs no network or library. */
+:root {
+  --sky-top: #e9ebee; --sky-low: #c6c9cf; --ink: #1d1a1b; --ink-soft: #5d5759;
+  --ember: #c4280f; --chip: rgba(255,255,255,.72); --chip-line: rgba(29,26,27,.14);
+  --display: "Hiragino Mincho ProN", "Yu Mincho", "Noto Serif JP", serif;
+  --body: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Noto Sans JP", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --sky-top: #2a2c31; --sky-low: #121316; --ink: #eceae8; --ink-soft: #a29c9a;
+  --ember: #ff5a36; --chip: rgba(20,20,23,.7); --chip-line: rgba(236,234,232,.16); color-scheme: dark } }
+:root[data-theme="dark"] {
+  --sky-top: #2a2c31; --sky-low: #121316; --ink: #eceae8; --ink-soft: #a29c9a;
+  --ember: #ff5a36; --chip: rgba(20,20,23,.7); --chip-line: rgba(236,234,232,.16); color-scheme: dark }
+html, body { height: 100%; }
+body { background: linear-gradient(var(--sky-top), var(--sky-low)); background-color: var(--sky-low); color: var(--ink);
+  font-family: var(--body); overflow: hidden; }
+.stage { position: relative; height: 100%; overflow: hidden; }
+canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; display: block; }
+.fallback { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; object-position: center 70%; }
+header { position: absolute; top: 0; left: 0; right: 0; pointer-events: none;
+  padding-block: 18px 0; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+h1 { margin: 0; font-family: var(--display); font-weight: 800; font-size: clamp(30px, 8vw, 52px); line-height: 1; letter-spacing: .02em; }
+h1 span { color: var(--ember); }
+.sub { margin: 8px 0 0; font-size: 12px; letter-spacing: .14em; color: var(--ink-soft); }
+.bar { position: absolute; left: 0; right: 0; bottom: 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+  padding-block: 0 calc(18px + env(safe-area-inset-bottom, 0px)); padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.bar button { font: 500 14px/1 var(--body); color: var(--ink); background: var(--chip); border: 1px solid var(--chip-line);
+  border-radius: 999px; padding: 10px 13px; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); cursor: pointer; }
+.bar button[aria-pressed="true"] { border-color: var(--ember); color: var(--ember); }
+.bar button:focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
+.status { position: absolute; left: 0; right: 0; top: 46%; margin: 0; text-align: center; font-size: 14px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.status span { display: inline-block; background: var(--chip); border: 1px solid var(--chip-line); border-radius: 12px; padding: 10px 14px; max-width: 32em; }
+.hint { position: absolute; left: 0; right: 0; bottom: calc(76px + env(safe-area-inset-bottom, 0px)); margin: 0; text-align: center; font-size: 12px; color: var(--ink-soft); pointer-events: none; }
+</style>
+
+<div class="stage">
+  <img class="fallback" id="fallback" src="data:image/jpeg;base64,__POSTER_B64__" alt="シン・ゴジラのレンダリング画像">
+  <canvas id="gl" aria-label="シン・ゴジラ第4形態の3Dモデル。ドラッグで回転、ピンチで拡大"></canvas>
+  <header>
+    <h1>シン・<span>ゴジラ</span></h1>
+    <p class="sub">第4形態 ・ Blenderで制作した3Dモデル</p>
+  </header>
+  <p class="status" id="status"><span id="statusText">3Dモデルを準備中…</span></p>
+  <p class="hint" id="hint">指でドラッグして回す ・ ピンチで拡大</p>
+  <div class="bar">
+    <button id="spin" aria-pressed="true">自動回転</button>
+    <button id="front">正面</button>
+    <button id="face">顔</button>
+    <button id="back">背びれ</button>
+  </div>
+</div>
+
+<script id="model" type="application/octet-stream">__MODEL_B64__</script>
+<script>
+(() => {
+const $ = id => document.getElementById(id);
+const say = t => { $('status').hidden = false; $('statusText').textContent = t; };
+try { start(); } catch (e) { say('3Dモデルを表示できませんでした(' + (e && e.message || e) + ')。画像だけ表示しています。'); $('gl').hidden = true; }
+
+function start() {
+  const canvas = $('gl');
+  const opts = { antialias: true, alpha: true, premultipliedAlpha: true };
+  let gl = canvas.getContext('webgl2', opts), gl2 = !!gl;
+  if (!gl) gl = canvas.getContext('webgl', opts) || canvas.getContext('experimental-webgl', opts);
+  if (!gl) throw new Error('この端末ではWebGLが使えません');
+  if (!gl2 && !gl.getExtension('OES_element_index_uint')) throw new Error('この端末のWebGLは大きなモデルに対応していません');
+
+  // unpack the inlined mesh
+  const bin = atob($('model').textContent.trim());
+  const buf = new ArrayBuffer(bin.length), u8 = new Uint8Array(buf);
+  for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+  const head = new DataView(buf);
+  const nv = head.getUint32(0, true), nt = head.getUint32(4, true);
+  const center = [0, 1, 2].map(i => head.getFloat32(8 + 4 * i, true)), half = [0, 1, 2].map(i => head.getFloat32(20 + 4 * i, true));
+  const al = n => (n + 3) & ~3;
+  let off = 32;
+  const pos = new Int16Array(buf, off, nv * 3); off += al(nv * 6);
+  const nor = new Int8Array(buf, off, nv * 3); off += al(nv * 3);
+  const col = new Uint8Array(buf, off, nv * 3); off += al(nv * 3);
+  const idx = new Uint32Array(buf, off, nt * 3);
+
+  const vs = `attribute vec3 aPos; attribute vec3 aNor; attribute vec3 aCol;
+    uniform mat4 uMVP; uniform vec3 uCenter, uHalf;
+    varying vec3 vN, vP, vC;
+    void main() { vec3 p = uCenter + aPos * uHalf; vP = p; vN = aNor; vC = pow(aCol, vec3(2.2)); gl_Position = uMVP * vec4(p, 1.0); }`;
+  const fs = `precision mediump float;
+    uniform vec3 uEye, uKey;
+    varying vec3 vN, vP, vC;
+    void main() {
+      vec3 n = normalize(vN); vec3 v = normalize(uEye - vP);
+      if (dot(n, v) < 0.0) n = -n;
+      vec3 hemi = mix(vec3(0.16, 0.15, 0.15), vec3(0.95, 0.97, 1.0), n.y * 0.5 + 0.5);
+      float key = max(dot(n, uKey), 0.0);
+      float spec = pow(max(dot(n, normalize(uKey + v)), 0.0), 36.0) * 0.22;
+      float rim = pow(1.0 - max(dot(n, v), 0.0), 3.0) * 0.18;
+      float red = clamp((vC.r - max(vC.g, vC.b)) * 2.0, 0.0, 1.0);
+      vec3 c = vC * (hemi * 1.15 + key * vec3(1.0, 0.96, 0.9) * 1.7) + spec + rim * vec3(0.85, 0.88, 0.95) + vec3(1.0, 0.16, 0.05) * red * 0.35;
+      c = c / (c + vec3(0.55)) * 1.45;
+      gl_FragColor = vec4(pow(clamp(c, 0.0, 1.0), vec3(1.0 / 2.2)), 1.0);
+    }`;
+  const sh = (type, src) => { const s = gl.createShader(type); gl.shaderSource(s, src); gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s)); return s; };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs)); gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, fs)); gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  gl.useProgram(prog);
+  const attr = (name, data, size, type, norm) => {
+    const b = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, b); gl.bufferData(gl.ARRAY_BUFFER, data, gl.STATIC_DRAW);
+    const loc = gl.getAttribLocation(prog, name); gl.enableVertexAttribArray(loc); gl.vertexAttribPointer(loc, size, type, norm, 0, 0);
+  };
+  attr('aPos', pos, 3, gl.SHORT, true); attr('aNor', nor, 3, gl.BYTE, true); attr('aCol', col, 3, gl.UNSIGNED_BYTE, true);
+  const ib = gl.createBuffer(); gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, ib); gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, idx, gl.STATIC_DRAW);
+  const U = n => gl.getUniformLocation(prog, n);
+  gl.uniform3fv(U('uCenter'), center); gl.uniform3fv(U('uHalf'), half);
+  gl.enable(gl.DEPTH_TEST); gl.clearColor(0, 0, 0, 0);
+
+  // camera: orbit around a target; views ease toward their goal
+  const VIEWS = {
+    front: { az: -0.55, el: 0.06, dist: 30, tgt: [0, 6.6, -1.5] },
+    face:  { az: -0.5, el: 0.05, dist: 8, tgt: [0, 9.6, 2.0] },
+    back:  { az: 2.5, el: 0.2, dist: 38, tgt: [0, 6.8, -3.5] },
+  };
+  const cam = { ...VIEWS.front, tgt: [...VIEWS.front.tgt] }; let goal = null;
+  let spin = !matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const setSpin = on => { spin = on; $('spin').setAttribute('aria-pressed', on); };
+  setSpin(spin);
+  $('spin').onclick = () => setSpin(!spin);
+  for (const k of Object.keys(VIEWS)) $(k).onclick = () => { setSpin(false); $('hint').hidden = true; goal = VIEWS[k]; };
+
+  const ptrs = new Map(); let pinch0 = 0, dist0 = 0;
+  canvas.addEventListener('pointerdown', e => { canvas.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    goal = null; setSpin(false); $('hint').hidden = true;
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; pinch0 = Math.hypot(a[0] - b[0], a[1] - b[1]); dist0 = cam.dist; } });
+  canvas.addEventListener('pointermove', e => {
+    const p = ptrs.get(e.pointerId); if (!p) return;
+    if (ptrs.size === 1) {
+      cam.az -= (e.clientX - p[0]) * 0.008; cam.el = Math.max(-0.35, Math.min(1.2, cam.el + (e.clientY - p[1]) * 0.006));
+    }
+    ptrs.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptrs.size === 2) { const [a, b] = [...ptrs.values()]; const d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      if (pinch0 > 0) cam.dist = Math.max(4, Math.min(60, dist0 * pinch0 / d)); }
+  });
+  const up = e => { ptrs.delete(e.pointerId); pinch0 = 0; };
+  canvas.addEventListener('pointerup', up); canvas.addEventListener('pointercancel', up);
+  canvas.addEventListener('wheel', e => { e.preventDefault(); goal = null; cam.dist = Math.max(4, Math.min(60, cam.dist * Math.exp(e.deltaY * 0.001))); }, { passive: false });
+
+  const sub = (a, b) => a.map((x, i) => x - b[i]), cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+  const norm = a => { const l = Math.hypot(...a); return a.map(x => x / l); }, dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+  function mvp(eye, tgt, aspect) {
+    const f = 1 / Math.tan(0.5 * 0.62), n = 0.5, fr = 200;
+    const z = norm(sub(eye, tgt)), x = norm(cross([0, 1, 0], z)), y = cross(z, x);
+    const V = [x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, -dot(x, eye), -dot(y, eye), -dot(z, eye), 1];
+    const P = [f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (fr + n) / (n - fr), -1, 0, 0, 2 * fr * n / (n - fr), 0];
+    const M = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) { let s = 0; for (let k = 0; k < 4; k++) s += P[k * 4 + r] * V[c * 4 + k]; M[c * 4 + r] = s; }
+    return M;
+  }
+  let last = performance.now(), shown = false;
+  function frame(now) {
+    const dt = Math.min(0.05, (now - last) / 1000); last = now;
+    if (spin) cam.az += dt * 0.3;
+    if (goal) {
+      const k = 1 - Math.exp(-dt * 4);
+      let da = ((goal.az - cam.az) % (2 * Math.PI) + 3 * Math.PI) % (2 * Math.PI) - Math.PI;
+      cam.az += da * k; cam.el += (goal.el - cam.el) * k; cam.dist += (goal.dist - cam.dist) * k;
+      cam.tgt = cam.tgt.map((t, i) => t + (goal.tgt[i] - t) * k);
+    }
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const w = Math.round(canvas.clientWidth * dpr), h = Math.round(canvas.clientHeight * dpr);
+    if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
+    gl.viewport(0, 0, w, h); gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    const eye = [cam.tgt[0] + cam.dist * Math.cos(cam.el) * Math.sin(cam.az), cam.tgt[1] + cam.dist * Math.sin(cam.el), cam.tgt[2] + cam.dist * Math.cos(cam.el) * Math.cos(cam.az)];
+    gl.uniformMatrix4fv(U('uMVP'), false, mvp(eye, cam.tgt, w / Math.max(h, 1)));
+    gl.uniform3fv(U('uEye'), eye);
+    gl.uniform3fv(U('uKey'), norm([-0.55 * Math.cos(cam.az) + 0.6 * Math.sin(cam.az), 0.75, 0.55 * Math.sin(cam.az) + 0.6 * Math.cos(cam.az)]));
+    gl.drawElements(gl.TRIANGLES, nt * 3, gl.UNSIGNED_INT, 0);
+    if (!shown) { shown = true; $('status').hidden = true; $('fallback').hidden = true; }
+    requestAnimationFrame(frame);
+  }
+  canvas.addEventListener('webglcontextlost', e => { e.preventDefault(); say('3D表示が中断されました。ページを開き直してください。'); $('fallback').hidden = false; });
+  requestAnimationFrame(frame);
+}
+})();
+</script>
