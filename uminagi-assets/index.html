@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>海凪の港町 3Dモデル集</title>
+<meta name="robots" content="noindex, noimageindex">
+<style>
+  :root { --bg: #f3f1ec; --fg: #1d2a36; --card: #fff; --muted: #66707a; --accent: #1d4f7a; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #11161c; --fg: #e8ecef; --card: #1b222b; --muted: #9aa5ae; --accent: #8fc3ee; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--fg); font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; }
+  header { padding: 22px 16px 8px; max-width: 1200px; margin: 0 auto; }
+  h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: .08em; }
+  header p { margin: 4px 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+  header a { color: var(--accent); }
+  .filters { display: flex; gap: 6px; flex-wrap: wrap; margin: 12px 0 4px; }
+  .filters button { border: 1px solid var(--muted); background: transparent; color: var(--fg); border-radius: 999px; padding: 5px 12px; cursor: pointer; font-size: 13px; }
+  .filters button.on { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+  main { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; padding: 12px 16px 40px; max-width: 1200px; margin: 0 auto; }
+  .card { background: var(--card); border-radius: 12px; overflow: hidden; cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.08); }
+  .card img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #c9cdd1; }
+  .card div { padding: 8px 10px 10px; font-size: 13px; }
+  .card b { display: block; font-size: 14px; margin-bottom: 2px; }
+  .card small { color: var(--muted); }
+  #viewer { position: fixed; inset: 0; background: rgba(0,0,0,.72); display: none; align-items: center; justify-content: center; padding: 16px; z-index: 9; }
+  #viewer.on { display: flex; }
+  .box { background: var(--card); border-radius: 14px; width: min(980px, 100%); max-height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+  #cv { width: 100%; height: min(62vh, 620px); display: block; touch-action: none; }
+  .info { padding: 10px 14px 14px; font-size: 13px; line-height: 1.6; }
+  .info b { font-size: 16px; }
+  .info .row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .info button, .info a { border: 1px solid var(--muted); background: transparent; color: var(--fg); border-radius: 8px; padding: 5px 10px; cursor: pointer; font-size: 13px; text-decoration: none; }
+</style>
+<script type="importmap">{ "imports": { "three": "../uminagi/vendor/three.module.min.js", "three/addons/": "../uminagi/vendor/addons/" } }</script>
+</head>
+<body>
+<header>
+  <h1>海凪の港町 3Dモデル集</h1>
+  <p>日本の漁港の町を組み立てるための、Blender の Python スクリプトで作ったオリジナル3Dモデル(全<span id="count"></span>種)。1単位 = 1m、Y軸が上、正面は +Z。カードを押すと3Dで回して見られます。</p>
+  <p>このモデルで作った探索ゲーム: <a href="../uminagi/">海凪の港町</a> ・ 作り方と決まりごと: <code>README.md</code></p>
+  <div class="filters" id="filters"></div>
+</header>
+<main id="grid"></main>
+<div id="viewer"><div class="box"><canvas id="cv"></canvas><div class="info" id="info"></div></div></div>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { MaterialLib } from '../uminagi/js/materials.js';
+
+const models = await fetch('models.json').then((r) => r.json());
+document.getElementById('count').textContent = models.length;
+const cats = ['すべて', ...new Set(models.map((m) => m.category))];
+let cat = 'すべて';
+const grid = document.getElementById('grid'), filters = document.getElementById('filters');
+function draw() {
+  filters.innerHTML = cats.map((c) => `<button class="${c === cat ? 'on' : ''}">${c}</button>`).join('');
+  [...filters.children].forEach((b) => (b.onclick = () => { cat = b.textContent; draw(); }));
+  grid.innerHTML = models.filter((m) => cat === 'すべて' || m.category === cat).map((m) => `
+    <div class="card" data-n="${m.name}"><img loading="lazy" src="preview/${m.name}.jpg" alt="${m.jp}">
+    <div><b>${m.jp}</b><small>${m.name} ・ ${m.size_m.join('×')} m ・ ${m.tris} △</small></div></div>`).join('');
+  [...grid.children].forEach((c) => (c.onclick = () => open(c.dataset.n)));
+}
+draw();
+
+// ---- 3D viewer (materials and textures shared with the game)
+const cv = document.getElementById('cv'), viewer = document.getElementById('viewer');
+const renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2)); renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.shadowMap.enabled = true;
+const scene = new THREE.Scene(); scene.background = new THREE.Color(0xc4d8e8);
+const camera = new THREE.PerspectiveCamera(40, 1, 0.05, 500);
+const controls = new OrbitControls(camera, cv); controls.enableDamping = true;
+scene.add(new THREE.HemisphereLight(0xdfeeff, 0x6b6450, 1.3));
+const sun = new THREE.DirectionalLight(0xfff2e0, 2.8); sun.position.set(-8, 14, 10); sun.castShadow = true; sun.shadow.mapSize.set(2048, 2048);
+scene.add(sun);
+const floor = new THREE.Mesh(new THREE.CircleGeometry(60, 48), new THREE.MeshStandardMaterial({ color: 0x9a9a92, roughness: 1 }));
+floor.rotation.x = -Math.PI / 2; floor.receiveShadow = true; scene.add(floor);
+const mats = await new MaterialLib(renderer, { aniso: 8, normalMaps: true }).load();
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new RoomEnvironment(), 0.04).texture; scene.environmentIntensity = 0.5;
+const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
+let current = null, showLod = false;
+async function open(name) {
+  const m = models.find((x) => x.name === name);
+  viewer.classList.add('on'); resize();
+  if (current) scene.remove(current);
+  const g = await loader.loadAsync('glb/' + name + '.glb');
+  current = g.scene;
+  current.traverse((o) => { if (o.isMesh) { o.material = mats.get(o.material.name); o.castShadow = o.receiveShadow = true; } });
+  const lod = current.getObjectByName(name + '_lod1'), body = current.getObjectByName(name + '_body');
+  const setLod = () => { if (lod) { lod.visible = showLod; if (body) body.visible = !showLod; } };
+  setLod();
+  scene.add(current);
+  const box = new THREE.Box3().setFromObject(body || current), size = box.getSize(new THREE.Vector3()), c = box.getCenter(new THREE.Vector3());
+  const r = size.length() * 0.75;
+  controls.target.copy(c); camera.position.set(c.x - r * 0.7, c.y + r * 0.45, c.z + r * 1.0); camera.near = r / 100; camera.far = r * 30; camera.updateProjectionMatrix();
+  floor.position.y = name.startsWith('fishing_boat') || name === 'skiff' ? box.min.y : 0;
+  sun.shadow.camera.left = sun.shadow.camera.bottom = -r; sun.shadow.camera.right = sun.shadow.camera.top = r; sun.shadow.camera.updateProjectionMatrix();
+  sun.position.set(c.x - r, c.y + r * 1.5, c.z + r); sun.target.position.copy(c); scene.add(sun.target);
+  document.getElementById('info').innerHTML = `<b>${m.jp}</b> <code>${m.name}.glb</code><br>
+    分類: ${m.category} ・ 大きさ ${m.size_m.join(' × ')} m ・ 三角形 ${m.tris}${m.lod1_tris ? ` (LOD1 ${m.lod1_tris})` : ''} ・ ${m.kb} KB(圧縮前)<br>
+    マテリアル: ${m.materials.join(', ')}${m.parts.length > 1 ? `<br>部品: ${m.parts.join(', ')}` : ''}
+    <div class="row">${lod ? '<button id="lodbtn">LOD1(遠景用)を表示</button>' : ''}<a href="glb/${m.name}.glb" download>GLBをダウンロード</a><button id="closebtn">閉じる</button></div>`;
+  document.getElementById('closebtn').onclick = () => viewer.classList.remove('on');
+  const lb = document.getElementById('lodbtn');
+  if (lb) lb.onclick = () => { showLod = !showLod; setLod(); lb.textContent = showLod ? 'LOD0(通常)を表示' : 'LOD1(遠景用)を表示'; };
+}
+viewer.onclick = (e) => { if (e.target === viewer) viewer.classList.remove('on'); };
+function resize() { const w = cv.clientWidth, h = cv.clientHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
+addEventListener('resize', resize);
+renderer.setAnimationLoop(() => { if (!viewer.classList.contains('on')) return; controls.update(); renderer.render(scene, camera); });
+</script>
+</body>
+</html>

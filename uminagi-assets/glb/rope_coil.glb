@@ -1,0 +1,330 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 2592,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 1440,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 1440,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 774,
+      "normalized": false,
+      "byteOffset": 5184,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 636,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 636,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1440,
+      "max": [
+        32767,
+        12981,
+        32271
+      ],
+      "min": [
+        -32767,
+        -12981,
+        -32271
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 636,
+      "max": [
+        31875,
+        13381,
+        32767
+      ],
+      "min": [
+        -31875,
+        -13381,
+        -32767
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 6732,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 1162,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 3366
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 6732,
+      "byteLength": 5760,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1164,
+          "byteLength": 2215,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 1440
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 12492,
+      "byteLength": 11520,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 3380,
+          "byteLength": 8238,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1440
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 24012,
+      "byteLength": 2544,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 11620,
+          "byteLength": 1352,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 636
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 26556,
+      "byteLength": 5088,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 12972,
+          "byteLength": 4415,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 636
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 31644,
+      "byteLength": 11520,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 17388,
+          "byteLength": 6978,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1440
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 43164,
+      "byteLength": 5088,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 24368,
+          "byteLength": 3931,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 636
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "rope_coil.glb.bin",
+      "byteLength": 28300
+    },
+    {
+      "byteLength": 48252,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "rope",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.6200000047683716,
+          0.5,
+          0.30000001192092896,
+          1
+        ],
+        "roughnessFactor": 0.949999988079071,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "rope_coil_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "rope_coil_lod1",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "rope_coil_body",
+      "translation": [
+        0,
+        0.18500000424683094,
+        0
+      ],
+      "scale": [
+        0.44999998807907104,
+        0.44999998807907104,
+        0.44999998807907104
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "rope_coil_lod1",
+      "translation": [
+        0,
+        0.18432171462336555,
+        0
+      ],
+      "scale": [
+        0.454851895570755,
+        0.454851895570755,
+        0.454851895570755
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "rope_coil",
+      "children": [
+        0,
+        1
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        2
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

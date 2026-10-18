@@ -1,0 +1,324 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 960,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 838,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 838,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 288,
+      "normalized": false,
+      "byteOffset": 1920,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 255,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 255,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 838,
+      "max": [
+        14325,
+        32767,
+        19278
+      ],
+      "min": [
+        -14325,
+        -32767,
+        -19278
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 255,
+      "max": [
+        14321,
+        32767,
+        19622
+      ],
+      "min": [
+        -14321,
+        -32767,
+        -19622
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 2496,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 434,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 1248
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2496,
+      "byteLength": 3352,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 436,
+          "byteLength": 1469,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 838
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 5848,
+      "byteLength": 6704,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1908,
+          "byteLength": 5785,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 838
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 12552,
+      "byteLength": 1020,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 7696,
+          "byteLength": 521,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 255
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 13572,
+      "byteLength": 2040,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 8220,
+          "byteLength": 1805,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 255
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 15612,
+      "byteLength": 6704,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 10028,
+          "byteLength": 4751,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 838
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 22316,
+      "byteLength": 2040,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 14780,
+          "byteLength": 1551,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 255
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "komainu.glb.bin",
+      "byteLength": 16332
+    },
+    {
+      "byteLength": 24356,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "granite",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "komainu_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "komainu_lod1",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "komainu_body",
+      "translation": [
+        0,
+        0.9150000214576721,
+        -0.01623666286468506
+      ],
+      "scale": [
+        0.9150000214576721,
+        0.9150000214576721,
+        0.9150000214576721
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "komainu_lod1",
+      "translation": [
+        0,
+        0.9152555465698242,
+        -0.003133058547973633
+      ],
+      "scale": [
+        0.9152555465698242,
+        0.9152555465698242,
+        0.9152555465698242
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "komainu",
+      "children": [
+        0,
+        1
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        2
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

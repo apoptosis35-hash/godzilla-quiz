@@ -1,0 +1,324 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 864,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 558,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 558,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 258,
+      "normalized": false,
+      "byteOffset": 1728,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 230,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 230,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 558,
+      "max": [
+        29211,
+        26675,
+        32767
+      ],
+      "min": [
+        -29211,
+        -26675,
+        -32767
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 230,
+      "max": [
+        29007,
+        26803,
+        32767
+      ],
+      "min": [
+        -29007,
+        -26803,
+        -32767
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 2244,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 392,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 1122
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2244,
+      "byteLength": 2232,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 392,
+          "byteLength": 1006,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 558
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 4476,
+      "byteLength": 4464,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1400,
+          "byteLength": 4102,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 558
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 8940,
+      "byteLength": 920,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 5504,
+          "byteLength": 515,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 230
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 9860,
+      "byteLength": 1840,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 6020,
+          "byteLength": 1802,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 230
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 11700,
+      "byteLength": 4464,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 7824,
+          "byteLength": 3369,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 558
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 16164,
+      "byteLength": 1840,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 11196,
+          "byteLength": 1455,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 230
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "tetrapod.glb.bin",
+      "byteLength": 12652
+    },
+    {
+      "byteLength": 18004,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "concrete",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "roughnessFactor": 0.9200000166893005,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "tetrapod_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "tetrapod_lod1",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "tetrapod_body",
+      "translation": [
+        0.2447388768196106,
+        1.3181021213531494,
+        -5.960464477539063e-8
+      ],
+      "scale": [
+        1.3904240727424622,
+        1.3904240727424622,
+        1.3904240727424622
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "tetrapod_lod1",
+      "translation": [
+        0.2560480535030365,
+        1.310146041214466,
+        0.006761312484741211
+      ],
+      "scale": [
+        1.3971694707870483,
+        1.3971694707870483,
+        1.3971694707870483
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "tetrapod",
+      "children": [
+        0,
+        1
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        2
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

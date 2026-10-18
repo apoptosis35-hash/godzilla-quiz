@@ -1,0 +1,330 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 564,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 360,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 360,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 156,
+      "normalized": false,
+      "byteOffset": 1128,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 136,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 136,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 360,
+      "max": [
+        4576,
+        32767,
+        4584
+      ],
+      "min": [
+        -4576,
+        -32767,
+        -4584
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 136,
+      "max": [
+        4512,
+        32767,
+        4640
+      ],
+      "min": [
+        -4512,
+        -32767,
+        -4640
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 1440,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 258,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 720
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 1440,
+      "byteLength": 1440,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 260,
+          "byteLength": 384,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 360
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2880,
+      "byteLength": 2880,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 644,
+          "byteLength": 2135,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 360
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 5760,
+      "byteLength": 544,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2780,
+          "byteLength": 322,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 136
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 6304,
+      "byteLength": 1088,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 3104,
+          "byteLength": 876,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 136
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 7392,
+      "byteLength": 2880,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 3980,
+          "byteLength": 1558,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 360
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 10272,
+      "byteLength": 1088,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 5540,
+          "byteLength": 746,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 136
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "quay_ladder.glb.bin",
+      "byteLength": 6288
+    },
+    {
+      "byteLength": 11360,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "steel_dark",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.18000000715255737,
+          0.1899999976158142,
+          0.20000000298023224,
+          1
+        ],
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0.699999988079071
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "quay_ladder_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        }
+      ]
+    },
+    {
+      "name": "quay_ladder_lod1",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "quay_ladder_body",
+      "translation": [
+        -4.470348358154297e-8,
+        -0.8451586961746216,
+        -0.1738571599125862
+      ],
+      "scale": [
+        1.7548412084579468,
+        1.7548412084579468,
+        1.7548412084579468
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "quay_ladder_lod1",
+      "translation": [
+        -0.0032663866877555847,
+        -0.8444671034812927,
+        -0.17296475172042847
+      ],
+      "scale": [
+        1.7555328011512756,
+        1.7555328011512756,
+        1.7555328011512756
+      ],
+      "mesh": 1
+    },
+    {
+      "name": "quay_ladder",
+      "children": [
+        0,
+        1
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        2
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}
