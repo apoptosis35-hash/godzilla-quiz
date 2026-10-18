@@ -61,7 +61,7 @@ PALETTE = {
     'fur_dark': P((0.5, 0.24, 0.08), 0.9), 'cheek': P((1.0, 0.55, 0.6), 0.8), 'nose_pink': P((0.95, 0.45, 0.5), 0.5), 'eye': P((0.02, 0.02, 0.03), 0.15),
     'raincoat': P((1.0, 0.78, 0.08), 0.35),
     'boot': P((0.1, 0.1, 0.1), 0.5), 'fur_orange': P((0.95, 0.36, 0.07), 0.9), 'fur_white': P((0.92, 0.9, 0.86), 0.9),
-    'bark': P((0.28, 0.21, 0.16), 0.95), 'bark_pine': P((0.3, 0.24, 0.2), 0.95), 'leaf': P((0.16, 0.36, 0.12), 0.85),
+    'bark': P((0.15, 0.11, 0.07), 0.95), 'bark_pine': P((0.3, 0.24, 0.2), 0.95), 'leaf': P((0.16, 0.36, 0.12), 0.85),
     'leaf_dark': P((0.07, 0.22, 0.09), 0.85), 'leaf_light': P((0.36, 0.55, 0.2), 0.85), 'pine': P((0.08, 0.24, 0.12), 0.85),
     'sakura': P((1.0, 0.72, 0.8), 0.8), 'hydrangea': P((0.45, 0.5, 0.92), 0.8), 'hydrangea_pink': P((0.92, 0.55, 0.75), 0.8),
     'flower_red': P((0.85, 0.12, 0.1), 0.8), 'flower_yellow': P((0.95, 0.8, 0.2), 0.8), 'soil': P((0.25, 0.17, 0.1), 1.0),
@@ -181,10 +181,10 @@ def cyl(mat, r, h, loc, verts=12, r2=None, rot=(0, 0, 0), cap=True):
     o = mesh(mat, v, f); o.location = loc; o.rotation_euler = rot
     return o
 
-def rod(mat, a, b, r, verts=8):
-    """Cylinder from point a to point b."""
+def rod(mat, a, b, r, verts=8, r2=None):
+    """Cylinder from point a to point b (tapering to r2)."""
     a, b = Vector(a), Vector(b); d = b - a
-    o = cyl(mat, r, d.length, a, verts)
+    o = cyl(mat, r, d.length, a, verts) if r2 is None else cyl(mat, r, d.length, a, verts, r2=r2)
     o.rotation_euler = d.to_track_quat('Z', 'Y').to_euler()
     return o
 
@@ -500,7 +500,7 @@ def signboard(text, w, h, loc, board='sign_wood', ink='ink', frame='wood_frame',
 
 ATLAS = {'leaf_card': 0, 'leaf_card_dark': 0, 'pine_card': 1, 'sakura_card': 2, 'shrub_card': 3, 'hydrangea_card': 3}
 
-def cards(mat, center, radius, n, size, seed, scale=(1, 1, 1), up=0.4, shell=(0.5, 1.0), flat=0.0):
+def cards(mat, center, radius, n, size, seed, scale=(1, 1, 1), up=0.4, shell=(0.5, 1.0), flat=0.0, face=0.0):
     """Foliage cards: n quads carrying an atlas leaf cluster, scattered over an ellipsoid shell around center and
     facing roughly outwards (the game rewrites their normals to point away from the canopy centre for soft shading)."""
     q = ATLAS[mat]; u0, v0 = (q % 2) * 0.5, (q // 2) * 0.5
@@ -509,7 +509,8 @@ def cards(mat, center, radius, n, size, seed, scale=(1, 1, 1), up=0.4, shell=(0.
     for i in range(n):
         d = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 1) * (1 - flat) + up)).normalized()
         p = c + Vector((d.x * scale[0], d.y * scale[1], d.z * scale[2])) * radius * rnd.uniform(*shell)
-        nrm = (d + Vector((rnd.uniform(-0.7, 0.7), rnd.uniform(-0.7, 0.7), rnd.uniform(-0.2, 0.8) + flat * 2))).normalized()
+        j = 1 - face  # face = 1: cards look straight out of the clump (no edge-on streaks)
+        nrm = (d + Vector((rnd.uniform(-0.7, 0.7) * j, rnd.uniform(-0.7, 0.7) * j, rnd.uniform(-0.2, 0.8) * j + flat * 2))).normalized()
         t = nrm.cross(Vector((0, 0, 1)))
         t = t.normalized() if t.length > 1e-3 else Vector((1, 0, 0))
         b = nrm.cross(t).normalized()
@@ -1722,25 +1723,50 @@ def tree_pine(): pine(9.0, 1.4, 3)
 def tree_pine_b(): pine(7.5, 2.6, 7)
 
 def canopy(clumps, dark='leaf_dark', card='leaf_card', card_dark='leaf_card_dark', seed=0, size=1.25, per=44):
-    """Broadleaf crown: each clump = a dark inner blob (fills gaps) + leaf cards on its shell (lighter on top)."""
-    rnd = random.Random(seed)
+    """Broadleaf crown made of leaf clumps (葉房): each clump is a small dark core that hides the gaps, a dome of leaf
+    cards standing up on its top and sides, and a few darker cards hanging under it. The game shades every clump
+    as its own ball of leaves (sunlit yellow-green top, blue-green underside)."""
     for k, (c, r) in enumerate(clumps):
-        ico(dark, r * 0.38, c, (1, 1, 0.8), 2, 0.2, seed + k)
-        cards(card, c, r, per, size, seed * 31 + k, (1, 1, 0.82), up=0.6, shell=(0.15, 1.0))
-        cards(card_dark, Vector(c) - Vector((0, 0, r * 0.25)), r * 0.85, per // 3, size, seed * 37 + k, (1, 1, 0.7), up=-0.6)
+        ico(dark, r * 0.45, Vector(c) - Vector((0, 0, r * 0.12)), (1, 1, 0.68), 2, 0.25, seed + k)
+        cards(card, c, r, per, size, seed * 31 + k, (1, 1, 0.75), up=0.7, shell=(0.55, 1.0), face=0.65)
+        cards(card_dark, Vector(c) - Vector((0, 0, r * 0.3)), r * 0.85, per // 4, size, seed * 37 + k, (1, 1, 0.5), up=-0.5, face=0.4)
+
+def branch_tree(rnd, trunk_h, trunk_r, limbs, spread, top, clump_r, bark='bark'):
+    """Trunk that forks into spreading limbs, each limb splitting into twigs; returns the twig tips (clump centres)."""
+    lean = Vector((rnd.uniform(-0.3, 0.3), rnd.uniform(-0.3, 0.3), 0))
+    fork = Vector((0, 0, trunk_h)) + lean
+    rod(bark, (0, 0, -0.2), (lean.x * 0.4, lean.y * 0.4, trunk_h * 0.5), trunk_r, 10, r2=trunk_r * 0.88)
+    rod(bark, (lean.x * 0.4, lean.y * 0.4, trunk_h * 0.5), fork, trunk_r * 0.88, 10, r2=trunk_r * 0.7)
+    ico(bark, trunk_r * 0.72, fork, sub=1)
+    for k in range(4):  # root flare
+        a = k * math.pi / 2 + 0.4
+        rod(bark, (math.cos(a) * trunk_r * 0.5, math.sin(a) * trunk_r * 0.5, 0.45), (math.cos(a) * trunk_r * 1.7, math.sin(a) * trunk_r * 1.7, -0.15), trunk_r * 0.4, 6)
+    tips = []
+    a0 = rnd.uniform(0, math.tau)
+    for k in range(limbs):
+        a = a0 + k * math.tau / limbs + rnd.uniform(-0.3, 0.3)
+        reach = spread * rnd.uniform(0.55, 0.75)
+        mid = fork + Vector((math.cos(a) * reach, math.sin(a) * reach, (top - trunk_h) * rnd.uniform(0.35, 0.55)))
+        bend = fork + (mid - fork) * 0.5 + Vector((0, 0, -(top - trunk_h) * 0.12))   # limbs arch out, then rise
+        rod(bark, fork, bend, trunk_r * 0.62, 8, r2=trunk_r * 0.5); ico(bark, trunk_r * 0.5, bend, sub=1)
+        rod(bark, bend, mid, trunk_r * 0.5, 8, r2=trunk_r * 0.36)
+        ico(bark, trunk_r * 0.36, mid, sub=1)
+        for j in range(rnd.choice((2, 3))):
+            b = a + rnd.uniform(-0.8, 0.8); rr = spread * rnd.uniform(0.25, 0.5)
+            tip = mid + Vector((math.cos(b) * rr, math.sin(b) * rr, (top - mid.z) * rnd.uniform(0.3, 0.85)))
+            rod(bark, mid, tip, trunk_r * 0.32, 6, r2=trunk_r * 0.12)
+            tips.append((tuple(tip), clump_r * rnd.uniform(0.85, 1.15)))
+    tips.append(((fork.x, fork.y, top), clump_r * 1.15))   # crown top
+    for k in range(3):   # inner clumps fill the middle of the crown
+        a = a0 + k * 2.1 + 0.5
+        tips.append(((fork.x + math.cos(a) * spread * 0.3, fork.y + math.sin(a) * spread * 0.3, (top + trunk_h) * 0.5 + 0.6), clump_r * 0.95))
+    return tips
 
 @model('tree_broadleaf', '広葉樹(クスノキ)', '自然')
 def tree_broadleaf():
     rnd = random.Random(4)
-    cyl('bark', 0.35, 3.0, (0, 0, 0), 10, r2=0.25)
-    for k in range(5):
-        a = k * 1.4 + 0.3; rod('bark', (0, 0, 2.6), (math.cos(a) * 1.6, math.sin(a) * 1.6, 4.7), 0.14, 6)
-        rod('bark', (math.cos(a) * 1.6, math.sin(a) * 1.6, 4.7), (math.cos(a + 0.4) * 2.4, math.sin(a + 0.4) * 2.4, 5.6), 0.07, 5)
-    cl = []
-    for k in range(10):
-        a = k * 2.3; r = rnd.uniform(0.6, 2.3)
-        cl.append(((math.cos(a) * r, math.sin(a) * r, rnd.uniform(4.3, 6.6)), rnd.uniform(1.25, 1.75)))
-    canopy(cl, seed=4)
+    tips = branch_tree(rnd, 2.2, 0.36, 4, 3.4, 6.0, 1.35)
+    canopy(tips, seed=4, size=1.5, per=34)
 
 @model('tree_shinboku', 'ご神木(大楠・しめ縄)', '神社')
 def tree_shinboku():

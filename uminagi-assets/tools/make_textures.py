@@ -224,7 +224,46 @@ def leaves():
     S = N  # each quadrant is N x N, atlas 2N
     atlas = Image.new('RGBA', (2 * S, 2 * S), (0, 0, 0, 0))
     r = np.random.default_rng(301)
+    def broad(qx, qy):
+        # big lobed leaves in sprigs, painted in two tones like the reference art: yellow-green where the sun hits,
+        # cool blue-green in the shade, a thin dark rim so neighbouring leaves stay readable
+        im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        cx = cy = S / 2; leaves_ = []
+        for i in range(34):
+            a = r.uniform(0, 2 * np.pi); rr = S * (0.33 * np.sqrt(r.uniform(0, 1)) if i >= 6 else r.uniform(0, 0.1))
+            sx, sy = cx + np.cos(a) * rr, cy + np.sin(a) * rr * 0.92
+            out = np.arctan2(sy - cy, sx - cx) if rr > S * 0.04 else r.uniform(0, 2 * np.pi)
+            for k in range(int(r.integers(3, 6))):
+                ang = out + r.uniform(-1.1, 1.1) - 0.35 * (1 if sy > cy else 0)
+                L = S * r.uniform(0.15, 0.2); dist = L * r.uniform(0.3, 0.6)
+                x, y = sx + np.cos(ang) * dist, sy + np.sin(ang) * dist
+                leaves_.append((y, x, ang, L, sx, sy))
+        leaves_.sort()
+        for y, x, ang, L, sx, sy in leaves_:
+            top = np.clip(1 - y / S, 0, 1); tone = r.uniform(-1, 1)
+            lit = np.clip(0.02 + top * 0.85 + tone * 0.28, 0, 1)
+            shade = np.array([40, 86, 70]); sun = np.array([152, 174, 70])
+            base = shade + (sun - shade) * lit
+            ca, sa = np.cos(ang), np.sin(ang)
+            d.line([(sx, sy), (x - ca * L * 0.42, y - sa * L * 0.42)], fill=(70, 78, 40, 255), width=max(2, S // 300))
+            def poly(scale, dx=0.0, dy=0.0):
+                pts = []
+                for t in np.linspace(0, 2 * np.pi, 40, endpoint=False):
+                    # five lobes, the middle one longest; pointed lobe tips
+                    lob = 0.74 + 0.26 * (1 - np.abs(np.sin(2.5 * t))) ** 1.3
+                    ex = np.cos(t) * L / 2 * lob * (1.25 if np.cos(t) > 0 else 0.8)
+                    ey = np.sin(t) * L * 0.4 * lob
+                    pts.append((x + dx + (ex * ca - ey * sa) * scale, y + dy + (ex * sa + ey * ca) * scale))
+                return pts
+            d.polygon(poly(1.0), fill=tuple(np.clip(base * 0.62, 0, 255).astype(int)) + (255,))
+            d.polygon(poly(0.9), fill=tuple(np.clip(base, 0, 255).astype(int)) + (255,))
+            if lit > 0.45:  # the sunlit half of the leaf, a flat brighter tone
+                hi = np.clip(base * 1.12 + np.array([14, 12, -4]), 0, 255).astype(int)
+                d.polygon(poly(0.62, -L * 0.08, -L * 0.1), fill=tuple(hi) + (255,))
+            d.line([(x - ca * L * 0.38, y - sa * L * 0.38), (x + ca * L * 0.4, y + sa * L * 0.4)], fill=tuple(np.clip(base * 0.8, 0, 255).astype(int)) + (255,), width=max(1, S // 400))
+        atlas.paste(im, (qx * S, qy * S))
     def quad(qx, qy, kind):
+        if kind == 'broad': return broad(qx, qy)
         im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
         cx = cy = S / 2
         n = {'broad': 750, 'pine': 900, 'sakura': 1000, 'shrub': 850}[kind]

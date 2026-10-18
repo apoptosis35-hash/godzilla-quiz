@@ -208,17 +208,45 @@ export class Town {
     if (leafBox.isEmpty()) leafBox.copy(box);
     const s = leafBox.getSize(new THREE.Vector3()), c = leafBox.getCenter(new THREE.Vector3());
     const parts = [];
-    const canopy = name === 'tree_cedar' ? new THREE.ConeGeometry(s.x * 0.42, s.y * 1.05, 8, 2) : new THREE.IcosahedronGeometry(0.5, 1);
-    if (name !== 'tree_cedar') canopy.scale(s.x * 0.95, s.y * 0.95, s.z * 0.95);
-    canopy.translate(c.x, c.y, c.z);
+    let canopy; const radial = [];
+    if (name === 'tree_cedar') { canopy = new THREE.ConeGeometry(s.x * 0.42, s.y * 1.05, 8, 2); canopy.translate(c.x, c.y, c.z); }
+    else {
+      // one low-poly blob per leaf clump of the real crown, so far trees keep their clumpy silhouette
+      const pts = [], v = new THREE.Vector3();
+      for (const pr of prims) {
+        if (!pr.material.alphaTest || pr.material.name.endsWith('_dark')) continue;
+        const P = pr.geometry.attributes.position;
+        for (let i = 0; i < P.count; i += 2) pts.push(v.fromBufferAttribute(P, i).applyMatrix4(pr.matrix).clone());
+      }
+      if (pts.length > 40) {
+        const { cen, rad, cnt } = clumps(pts, Math.min(10, Math.max(3, Math.round(pts.length / 260))), 6);
+        const blobs = [];
+        for (let k = 0; k < cen.length; k++) {
+          if (!cnt[k]) continue;
+          const b = new THREE.IcosahedronGeometry(1, 0), BP = b.attributes.position, tt = new Float32Array(BP.count * 3);
+          radial.push(...BP.array);  // smooth (radial) normals keep a 20-face blob looking round
+          for (let i = 0; i < BP.count; i++) tt[i * 3] = THREE.MathUtils.smoothstep(BP.getY(i) * 0.75 + (cen[k].y - box.min.y) / Math.max(1e-3, s.y + leafBox.min.y - box.min.y) * 0.6, -0.35, 0.85);  // sunlit share, as in canopyNormals
+          b.setAttribute('color', new THREE.BufferAttribute(tt, 3));
+          b.scale(rad[k] * 0.78, rad[k] * 0.62, rad[k] * 0.78); b.translate(cen[k].x, cen[k].y, cen[k].z);
+          blobs.push(b);
+        }
+        canopy = mergeAttr(blobs);
+      } else { canopy = new THREE.IcosahedronGeometry(0.5, 1); canopy.scale(s.x * 0.95, s.y * 0.95, s.z * 0.95); canopy.translate(c.x, c.y, c.z); }
+    }
     const trunk = new THREE.CylinderGeometry(s.x * 0.04, s.x * 0.06, leafBox.min.y + s.y * 0.2, 5, 1, true);
     trunk.translate(0, (leafBox.min.y + s.y * 0.2) / 2, 0);
-    for (const [g, col] of [[canopy.index ? canopy.toNonIndexed() : canopy, leafCol.clone().multiplyScalar(0.78)], [trunk.toNonIndexed(), new THREE.Color(0.18, 0.13, 0.1)]]) {
-      const n = g.attributes.position.count, cc = new Float32Array(n * 3);
-      for (let i = 0; i < n; i++) cc.set([col.r, col.g, col.b], i * 3);
+    const cy0 = leafBox.min.y, cy1 = leafBox.max.y;
+    for (const [g, col, leaf] of [[canopy.index ? canopy.toNonIndexed() : canopy, leafCol.clone().multiplyScalar(0.62), true], [trunk.toNonIndexed(), new THREE.Color(0.15, 0.11, 0.07), false]]) {
+      const n = g.attributes.position.count, cc = new Float32Array(n * 3), P = g.attributes.position, T = g.attributes.color;
+      for (let i = 0; i < n; i++) {
+        if (!leaf) { cc.set([col.r, col.g, col.b], i * 3); continue; }
+        const t = T ? T.getX(i) : THREE.MathUtils.smoothstep((P.getY(i) - cy0) / Math.max(1e-3, cy1 - cy0), 0.2, 0.95) * 0.7;
+        cc.set([col.r * (CLUMP_COOL[0] + (CLUMP_WARM[0] - CLUMP_COOL[0]) * t), col.g * (CLUMP_COOL[1] + (CLUMP_WARM[1] - CLUMP_COOL[1]) * t), col.b * (CLUMP_COOL[2] + (CLUMP_WARM[2] - CLUMP_COOL[2]) * t)], i * 3);
+      }
       g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.deleteAttribute('uv'); parts.push(g);
     }
     const geo = mergeAttr(parts); geo.computeVertexNormals();
+    if (radial.length) { const N = geo.attributes.normal, t = new THREE.Vector3(); for (let i = 0; i < radial.length / 3; i++) { t.fromArray(radial, i * 3); t.y += 0.25; t.normalize(); N.setXYZ(i, t.x, t.y, t.z); } }
     const n = geo.attributes.position.count, pb = new Float32Array(n * 2);
     for (let i = 0; i < n; i++) { pb[i * 2] = 0.9; pb[i * 2 + 1] = 0; }
     geo.setAttribute('pbr', new THREE.BufferAttribute(pb, 2)); geo.setAttribute('emit', new THREE.BufferAttribute(new Float32Array(n * 3), 3));
@@ -650,22 +678,54 @@ export class Town {
   }
 }
 
-// leaf cards: normals point away from the centre of their crown (plus up), so a canopy shades like a soft volume
+// painterly hue of a leaf clump: blue-green underneath, warm yellow-green on the sunlit top
+const CLUMP_COOL = [0.5, 0.74, 0.86], CLUMP_WARM = [1.4, 1.3, 0.62];
+// k-means over points (seeded by farthest-point sampling): clump centres, radii and each point's clump
+function clumps(pts, K, iters = 8) {
+  const N = pts.length, cen = [pts[0].clone()], asg = new Uint8Array(N), d2 = new Float32Array(N).fill(Infinity);
+  for (let k = 1; k < K; k++) {
+    let best = 0;
+    for (let i = 0; i < N; i++) { d2[i] = Math.min(d2[i], pts[i].distanceToSquared(cen[k - 1])); if (d2[i] > d2[best]) best = i; }
+    cen.push(pts[best].clone());
+  }
+  const sum = cen.map(() => new THREE.Vector3()), cnt = new Float32Array(K), rad = new Float32Array(K).fill(1e-3);
+  for (let it = 0; it < iters; it++) {
+    sum.forEach((s) => s.set(0, 0, 0)); cnt.fill(0);
+    for (let i = 0; i < N; i++) {
+      let bk = 0, bd = Infinity;
+      for (let k = 0; k < K; k++) { const d = pts[i].distanceToSquared(cen[k]); if (d < bd) { bd = d; bk = k; } }
+      asg[i] = bk; sum[bk].add(pts[i]); cnt[bk]++;
+    }
+    for (let k = 0; k < K; k++) if (cnt[k]) cen[k].copy(sum[k]).multiplyScalar(1 / cnt[k]);
+  }
+  for (let i = 0; i < N; i++) rad[asg[i]] = Math.max(rad[asg[i]], pts[i].distanceTo(cen[asg[i]]));
+  return { cen, rad, asg, cnt };
+}
+
+// leaf cards: the crown is split into its leaf clumps (k-means over the card vertices). Each clump shades like its own
+// ball of leaves (normals away from the clump centre, bent toward the crown's outside and up), with a painterly hue
+// shift: warm yellow-green on the sunlit tops, cool blue-green underneath, darker deep inside the crown.
 function canopyNormals(geo, matrix) {
-  const P = geo.attributes.position, n = new Float32Array(P.count * 3), v = new THREE.Vector3(), c = new THREE.Vector3();
-  const box = new THREE.Box3();
-  for (let i = 0; i < P.count; i++) box.expandByPoint(v.fromBufferAttribute(P, i));
+  const P = geo.attributes.position, N = P.count, n = new Float32Array(N * 3), col = new Float32Array(N * 3);
+  const v = new THREE.Vector3(), c = new THREE.Vector3(), box = new THREE.Box3();
+  for (let i = 0; i < N; i++) box.expandByPoint(v.fromBufferAttribute(P, i));
   box.getCenter(c); const size = box.getSize(new THREE.Vector3()); c.y -= size.y * 0.15;
   const inv = new THREE.Vector3(1 / Math.max(size.x, 1e-3), 1 / Math.max(size.y, 1e-3), 1 / Math.max(size.z, 1e-3));
-  const col = new Float32Array(P.count * 3);
-  for (let i = 0; i < P.count; i++) {
-    v.fromBufferAttribute(P, i).sub(c).multiply(inv);
-    // self-shadowing: leaves deep inside and underneath the crown are darker, the sunlit top is brighter
+  // about 150 vertices (~38 cards) per clump
+  const pts = []; for (let i = 0; i < N; i++) pts.push(new THREE.Vector3().fromBufferAttribute(P, i));
+  const { cen, rad, asg } = clumps(pts, Math.max(1, Math.min(24, Math.round(N / 150))));
+  const nc = new THREE.Vector3(), cool = CLUMP_COOL, warm = CLUMP_WARM;
+  for (let i = 0; i < N; i++) {
+    const k = asg[i]; v.fromBufferAttribute(P, i);
+    nc.copy(v).sub(cen[k]).multiplyScalar(1 / rad[k]);                 // position inside the clump, -1..1
+    const local = nc.length();
+    v.sub(c).multiply(inv);                                            // position inside the crown
     const depth = Math.min(1, v.length() * 2.2), top = THREE.MathUtils.clamp(v.y * 1.6 + 0.5, 0, 1);
-    const k = 0.42 + 0.4 * depth + 0.25 * top;
-    col.set([k, k, k * 0.97], i * 3);
-    v.y += 0.35; v.normalize();
-    n.set([v.x, v.y, v.z], i * 3);
+    const sun = THREE.MathUtils.smoothstep(nc.y * 0.75 + top * 0.6, -0.35, 0.85);
+    const ao = (0.68 + 0.32 * Math.min(1, local * 1.1)) * (0.74 + 0.26 * depth);
+    for (let j = 0; j < 3; j++) col[i * 3 + j] = (cool[j] + (warm[j] - cool[j]) * sun) * ao;
+    v.normalize().multiplyScalar(0.45); nc.normalize().add(v); nc.y += 0.3; nc.normalize();
+    n.set([nc.x, nc.y, nc.z], i * 3);
   }
   const g = geo.clone(); g.setAttribute('normal', new THREE.BufferAttribute(n, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   void matrix; return g;
