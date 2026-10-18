@@ -121,8 +121,10 @@ export function naturalRaw(x, z) {
     const beach = smooth(60, 80, x) * smooth(30, 60, z) * (1 - smooth(110, 140, x));
     // inside the breakwaters the basin is a clear, sandy 4-6 m; outside it drops off to deep water
     const basin = smooth(-90, -70, x) * (1 - smooth(60, 70, x)) * (1 - smooth(100, 125, z)) * smooth(10, 20, z);
-    const floor = beach > 0.5 ? 0.4 + d * 0.07 : -2.2 + d * 0.25;
-    return Math.max(-14, Math.max(floor, basin * (-4.2 - n * 1.6) + (1 - basin) * floor)) - n * 1.0;
+    // the beach shelves gently, then (40-120 m out) blends into the open-sea slope
+    const deep = -2.2 + d * 0.25;
+    const floor = deep + beach * Math.max(0, 0.4 + d * 0.07 - deep) * smooth(-120, -40, d);
+    return Math.max(-40, Math.max(floor, basin * (-4.2 - n * 1.6) + (1 - basin) * floor)) - n * 1.0;
   }
   let h = 1.0 + 0.14 * Math.max(0, -z - 10);                                   // the town slope rising north
   h += 40 * smooth(-120, -230, z);                                             // mountains behind the shrine
@@ -432,7 +434,7 @@ export class Ground {
         if (a >= 0 && b >= 0 && a < W && b < H && hg[b * W + a] > 0.2 && !dock[b * W + a]) land = 0.9;
       }
       const o = (j * W + i) * 4;
-      data[o] = Math.min(255, depth * 18); data[o + 1] = land * 255; data[o + 2] = 0; data[o + 3] = 255;
+      data[o] = Math.min(255, depth * 6); data[o + 1] = land * 255; data[o + 2] = 0; data[o + 3] = 255;
     }
     const t = new THREE.DataTexture(data, W, H); t.magFilter = THREE.LinearFilter; t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
     return t;

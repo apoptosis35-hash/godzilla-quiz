@@ -1,6 +1,9 @@
 // Sky, sun and moon, time of day, the sea, distant islands and seagulls.
 import * as THREE from 'three';
-import { G, WATER_BOX } from './terrain.js';
+import { G, WATER_BOX, naturalRaw } from './terrain.js';
+
+// the far depth map: open sea, the mainland coast outside the near box and the islands (shallow rings and shore foam)
+const FAR = { x0: -1600, z0: -700, x1: 1600, z1: 2500 };
 
 const C = (h) => new THREE.Color(h);
 // time-of-day presets (blended): sun direction, sky colours, light colours/intensities, fog, lamp glow
@@ -46,6 +49,7 @@ export class World {
       uTop: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3() },
       uSunCol: { value: new THREE.Color() }, uTime: { value: 0 }, uStars: { value: 0 }, uSunDisk: { value: 1 },
     };
+    this.hazeU = { uHaze: { value: new THREE.Color() }, uHazeDist: { value: 2600 } };
     this.buildSky(); this.buildLights(); this.buildSea(); this.buildIslands();
     scene.fog = new THREE.Fog(0xbfd8ec, 160, 1500);
     this.pmrem = new THREE.PMREMGenerator(renderer);
@@ -96,19 +100,18 @@ export class World {
     }
     const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setIndex(idx);
     this.depthTex = this.ground.waterTexture();
-    this.seaU = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
-      uDepth: { value: this.depthTex }, uBox: { value: new THREE.Vector4(WATER_BOX.x0, WATER_BOX.z0, WATER_BOX.x1 - WATER_BOX.x0, WATER_BOX.z1 - WATER_BOX.z0) },
+    this.seaU = THREE.UniformsUtils.merge([{
+      uDepth: { value: this.depthTex }, uFar: { value: null }, uFarBox: { value: new THREE.Vector4(FAR.x0, FAR.z0, FAR.x1 - FAR.x0, FAR.z1 - FAR.z0) }, uBox: { value: new THREE.Vector4(WATER_BOX.x0, WATER_BOX.z0, WATER_BOX.x1 - WATER_BOX.x0, WATER_BOX.z1 - WATER_BOX.z0) },
       uCam: { value: new THREE.Vector3() },
       uScene: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uRefract: { value: 0 }, uLinear: { value: 0 },
     }]);
-    Object.assign(this.seaU, this.skyU);
+    Object.assign(this.seaU, this.skyU, this.hazeU);
     this.seaU.uDepth.value = this.depthTex;
     const mat = new THREE.ShaderMaterial({
-      uniforms: this.seaU, transparent: true, fog: true, depthWrite: true,
+      uniforms: this.seaU, transparent: true, fog: false, depthWrite: true,
       vertexShader: `
         uniform float uTime; uniform vec3 uCam; uniform sampler2D uDepth; uniform vec4 uBox;
         varying vec3 vW; varying float vSwell; varying float vAmp;
-        #include <fog_pars_vertex>
         float swellAmp(vec2 p){
           float harbour = smoothstep(118.0, 95.0, p.y) * step(-82.0, p.x) * step(p.x, 64.0) * step(-150.0, p.y);
           return mix(0.32, 0.08, harbour); }
@@ -121,53 +124,74 @@ export class World {
           vW = p;
           vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
           gl_Position = projectionMatrix * mvPosition;
-          #include <fog_vertex>
         }`,
       fragmentShader: SKY_FN + `
         uniform sampler2D uDepth; uniform vec4 uBox; uniform sampler2D uScene; uniform vec2 uRes; uniform float uRefract; uniform float uLinear;
+        uniform sampler2D uFar; uniform vec4 uFarBox; uniform vec3 uHaze; uniform float uHazeDist;
         varying float vAmp;
         varying vec3 vW; varying float vSwell;
-        #include <fog_pars_fragment>
-        vec2 grad(vec2 p, float t){
+        // ripple slope. Each wave fades out once it is smaller than about a pixel (foot = metres per pixel), which
+        // stops the shimmering moire far away; the lost detail is returned as roughness (a broader, softer glitter).
+        float band(float f, float foot){ return 1.0 - smoothstep(0.6, 2.2, f * foot); }
+        vec2 nGrad(vec2 q){ float e = 0.35; return vec2(vn(q + vec2(e, 0.0)) - vn(q - vec2(e, 0.0)), vn(q + vec2(0.0, e)) - vn(q - vec2(0.0, e))); }
+        vec2 grad(vec2 p, float t, float foot){
           vec2 g = vec2(0.0);
           g += vec2(0.08, 0.11) * cos(dot(p, vec2(0.08, 0.11)) + t * 0.9) * 0.06;
           g += vec2(-0.13, 0.07) * cos(dot(p, vec2(-0.13, 0.07)) + t * 1.3) * 0.05;
-          g += vec2(0.9, 0.4) * cos(dot(p, vec2(0.9, 0.4)) + t * 2.6) * 0.035;
-          g += vec2(-0.5, 1.1) * cos(dot(p, vec2(-0.5, 1.1)) + t * 3.1) * 0.03;
-          g += vec2(1.7, -1.3) * cos(dot(p, vec2(1.7, -1.3)) + t * 4.3) * 0.018;
-          float e = 0.35;
-          vec2 q = p * 0.9 + vec2(t * 0.35, t * 0.22);
-          g += vec2(vn(q + vec2(e, 0.0)) - vn(q - vec2(e, 0.0)), vn(q + vec2(0.0, e)) - vn(q - vec2(0.0, e))) * 0.35;
-          vec2 q2 = p * 2.3 - vec2(t * 0.5, -t * 0.4);
-          g += vec2(vn(q2 + vec2(e, 0.0)) - vn(q2 - vec2(e, 0.0)), vn(q2 + vec2(0.0, e)) - vn(q2 - vec2(0.0, e))) * 0.16;
+          g += vec2(0.031, -0.022) * cos(dot(p, vec2(0.031, -0.022)) + t * 0.45) * 0.5;   // long swell, keeps the far sea from going flat
+          g += vec2(0.9, 0.4) * cos(dot(p, vec2(0.9, 0.4)) + t * 2.6) * 0.035 * band(0.99, foot);
+          g += vec2(-0.5, 1.1) * cos(dot(p, vec2(-0.5, 1.1)) + t * 3.1) * 0.03 * band(1.21, foot);
+          g += vec2(1.7, -1.3) * cos(dot(p, vec2(1.7, -1.3)) + t * 4.3) * 0.018 * band(2.14, foot);
+          g += nGrad(p * 0.9 + vec2(t * 0.35, t * 0.22)) * 0.35 * band(3.0, foot);
+          g += nGrad(p * 2.3 - vec2(t * 0.5, -t * 0.4)) * 0.16 * band(7.0, foot);
+          // medium chop that survives a bit further out
+          g += nGrad(p * 0.22 + vec2(t * 0.06, -t * 0.05)) * 0.22 * band(0.8, foot);
           return g;
         }
         void main(){
           vec2 uv = (vW.xz - uBox.xy) / uBox.zw;
           float inBox = step(0.0, uv.x) * step(uv.x, 1.0) * step(0.0, uv.y) * step(uv.y, 1.0);
           vec4 dt = texture2D(uDepth, uv);
-          float depth = mix(12.0, dt.r * 255.0 / 18.0, inBox);
-          float foamMask = dt.g * inBox;
+          vec2 fuv = (vW.xz - uFarBox.xy) / uFarBox.zw;
+          float inFar = step(0.0, fuv.x) * step(fuv.x, 1.0) * step(0.0, fuv.y) * step(fuv.y, 1.0);
+          vec4 df = texture2D(uFar, fuv);
+          float depth = mix(mix(40.0, df.r * 255.0 / 6.0, inFar), dt.r * 255.0 / 6.0, inBox);
+          float foamMask = mix(df.g * inFar, dt.g, inBox);
           vec3 V = normalize(cameraPosition - vW);
           float dist = length(cameraPosition - vW);
-          vec2 g = grad(vW.xz, uTime) * mix(1.0, 0.25, smoothstep(60.0, 600.0, dist));
+          float foot = max(length(dFdx(vW.xz)), length(dFdy(vW.xz)));
+          float rough = smoothstep(0.04, 1.6, foot);
+          // wind patches: slowly drifting areas of rougher and calmer water, as seen from a hill
+          float wind = vn(vW.xz * 0.0045 + vec2(uTime * 0.004, uTime * 0.002)) * 0.65 + vn(vW.xz * 0.013 - uTime * 0.003) * 0.35;
+          float gust = mix(0.55, 1.35, smoothstep(0.25, 0.75, wind));
+          vec2 g = grad(vW.xz, uTime, foot) * gust;
           vec3 N = normalize(vec3(-g.x, 1.0, -g.y));
           vec3 R = reflect(-V, N); R.y = abs(R.y);
+          // a rough (far) surface reflects a spread of directions, on average higher in the sky
+          R.y = max(R.y, rough * mix(0.05, 0.11, gust - 0.55)); R = normalize(R);
           float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
-          vec3 refl = skyColor(R, true);
+          fres = min(fres, mix(1.0, 0.8, rough));   // facets tilted toward the viewer: the far sea stays a little darker than the sky
+          vec3 refl = skyColor(R, rough < 0.6);
+          refl -= uSunCol * smoothstep(0.9993, 0.9997, max(0.0, dot(R, uSunDir))) * 6.0 * uSunDisk;   // the sun's mirror image comes from the glitter below (no hard-edged disk)
+          refl = mix(refl, mix(uHor, uTop, 0.35), rough * 0.25);
           // light absorbed along the path through the water (Beer-Lambert): red goes first, then green -> clear shallows, blue depths
           float path = depth / max(0.22, V.y) + depth;
           vec3 T = exp(-vec3(0.20, 0.040, 0.030) * path);
           float lightK = (0.3 + 0.7 * max(0.0, uSunDir.y)) * (0.55 + 0.45 * dot(uSunCol, vec3(0.33)));
-          vec3 scatter = mix(vec3(0.02, 0.13, 0.19), vec3(0.05, 0.35, 0.34), exp(-depth * 0.18)) * lightK * mix(vec3(1.0), uSunCol, 0.35);
+          vec3 scatter = mix(vec3(0.015, 0.09, 0.17), vec3(0.05, 0.35, 0.34), exp(-depth * 0.16)) * lightK * mix(vec3(1.0), uSunCol, 0.35);
           scatter += uSunCol * 0.025 * (vSwell * 0.5 + 0.5);
+          // float target (PC post-processing): the scene and sky are linear there, so only the water's own
+          // display-space colours are converted; reflections, haze and highlights stay as they are
+          if (uLinear > 0.5) scatter = pow(scatter, vec3(2.2)) * 1.6;
           vec3 body;
           float alpha;
           if (uRefract > 0.5) {
             // what is behind the surface (seabed, rocks, quay walls), seen through the refracting water
             vec2 suv = gl_FragCoord.xy / uRes + N.xz * 0.035 * clamp(depth * 0.4, 0.0, 1.0) * (1.0 - smoothstep(30.0, 200.0, dist));
             vec3 behind = texture2D(uScene, suv).rgb;
-            if (uLinear > 0.5) behind = pow(clamp(behind, 0.0, 4.0), vec3(1.0 / 2.2));  // float target: linear -> display-like
+            vec3 bed = vec3(0.5, 0.46, 0.36) * lightK;
+            if (uLinear > 0.5) bed = pow(bed, vec3(2.2)) * 1.6;
+            behind = mix(bed, behind, inBox);   // out by the islands: a sandy bed instead of the (hazed) island skirt   // out by the islands: a sandy bed instead of the (hazed) island skirt
             body = behind * T + scatter * (1.0 - T);
             alpha = 1.0;
           } else {
@@ -176,17 +200,23 @@ export class World {
           }
           vec3 col = mix(body, refl, fres);
           alpha = max(alpha, fres);
-          float spec = pow(max(dot(R, uSunDir), 0.0), 380.0) * 3.5 + pow(max(dot(R, uSunDir), 0.0), 40.0) * 0.2;
-          col += uSunCol * spec * (0.3 + 0.7 * uSunDisk);
-          // shore foam and white water around rocks and tetrapods
+          // sun glitter: a sharp highlight close by, a wide shimmering path across the far sea
+          float sd = max(dot(R, uSunDir), 0.0);
+          float spec = pow(sd, mix(380.0, 22.0, rough)) * mix(3.5, 0.32, rough) * gust + pow(sd, 40.0) * 0.2;
+          float spark = step(0.86, vn(vW.xz * 1.7 + uTime * 0.8)) * (1.0 - rough) * pow(sd, 120.0) * 2.0;
+          col += uSunCol * (spec + spark) * (0.3 + 0.7 * uSunDisk);
+          // shore foam and white water around rocks, tetrapods and the islands
           float fn = vn(vW.xz * 0.9 + vec2(uTime * 0.3, 0.0)) * vn(vW.xz * 2.3 - uTime * 0.2);
+          fn = mix(fn, 0.3, rough);   // far away the speckle averages out
           float foam = smoothstep(0.55, 0.95, foamMask * 0.8 + fn * 0.55 + 0.15 * sin(uTime * 1.6 + vW.x * 0.3 + vW.z * 0.2)) * foamMask * 0.8;
-          foam += smoothstep(0.55, 0.0, depth) * 0.5 * inBox * smoothstep(0.3, 0.6, fn + 0.3);
+          foam += smoothstep(0.55, 0.0, depth) * 0.5 * max(inBox, inFar) * smoothstep(0.3, 0.6, fn + 0.3);
           foam *= mix(0.3, 1.0, smoothstep(0.1, 0.3, vAmp));   // calm inside the harbour: little white water at the quays
-          col = mix(col, vec3(0.92, 0.96, 0.98) * (0.4 + 0.6 * max(0.15, uSunDir.y)), clamp(foam, 0.0, 0.85));
-          if (uLinear > 0.5) col = pow(max(col, 0.0), vec3(2.2)) * 1.65;   // float target: back to linear, offset the filmic tone curve
-          gl_FragColor = vec4(col, max(alpha, foam));
-          #include <fog_fragment>
+          col = mix(col, vec3(0.92, 0.96, 0.98) * (0.4 + 0.6 * max(0.15, uSunDir.y)) * mix(1.0, 0.75, uLinear), clamp(foam, 0.0, 0.85));
+          // atmospheric haze shared with the islands and mountains (scene fog would bleach the open sea white)
+          float haze = clamp((1.0 - exp(-dist / uHazeDist)) * 1.05, 0.0, 0.93);
+          col = mix(col, uHaze, haze);
+          col = mix(col, uHor, smoothstep(3500.0, 6200.0, dist));   // melt into the sky at the horizon line
+          gl_FragColor = vec4(col, max(alpha, max(foam, haze)));
         }`,
     });
     this.sea = new THREE.Mesh(geo, mat); this.sea.frustumCulled = false; this.sea.renderOrder = 1; this.sea.name = 'sea';
@@ -226,7 +256,6 @@ export class World {
       return (vn(ix, iz) * (1 - u) + vn(ix + 1, iz) * u) * (1 - v) + (vn(ix, iz + 1) * (1 - u) + vn(ix + 1, iz + 1) * u) * v;
     };
     const fbm = (x, z, o = 5) => { let a = 0.5, f = 1, t = 0; for (let k = 0; k < o; k++) { t += a * noise(x * f, z * f); a *= 0.5; f *= 2.1; } return t; };
-    this.hazeU = { uHaze: { value: new THREE.Color() }, uHazeDist: { value: 2600 } };
     const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, fog: false, flatShading: false });
     mat.onBeforeCompile = (sh) => {
       Object.assign(sh.uniforms, this.hazeU);
@@ -250,7 +279,7 @@ export class World {
     this.farMat = mat;
     const colOf = (h, slope, x, z, rock) => {
       const n = fbm(x * 0.02, z * 0.02, 3);
-      if (h < 2.5 || slope > 1.1 || rock) return new THREE.Color().setRGB(0.42 + n * 0.12, 0.39 + n * 0.1, 0.34 + n * 0.08);   // rocky shore and cliffs
+      if (h < 2.5 || slope > 1.1 || rock) return new THREE.Color().setRGB(0.25 + n * 0.1, 0.23 + n * 0.08, 0.2 + n * 0.06);   // rocky shore and cliffs
       const g = new THREE.Color().setRGB(0.1 + n * 0.08, 0.24 + n * 0.12, 0.09 + n * 0.04);
       if (n > 0.62) g.setRGB(0.2, 0.32, 0.13);                                                                                   // lighter broadleaf patches
       return g;
@@ -258,11 +287,12 @@ export class World {
     // --- islands: polar heightfields with noisy coastlines, ridges and a band of rock at the waterline
     const isl = [[-520, 620, 140, 85, 1], [-180, 760, 80, 48, 2], [260, 680, 190, 105, 3], [620, 520, 120, 62, 4], [880, 300, 240, 120, 5],
       [-900, 380, 260, 150, 6], [120, 980, 300, 90, 7], [-330, 470, 45, 28, 8], [420, 440, 38, 22, 9], [-40, 1150, 200, 70, 10]];
+    const edgeOf = (t, R, seed) => R * (0.75 + 0.5 * fbm(Math.cos(t) * 2 + seed * 7, Math.sin(t) * 2 + seed, 4));
     for (const [cx, cz, R, Hh, seed] of isl) {
       const A = 72, RINGS = 18, pos = [], col = [], idx = [];
       for (let ri = 0; ri <= RINGS; ri++) for (let ai = 0; ai < A; ai++) {
         const t = ai / A * Math.PI * 2, rr = ri / RINGS;
-        const edge = R * (0.75 + 0.5 * fbm(Math.cos(t) * 2 + seed * 7, Math.sin(t) * 2 + seed, 4));
+        const edge = edgeOf(t, R, seed);
         const r = rr * edge * 1.06, x = cx + Math.cos(t) * r, z = cz + Math.sin(t) * r * 0.75;
         const ridge = 1 - Math.abs(fbm(x * 0.006 + seed, z * 0.006, 4) - 0.5) * 2;
         let h = Hh * Math.pow(Math.max(0, 1 - rr * rr), 0.8) * (0.55 + 0.6 * ridge) + fbm(x * 0.03, z * 0.03, 3) * 8 - 2;
@@ -284,6 +314,7 @@ export class World {
       geo.setIndex(idx); geo.computeVertexNormals();
       const m = new THREE.Mesh(geo, mat); m.name = 'island'; m.receiveShadow = false; this.scene.add(m);
     }
+    this.buildFarDepth(isl, edgeOf);
     // --- mountain ranges on the horizon: three layers of ridged strips, further = taller and hazier
     const ranges = [[2000, -2.2, -0.4, 180, 11], [2800, -2.7, 0.1, 280, 12], [3600, -3.3, 0.5, 420, 13], [2600, 0.55, 1.15, 230, 14], [3400, 0.35, 1.45, 380, 15]];
     for (const [R, a0, a1, Hh, seed] of ranges) {
@@ -307,6 +338,34 @@ export class World {
       const mm = new THREE.Mesh(geo, mat.clone()); mm.material.side = THREE.DoubleSide; mm.material.onBeforeCompile = mat.onBeforeCompile;
       mm.name = 'ranges'; mm.frustumCulled = false; this.scene.add(mm);
     }
+  }
+  // depth of the open sea around the islands and the mainland outside the near box (same encoding as Ground.waterTexture)
+  buildFarDepth(isl, edgeOf) {
+    const W = 320, H = 320, sx = (FAR.x1 - FAR.x0) / W, sz = (FAR.z1 - FAR.z0) / H;
+    const hg = new Float32Array(W * H), data = new Uint8Array(W * H * 4);
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const x = FAR.x0 + (i + 0.5) * sx, z = FAR.z0 + (j + 0.5) * sz;
+      let h = naturalRaw(x, z);
+      for (const [cx, cz, R, , seed] of isl) {
+        const dx = x - cx, dz = (z - cz) / 0.75, r = Math.hypot(dx, dz);
+        if (r > R * 2.2) continue;
+        const e = edgeOf(Math.atan2(dz, dx), R, seed) * 1.06 * 0.97;   // the shoreline sits just inside the outer ring
+        h = Math.max(h, r < e ? 2 : -(0.6 + (r - e) * 0.16));        // a sandy, then rocky shelf around each island
+      }
+      hg[j * W + i] = h;
+    }
+    for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) {
+      const h = hg[j * W + i];
+      let land = 0;
+      if (h < 0.2) for (let dj = -1; dj <= 1; dj++) for (let di = -1; di <= 1; di++) {
+        const a = i + di, b = j + dj;
+        if (a >= 0 && b >= 0 && a < W && b < H && hg[b * W + a] > 0.2) land = 0.9;
+      }
+      const o = (j * W + i) * 4;
+      data[o] = Math.min(255, Math.max(0, -h) * 6); data[o + 1] = land * 255; data[o + 3] = 255;
+    }
+    const t = new THREE.DataTexture(data, W, H); t.magFilter = t.minFilter = THREE.LinearFilter; t.needsUpdate = true;
+    this.seaU.uFar.value = t;
   }
   // ------------------------------------------------------------------ per frame
   apply(env) {

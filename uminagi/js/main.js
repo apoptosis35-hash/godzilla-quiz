@@ -111,6 +111,9 @@ class App {
     ao.updateGtaoMaterial({ radius: 0.9, distanceExponent: 1.4, thickness: 1.2, scale: 1.0, samples: 12 });
     ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
     ao.blendIntensity = 0.85;
+    // the sea stays out of the AO depth/normal pass: a huge flat plane at grazing angles reads as one big crevice and goes black
+    const aoRender = ao.render.bind(ao);
+    ao.render = (...args) => { const sea = this.world?.sea, v = sea?.visible; if (sea) sea.visible = false; aoRender(...args); if (sea) sea.visible = v; };
     c.addPass(ao);
     c.addPass(sanitize());
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.55, 0.92);
