@@ -213,7 +213,65 @@ def main():
     c = rgb((124, 98, 70)) * (0.8 + 0.3 * nn[..., None]) + peb[..., None] * 0.15
     save('dirt', c, nn * 0.5 + peb * 0.4, 2.0, [4.0, 4.0])
 
+    leaves()
     json.dump(META, open(f'{OUT}/textures.json', 'w'), indent=1)
+
+
+def leaves():
+    """2x2 atlas of foliage cards with alpha: broadleaf cluster, pine needles, sakura blossom, small shrub leaves.
+    Drawn as many small shapes with per-leaf tone, lit from above, so a card reads as a clump of real leaves."""
+    from PIL import ImageDraw
+    S = N  # each quadrant is N x N, atlas 2N
+    atlas = Image.new('RGBA', (2 * S, 2 * S), (0, 0, 0, 0))
+    r = np.random.default_rng(301)
+    def quad(qx, qy, kind):
+        im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        cx = cy = S / 2
+        n = {'broad': 750, 'pine': 900, 'sakura': 1000, 'shrub': 850}[kind]
+        items = []
+        for _ in range(n):
+            a = r.uniform(0, 2 * np.pi); rr = S * 0.44 * np.sqrt(r.uniform(0, 1))
+            x, y = cx + np.cos(a) * rr, cy + np.sin(a) * rr * 0.9
+            items.append((y, x, a))
+        items.sort()  # lower leaves first, upper (sunlit) leaves drawn on top
+        for y, x, a in items:
+            top = 1 - y / S            # 0 bottom .. 1 top: light from above
+            tone = r.uniform(-1, 1)
+            if kind == 'broad':
+                L, W = S * r.uniform(0.05, 0.075), S * r.uniform(0.022, 0.032)
+                base = np.array([58, 108, 38]) * (0.62 + 0.55 * top) * (1 + 0.16 * tone)
+            elif kind == 'shrub':
+                L, W = S * r.uniform(0.035, 0.05), S * r.uniform(0.02, 0.028)
+                base = np.array([66, 120, 46]) * (0.6 + 0.55 * top) * (1 + 0.18 * tone)
+            elif kind == 'pine':
+                L, W = S * r.uniform(0.06, 0.1), S * 0.009
+                base = np.array([52, 112, 58]) * (0.7 + 0.55 * top) * (1 + 0.15 * tone)
+            else:
+                L, W = S * r.uniform(0.02, 0.03), S * r.uniform(0.018, 0.026)
+                base = np.array([250, 196, 214]) * (0.8 + 0.25 * top) * (1 + 0.06 * tone)
+            ang = a + r.uniform(-0.8, 0.8) if kind != 'pine' else r.uniform(0, np.pi)
+            ca, sa = np.cos(ang), np.sin(ang)
+            if kind == 'pine':  # needle = thin line
+                d.line([(x - ca * L / 2, y - sa * L / 2), (x + ca * L / 2, y + sa * L / 2)], fill=tuple(np.clip(base, 0, 255).astype(int)) + (255,), width=max(2, int(W)))
+                continue
+            # leaf = pointed ellipse polygon
+            pts = []
+            for t in np.linspace(0, 2 * np.pi, 14, endpoint=False):
+                ex, ey = np.cos(t) * L / 2, np.sin(t) * W / 2 * (1 - 0.35 * np.cos(t) ** 8)
+                pts.append((x + ex * ca - ey * sa, y + ex * sa + ey * ca))
+            d.polygon(pts, fill=tuple(np.clip(base, 0, 255).astype(int)) + (255,))
+            if kind != 'sakura':  # midrib highlight
+                d.line([(x - ca * L * 0.4, y - sa * L * 0.4), (x + ca * L * 0.4, y + sa * L * 0.4)], fill=tuple(np.clip(base * 1.25, 0, 255).astype(int)) + (255,), width=1)
+            else:  # blossom centre
+                d.ellipse([x - W * 0.2, y - W * 0.2, x + W * 0.2, y + W * 0.2], fill=(236, 120, 150, 255))
+        if kind == 'sakura':  # a few green leaves among the blossom
+            for _ in range(40):
+                x, y = r.uniform(S * 0.15, S * 0.85, 2); d.ellipse([x - 6, y - 3, x + 6, y + 3], fill=(96, 140, 60, 255))
+        atlas.paste(im, (qx * S, qy * S))
+    quad(0, 0, 'broad'); quad(1, 0, 'pine'); quad(0, 1, 'sakura'); quad(1, 1, 'shrub')
+    atlas.save(f'{OUT}/leaves.png', optimize=True)
+    META['leaves'] = {'size_m': [1.0, 1.0], 'file': 'leaves.png', 'alpha': True}
+    print('leaves         atlas', atlas.size)
 
 
 if __name__ == '__main__':

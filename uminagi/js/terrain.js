@@ -119,7 +119,10 @@ export function naturalRaw(x, z) {
   const n = fbm(x * 0.02, z * 0.02);
   if (d < 0) {  // sea floor: shallow near the beach in the east, deeper elsewhere
     const beach = smooth(60, 80, x) * smooth(30, 60, z) * (1 - smooth(110, 140, x));
-    return Math.max(-14, beach > 0.5 ? 0.4 + d * 0.07 : -2.2 + d * 0.25) - n * 1.5;
+    // inside the breakwaters the basin is a clear, sandy 4-6 m; outside it drops off to deep water
+    const basin = smooth(-90, -70, x) * (1 - smooth(60, 70, x)) * (1 - smooth(100, 125, z)) * smooth(10, 20, z);
+    const floor = beach > 0.5 ? 0.4 + d * 0.07 : -2.2 + d * 0.25;
+    return Math.max(-14, Math.max(floor, basin * (-4.2 - n * 1.6) + (1 - basin) * floor)) - n * 1.0;
   }
   let h = 1.0 + 0.14 * Math.max(0, -z - 10);                                   // the town slope rising north
   h += 40 * smooth(-120, -230, z);                                             // mountains behind the shrine

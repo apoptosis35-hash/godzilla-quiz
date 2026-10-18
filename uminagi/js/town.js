@@ -140,6 +140,7 @@ export class Town {
       if (isLod) (p.lod1 ||= []).push(prim); else p.lod0.push(prim);
     });
     const lod1 = scene.getObjectByName(`${name}_lod1`); if (lod1) lod1.visible = false;
+    for (const pr of [...p.lod0, ...(p.lod1 || [])]) if (pr.material.alphaTest) pr.geometry = canopyNormals(pr.geometry, pr.matrix);
     p.lod0 = this.mergePlain(p.lod0, false, !MODELS.nature.includes(name));
     if (p.lod1) p.lod1 = this.mergePlain(p.lod1, true);
     if (name.startsWith('tree_')) p.lod2 = [this.treeProxy(name, p.lod0)];
@@ -156,8 +157,8 @@ export class Town {
     for (const pr of prims) {
       const m = pr.material;
       const sway = !far && !!m.onBeforeCompile?.toString().includes('uTime') && !(stillFoliage && m.name !== 'net' && m.name !== 'net_green');
-      if (sway) groups.sway.push(pr);
-      else if (!far && m.map) { if (!byMat.has(m)) byMat.set(m, []); byMat.get(m).push(pr); }
+      if ((!far && m.map) || m.alphaTest) { if (!byMat.has(m)) byMat.set(m, []); byMat.get(m).push(pr); }  // textured / leaf cards
+      else if (sway) groups.sway.push(pr);
       else groups[m.side === THREE.DoubleSide && !single ? 'double' : 'front'].push(pr);
     }
     // textured / swaying primitives: one merged primitive per material
@@ -477,6 +478,17 @@ export class Town {
     // the beach: rocks, a boat pulled up on the sand
     for (const [n, x, z, s] of [['rock_c', 118, 66, 1.4], ['rock_c', 104, 94, 1], ['rock_a', 92, 102, 1.2], ['rock_b', 110, 80, 1.3], ['rock_a', 70, 96, 1.5], ['rock_c', 66, 104, 1.3]]) this.put(n, x, null, z, r() * 6, { s });
     this.put('skiff', 86, null, 74, 2.2, { rz: 0.12 });
+    // rocks and weed on the clear sea floor (seen through the water)
+    for (let i = 0; i < 70; i++) {
+      const x = -70 + r() * 125, z = 24 + r() * 90, h = this.at(x, z);
+      if (h > -0.8 || this.ground.platformAt(x, z)) continue;
+      this.put(['rock_a', 'rock_b', 'rock_b'][i % 3], x, h - 0.3, z, r() * 6, { s: 0.6 + r() * 1.1, col: false, pool: { lod: 40, cull: 300 }, shadow: false });
+    }
+    for (let i = 0; i < 40; i++) {
+      const x = 66 + r() * 60, z = 70 + r() * 50, h = this.at(x, z);
+      if (h > -0.3 || h < -6) continue;
+      this.put(r() < 0.5 ? 'rock_a' : 'rock_c', x, h - 0.4, z, r() * 6, { s: 0.5 + r() * 0.8, col: false, pool: { lod: 40, cull: 300 }, shadow: false });
+    }
     // coastal boulders below the lighthouse cliffs
     for (let i = 0; i < 40; i++) {
       const a = r() * Math.PI * 1.2 + 0.2, x = -92 - Math.cos(a) * (30 + r() * 30) - 20, z = 18 + Math.sin(a) * 20 + r() * 12;
@@ -636,6 +648,21 @@ export class Town {
     if (L.leg_l) { L.leg_l.rotation.x = sw; L.leg_r.rotation.x = -sw; }
     if (L.arm_l) { L.arm_l.rotation.x = -sw * 0.8 + (moving ? 0 : 0.1); L.arm_r.rotation.x = sw * 0.8 + (moving || n.name !== 'fisherman' ? 0 : -0.6 + Math.sin(n.t * 2) * 0.25); }
   }
+}
+
+// leaf cards: normals point away from the centre of their crown (plus up), so a canopy shades like a soft volume
+function canopyNormals(geo, matrix) {
+  const P = geo.attributes.position, n = new Float32Array(P.count * 3), v = new THREE.Vector3(), c = new THREE.Vector3();
+  const box = new THREE.Box3();
+  for (let i = 0; i < P.count; i++) box.expandByPoint(v.fromBufferAttribute(P, i));
+  box.getCenter(c); const size = box.getSize(new THREE.Vector3()); c.y -= size.y * 0.15;
+  const inv = new THREE.Vector3(1 / Math.max(size.x, 1e-3), 1 / Math.max(size.y, 1e-3), 1 / Math.max(size.z, 1e-3));
+  for (let i = 0; i < P.count; i++) {
+    v.fromBufferAttribute(P, i).sub(c).multiply(inv); v.y += 0.35; v.normalize();
+    n.set([v.x, v.y, v.z], i * 3);
+  }
+  const g = geo.clone(); g.setAttribute('normal', new THREE.BufferAttribute(n, 3));
+  void matrix; return g;
 }
 
 // merge primitives that share a material (positions/normals baked through their matrices, UVs kept)

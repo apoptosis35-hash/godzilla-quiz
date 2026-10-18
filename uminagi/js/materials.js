@@ -3,16 +3,16 @@
 import * as THREE from 'three';
 
 export const ASSETS = '../uminagi-assets/';
-const FOLIAGE = new Set(['leaf', 'leaf_dark', 'leaf_light', 'pine', 'sakura', 'grass_blade', 'hydrangea', 'hydrangea_pink', 'net', 'net_green']);
+const FOLIAGE = new Set(['leaf_card', 'leaf_card_dark', 'pine_card', 'sakura_card', 'shrub_card', 'hydrangea_card', 'leaf', 'leaf_dark', 'leaf_light', 'pine', 'sakura', 'grass_blade', 'hydrangea', 'hydrangea_pink', 'net', 'net_green']);
 const CLOTH = new Set(['cloth_red', 'cloth_blue', 'cloth_navy', 'cloth_white', 'cloth_yellow', 'cloth_green', 'cloth_pink', 'tarp_blue', 'denim']);
 export const GLOW = ['lamp', 'lantern_red', 'lantern_white', 'vend_panel', 'beacon_red', 'beacon_white', 'window_lit'];
 
 function avgColor(img) {
   const cv = document.createElement('canvas'); cv.width = cv.height = 8;
   const g = cv.getContext('2d'); g.drawImage(img, 0, 0, 8, 8);
-  const d = g.getImageData(0, 0, 8, 8).data; let r = 0, gg = 0, b = 0;
-  for (let i = 0; i < d.length; i += 4) { r += d[i]; gg += d[i + 1]; b += d[i + 2]; }
-  const n = d.length / 4;
+  const d = g.getImageData(0, 0, 8, 8).data; let r = 0, gg = 0, b = 0, n = 0;
+  for (let i = 0; i < d.length; i += 4) { const a = d[i + 3] / 255; r += d[i] * a; gg += d[i + 1] * a; b += d[i + 2] * a; n += a; }
+  n = Math.max(n, 1e-3);
   return new THREE.Color().setRGB(r / n / 255, gg / n / 255, b / n / 255, THREE.SRGBColorSpace);
 }
 
@@ -37,7 +37,7 @@ export class MaterialLib {
       res(t);
     }, undefined, () => res(null)));
     await Promise.all(Object.entries(texMeta).map(async ([name, m]) => {
-      const [map, nrm, rough] = await Promise.all([load(name + '.jpg', true), this.q.normalMaps ? load(m.normal, false) : null, m.rough ? load(m.rough, false) : null]);
+      const [map, nrm, rough] = await Promise.all([load(m.file || name + '.jpg', true), this.q.normalMaps && m.normal ? load(m.normal, false) : null, m.rough ? load(m.rough, false) : null]);
       for (const t of [map, nrm, rough]) if (t) t.repeat.set(1 / m.size_m[0], 1 / m.size_m[1]);
       this.tex[name] = { map, nrm, rough, avg: map ? avgColor(map.image) : new THREE.Color(1, 1, 1) };
     }));
@@ -61,6 +61,7 @@ export class MaterialLib {
       if (t.nrm) { m.normalMap = t.nrm; m.normalScale.set(0.9, 0.9); }
       if (t.rough) { m.roughnessMap = t.rough; m.roughness = 1; }
     }
+    if (t && this.texMeta[d.tex]?.alpha) { m.alphaTest = 0.45; m.side = THREE.DoubleSide; m.normalMap = null; }  // foliage cards
     if (d.emit) { m.emissive = new THREE.Color().setRGB(...d.emit, THREE.LinearSRGBColorSpace); m.emissiveIntensity = d.emit_strength; this.glow[name] = { m, base: d.emit_strength }; }
     if (name === 'glass') { m.metalness = 0.1; m.roughness = 0.05; m.envMapIntensity = 1.6; }
     if (name === 'concrete_wet') m.envMapIntensity = 1.3;
@@ -98,11 +99,11 @@ export class MaterialLib {
   terrain() {
     const T = this.tex, m = new THREE.MeshStandardMaterial({ name: 'terrain', roughness: 1, map: T.grass.map, normalMap: T.grass.nrm || null });
     m.onBeforeCompile = (sh) => {
-      sh.uniforms.tRock = { value: T.rock.map }; sh.uniforms.tSand = { value: T.sand.map }; sh.uniforms.tDirt = { value: T.dirt.map };
+      sh.uniforms.tRock = { value: T.rock.map }; sh.uniforms.tSand = { value: T.sand.map }; sh.uniforms.tDirt = { value: T.dirt.map }; sh.uniforms.uTime = this.wind;
       sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWP; varying vec3 vWN;')
         .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWP = (modelMatrix * vec4(transformed, 1.0)).xyz; vWN = normalize(mat3(modelMatrix) * objectNormal);')
         .replace('#include <uv_vertex>', '#include <uv_vertex>\n#ifdef USE_MAP\nvMapUv = (modelMatrix * vec4(position, 1.0)).xz * 0.2;\n#endif\n#ifdef USE_NORMALMAP\nvNormalMapUv = (modelMatrix * vec4(position, 1.0)).xz * 0.2;\n#endif');
-      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tRock, tSand, tDirt; varying vec3 vWP; varying vec3 vWN;')
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', '#include <common>\nuniform sampler2D tRock, tSand, tDirt; uniform float uTime; varying vec3 vWP; varying vec3 vWN;')
         .replace('#include <map_fragment>', `
           vec3 grass = texture2D(map, vWP.xz * 0.2).rgb;
           vec3 dirt = texture2D(tDirt, vWP.xz * 0.25).rgb;
@@ -116,7 +117,16 @@ export class MaterialLib {
           float rn = texture2D(tDirt, vWP.xz * 0.031 + 0.37).r;
           col = mix(col, rock, smoothstep(0.2 + rn * 0.25, 0.38 + rn * 0.3, slope));
           col = mix(col, sand, smoothstep(1.4, 0.5, vWP.y) * (1.0 - smoothstep(0.35, 0.5, slope)));
-          col = mix(col, col * vec3(0.55, 0.6, 0.55), smoothstep(0.0, -1.5, vWP.y));
+          // under water: sand-coloured seabed with moving caustics (the water's own absorption tints it)
+          float uw = smoothstep(0.2, -0.6, vWP.y);
+          vec2 cp = vWP.xz * 0.55;
+          float c1 = sin(cp.x * 1.7 + uTime * 1.1 + sin(cp.y * 1.3 + uTime * 0.7) * 1.8);
+          float c2 = sin(cp.y * 1.9 - uTime * 0.9 + sin(cp.x * 1.1 - uTime * 0.6) * 1.8);
+          float caust = pow(max(0.0, 1.0 - abs(c1 + c2) * 0.6), 6.0) * smoothstep(-9.0, -0.5, vWP.y);
+          float weed = smoothstep(0.45, 0.62, texture2D(tDirt, vWP.xz * 0.045 + 0.71).r);
+          vec3 bed = mix(sand * vec3(0.95, 0.93, 0.85), mix(rock * 0.75, vec3(0.16, 0.22, 0.1), 0.55), weed * 0.85);
+          col = mix(col, bed, uw * (1.0 - smoothstep(0.35, 0.6, slope)) * 0.85);
+          col *= 1.0 + caust * 1.6 * uw;
           diffuseColor.rgb *= col;`);
     };
     return m;

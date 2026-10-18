@@ -85,7 +85,7 @@ export class World {
   buildSea() {
     // polar grid centred on the camera: dense near, sparse far (vertex swell + per-pixel ripples)
     const ang = 128, radii = [0];
-    for (let r = 1; r < 2600; r *= 1.075) radii.push(r * 0.9);
+    for (let r = 1; r < 6500; r *= 1.075) radii.push(r * 0.9);
     const pos = [], idx = [];
     pos.push(0, 0, 0);
     for (let i = 1; i < radii.length; i++) for (let a = 0; a < ang; a++) { const t = a / ang * Math.PI * 2; pos.push(Math.cos(t) * radii[i], 0, Math.sin(t) * radii[i]); }
@@ -99,6 +99,7 @@ export class World {
     this.seaU = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, {
       uDepth: { value: this.depthTex }, uBox: { value: new THREE.Vector4(WATER_BOX.x0, WATER_BOX.z0, WATER_BOX.x1 - WATER_BOX.x0, WATER_BOX.z1 - WATER_BOX.z0) },
       uCam: { value: new THREE.Vector3() },
+      uScene: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uRefract: { value: 0 }, uLinear: { value: 0 },
     }]);
     Object.assign(this.seaU, this.skyU);
     this.seaU.uDepth.value = this.depthTex;
@@ -106,7 +107,7 @@ export class World {
       uniforms: this.seaU, transparent: true, fog: true, depthWrite: true,
       vertexShader: `
         uniform float uTime; uniform vec3 uCam; uniform sampler2D uDepth; uniform vec4 uBox;
-        varying vec3 vW; varying float vSwell;
+        varying vec3 vW; varying float vSwell; varying float vAmp;
         #include <fog_pars_vertex>
         float swellAmp(vec2 p){
           float harbour = smoothstep(118.0, 95.0, p.y) * step(-82.0, p.x) * step(p.x, 64.0) * step(-150.0, p.y);
@@ -115,7 +116,7 @@ export class World {
           vec3 p = position + vec3(uCam.x, 0.0, uCam.z);
           float a = swellAmp(p.xz);
           float w = sin(dot(p.xz, vec2(0.08, 0.11)) + uTime * 0.9) + 0.6 * sin(dot(p.xz, vec2(-0.13, 0.07)) + uTime * 1.3) + 0.35 * sin(dot(p.xz, vec2(0.21, -0.17)) + uTime * 1.9);
-          p.y = w * a * 0.6;
+          p.y = w * a * 0.6; vAmp = a;
           vSwell = w;
           vW = p;
           vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
@@ -123,7 +124,8 @@ export class World {
           #include <fog_vertex>
         }`,
       fragmentShader: SKY_FN + `
-        uniform sampler2D uDepth; uniform vec4 uBox;
+        uniform sampler2D uDepth; uniform vec4 uBox; uniform sampler2D uScene; uniform vec2 uRes; uniform float uRefract; uniform float uLinear;
+        varying float vAmp;
         varying vec3 vW; varying float vSwell;
         #include <fog_pars_fragment>
         vec2 grad(vec2 p, float t){
@@ -153,25 +155,59 @@ export class World {
           vec3 R = reflect(-V, N); R.y = abs(R.y);
           float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
           vec3 refl = skyColor(R, true);
-          vec3 deep = mix(vec3(0.015, 0.11, 0.2), uTop * 0.25, 0.25), shallow = vec3(0.08, 0.52, 0.5);
-          float sh = smoothstep(4.5, 0.3, depth);
-          vec3 body = mix(deep, shallow, sh) * (0.35 + 0.65 * max(0.0, uSunDir.y)) * (0.6 + 0.4 * uSunCol);
-          body += uSunCol * 0.03 * (vSwell * 0.5 + 0.5);
+          // light absorbed along the path through the water (Beer-Lambert): red goes first, then green -> clear shallows, blue depths
+          float path = depth / max(0.22, V.y) + depth;
+          vec3 T = exp(-vec3(0.20, 0.040, 0.030) * path);
+          float lightK = (0.3 + 0.7 * max(0.0, uSunDir.y)) * (0.55 + 0.45 * dot(uSunCol, vec3(0.33)));
+          vec3 scatter = mix(vec3(0.02, 0.13, 0.19), vec3(0.05, 0.35, 0.34), exp(-depth * 0.18)) * lightK * mix(vec3(1.0), uSunCol, 0.35);
+          scatter += uSunCol * 0.025 * (vSwell * 0.5 + 0.5);
+          vec3 body;
+          float alpha;
+          if (uRefract > 0.5) {
+            // what is behind the surface (seabed, rocks, quay walls), seen through the refracting water
+            vec2 suv = gl_FragCoord.xy / uRes + N.xz * 0.035 * clamp(depth * 0.4, 0.0, 1.0) * (1.0 - smoothstep(30.0, 200.0, dist));
+            vec3 behind = texture2D(uScene, suv).rgb;
+            if (uLinear > 0.5) behind = pow(clamp(behind, 0.0, 4.0), vec3(1.0 / 2.2));  // float target: linear -> display-like
+            body = behind * T + scatter * (1.0 - T);
+            alpha = 1.0;
+          } else {
+            body = scatter;
+            alpha = clamp(1.0 - dot(T, vec3(0.25, 0.5, 0.25)), 0.18, 1.0);
+          }
           vec3 col = mix(body, refl, fres);
+          alpha = max(alpha, fres);
           float spec = pow(max(dot(R, uSunDir), 0.0), 380.0) * 3.5 + pow(max(dot(R, uSunDir), 0.0), 40.0) * 0.2;
           col += uSunCol * spec * (0.3 + 0.7 * uSunDisk);
           // shore foam and white water around rocks and tetrapods
           float fn = vn(vW.xz * 0.9 + vec2(uTime * 0.3, 0.0)) * vn(vW.xz * 2.3 - uTime * 0.2);
           float foam = smoothstep(0.55, 0.95, foamMask * 0.8 + fn * 0.55 + 0.15 * sin(uTime * 1.6 + vW.x * 0.3 + vW.z * 0.2)) * foamMask * 0.8;
           foam += smoothstep(0.55, 0.0, depth) * 0.5 * inBox * smoothstep(0.3, 0.6, fn + 0.3);
+          foam *= mix(0.3, 1.0, smoothstep(0.1, 0.3, vAmp));   // calm inside the harbour: little white water at the quays
           col = mix(col, vec3(0.92, 0.96, 0.98) * (0.4 + 0.6 * max(0.15, uSunDir.y)), clamp(foam, 0.0, 0.85));
-          float alpha = mix(0.98, mix(0.55, 0.95, smoothstep(0.2, 3.0, depth)), inBox);
-          alpha = max(alpha, fres);
+          if (uLinear > 0.5) col = pow(max(col, 0.0), vec3(2.2)) * 1.65;   // float target: back to linear, offset the filmic tone curve
           gl_FragColor = vec4(col, max(alpha, foam));
           #include <fog_fragment>
         }`,
     });
     this.sea = new THREE.Mesh(geo, mat); this.sea.frustumCulled = false; this.sea.renderOrder = 1; this.sea.name = 'sea';
+    // refraction: just before the sea is drawn, copy what has been rendered so far (the opaque scene) into a texture
+    this.refract = !!this.q.refraction;
+    this.seaU.uRefract.value = this.refract ? 1 : 0;
+    const size = new THREE.Vector2();
+    this.sea.onBeforeRender = (r, scene) => {
+      if (!this.refract || scene.overrideMaterial) return;
+      const rt = r.getRenderTarget();
+      if (rt) size.set(rt.width, rt.height); else r.getDrawingBufferSize(size);
+      const type = rt ? rt.texture.type : THREE.UnsignedByteType;
+      this.seaU.uLinear.value = type !== THREE.UnsignedByteType ? 1 : 0;
+      if (!this.fbTex || this.fbTex.image.width !== size.x || this.fbTex.image.height !== size.y || this.fbTex.type !== type) {
+        this.fbTex?.dispose();
+        this.fbTex = new THREE.FramebufferTexture(size.x, size.y); this.fbTex.type = type;
+        this.fbTex.minFilter = this.fbTex.magFilter = THREE.LinearFilter;
+        this.seaU.uScene.value = this.fbTex; this.seaU.uRes.value.copy(size);
+      }
+      r.copyFramebufferToTexture(this.fbTex);
+    };
     this.scene.add(this.sea);
   }
   // swell height at a point (same formula as the shader) for boats
@@ -181,23 +217,96 @@ export class World {
     const w = Math.sin(0.08 * x + 0.11 * z + t * 0.9) + 0.6 * Math.sin(-0.13 * x + 0.07 * z + t * 1.3) + 0.35 * Math.sin(0.21 * x - 0.17 * z + t * 1.9);
     return w * a * 0.6;
   }
+  // islands across the bay and layered mountain ranges on the horizon. They use their own atmospheric haze
+  // (instead of the scene fog, which would hide them) so they read as receding blue silhouettes.
   buildIslands() {
-    const rnd = (s) => { const x = Math.sin(s * 91.7) * 43758.5; return x - Math.floor(x); };
-    const isl = [[-520, 620, 120, 60], [-180, 760, 70, 38], [260, 680, 160, 70], [620, 520, 110, 46], [880, 300, 200, 90], [-900, 380, 220, 110], [120, 980, 260, 60]];
-    const mats = [new THREE.MeshStandardMaterial({ color: 0x3f6a3c, roughness: 1, flatShading: false }), new THREE.MeshStandardMaterial({ color: 0x8a8070, roughness: 1 })];
-    isl.forEach(([x, z, r, h], k) => {
-      const geo = new THREE.SphereGeometry(1, 40, 14, 0, Math.PI * 2, 0, Math.PI / 2);
-      const p = geo.attributes.position;
-      for (let i = 0; i < p.count; i++) {
-        const vx = p.getX(i), vy = p.getY(i), vz = p.getZ(i), a = Math.atan2(vz, vx);
-        const n = 1 + 0.25 * Math.sin(a * 3 + k) + 0.15 * Math.sin(a * 7 + k * 2) + 0.1 * rnd(i + k * 100);
-        p.setXYZ(i, vx * r * n, Math.pow(vy, 1.6) * h * (0.8 + 0.3 * Math.sin(a * 2 + k)) - 2, vz * r * n * 0.7);
+    const vn = (x, z) => { const s = Math.sin(x * 12.9898 + z * 78.233) * 43758.5453; return s - Math.floor(s); };
+    const noise = (x, z) => {
+      const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, u = fx * fx * (3 - 2 * fx), v = fz * fz * (3 - 2 * fz);
+      return (vn(ix, iz) * (1 - u) + vn(ix + 1, iz) * u) * (1 - v) + (vn(ix, iz + 1) * (1 - u) + vn(ix + 1, iz + 1) * u) * v;
+    };
+    const fbm = (x, z, o = 5) => { let a = 0.5, f = 1, t = 0; for (let k = 0; k < o; k++) { t += a * noise(x * f, z * f); a *= 0.5; f *= 2.1; } return t; };
+    this.hazeU = { uHaze: { value: new THREE.Color() }, uHazeDist: { value: 2600 } };
+    const mat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1, fog: false, flatShading: false });
+    mat.onBeforeCompile = (sh) => {
+      Object.assign(sh.uniforms, this.hazeU);
+      sh.vertexShader = sh.vertexShader.replace('#include <common>', '#include <common>\nvarying vec3 vWPi;')
+        .replace('#include <worldpos_vertex>', '#include <worldpos_vertex>\nvWPi = (modelMatrix * vec4(transformed, 1.0)).xyz;');
+      sh.fragmentShader = sh.fragmentShader.replace('#include <common>', `#include <common>
+        uniform vec3 uHaze; uniform float uHazeDist; varying vec3 vWPi;
+        float h21(vec2 p){ p = fract(p * vec2(233.34, 851.73)); p += dot(p, p + 23.45); return fract(p.x * p.y); }
+        float n2(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
+          return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }`)
+        .replace('#include <color_fragment>', `#include <color_fragment>
+          // tree crowns: bumpy light/dark speckle on the forested parts
+          float canopy = n2(vWPi.xz * 0.35) * 0.6 + n2(vWPi.xz * 1.1) * 0.4;
+          float forest = smoothstep(0.12, 0.25, diffuseColor.g - diffuseColor.r);
+          diffuseColor.rgb *= mix(1.0, 0.7 + 0.55 * canopy, forest);`)
+        .replace('#include <dithering_fragment>', `#include <dithering_fragment>
+          float dd = length(vWPi - cameraPosition);
+          float haze = 1.0 - exp(-dd / uHazeDist);
+          gl_FragColor.rgb = mix(gl_FragColor.rgb, uHaze, clamp(haze * 1.05, 0.0, 0.93));`);
+    };
+    this.farMat = mat;
+    const colOf = (h, slope, x, z, rock) => {
+      const n = fbm(x * 0.02, z * 0.02, 3);
+      if (h < 2.5 || slope > 1.1 || rock) return new THREE.Color().setRGB(0.42 + n * 0.12, 0.39 + n * 0.1, 0.34 + n * 0.08);   // rocky shore and cliffs
+      const g = new THREE.Color().setRGB(0.1 + n * 0.08, 0.24 + n * 0.12, 0.09 + n * 0.04);
+      if (n > 0.62) g.setRGB(0.2, 0.32, 0.13);                                                                                   // lighter broadleaf patches
+      return g;
+    };
+    // --- islands: polar heightfields with noisy coastlines, ridges and a band of rock at the waterline
+    const isl = [[-520, 620, 140, 85, 1], [-180, 760, 80, 48, 2], [260, 680, 190, 105, 3], [620, 520, 120, 62, 4], [880, 300, 240, 120, 5],
+      [-900, 380, 260, 150, 6], [120, 980, 300, 90, 7], [-330, 470, 45, 28, 8], [420, 440, 38, 22, 9], [-40, 1150, 200, 70, 10]];
+    for (const [cx, cz, R, Hh, seed] of isl) {
+      const A = 72, RINGS = 18, pos = [], col = [], idx = [];
+      for (let ri = 0; ri <= RINGS; ri++) for (let ai = 0; ai < A; ai++) {
+        const t = ai / A * Math.PI * 2, rr = ri / RINGS;
+        const edge = R * (0.75 + 0.5 * fbm(Math.cos(t) * 2 + seed * 7, Math.sin(t) * 2 + seed, 4));
+        const r = rr * edge * 1.06, x = cx + Math.cos(t) * r, z = cz + Math.sin(t) * r * 0.75;
+        const ridge = 1 - Math.abs(fbm(x * 0.006 + seed, z * 0.006, 4) - 0.5) * 2;
+        let h = Hh * Math.pow(Math.max(0, 1 - rr * rr), 0.8) * (0.55 + 0.6 * ridge) + fbm(x * 0.03, z * 0.03, 3) * 8 - 2;
+        if (ri === RINGS) h = -6;
+        if (ri === RINGS - 1) h = Math.min(h, 3 + fbm(x, z, 2) * 6);
+        pos.push(x, h, z);
       }
-      geo.computeVertexNormals();
-      const m = new THREE.Mesh(geo, mats[0]); m.position.set(x, 0, z); m.rotation.y = k * 1.3; this.scene.add(m);
-      const rock = new THREE.Mesh(new THREE.CylinderGeometry(r * 1.02, r * 1.08, 6, 40, 1, true), mats[1]);
-      rock.scale.z = 0.7; rock.position.set(x, 0.5, z); rock.rotation.y = k * 1.3; this.scene.add(rock);
-    });
+      for (let ri = 0; ri < RINGS; ri++) for (let ai = 0; ai < A; ai++) {
+        const a = ri * A + ai, b = ri * A + (ai + 1) % A, c = a + A, d = b + A; idx.push(a, c, b, b, c, d);
+      }
+      for (let k = 0; k < pos.length / 3; k++) {
+        const x = pos[k * 3], h = pos[k * 3 + 1], z = pos[k * 3 + 2], ri = Math.floor(k / A);
+        const hn = ri > 0 ? pos[(k - A) * 3 + 1] : h, slope = Math.abs(h - hn) / Math.max(1, R / RINGS);
+        const c = colOf(h, slope, x, z, ri >= RINGS - 1); col.push(c.r, c.g, c.b);
+      }
+      // centre cap
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      geo.setIndex(idx); geo.computeVertexNormals();
+      const m = new THREE.Mesh(geo, mat); m.name = 'island'; m.receiveShadow = false; this.scene.add(m);
+    }
+    // --- mountain ranges on the horizon: three layers of ridged strips, further = taller and hazier
+    const ranges = [[2000, -2.2, -0.4, 180, 11], [2800, -2.7, 0.1, 280, 12], [3600, -3.3, 0.5, 420, 13], [2600, 0.55, 1.15, 230, 14], [3400, 0.35, 1.45, 380, 15]];
+    for (const [R, a0, a1, Hh, seed] of ranges) {
+      const N = 220, ROWS = 6, pos = [], col = [], idx = [];
+      for (let j = 0; j <= ROWS; j++) for (let i = 0; i <= N; i++) {
+        const t = a0 + (a1 - a0) * i / N, depth = j / ROWS;           // depth 0 = front foot, 1 = back
+        const x = Math.sin(t) * (R + depth * 400), z = Math.cos(t) * (R + depth * 400);
+        const ridge = 1 - Math.abs(fbm(i * 0.035 + seed * 3, seed, 5) - 0.5) * 2;
+        const env = Math.sin(Math.min(1, i / N) * Math.PI) ** 0.35;
+        const prof = Math.sin(depth * Math.PI) ** 0.8;
+        const h = (j === 0 || j === ROWS) ? -10 : Hh * env * prof * (0.35 + 0.75 * ridge * ridge) * (0.85 + 0.3 * fbm(i * 0.2, j + seed, 3));
+        pos.push(x, h, z);
+        const c = colOf(h, 0, x, z, false).lerp(new THREE.Color(0.18, 0.26, 0.2), 0.3); col.push(c.r, c.g, c.b);
+      }
+      for (let j = 0; j < ROWS; j++) for (let i = 0; i < N; i++) {
+        const a = j * (N + 1) + i, b = a + 1, c = a + N + 1, d = c + 1; idx.push(a, b, c, b, d, c);
+      }
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+      geo.setIndex(idx); geo.computeVertexNormals();
+      const mm = new THREE.Mesh(geo, mat.clone()); mm.material.side = THREE.DoubleSide; mm.material.onBeforeCompile = mat.onBeforeCompile;
+      mm.name = 'ranges'; mm.frustumCulled = false; this.scene.add(mm);
+    }
   }
   // ------------------------------------------------------------------ per frame
   apply(env) {
@@ -236,5 +345,8 @@ export class World {
     }
     this.seaU.uCam.value.set(Math.round(camPos.x / 4) * 4, 0, Math.round(camPos.z / 4) * 4);
     this.sky.position.copy(camPos);
+    // haze colour for the far scenery: between the fog colour and the sky at the horizon
+    this.hazeU.uHaze.value.copy(this.cur.fog).lerp(this.cur.hor, 0.5);
+    this.hazeU.uHazeDist.value = this.cur.fogFar * 1.6;
   }
 }

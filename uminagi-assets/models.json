@@ -6,28 +6,34 @@
   "size_m": [
    6.26,
    8.67,
-   9.26
+   9.34
   ],
-  "tris": 5910,
-  "lod1_tris": 1621,
+  "tris": 6846,
+  "lod1_tris": 1865,
   "materials": [
    "alu",
    "black",
-   "cloth_green",
+   "cloth_blue",
+   "cloth_check",
+   "cloth_grey",
+   "cloth_navy",
+   "cloth_orange",
    "cloth_pink",
    "cloth_red",
    "cloth_white",
    "cloth_yellow",
    "concrete",
    "curtain",
+   "denim",
+   "futon_red",
    "glass",
    "hydrangea",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -40,7 +46,7 @@
   "parts": [
    "house_narrow_body"
   ],
-  "kb": 534.9
+  "kb": 626.4
  },
  {
   "name": "house_standard",
@@ -51,29 +57,34 @@
    8.39,
    8.26
   ],
-  "tris": 8976,
-  "lod1_tris": 2492,
+  "tris": 10754,
+  "lod1_tris": 2934,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
+   "cloth_check",
    "cloth_green",
+   "cloth_grey",
+   "cloth_navy",
+   "cloth_orange",
    "cloth_pink",
    "cloth_red",
    "cloth_white",
    "cloth_yellow",
    "concrete",
    "curtain",
+   "denim",
+   "flower_red",
    "flower_yellow",
    "glass",
-   "hydrangea",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "plaster",
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -88,7 +99,7 @@
   "parts": [
    "house_standard_body"
   ],
-  "kb": 799.1
+  "kb": 958.1
  },
  {
   "name": "house_twostory",
@@ -97,31 +108,36 @@
   "size_m": [
    10.33,
    8.11,
-   8.66
+   8.74
   ],
-  "tris": 9122,
-  "lod1_tris": 2547,
+  "tris": 11550,
+  "lod1_tris": 3142,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
+   "cloth_check",
    "cloth_green",
+   "cloth_grey",
+   "cloth_navy",
+   "cloth_orange",
    "cloth_pink",
    "cloth_red",
    "cloth_white",
    "cloth_yellow",
    "concrete",
    "curtain",
-   "flower_yellow",
+   "denim",
+   "futon_red",
    "glass",
    "hydrangea",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "plaster_cream",
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -134,7 +150,7 @@
   "parts": [
    "house_twostory_body"
   ],
-  "kb": 841.9
+  "kb": 1058.2
  },
  {
   "name": "house_hira",
@@ -145,8 +161,8 @@
    5.79,
    8.02
   ],
-  "tris": 6764,
-  "lod1_tris": 1930,
+  "tris": 6792,
+  "lod1_tris": 1932,
   "materials": [
    "alu",
    "black",
@@ -154,12 +170,12 @@
    "curtain",
    "glass",
    "hydrangea",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -174,19 +190,19 @@
   "parts": [
    "house_hira_body"
   ],
-  "kb": 595.9
+  "kb": 598.1
  },
  {
   "name": "house_old",
   "jp": "古い木造の家(R6)",
   "category": "住宅",
   "size_m": [
-   7.86,
+   7.88,
    8.25,
-   7.52
+   7.55
   ],
-  "tris": 6038,
-  "lod1_tris": 1700,
+  "tris": 6094,
+  "lod1_tris": 1707,
   "materials": [
    "alu",
    "black",
@@ -195,13 +211,13 @@
    "flower_red",
    "glass",
    "hydrangea",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "ridge_brown",
    "roof_tile",
    "roof_tile_brown",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -214,7 +230,7 @@
   "parts": [
    "house_old_body"
   ],
-  "kb": 545.7
+  "kb": 549.3
  },
  {
   "name": "house_hipped",
@@ -225,29 +241,35 @@
    8.17,
    9.16
   ],
-  "tris": 7222,
-  "lod1_tris": 1964,
+  "tris": 8496,
+  "lod1_tris": 2295,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
+   "cloth_check",
    "cloth_green",
+   "cloth_grey",
+   "cloth_orange",
    "cloth_pink",
    "cloth_red",
+   "cloth_white",
    "cloth_yellow",
    "concrete",
    "curtain",
+   "denim",
    "flower_red",
    "flower_yellow",
    "glass",
-   "leaf",
-   "leaf_light",
+   "hydrangea",
+   "leaf_dark",
    "metal",
    "plaster_white",
    "ridge_tile",
    "roof_tile",
    "roof_tile_blue",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -259,7 +281,7 @@
   "parts": [
    "house_hipped_body"
   ],
-  "kb": 656.2
+  "kb": 780.6
  },
  {
   "name": "house_hillside",
@@ -270,26 +292,35 @@
    10.65,
    9.0
   ],
-  "tris": 7142,
-  "lod1_tris": 1961,
+  "tris": 8722,
+  "lod1_tris": 2369,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
+   "cloth_check",
+   "cloth_green",
+   "cloth_grey",
+   "cloth_navy",
+   "cloth_orange",
    "cloth_pink",
+   "cloth_red",
    "cloth_white",
+   "cloth_yellow",
    "concrete",
    "curtain",
+   "denim",
    "flower_red",
    "glass",
    "granite",
-   "leaf",
-   "leaf_light",
+   "hydrangea",
+   "leaf_dark",
    "metal",
    "plaster",
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "soil",
    "steel_dark",
    "stone_wall",
@@ -302,7 +333,7 @@
   "parts": [
    "house_hillside_body"
   ],
-  "kb": 634.8
+  "kb": 786.9
  },
  {
   "name": "shop_general",
@@ -313,8 +344,8 @@
    8.9,
    11.26
   ],
-  "tris": 8254,
-  "lod1_tris": 2312,
+  "tris": 8282,
+  "lod1_tris": 2314,
   "materials": [
    "alu",
    "black",
@@ -330,8 +361,7 @@
    "ink",
    "ink_white",
    "lamp",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
@@ -339,6 +369,7 @@
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -353,7 +384,7 @@
   "parts": [
    "shop_general_body"
   ],
-  "kb": 738.4
+  "kb": 740.6
  },
  {
   "name": "shop_restaurant",
@@ -364,8 +395,8 @@
    8.9,
    10.99
   ],
-  "tris": 14450,
-  "lod1_tris": 4093,
+  "tris": 14492,
+  "lod1_tris": 4098,
   "materials": [
    "alu",
    "black",
@@ -382,8 +413,7 @@
    "ink_white",
    "lamp",
    "lantern_red",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
@@ -391,6 +421,7 @@
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -405,7 +436,7 @@
   "parts": [
    "shop_restaurant_body"
   ],
-  "kb": 1194.7
+  "kb": 1197.7
  },
  {
   "name": "shop_izakaya",
@@ -416,8 +447,8 @@
    8.9,
    11.26
   ],
-  "tris": 8922,
-  "lod1_tris": 2475,
+  "tris": 8950,
+  "lod1_tris": 2484,
   "materials": [
    "alu",
    "black",
@@ -434,8 +465,7 @@
    "ink_white",
    "lamp",
    "lantern_red",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
@@ -443,6 +473,7 @@
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -457,7 +488,7 @@
   "parts": [
    "shop_izakaya_body"
   ],
-  "kb": 794.5
+  "kb": 796.8
  },
  {
   "name": "shop_souvenir",
@@ -468,8 +499,8 @@
    8.9,
    11.26
   ],
-  "tris": 8970,
-  "lod1_tris": 2523,
+  "tris": 8998,
+  "lod1_tris": 2526,
   "materials": [
    "alu",
    "black",
@@ -486,8 +517,7 @@
    "ink",
    "ink_white",
    "lamp",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
@@ -496,6 +526,7 @@
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -509,7 +540,7 @@
   "parts": [
    "shop_souvenir_body"
   ],
-  "kb": 795.1
+  "kb": 796.7
  },
  {
   "name": "shop_fish",
@@ -520,8 +551,8 @@
    8.9,
    11.26
   ],
-  "tris": 8606,
-  "lod1_tris": 2364,
+  "tris": 8618,
+  "lod1_tris": 2367,
   "materials": [
    "alu",
    "black",
@@ -536,7 +567,7 @@
    "ink",
    "ink_white",
    "lamp",
-   "leaf",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
@@ -544,6 +575,7 @@
    "ridge_tile",
    "roof_tile",
    "shoji",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -558,7 +590,7 @@
   "parts": [
    "shop_fish_body"
   ],
-  "kb": 770.1
+  "kb": 772.4
  },
  {
   "name": "shop_cafe",
@@ -569,8 +601,8 @@
    8.9,
    11.26
   ],
-  "tris": 6608,
-  "lod1_tris": 1837,
+  "tris": 6622,
+  "lod1_tris": 1840,
   "materials": [
    "alu",
    "black",
@@ -584,7 +616,7 @@
    "glass",
    "ink",
    "lamp",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
@@ -592,6 +624,7 @@
    "plaster_white",
    "ridge_tile",
    "roof_tile",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -606,7 +639,7 @@
   "parts": [
    "shop_cafe_body"
   ],
-  "kb": 606.8
+  "kb": 609.7
  },
  {
   "name": "shop_sake",
@@ -617,8 +650,8 @@
    6.05,
    10.26
   ],
-  "tris": 5830,
-  "lod1_tris": 1671,
+  "tris": 5872,
+  "lod1_tris": 1677,
   "materials": [
    "alu",
    "cloth_blue",
@@ -632,14 +665,14 @@
    "ink",
    "ink_white",
    "lamp",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
    "metal",
    "orange",
    "paper",
    "plaster",
    "ridge_tile",
    "roof_tile",
+   "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
@@ -654,7 +687,7 @@
   "parts": [
    "shop_sake_body"
   ],
-  "kb": 523.3
+  "kb": 526.8
  },
  {
   "name": "fish_market",
@@ -1781,22 +1814,31 @@
   "size_m": [
    2.8,
    1.9,
-   0.5
+   0.67
   ],
-  "tris": 224,
-  "lod1_tris": 59,
+  "tris": 948,
+  "lod1_tris": 252,
   "materials": [
    "alu",
    "cloth_blue",
+   "cloth_check",
    "cloth_green",
+   "cloth_grey",
+   "cloth_khaki",
+   "cloth_navy",
+   "cloth_orange",
+   "cloth_pink",
    "cloth_white",
    "cloth_yellow",
-   "concrete"
+   "concrete",
+   "denim",
+   "steel_dark",
+   "white"
   ],
   "parts": [
    "laundry_pole_body"
   ],
-  "kb": 28.9
+  "kb": 106.0
  },
  {
   "name": "fence_wood",
@@ -1861,25 +1903,25 @@
   "jp": "植木鉢の寄せ植え",
   "category": "住宅の小物",
   "size_m": [
-   1.21,
-   0.74,
-   0.86
+   1.31,
+   0.78,
+   1.0
   ],
-  "tris": 700,
-  "lod1_tris": 202,
+  "tris": 770,
+  "lod1_tris": 211,
   "materials": [
    "flower_red",
    "flower_yellow",
    "hydrangea",
-   "leaf",
-   "leaf_light",
+   "leaf_dark",
+   "shrub_card",
    "soil",
    "terracotta"
   ],
   "parts": [
    "plant_pots_body"
   ],
-  "kb": 82.3
+  "kb": 86.5
  },
  {
   "name": "propane",
@@ -1906,76 +1948,80 @@
   "jp": "黒松",
   "category": "自然",
   "size_m": [
-   6.57,
-   7.58,
-   6.09
+   6.58,
+   7.86,
+   7.06
   ],
-  "tris": 920,
-  "lod1_tris": 269,
+  "tris": 1412,
+  "lod1_tris": 346,
   "materials": [
    "bark_pine",
-   "pine"
+   "pine",
+   "pine_card"
   ],
   "parts": [
    "tree_pine_body"
   ],
-  "kb": 89.8
+  "kb": 124.4
  },
  {
   "name": "tree_pine_b",
   "jp": "黒松(海辺・傾き)",
   "category": "自然",
   "size_m": [
-   7.31,
-   6.49,
-   4.63
+   6.88,
+   6.75,
+   5.94
   ],
-  "tris": 920,
-  "lod1_tris": 269,
+  "tris": 1412,
+  "lod1_tris": 346,
   "materials": [
    "bark_pine",
-   "pine"
+   "pine",
+   "pine_card"
   ],
   "parts": [
    "tree_pine_b_body"
   ],
-  "kb": 90.8
+  "kb": 126.8
  },
  {
   "name": "tree_broadleaf",
   "jp": "広葉樹(クスノキ)",
   "category": "自然",
   "size_m": [
-   7.09,
-   7.61,
-   7.04
+   6.46,
+   7.71,
+   7.46
   ],
-  "tris": 2996,
-  "lod1_tris": 898,
+  "tris": 1696,
+  "lod1_tris": 381,
   "materials": [
    "bark",
-   "leaf",
+   "leaf_card",
+   "leaf_card_dark",
    "leaf_dark"
   ],
   "parts": [
    "tree_broadleaf_body"
   ],
-  "kb": 364.0
+  "kb": 169.6
  },
  {
   "name": "tree_shinboku",
   "jp": "ご神木(大楠・しめ縄)",
   "category": "神社",
   "size_m": [
-   11.22,
-   12.46,
-   10.88
+   9.98,
+   13.05,
+   10.73
   ],
-  "tris": 1756,
-  "lod1_tris": 522,
+  "tris": 3036,
+  "lod1_tris": 698,
   "materials": [
    "bark",
-   "leaf",
+   "leaf_card",
+   "leaf_card_dark",
    "leaf_dark",
    "paper",
    "rope"
@@ -1983,108 +2029,111 @@
   "parts": [
    "tree_shinboku_body"
   ],
-  "kb": 197.5
+  "kb": 291.7
  },
  {
   "name": "tree_sakura",
   "jp": "桜",
   "category": "自然",
   "size_m": [
-   5.44,
-   5.52,
-   5.1
+   5.76,
+   5.63,
+   5.21
   ],
-  "tris": 2696,
-  "lod1_tris": 808,
+  "tris": 1512,
+  "lod1_tris": 343,
   "materials": [
    "bark",
-   "sakura"
+   "sakura",
+   "sakura_card"
   ],
   "parts": [
    "tree_sakura_body"
   ],
-  "kb": 320.8
+  "kb": 151.0
  },
  {
   "name": "tree_cedar",
   "jp": "杉",
   "category": "自然",
   "size_m": [
-   4.4,
-   12.2,
-   4.18
+   4.61,
+   12.45,
+   4.58
   ],
-  "tris": 208,
-  "lod1_tris": 61,
+  "tris": 412,
+  "lod1_tris": 89,
   "materials": [
    "bark",
-   "pine"
+   "pine",
+   "pine_card"
   ],
   "parts": [
    "tree_cedar_body"
   ],
-  "kb": 20.8
+  "kb": 37.5
  },
  {
   "name": "bush",
   "jp": "植え込み",
   "category": "自然",
   "size_m": [
-   2.03,
-   1.01,
-   1.99
+   2.5,
+   1.19,
+   2.16
   ],
-  "tris": 320,
-  "lod1_tris": 96,
+  "tris": 416,
+  "lod1_tris": 106,
   "materials": [
-   "leaf",
    "leaf_dark",
-   "leaf_light"
+   "shrub_card"
   ],
   "parts": [
    "bush_body"
   ],
-  "kb": 44.3
+  "kb": 49.3
  },
  {
   "name": "hydrangea",
   "jp": "紫陽花",
   "category": "自然",
   "size_m": [
-   1.87,
-   1.1,
-   1.92
+   2.19,
+   1.27,
+   1.93
   ],
-  "tris": 1040,
-  "lod1_tris": 312,
+  "tris": 1280,
+  "lod1_tris": 366,
   "materials": [
    "hydrangea",
    "hydrangea_pink",
-   "leaf_dark"
+   "leaf_dark",
+   "shrub_card"
   ],
   "parts": [
    "hydrangea_body"
   ],
-  "kb": 134.0
+  "kb": 161.5
  },
  {
   "name": "grass_tuft",
   "jp": "草むら",
   "category": "自然",
   "size_m": [
-   0.92,
-   0.61,
-   0.85
+   1.17,
+   0.7,
+   1.16
   ],
-  "tris": 14,
+  "tris": 78,
   "lod1_tris": 0,
   "materials": [
-   "grass_blade"
+   "grass_blade",
+   "leaf_light"
   ],
   "parts": [
    "grass_tuft_body"
   ],
-  "kb": 2.6
+  "kb": 8.3
  },
  {
   "name": "rock_a",

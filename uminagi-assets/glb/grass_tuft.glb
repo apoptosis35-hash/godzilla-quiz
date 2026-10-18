@@ -7,7 +7,7 @@
     {
       "type": "SCALAR",
       "componentType": 5123,
-      "count": 42,
+      "count": 81,
       "normalized": false,
       "byteOffset": 0,
       "bufferView": 0
@@ -15,7 +15,7 @@
     {
       "type": "VEC3",
       "componentType": 5120,
-      "count": 42,
+      "count": 63,
       "normalized": true,
       "byteOffset": 0,
       "bufferView": 1
@@ -23,96 +23,190 @@
     {
       "type": "VEC2",
       "componentType": 5126,
-      "count": 42,
+      "count": 63,
       "normalized": false,
       "byteOffset": 0,
       "bufferView": 2
     },
     {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 153,
+      "normalized": false,
+      "byteOffset": 162,
+      "bufferView": 0
+    },
+    {
       "type": "VEC3",
-      "componentType": 5122,
-      "count": 42,
-      "max": [
-        32767,
-        21914,
-        30183
-      ],
-      "min": [
-        -32767,
-        -21914,
-        -30183
-      ],
+      "componentType": 5120,
+      "count": 119,
       "normalized": true,
       "byteOffset": 0,
       "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 119,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 63,
+      "max": [
+        32767,
+        15725,
+        16494
+      ],
+      "min": [
+        -15729,
+        -19546,
+        -31027
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 119,
+      "max": [
+        27419,
+        19546,
+        32651
+      ],
+      "min": [
+        -32767,
+        -19546,
+        -32651
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
     }
   ],
   "bufferViews": [
     {
       "buffer": 1,
       "byteOffset": 0,
-      "byteLength": 84,
+      "byteLength": 468,
       "target": 34963,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
           "byteOffset": 0,
-          "byteLength": 31,
+          "byteLength": 96,
           "mode": "TRIANGLES",
           "byteStride": 2,
-          "count": 42
+          "count": 234
         }
       }
     },
     {
       "buffer": 1,
-      "byteOffset": 84,
-      "byteLength": 168,
+      "byteOffset": 468,
+      "byteLength": 252,
       "target": 34962,
       "byteStride": 4,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
-          "byteOffset": 32,
-          "byteLength": 82,
+          "byteOffset": 96,
+          "byteLength": 102,
           "mode": "ATTRIBUTES",
           "filter": "OCTAHEDRAL",
           "byteStride": 4,
-          "count": 42
+          "count": 63
         }
       }
     },
     {
       "buffer": 1,
-      "byteOffset": 252,
-      "byteLength": 336,
+      "byteOffset": 720,
+      "byteLength": 504,
       "target": 34962,
       "byteStride": 8,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
-          "byteOffset": 116,
-          "byteLength": 348,
+          "byteOffset": 200,
+          "byteLength": 439,
           "mode": "ATTRIBUTES",
           "byteStride": 8,
-          "count": 42
+          "count": 63
         }
       }
     },
     {
       "buffer": 1,
-      "byteOffset": 588,
-      "byteLength": 336,
+      "byteOffset": 1224,
+      "byteLength": 476,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 640,
+          "byteLength": 177,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 119
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 1700,
+      "byteLength": 952,
       "target": 34962,
       "byteStride": 8,
       "extensions": {
         "EXT_meshopt_compression": {
           "buffer": 0,
-          "byteOffset": 464,
-          "byteLength": 298,
+          "byteOffset": 820,
+          "byteLength": 847,
           "mode": "ATTRIBUTES",
           "byteStride": 8,
-          "count": 42
+          "count": 119
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2652,
+      "byteLength": 504,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1668,
+          "byteLength": 367,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 63
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 3156,
+      "byteLength": 952,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2036,
+          "byteLength": 733,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 119
         }
       }
     }
@@ -120,10 +214,10 @@
   "buffers": [
     {
       "uri": "grass_tuft.glb.bin",
-      "byteLength": 764
+      "byteLength": 2772
     },
     {
-      "byteLength": 924,
+      "byteLength": 4108,
       "extensions": {
         "EXT_meshopt_compression": {
           "fallback": true
@@ -132,6 +226,20 @@
     }
   ],
   "materials": [
+    {
+      "name": "leaf_light",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.36000001430511475,
+          0.550000011920929,
+          0.20000000298023224,
+          1
+        ],
+        "roughnessFactor": 0.8500000238418579,
+        "metallicFactor": 0
+      }
+    },
     {
       "name": "grass_blade",
       "doubleSided": true,
@@ -155,11 +263,21 @@
           "attributes": {
             "NORMAL": 1,
             "TEXCOORD_0": 2,
-            "POSITION": 3
+            "POSITION": 6
           },
           "mode": 4,
           "material": 0,
           "indices": 0
+        },
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 3
         }
       ]
     }
@@ -168,14 +286,14 @@
     {
       "name": "grass_tuft_body",
       "translation": [
-        -0.058647140860557556,
-        0.30695071816444397,
-        0.0981479287147522
+        -0.042946696281433105,
+        0.34813088178634644,
+        0.02760365605354309
       ],
       "scale": [
-        0.45894940197467804,
-        0.45894940197467804,
-        0.45894940197467804
+        0.5836318731307983,
+        0.5836318731307983,
+        0.5836318731307983
       ],
       "mesh": 0
     },

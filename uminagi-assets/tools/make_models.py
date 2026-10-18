@@ -64,7 +64,13 @@ PALETTE = {
     'sakura': P((1.0, 0.72, 0.8), 0.8), 'hydrangea': P((0.45, 0.5, 0.92), 0.8), 'hydrangea_pink': P((0.92, 0.55, 0.75), 0.8),
     'flower_red': P((0.85, 0.12, 0.1), 0.8), 'flower_yellow': P((0.95, 0.8, 0.2), 0.8), 'soil': P((0.25, 0.17, 0.1), 1.0),
     'terracotta': P((0.65, 0.3, 0.16), 0.8), 'grass_blade': P((0.3, 0.5, 0.16), 0.9), 'moss': P((0.28, 0.38, 0.14), 1.0),
-    'paper': P((0.96, 0.95, 0.9), 0.9), 'sign_green': P((0.05, 0.35, 0.2), 0.5), 'sign_blue': P((0.05, 0.25, 0.6), 0.5),
+    'paper': P((0.96, 0.95, 0.9), 0.9),
+    # foliage cards: alpha-tested quads with the leaves.png atlas (see make_textures.py), u/v measured from the image top-left
+    'leaf_card': P((1.0, 1.0, 1.0), 0.8, tex='leaves'), 'leaf_card_dark': P((0.62, 0.72, 0.62), 0.8, tex='leaves'),
+    'pine_card': P((1.0, 1.0, 1.0), 0.8, tex='leaves'), 'sakura_card': P((1.0, 1.0, 1.0), 0.8, tex='leaves'),
+    'shrub_card': P((1.0, 1.0, 1.0), 0.8, tex='leaves'), 'hydrangea_card': P((0.55, 0.62, 0.95), 0.8, tex='leaves'),
+    'cloth_orange': P((0.95, 0.5, 0.15), 0.9), 'cloth_grey': P((0.55, 0.56, 0.58), 0.9), 'cloth_check': P((0.8, 0.82, 0.9), 0.9),
+    'futon': P((0.92, 0.88, 0.8), 0.95), 'futon_red': P((0.75, 0.2, 0.25), 0.95), 'sign_green': P((0.05, 0.35, 0.2), 0.5), 'sign_blue': P((0.05, 0.25, 0.6), 0.5),
     # light sources (the game scales their emission with the time of day)
     'lamp': P((1.0, 0.92, 0.75), 0.4, e=(1.0, 0.85, 0.55), es=4.0), 'lantern_red': P((0.9, 0.15, 0.08), 0.6, e=(1.0, 0.35, 0.15), es=2.0),
     'lantern_white': P((0.95, 0.92, 0.85), 0.7, e=(1.0, 0.85, 0.6), es=2.0), 'vend_panel': P((0.85, 0.92, 1.0), 0.3, e=(0.85, 0.92, 1.0), es=2.5),
@@ -93,17 +99,20 @@ def M(name):
     p.inputs['Roughness'].default_value = v['rough']; p.inputs['Metallic'].default_value = v['metal']
     if v['emit']:
         p.inputs['Emission Color'].default_value = (*v['emit'], 1); p.inputs['Emission Strength'].default_value = v['emit_strength']
-    if v['tex'] and _img(v['tex'] + '.jpg'):
+    if v['tex'] and _img(TEXMETA.get(v['tex'], {}).get('file', v['tex'] + '.jpg')):
         # metre-based UVs -> one texture tile per size_m metres
         size = TEXMETA.get(v['tex'], {}).get('size_m', [2, 2])
         uv = nt.nodes.new('ShaderNodeUVMap'); mp = nt.nodes.new('ShaderNodeMapping')
         mp.inputs['Scale'].default_value = (1 / size[0], 1 / size[1], 1)
         nt.links.new(uv.outputs['UV'], mp.inputs['Vector'])
-        ti = nt.nodes.new('ShaderNodeTexImage'); ti.image = _img(v['tex'] + '.jpg'); nt.links.new(mp.outputs['Vector'], ti.inputs['Vector'])
+        ti = nt.nodes.new('ShaderNodeTexImage'); ti.image = _img(TEXMETA.get(v['tex'], {}).get('file', v['tex'] + '.jpg')); nt.links.new(mp.outputs['Vector'], ti.inputs['Vector'])
+        if TEXMETA.get(v['tex'], {}).get('alpha'):  # atlas uv is top-left based (glTF/three convention): flip for Blender, use alpha
+            mp.inputs['Scale'].default_value = (1, -1, 1); mp.inputs['Location'].default_value = (0, 1, 0)
+            nt.links.new(ti.outputs['Alpha'], p.inputs['Alpha']); m.blend_method = 'CLIP' if hasattr(m, 'blend_method') else None
         mix = nt.nodes.new('ShaderNodeMix'); mix.data_type = 'RGBA'; mix.blend_type = 'MULTIPLY'; mix.inputs['Factor'].default_value = 1
         nt.links.new(ti.outputs['Color'], mix.inputs['A']); mix.inputs['B'].default_value = (*v['color'], 1)
         nt.links.new(mix.outputs['Result'], p.inputs['Base Color'])
-        nimg = _img(v['tex'] + '_n.jpg', True)
+        nimg = _img(v['tex'] + '_n.jpg', True) if not TEXMETA.get(v['tex'], {}).get('alpha') else None
         if nimg:
             tn = nt.nodes.new('ShaderNodeTexImage'); tn.image = nimg; nt.links.new(mp.outputs['Vector'], tn.inputs['Vector'])
             nm = nt.nodes.new('ShaderNodeNormalMap'); nt.links.new(tn.outputs['Color'], nm.inputs['Color']); nt.links.new(nm.outputs['Normal'], p.inputs['Normal'])
@@ -487,11 +496,38 @@ def signboard(text, w, h, loc, board='sign_wood', ink='ink', frame='wood_frame',
             size = min(h * 0.68, w / (len(text) * 1.02 + 0.35))
             text3d(ink, text, size, (0, -depth / 2 - 0.012, 0), depth=0.02)
 
+ATLAS = {'leaf_card': 0, 'leaf_card_dark': 0, 'pine_card': 1, 'sakura_card': 2, 'shrub_card': 3, 'hydrangea_card': 3}
+
+def cards(mat, center, radius, n, size, seed, scale=(1, 1, 1), up=0.4, shell=(0.5, 1.0), flat=0.0):
+    """Foliage cards: n quads carrying an atlas leaf cluster, scattered over an ellipsoid shell around center and
+    facing roughly outwards (the game rewrites their normals to point away from the canopy centre for soft shading)."""
+    q = ATLAS[mat]; u0, v0 = (q % 2) * 0.5, (q // 2) * 0.5
+    rnd = random.Random(seed); verts, faces, uvs = [], [], []
+    c = Vector(center)
+    for i in range(n):
+        d = Vector((rnd.gauss(0, 1), rnd.gauss(0, 1), rnd.gauss(0, 1) * (1 - flat) + up)).normalized()
+        p = c + Vector((d.x * scale[0], d.y * scale[1], d.z * scale[2])) * radius * rnd.uniform(*shell)
+        nrm = (d + Vector((rnd.uniform(-0.7, 0.7), rnd.uniform(-0.7, 0.7), rnd.uniform(-0.2, 0.8) + flat * 2))).normalized()
+        t = nrm.cross(Vector((0, 0, 1)))
+        t = t.normalized() if t.length > 1e-3 else Vector((1, 0, 0))
+        b = nrm.cross(t).normalized()
+        a = rnd.uniform(0, math.tau); t, b = t * math.cos(a) + b * math.sin(a), -t * math.sin(a) + b * math.cos(a)
+        h = size * rnd.uniform(0.8, 1.2) / 2
+        k = len(verts); verts += [p - t * h - b * h, p + t * h - b * h, p + t * h + b * h, p - t * h + b * h]
+        faces.append((k, k + 1, k + 2, k + 3)); uvs += [(u0, v0 + 0.5), (u0 + 0.5, v0 + 0.5), (u0 + 0.5, v0), (u0, v0)]
+    me = bpy.data.meshes.new('cards'); me.from_pydata([tuple(v) for v in verts], [], faces); me.update()
+    uvl = me.uv_layers.new(name='UVMap').data
+    for poly in me.polygons:
+        for j, li in enumerate(poly.loop_indices): uvl[li].uv = uvs[poly.index * 4 + j]
+    o = bpy.data.objects.new('cards', me); bpy.context.scene.collection.objects.link(o)
+    return _take(o, mat)
+
 def flowerpot(loc, s=1.0, flower=None, seed=0):
     with xf(loc, s=s):
         cyl('terracotta', 0.16, 0.26, (0, 0, 0), 10, r2=0.2)
         cyl('soil', 0.18, 0.02, (0, 0, 0.23), 10)
-        ico('leaf' if seed % 2 else 'leaf_light', 0.24, (0, 0, 0.42), (1, 1, 0.8), 1, 0.25, seed)
+        ico('leaf_dark', 0.14, (0, 0, 0.36), (1, 1, 0.8), 1, 0.25, seed)
+        cards('shrub_card', (0, 0, 0.42), 0.2, 7, 0.32, seed)
         if flower:
             for k in range(4): ico(flower, 0.06, (0.12 * math.cos(k * 1.7 + seed), 0.12 * math.sin(k * 1.7 + seed), 0.55), sub=1)
 
@@ -506,7 +542,9 @@ def uv_project(o):
     me = o.data
     if not me.uv_layers: me.uv_layers.new(name='UVMap')
     uvl = me.uv_layers.active.data
+    keep = {i for i, m in enumerate(me.materials) if m and m.name in ATLAS}
     for poly in me.polygons:
+        if poly.material_index in keep: continue
         n = poly.normal
         if abs(n.z) > 0.92: t, b = Vector((1, 0, 0)), Vector((0, 1, 0))
         else:
@@ -560,6 +598,14 @@ def build(name):
         lod_obj = body.copy(); lod_obj.data = body.data.copy(); lod_obj.name = f'{name}_lod1'; lod_obj.data.name = lod_obj.name
         col.objects.link(lod_obj); lod_obj.parent = top
         dm = lod_obj.modifiers.new('dec', 'DECIMATE'); dm.ratio = LOD_RATIO; dm.use_collapse_triangulate = True
+        cardm = {i for i, m in enumerate(lod_obj.data.materials) if m and m.name in ATLAS}
+        if cardm:  # foliage cards: keep 45% of them intact (collapsing would tear the quads), decimate only the rest
+            bm = bmesh.new(); bm.from_mesh(lod_obj.data); rr = random.Random(1)
+            bmesh.ops.delete(bm, geom=[f for f in bm.faces if f.material_index in cardm and rr.random() < 0.55], context='FACES')
+            bm.to_mesh(lod_obj.data); bm.free()
+            vg = lod_obj.vertex_groups.new(name='solid')
+            vg.add([v for p in lod_obj.data.polygons if p.material_index not in cardm for v in p.vertices], 1.0, 'REPLACE')
+            dm.vertex_group = 'solid'
         with bpy.context.temp_override(object=lod_obj, active_object=lod_obj, selected_objects=[lod_obj]):
             bpy.ops.object.modifier_apply(modifier='dec')
     return top, meshes, lod_obj
@@ -613,15 +659,11 @@ def house(w=7.0, d=6.5, floors=2, lower='wood_dark', upper='plaster', roof='gabl
             box2('wood_frame', -w / 2 + 0.3, w / 2 - 0.3, -d / 2 - 1.0, -d / 2, bz + 0.12 if pent else bz, bz + 0.22 if pent else bz + 0.1)
             for x in (-w / 2 + 0.35, w / 2 - 0.35): box2('wood_frame', x - 0.05, x + 0.05, -d / 2 - 0.95, -d / 2 - 0.85, bz - 0.4, bz + 1.1)
             railing(-w / 2 + 0.3, w / 2 - 0.3, -d / 2 - 0.95, bz + 0.2, 0.95, 'alu', 0.11)
-            if laundry:  # 物干し竿 with washing
+            if laundry:  # 物干し竿 with washing, and sometimes a futon airing over the balcony rail
                 rod('alu', (-w / 2 + 0.4, -d / 2 - 0.7, bz + 1.85), (w / 2 - 0.4, -d / 2 - 0.7, bz + 1.85), 0.018, 6)
                 for x in (-w / 2 + 0.4, w / 2 - 0.4): rod('alu', (x, -d / 2 - 0.92, bz + 0.2), (x, -d / 2 - 0.7, bz + 1.95), 0.02, 6)
-                cl = ['cloth_white', 'cloth_blue', 'cloth_red', 'cloth_yellow', 'cloth_white', 'cloth_green', 'cloth_pink']
-                xx = -w / 2 + 0.8
-                while xx < w / 2 - 1.0:
-                    ww = rnd.uniform(0.35, 0.75); hh = rnd.uniform(0.4, 0.75)
-                    box2(rnd.choice(cl), xx, xx + ww, -d / 2 - 0.71, -d / 2 - 0.69, bz + 1.83 - hh, bz + 1.83)
-                    xx += ww + rnd.uniform(0.08, 0.3)
+                laundry_line(-w / 2 + 0.7, w / 2 - 0.7, -d / 2 - 0.7, bz + 1.85, seed)
+                if seed % 2: futon(-w / 2 + 0.6, -w / 2 + 2.0, -d / 2 - 0.95, bz + 1.17, seed)
         ztop += h2
     elif pent:
         with xf((0, -d / 2, 0)): pent_roof(w + 0.3, 0.7, ztop - 0.25)
@@ -1552,18 +1594,77 @@ def direction_sign():
             prism('wood_light', [(0, 0), (0.95, 0), (1.15, 0.15), (0.95, 0.3), (0, 0.3)], 0.06, loc=(0, 0, 0), axis='Y')
             text3d('ink', t, 0.2, (0.5, -0.04, 0.15), depth=0.008)
 
+CLOTHES = ['cloth_white', 'cloth_blue', 'cloth_red', 'cloth_yellow', 'cloth_white', 'cloth_green', 'cloth_pink', 'cloth_navy', 'cloth_grey', 'cloth_check', 'denim', 'cloth_orange']
+
+def tshirt(mat, x, y, z, rnd):
+    """T-shirt on a wire hanger hooked over the pole at height z."""
+    k = rnd.uniform(0.85, 1.1)
+    prof = [(-0.08, 0), (-0.19, -0.02), (-0.34, -0.13), (-0.29, -0.25), (-0.21, -0.19), (-0.22, -0.64), (0.22, -0.64), (0.21, -0.19), (0.29, -0.25), (0.34, -0.13), (0.19, -0.02), (0.08, 0), (0, -0.06)]
+    prism(mat, [(u * k, v * k) for u, v in prof], 0.02, loc=(x, y, z - 0.12), axis='Y')
+    if rnd.random() < 0.5: box(rnd.choice(CLOTHES), (0.44 * k, 0.024, 0.05), (x, y, z - 0.12 - 0.36 * k))   # printed stripe
+    rod('alu', (x - 0.2 * k, y, z - 0.13), (x, y, z - 0.03), 0.006, 3); rod('alu', (x + 0.2 * k, y, z - 0.13), (x, y, z - 0.03), 0.006, 3)
+    torus('alu', 0.025, 0.005, (x, y, z), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)
+
+def pants(mat, x, y, z, rnd):
+    k = rnd.uniform(0.85, 1.05)
+    prof = [(-0.19, 0), (0.19, 0), (0.21, -0.82), (0.04, -0.82), (0.0, -0.28), (-0.04, -0.82), (-0.21, -0.82)]
+    prism(mat, [(u * k, v * k) for u, v in prof], 0.03, loc=(x, y, z - 0.05), axis='Y')
+    for sx in (-1, 1): box('cloth_white', (0.025, 0.05, 0.06), (x + sx * 0.15 * k, y, z - 0.07))      # clothes pegs
+    box('steel_dark', (0.4 * k, 0.012, 0.012), (x, y, z - 0.03))
+
+def towel(mat, x, y, z, rnd, w=None):
+    """Bath towel folded over the pole: a front and a back panel and the rounded fold on top."""
+    w = w or rnd.uniform(0.45, 0.7); f, b = rnd.uniform(0.35, 0.55), rnd.uniform(0.45, 0.7)
+    box2(mat, x - w / 2, x + w / 2, y - 0.04, y - 0.025, z - f, z)
+    box2(mat, x - w / 2, x + w / 2, y + 0.025, y + 0.04, z - b, z)
+    rod(mat, (x - w / 2, y, z + 0.005), (x + w / 2, y, z + 0.005), 0.04, 8)
+    if rnd.random() < 0.6: box2(rnd.choice(CLOTHES), x - w / 2, x + w / 2, y - 0.045, y - 0.04, z - f + 0.06, z - f + 0.12)
+
+def pinch_hanger(x, y, z, rnd):
+    """ピンチハンガー: square frame of pegs hung from the pole, with socks and handkerchiefs."""
+    hz = z - 0.28
+    for a, b in (((-0.25, -0.18), (0.25, -0.18)), ((0.25, -0.18), (0.25, 0.18)), ((0.25, 0.18), (-0.25, 0.18)), ((-0.25, 0.18), (-0.25, -0.18))):
+        rod('white', (x + a[0], y + a[1], hz), (x + b[0], y + b[1], hz), 0.01, 4)
+    for c in ((-0.25, -0.18), (0.25, -0.18), (0.25, 0.18), (-0.25, 0.18)): rod('white', (x + c[0], y + c[1], hz), (x, y, z - 0.04), 0.004, 3)
+    torus('white', 0.03, 0.006, (x, y, z), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)
+    for k in range(10):
+        px = x - 0.25 + (k % 5) * 0.125; py = y + (-0.18 if k < 5 else 0.18)
+        box(rnd.choice(['cloth_pink', 'cloth_blue', 'cloth_yellow', 'white']), (0.02, 0.025, 0.05), (px, py, hz - 0.05))
+        if rnd.random() < 0.75:
+            m = rnd.choice(CLOTHES)
+            if rnd.random() < 0.5:  # sock
+                prism(m, [(-0.03, 0), (0.03, 0), (0.03, -0.18), (0.09, -0.22), (0.07, -0.26), (-0.03, -0.24)], 0.02, loc=(px, py, hz - 0.06), axis='Y')
+            else:  # handkerchief / small towel
+                box2(m, px - 0.06, px + 0.06, py - 0.01, py + 0.01, hz - 0.06 - rnd.uniform(0.14, 0.26), hz - 0.06)
+
+def futon(x0, x1, y, z, seed):
+    """布団干し: a futon folded over the balcony rail (z = rail top), with clips."""
+    rnd = random.Random(seed)
+    m = rnd.choice(['futon', 'futon_red', 'cloth_blue', 'cloth_pink'])
+    box2(m, x0, x1, y - 0.11, y - 0.04, z - 0.75, z + 0.02)
+    box2(m, x0, x1, y + 0.04, y + 0.11, z - 0.5, z + 0.02)
+    rod(m, (x0, y, z + 0.02), (x1, y, z + 0.02), 0.11, 10)
+    for k in range(3): box2('cloth_white', x0 + (x1 - x0) * (0.2 + 0.3 * k) - 0.02, x0 + (x1 - x0) * (0.2 + 0.3 * k) + 0.02, y - 0.13, y + 0.13, z - 0.03, z + 0.16)
+    if m == 'futon': box2('cloth_blue', x0, x1, y - 0.115, y - 0.11, z - 0.6, z - 0.5)
+
+def laundry_line(x0, x1, y, z, seed):
+    """Fill a laundry pole from x0 to x1 (pole at height z, running along X) with a mix of washing."""
+    rnd = random.Random(seed * 7 + 1); x = x0 + 0.2
+    while x < x1 - 0.3:
+        kind = rnd.random()
+        if kind < 0.35: tshirt(rnd.choice(CLOTHES), x + 0.3, y, z, rnd); x += 0.75
+        elif kind < 0.55: pants(rnd.choice(['denim', 'cloth_khaki', 'cloth_navy', 'cloth_grey']), x + 0.22, y, z, rnd); x += 0.55
+        elif kind < 0.8: w = rnd.uniform(0.45, 0.65); towel(rnd.choice(CLOTHES), x + w / 2, y, z, rnd, w); x += w + 0.12
+        else:
+            if x + 0.6 > x1: break
+            pinch_hanger(x + 0.3, y, z, rnd); x += 0.7
+
 @model('laundry_pole', '物干し台(洗濯物付き)', '住宅の小物')
 def laundry_pole():
-    rnd = random.Random(9)
     for x in (-1.2, 1.2):
         box('concrete', (0.3, 0.3, 0.12), (x, 0, 0)); rod('alu', (x, 0, 0), (x, 0, 1.9), 0.03, 6); rod('alu', (x, -0.25, 1.75), (x, 0.25, 1.75), 0.02, 4)
     for y in (-0.22, 0.22): rod('alu', (-1.4, y, 1.76), (1.4, y, 1.76), 0.018, 6)
-    for y in (-0.22, 0.22):
-        x = -1.1
-        while x < 1.0:
-            w = rnd.uniform(0.3, 0.6); h = rnd.uniform(0.4, 0.8)
-            box2(rnd.choice(['cloth_white', 'cloth_blue', 'cloth_pink', 'cloth_yellow', 'cloth_green', 'denim']), x, x + w, y - 0.01, y + 0.01, 1.74 - h, 1.74)
-            x += w + rnd.uniform(0.05, 0.2)
+    laundry_line(-1.3, 1.3, -0.22, 1.76, 3); laundry_line(-1.3, 1.3, 0.22, 1.76, 4)
 
 @model('fence_wood', '木の塀(2m)', '住宅の小物')
 def fence_wood():
@@ -1600,14 +1701,17 @@ def pine(h, lean, seed):
         t = i / 6; pts.append(Vector((lean * t * t + rnd.uniform(-0.25, 0.25) * t, rnd.uniform(-0.25, 0.25) * t, h * 0.75 * t)))
     for i in range(6): rod('bark_pine', pts[i], pts[i + 1], 0.28 * (1 - i / 7) + 0.06, 8)
     top = pts[-1]
-    for k in range(7):  # layered flat foliage pads (black pine)
+    for k in range(8):  # layered flat foliage pads (black pine): a dark core and needle cards on top and round the rim
         a = k * 2.4 + rnd.random(); r = rnd.uniform(1.0, 2.4)
         z = top.z * rnd.uniform(0.6, 1.08)
         c = Vector((top.x * z / top.z + math.cos(a) * r, top.y + math.sin(a) * r, z))
         base = pts[min(6, max(2, int(z / top.z * 6)))]
         rod('bark_pine', base, c, 0.07, 5)
-        ico('pine', 1.0, c, (rnd.uniform(1.2, 1.8), rnd.uniform(1.0, 1.5), 0.45), 2, 0.3, seed * 10 + k)
-    ico('pine', 1.0, top + Vector((0, 0, 0.3)), (1.6, 1.4, 0.55), 2, 0.3, seed)
+        sx, sy = rnd.uniform(1.2, 1.8), rnd.uniform(1.0, 1.5)
+        ico('pine', 0.75, c, (sx, sy, 0.35), 2, 0.3, seed * 10 + k)
+        cards('pine_card', c + Vector((0, 0, 0.1)), 1.0, 22, 1.0, seed * 10 + k, (sx, sy, 0.38), up=0.9, flat=0.6)
+    ico('pine', 0.75, top + Vector((0, 0, 0.3)), (1.6, 1.4, 0.45), 2, 0.3, seed)
+    cards('pine_card', top + Vector((0, 0, 0.4)), 1.0, 22, 1.0, seed, (1.6, 1.4, 0.45), up=0.9, flat=0.6)
 
 @model('tree_pine', '黒松', '自然')
 def tree_pine(): pine(9.0, 1.4, 3)
@@ -1615,15 +1719,26 @@ def tree_pine(): pine(9.0, 1.4, 3)
 @model('tree_pine_b', '黒松(海辺・傾き)', '自然')
 def tree_pine_b(): pine(7.5, 2.6, 7)
 
+def canopy(clumps, dark='leaf_dark', card='leaf_card', card_dark='leaf_card_dark', seed=0, size=1.0, per=26):
+    """Broadleaf crown: each clump = a dark inner blob (fills gaps) + leaf cards on its shell (lighter on top)."""
+    rnd = random.Random(seed)
+    for k, (c, r) in enumerate(clumps):
+        ico(dark, r * 0.6, c, (1, 1, 0.8), 2, 0.2, seed + k)
+        cards(card, c, r, per, size, seed * 31 + k, (1, 1, 0.82), up=0.6, shell=(0.35, 1.0))
+        cards(card_dark, Vector(c) - Vector((0, 0, r * 0.25)), r * 0.85, per // 3, size, seed * 37 + k, (1, 1, 0.7), up=-0.6)
+
 @model('tree_broadleaf', '広葉樹(クスノキ)', '自然')
 def tree_broadleaf():
     rnd = random.Random(4)
     cyl('bark', 0.35, 3.0, (0, 0, 0), 10, r2=0.25)
-    for k in range(4):
-        a = k * 1.7; rod('bark', (0, 0, 2.6), (math.cos(a) * 1.4, math.sin(a) * 1.4, 4.6), 0.14, 6)
-    for k in range(9):
-        a = k * 2.3; r = rnd.uniform(0.6, 2.2)
-        ico(rnd.choice(['leaf', 'leaf_dark', 'leaf']), rnd.uniform(1.4, 2.0), (math.cos(a) * r, math.sin(a) * r, rnd.uniform(4.2, 6.4)), (1, 1, 0.8), 3, 0.22, k)
+    for k in range(5):
+        a = k * 1.4 + 0.3; rod('bark', (0, 0, 2.6), (math.cos(a) * 1.6, math.sin(a) * 1.6, 4.7), 0.14, 6)
+        rod('bark', (math.cos(a) * 1.6, math.sin(a) * 1.6, 4.7), (math.cos(a + 0.4) * 2.4, math.sin(a + 0.4) * 2.4, 5.6), 0.07, 5)
+    cl = []
+    for k in range(10):
+        a = k * 2.3; r = rnd.uniform(0.6, 2.3)
+        cl.append(((math.cos(a) * r, math.sin(a) * r, rnd.uniform(4.3, 6.6)), rnd.uniform(1.25, 1.75)))
+    canopy(cl, seed=4)
 
 @model('tree_shinboku', 'ご神木(大楠・しめ縄)', '神社')
 def tree_shinboku():
@@ -1632,9 +1747,11 @@ def tree_shinboku():
     for k in range(5):
         a = k * 1.25; rod('bark', (0, 0, 4.2), (math.cos(a) * 3, math.sin(a) * 3, 7.5 + rnd.random()), 0.32, 6)
         rod('bark', (math.cos(a) * 0.8, math.sin(a) * 0.8, 0.5), (math.cos(a) * 1.8, math.sin(a) * 1.8, -0.1), 0.25, 6)
-    for k in range(14):
-        a = k * 2.2; r = rnd.uniform(1.0, 4.0)
-        ico(rnd.choice(['leaf', 'leaf_dark']), rnd.uniform(1.8, 2.8), (math.cos(a) * r, math.sin(a) * r, rnd.uniform(7, 10.5)), (1, 1, 0.75), 2, 0.25, k + 20)
+    cl = []
+    for k in range(15):
+        a = k * 2.2; r = rnd.uniform(1.0, 4.2)
+        cl.append(((math.cos(a) * r, math.sin(a) * r, rnd.uniform(7, 10.8)), rnd.uniform(1.7, 2.5)))
+    canopy(cl, seed=8, size=1.4, per=30)
     torus('rope', 1.1, 0.12, (0, 0, 2.2), seg=20, rseg=8)
     for k in range(4):
         a = k * math.pi / 2
@@ -1646,34 +1763,46 @@ def tree_sakura():
     cyl('bark', 0.25, 2.2, (0, 0, 0), 10, r2=0.18)
     for k in range(5):
         a = k * 1.3; rod('bark', (0, 0, 2.0), (math.cos(a) * 1.8, math.sin(a) * 1.8, 3.4), 0.1, 6)
-    for k in range(8):
-        a = k * 2.4; r = rnd.uniform(0.5, 2.0)
-        ico('sakura', rnd.uniform(1.0, 1.5), (math.cos(a) * r, math.sin(a) * r, rnd.uniform(3.2, 4.6)), (1, 1, 0.7), 3, 0.25, k)
+        rod('bark', (math.cos(a) * 1.8, math.sin(a) * 1.8, 3.4), (math.cos(a + 0.5) * 2.4, math.sin(a + 0.5) * 2.4, 4.1), 0.05, 5)
+    cl = []
+    for k in range(9):
+        a = k * 2.4; r = rnd.uniform(0.5, 2.1)
+        cl.append(((math.cos(a) * r, math.sin(a) * r, rnd.uniform(3.2, 4.7)), rnd.uniform(0.95, 1.35)))
+    canopy(cl, dark='sakura', card='sakura_card', card_dark='sakura_card', seed=5, size=0.9, per=24)
 
 @model('tree_cedar', '杉', '自然')
 def tree_cedar():
     cyl('bark', 0.3, 11.0, (0, 0, 0), 8, r2=0.05)
-    for k in range(5):
-        z = 3.0 + k * 1.6; cyl('pine', 2.2 - k * 0.38, 2.8, (0, 0, z), 10, r2=0.3)
+    for k in range(6):
+        z = 2.6 + k * 1.45; rr = 2.2 - k * 0.33
+        cyl('pine', rr * 0.8, 2.6, (0, 0, z), 10, r2=0.2)
+        cards('pine_card', (0, 0, z + 0.9), rr, 14, 1.1, 50 + k, (1, 1, 0.55), up=-0.2, shell=(0.8, 1.05))
 
 @model('bush', '植え込み', '自然')
 def bush():
-    for k in range(4): ico(['leaf', 'leaf_light', 'leaf_dark', 'leaf'][k], 0.6, (math.cos(k * 1.7) * 0.5, math.sin(k * 1.7) * 0.4, 0.45), (1, 1, 0.8), 2, 0.3, k)
+    for k in range(4):
+        c = (math.cos(k * 1.7) * 0.5, math.sin(k * 1.7) * 0.4, 0.45)
+        ico('leaf_dark', 0.45, c, (1, 1, 0.8), 2, 0.3, k)
+        cards('shrub_card', c, 0.6, 12, 0.6, 70 + k, (1, 1, 0.8), up=0.5)
 
 @model('hydrangea', '紫陽花', '自然')
 def hydrangea():
-    for k in range(4): ico('leaf_dark', 0.55, (math.cos(k * 1.6) * 0.45, math.sin(k * 1.6) * 0.4, 0.4), (1, 1, 0.8), 2, 0.25, k)
-    for k in range(9):
-        a = k * 2.1; r = 0.5 + (k % 3) * 0.12
-        ico('hydrangea' if k % 3 else 'hydrangea_pink', 0.2, (math.cos(a) * r, math.sin(a) * r, 0.65 + (k % 2) * 0.2), sub=2, jitter=0.15, seed=k)
+    for k in range(4):
+        c = (math.cos(k * 1.6) * 0.45, math.sin(k * 1.6) * 0.4, 0.4)
+        ico('leaf_dark', 0.42, c, (1, 1, 0.8), 2, 0.25, k)
+        cards('shrub_card', c, 0.55, 10, 0.55, 80 + k, (1, 1, 0.8), up=0.4)
+    for k in range(11):
+        a = k * 2.1; r = 0.45 + (k % 3) * 0.14
+        ico('hydrangea' if k % 3 else 'hydrangea_pink', 0.17, (math.cos(a) * r, math.sin(a) * r, 0.62 + (k % 2) * 0.2), sub=2, jitter=0.18, seed=k)
 
 @model('grass_tuft', '草むら', '自然', lod=False)
 def grass_tuft():
     rnd = random.Random(2)
-    for k in range(14):
-        a = rnd.random() * math.tau; r = rnd.random() * 0.35; h = rnd.uniform(0.35, 0.7); lean = rnd.uniform(0.05, 0.25)
-        x, y = math.cos(a) * r, math.sin(a) * r
-        mesh('grass_blade', [(x - 0.04, y, 0), (x + 0.04, y, 0), (x + math.cos(a) * lean, y + math.sin(a) * lean, h)], [(0, 1, 2)])
+    for k in range(26):
+        a = rnd.random() * math.tau; r = rnd.random() * 0.4; h = rnd.uniform(0.3, 0.75); lean = rnd.uniform(0.05, 0.3)
+        x, y = math.cos(a) * r, math.sin(a) * r; w = rnd.uniform(0.025, 0.045)
+        mid = (x + math.cos(a) * lean * 0.4, y + math.sin(a) * lean * 0.4, h * 0.55)
+        mesh('grass_blade' if k % 3 else 'leaf_light', [(x - w, y, 0), (x + w, y, 0), (mid[0] + w * 0.6, mid[1], mid[2]), (mid[0] - w * 0.6, mid[1], mid[2]), (x + math.cos(a) * lean, y + math.sin(a) * lean, h)], [(0, 1, 2, 3), (3, 2, 4)])
 
 @model('rock_a', '岩(A)', '自然')
 def rock_a(): ico('rock', 1.0, (0, 0, 0.45), (1.3, 1.0, 0.75), 3, 0.35, 1)

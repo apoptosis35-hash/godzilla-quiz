@@ -15,11 +15,11 @@ const store = (s) => { try { localStorage.setItem(SAVE, JSON.stringify(s)); } ca
 
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const QUALITY = {
-  low: { name: '軽量', pixelRatio: 1.0, shadows: false, shadowSize: 1024, shadowRange: 40, aniso: 2, normalMaps: true, trees: 1000, grass: 600, lod: 0.5, lights: 3 },
-  medium: { name: '標準', pixelRatio: 1.5, shadows: true, shadowSize: 1024, shadowRange: 45, aniso: 4, normalMaps: true, trees: 1800, grass: 1600, lod: 0.85, lights: 6 },
-  high: { name: '高画質', pixelRatio: 2.0, shadows: true, shadowSize: 2048, shadowRange: 60, aniso: 8, normalMaps: true, trees: 3200, grass: 3500, lod: 1.25, lights: 8 },
+  low: { name: '軽量', pixelRatio: 1.0, shadows: false, shadowSize: 1024, shadowRange: 40, aniso: 2, normalMaps: true, trees: 1000, grass: 600, lod: 0.5, lights: 3, refraction: false },
+  medium: { name: '標準', pixelRatio: 1.5, shadows: true, shadowSize: 1024, shadowRange: 45, aniso: 4, normalMaps: true, trees: 1800, grass: 1600, lod: 0.85, lights: 6, refraction: true },
+  high: { name: '高画質', pixelRatio: 2.0, shadows: true, shadowSize: 2048, shadowRange: 60, aniso: 8, normalMaps: true, trees: 3200, grass: 3500, lod: 1.25, lights: 8, refraction: true },
   // PC: 1024 px textures, 4096 shadow map over 90 m, dense forest and grass, far LOD, ambient occlusion + bloom + SMAA
-  ultra: { name: '最高(PC)', pixelRatio: 2.0, shadows: true, shadowSize: 4096, shadowRange: 90, aniso: 16, normalMaps: true, trees: 6500, grass: 9000, lod: 2.2, lights: 12, tex1k: true, post: true },
+  ultra: { name: '最高(PC)', pixelRatio: 2.0, shadows: true, shadowSize: 4096, shadowRange: 90, aniso: 16, normalMaps: true, trees: 6500, grass: 9000, lod: 2.2, lights: 12, tex1k: true, post: true, refraction: true },
 };
 const saved = load();
 const qName = new URLSearchParams(location.search).get('q') || saved?.quality || (isMobile ? 'medium' : 'ultra');
@@ -50,13 +50,13 @@ const SPOTS = {  // fast travel (map buttons)
 class App {
   async init() {
     const cv = $('gl');
-    this.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: !Q.post && Q.pixelRatio < 1.6, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: !Q.post && !Q.refraction, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, Q.pixelRatio));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.shadowMap.enabled = Q.shadows; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene = new THREE.Scene();
-    this.camera = new THREE.PerspectiveCamera(58, 1, 0.25, 2600);
+    this.camera = new THREE.PerspectiveCamera(58, 1, 0.25, 6000);
     if (Q.post) await this.setupPost();
     this.resize(); addEventListener('resize', () => this.resize());
     const prog = (k, msg) => { $('loadbar').style.width = (k * 100).toFixed(0) + '%'; if (msg) $('loadmsg').textContent = msg; };
