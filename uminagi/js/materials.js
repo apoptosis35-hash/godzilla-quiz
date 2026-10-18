@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 
 export const ASSETS = '../uminagi-assets/';
-const FOLIAGE = new Set(['leaf_card', 'leaf_card_dark', 'pine_card', 'sakura_card', 'shrub_card', 'hydrangea_card', 'leaf', 'leaf_dark', 'leaf_light', 'pine', 'sakura', 'grass_blade', 'hydrangea', 'hydrangea_pink', 'net', 'net_green']);
+const FOLIAGE = new Set(['leaf_card', 'cedar_card', 'leaf_card_dark', 'pine_card', 'sakura_card', 'shrub_card', 'hydrangea_card', 'leaf', 'leaf_dark', 'leaf_light', 'pine', 'sakura', 'grass_blade', 'hydrangea', 'hydrangea_pink', 'net', 'net_green']);
 const CLOTH = new Set(['cloth_red', 'cloth_blue', 'cloth_navy', 'cloth_white', 'cloth_yellow', 'cloth_green', 'cloth_pink', 'tarp_blue', 'denim']);
 export const GLOW = ['lamp', 'lantern_red', 'lantern_white', 'vend_panel', 'beacon_red', 'beacon_white', 'window_lit'];
 
