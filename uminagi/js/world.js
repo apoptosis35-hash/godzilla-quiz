@@ -158,7 +158,7 @@ export class World {
           vec3 body = mix(deep, shallow, sh) * (0.35 + 0.65 * max(0.0, uSunDir.y)) * (0.6 + 0.4 * uSunCol);
           body += uSunCol * 0.03 * (vSwell * 0.5 + 0.5);
           vec3 col = mix(body, refl, fres);
-          float spec = pow(max(dot(R, uSunDir), 0.0), 380.0) * 7.0 + pow(max(dot(R, uSunDir), 0.0), 40.0) * 0.25;
+          float spec = pow(max(dot(R, uSunDir), 0.0), 380.0) * 3.5 + pow(max(dot(R, uSunDir), 0.0), 40.0) * 0.2;
           col += uSunCol * spec * (0.3 + 0.7 * uSunDisk);
           // shore foam and white water around rocks and tetrapods
           float fn = vn(vW.xz * 0.9 + vec2(uTime * 0.3, 0.0)) * vn(vW.xz * 2.3 - uTime * 0.2);

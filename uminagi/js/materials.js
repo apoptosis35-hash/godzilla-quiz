@@ -31,7 +31,7 @@ export class MaterialLib {
     ]);
     this.defs = defs; this.texMeta = texMeta;
     const aniso = Math.min(this.q.aniso, this.renderer.capabilities.getMaxAnisotropy());
-    const load = (file, srgb) => new Promise((res) => this.loader.load(ASSETS + 'textures/' + file, (t) => {
+    const load = (file, srgb) => new Promise((res) => this.loader.load(ASSETS + 'textures/' + (this.q.tex1k ? '1k/' : '') + file, (t) => {
       t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = aniso;
       if (srgb) t.colorSpace = THREE.SRGBColorSpace;
       res(t);

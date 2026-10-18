@@ -22,6 +22,9 @@ export class Input {
   down(e) {
     if (!this.enabled || e.target.closest?.('button, .panel, #map')) return;
     const touch = e.pointerType !== 'mouse';
+    // PC: clicking the scene captures the mouse (free look like a PC game); Esc releases it
+    if (!touch && !document.pointerLockElement && e.target.id === 'gl') document.getElementById('gl').requestPointerLock?.()?.catch?.(() => {});
+    if (!touch && document.pointerLockElement) return;
     if (touch && e.clientX < innerWidth * 0.45 && !this.stick) {
       this.stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
       this.stickEl.style.left = e.clientX + 'px'; this.stickEl.style.top = e.clientY + 'px'; this.stickEl.classList.add('on');
@@ -32,6 +35,9 @@ export class Input {
   }
   pinchDist() { const [a, b] = [...this.cams.values()]; return Math.hypot(a.x - b.x, a.y - b.y); }
   moveP(e) {
+    if (e.pointerType === 'mouse' && document.pointerLockElement && this.enabled) {
+      this.look.x += e.movementX * 0.0028; this.look.y += e.movementY * 0.0028; return;
+    }
     if (this.stick && e.pointerId === this.stick.id) { this.stick.x = e.clientX; this.stick.y = e.clientY; e.preventDefault(); return; }
     const c = this.cams.get(e.pointerId);
     if (!c) return;

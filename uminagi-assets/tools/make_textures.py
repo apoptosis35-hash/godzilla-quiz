@@ -1,14 +1,16 @@
 # Seamless PBR textures for the Uminagi port-town kit (colour JPG + normal-map JPG, some with a roughness map).
-#   python3 tools/make_textures.py            (numpy + pillow only)
+#   python3 tools/make_textures.py            (numpy + pillow only; 512 px -> textures/)
+#   python3 tools/make_textures.py --1k       (1024 px for the PC ultra preset -> textures/1k/)
 # Every texture tiles in both directions. `textures/textures.json` records the real-world size one tile covers
 # (metres), so the game can set texture.repeat = 1 / size on the metre-based UVs the Blender script writes.
-import json, os
+import json, os, sys
 import numpy as np
 from PIL import Image
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-OUT = os.path.normpath(os.path.join(HERE, '..', 'textures'))
-N = 512
+HI = '--1k' in sys.argv
+OUT = os.path.normpath(os.path.join(HERE, '..', 'textures', '1k' if HI else ''))
+N = 1024 if HI else 512
 rng = np.random.default_rng(7)
 yy, xx = np.mgrid[0:N, 0:N].astype(np.float32) / N   # 0..1, row = v, col = u
 
@@ -44,6 +46,7 @@ def voronoi(pts, aspect=(1.0, 1.0)):
 
 
 def normal_from_height(h, strength):
+    strength *= N / 512  # same slope per texel-in-metres at any resolution
     gx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * strength
     gy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) * strength
     n = np.stack([-gx, gy, np.ones_like(h)], -1)  # OpenGL convention (+Y up in tangent space)

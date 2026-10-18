@@ -57,3 +57,10 @@ h1 small { display: block; font-size: 13px; letter-spacing: .6em; opacity: .85; 
 .small { font-size: 12px; opacity: .85; text-shadow: 0 1px 4px rgba(0, 0, 0, .6); }
 .bar { width: min(360px, 70vw); height: 8px; border-radius: 99px; background: rgba(255, 255, 255, .2); overflow: hidden; margin: 18px 0 10px; }
 #loadbar { height: 100%; width: 0; background: #e8b23a; transition: width .2s; }
+/* PC (mouse + keyboard): no touch-only controls */
+.pc-only { display: none; }
+@media (hover: hover) and (pointer: fine) {
+  .pc-only { display: block; }
+  .touch-only, #dash, .zoom { display: none; }
+  #gl { cursor: grab; }
+}

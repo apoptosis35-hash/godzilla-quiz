@@ -44,6 +44,22 @@ python3 tools/write_readme.py                # この表を models.json から�
 | `uminagi_town.glb` | 同じ町を1つのGLBにしたもの(EXT_mesh_gpu_instancing でモデルを使い回し、meshopt 圧縮。テクスチャは入っていないので `materials.json` で貼り替え) |
 | `uminagi_town.blend` | 上の2つから `tools/assemble_town.py` で組み直した町全体(モデルはリンクしたコレクションインスタンスなので、元モデルを直すと町全体に反映) |
 
+## 町全体の高品質レンダリング(Cycles)
+
+`tools/render_town.py` は `scene/uminagi_town.blend` を Blender の Cycles(パストレーシング、物理ベースの空、デノイズ)で描き、`scene/render_<視点>.jpg` を書き出します。視点は全景・漁港・商店街・住宅の段々・灯台の丘・夕方の全景の6つです。
+
+```
+python3 tools/render_town.py [--samples 96] [--size 1920x1080] [overview harbour street terraces hill evening]
+```
+
+| | |
+|---|---|
+| ![全景](scene/render_overview.jpg) | ![夕方](scene/render_evening.jpg) |
+| ![漁港](scene/render_harbour.jpg) | ![商店街](scene/render_street.jpg) |
+| ![住宅の段々](scene/render_terraces.jpg) | ![灯台の丘](scene/render_hill.jpg) |
+
+テクスチャは `python3 tools/make_textures.py --1k` で1024px版(`textures/1k/`、ゲームの「最高(PC)」用)も作れます。
+
 ## モデル一覧
 
 <!-- MODELS -->

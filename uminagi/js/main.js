@@ -18,9 +18,11 @@ const QUALITY = {
   low: { name: '軽量', pixelRatio: 1.0, shadows: false, shadowSize: 1024, shadowRange: 40, aniso: 2, normalMaps: true, trees: 1000, grass: 600, lod: 0.5, lights: 3 },
   medium: { name: '標準', pixelRatio: 1.5, shadows: true, shadowSize: 1024, shadowRange: 45, aniso: 4, normalMaps: true, trees: 1800, grass: 1600, lod: 0.85, lights: 6 },
   high: { name: '高画質', pixelRatio: 2.0, shadows: true, shadowSize: 2048, shadowRange: 60, aniso: 8, normalMaps: true, trees: 3200, grass: 3500, lod: 1.25, lights: 8 },
+  // PC: 1024 px textures, 4096 shadow map over 90 m, dense forest and grass, far LOD, ambient occlusion + bloom + SMAA
+  ultra: { name: '最高(PC)', pixelRatio: 2.0, shadows: true, shadowSize: 4096, shadowRange: 90, aniso: 16, normalMaps: true, trees: 6500, grass: 9000, lod: 2.2, lights: 12, tex1k: true, post: true },
 };
 const saved = load();
-const qName = new URLSearchParams(location.search).get('q') || saved?.quality || (isMobile ? 'medium' : 'high');
+const qName = new URLSearchParams(location.search).get('q') || saved?.quality || (isMobile ? 'medium' : 'ultra');
 const Q = QUALITY[qName] || QUALITY.medium;
 
 // areas shown on entry (first match wins)
@@ -48,13 +50,14 @@ const SPOTS = {  // fast travel (map buttons)
 class App {
   async init() {
     const cv = $('gl');
-    this.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: Q.pixelRatio < 1.6, powerPreference: 'high-performance' });
+    this.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: !Q.post && Q.pixelRatio < 1.6, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, Q.pixelRatio));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
     this.renderer.shadowMap.enabled = Q.shadows; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(58, 1, 0.25, 2600);
+    if (Q.post) await this.setupPost();
     this.resize(); addEventListener('resize', () => this.resize());
     const prog = (k, msg) => { $('loadbar').style.width = (k * 100).toFixed(0) + '%'; if (msg) $('loadmsg').textContent = msg; };
     prog(0.02, '地形をつくっています…');
@@ -88,9 +91,37 @@ class App {
     this.renderer.setAnimationLoop((t) => this.loop(t));
     window.__uminagi = this;
   }
+  // PC ultra: scene -> GTAO (ambient occlusion) -> bloom (lamps, sun glints) -> tone mapping -> SMAA
+  async setupPost() {
+    const [{ EffectComposer }, { RenderPass }, { GTAOPass }, { UnrealBloomPass }, { SMAAPass }, { OutputPass }, { ShaderPass }] = await Promise.all([
+      import('three/addons/postprocessing/EffectComposer.js'), import('three/addons/postprocessing/RenderPass.js'), import('three/addons/postprocessing/GTAOPass.js'),
+      import('three/addons/postprocessing/UnrealBloomPass.js'), import('three/addons/postprocessing/SMAAPass.js'), import('three/addons/postprocessing/OutputPass.js'),
+      import('three/addons/postprocessing/ShaderPass.js')]);
+    // drop NaN/negative pixels and cap HDR peaks (sun glints) so bloom never smears them across the screen
+    const sanitize = () => new ShaderPass({
+      uniforms: { tDiffuse: { value: null } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: 'uniform sampler2D tDiffuse; varying vec2 vUv; void main(){ vec4 c = texture2D(tDiffuse, vUv); if (any(isnan(c)) || any(isinf(c))) c = vec4(0.0, 0.0, 0.0, 1.0); gl_FragColor = vec4(clamp(c.rgb, 0.0, 5.0), 1.0); }',
+    });
+    const r = this.renderer, rt = new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 0 });
+    const c = this.composer = new EffectComposer(r, rt);
+    c.addPass(new RenderPass(this.scene, this.camera));
+    c.addPass(sanitize());
+    const ao = this.ao = new GTAOPass(this.scene, this.camera, 1, 1);
+    ao.updateGtaoMaterial({ radius: 0.9, distanceExponent: 1.4, thickness: 1.2, scale: 1.0, samples: 12 });
+    ao.updatePdMaterial({ lumaPhi: 10, depthPhi: 2, normalPhi: 3, radius: 6, rings: 2, samples: 16 });
+    ao.blendIntensity = 0.85;
+    c.addPass(ao);
+    c.addPass(sanitize());
+    this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.55, 0.92);
+    c.addPass(this.bloom);
+    c.addPass(new OutputPass());
+    this.smaa = new SMAAPass(1, 1); c.addPass(this.smaa);
+  }
   resize() {
     const w = innerWidth, h = innerHeight;
     this.renderer.setSize(w, h, false); this.camera.aspect = w / h;
+    if (this.composer) { this.composer.setPixelRatio(this.renderer.getPixelRatio()); this.composer.setSize(w, h); }
     this.camera.fov = w < h ? 70 : 58; this.camera.updateProjectionMatrix();
   }
   ui(hasSave) {
@@ -116,6 +147,11 @@ class App {
     $('reset').onclick = () => { try { localStorage.removeItem(SAVE); } catch { /* ignore */ } location.search = ''; };
     this.syncButtons();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
+    addEventListener('keydown', (e) => {
+      if (!this.playing) return;
+      if (e.code === 'KeyM') { if (document.pointerLockElement) document.exitPointerLock(); this.toggleMap(); }
+      if (e.code === 'KeyT') { const order = ['day', 'evening', 'night']; this.world.setTimeOfDay(order[(order.indexOf(this.world.todName) + 1) % 3]); this.syncButtons(); }
+    });
   }
   syncButtons() {
     for (const b of document.querySelectorAll('[data-tod]')) b.classList.toggle('on', b.dataset.tod === this.world.todName);
@@ -209,7 +245,12 @@ class App {
     this.town.update(dt, cam, pl.pos, Q.lod);
     if (this.playing && !this.mapT) this.drawMap($('map'), 0);
     this.mapT = ((this.mapT || 0) + 1) % 3;
-    if (draw) this.renderer.render(this.scene, this.camera);
+    if (!draw) return;
+    if (this.composer) {
+      this.bloom.strength = 0.22 + 0.55 * this.world.cur.glow;   // lamps and lit windows bloom at night
+      this.bloom.threshold = 0.92 - 0.25 * this.world.cur.glow;
+      this.composer.render();
+    } else this.renderer.render(this.scene, this.camera);
   }
   // ------------------------------------------------------------------ scene export (tools/export_scene.mjs)
   // placements of every kit model (instanced and animated) + the generated ground as a GLB (base64)

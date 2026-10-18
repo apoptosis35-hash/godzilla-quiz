@@ -61,7 +61,7 @@
   <p>時間帯</p>
   <div class="row"><button class="btn" data-tod="day">昼</button><button class="btn" data-tod="evening">夕方</button><button class="btn" data-tod="night">夜</button></div>
   <p>描画品質 <small>(変えると再読み込みします)</small></p>
-  <div class="row"><button class="btn" data-q="low">軽量</button><button class="btn" data-q="medium">標準</button><button class="btn" data-q="high">高画質</button></div>
+  <div class="row"><button class="btn" data-q="low">軽量</button><button class="btn" data-q="medium">標準</button><button class="btn" data-q="high">高画質</button><button class="btn" data-q="ultra">最高(PC)</button></div>
   <p class="help">左半分をドラッグ: 歩く / 右半分をドラッグ: 見まわす / 2本指: ズーム<br>PC: WASD・矢印で歩く、Shiftでダッシュ、マウスドラッグで見まわす、ホイールでズーム</p>
   <div class="row"><button class="btn" id="reset">はじめからやり直す</button><button class="btn" id="setclose">閉じる</button></div>
 </div>
@@ -76,7 +76,8 @@
   <h1>海凪の港町<small>UMINAGI PORT TOWN</small></h1>
   <p class="lead">海と人と暮らしがとけあう、小さな漁港の町。<br>港から商店街、坂の住宅街、神社、そして灯台の丘まで、自由に歩いてみよう。</p>
   <div class="row"><button id="continue" class="big alt" hidden>つづきから</button><button id="startbtn" class="big">港から歩きはじめる</button></div>
-  <p class="small">左半分で歩く・右半分で見まわす・🗺️で地図(移動もできます)</p>
+  <p class="small touch-only">左半分で歩く・右半分で見まわす・🗺️で地図(移動もできます)</p>
+  <p class="small pc-only">WASDで歩く・Shiftで走る・クリックでマウス操作(Escで解除)・ホイールでズーム・Mで地図</p>
 </div>
 
 <script type="module" src="js/main.js"></script>
