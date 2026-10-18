@@ -132,19 +132,20 @@ python3 tools/render_town.py [--samples 96] [--size 1920x1080] [overview harbour
 | 丸太の柵(2m) | `fence_log.glb` | 灯台・展望台 | 2.14 × 1.05 × 0.14 | 112 / 32 | — |
 | 植木鉢の寄せ植え | `plant_pots.glb` | 住宅の小物 | 1.31 × 0.78 × 1.0 | 770 / 211 | — |
 | プロパンボンベ | `propane.glb` | 住宅の小物 | 0.8 × 1.28 × 0.38 | 212 / 61 | — |
-| 黒松 | `tree_pine.glb` | 自然 | 6.58 × 7.86 × 7.06 | 1412 / 346 | — |
-| 黒松(海辺・傾き) | `tree_pine_b.glb` | 自然 | 6.88 × 6.75 × 5.94 | 1412 / 346 | — |
-| 広葉樹(クスノキ) | `tree_broadleaf.glb` | 自然 | 6.46 × 7.71 × 7.46 | 1696 / 381 | — |
-| ご神木(大楠・しめ縄) | `tree_shinboku.glb` | 神社 | 9.98 × 13.05 × 10.73 | 3036 / 698 | — |
-| 桜 | `tree_sakura.glb` | 自然 | 5.76 × 5.63 × 5.21 | 1512 / 343 | — |
+| 黒松 | `tree_pine.glb` | 自然 | 6.78 × 7.88 × 7.12 | 1628 / 373 | — |
+| 黒松(海辺・傾き) | `tree_pine_b.glb` | 自然 | 6.93 × 6.78 × 5.88 | 1628 / 373 | — |
+| 広葉樹(クスノキ) | `tree_broadleaf.glb` | 自然 | 6.64 × 7.78 × 7.68 | 2176 / 541 | — |
+| ご神木(大楠・しめ縄) | `tree_shinboku.glb` | 神社 | 10.49 × 13.14 × 10.81 | 3756 / 942 | — |
+| 桜 | `tree_sakura.glb` | 自然 | 6.08 × 5.82 × 5.28 | 1890 / 438 | — |
 | 杉 | `tree_cedar.glb` | 自然 | 4.61 × 12.45 × 4.58 | 412 / 89 | — |
-| 植え込み | `bush.glb` | 自然 | 2.5 × 1.19 × 2.16 | 416 / 106 | — |
-| 紫陽花 | `hydrangea.glb` | 自然 | 2.19 × 1.27 × 1.93 | 1280 / 366 | — |
+| 植え込み | `bush.glb` | 自然 | 2.45 × 1.4 × 2.19 | 480 / 114 | — |
+| 紫陽花 | `hydrangea.glb` | 自然 | 2.43 × 1.32 × 2.17 | 1344 / 376 | — |
 | 草むら | `grass_tuft.glb` | 自然 | 1.17 × 0.7 × 1.16 | 78 / — | — |
 | 岩(A) | `rock_a.glb` | 自然 | 2.96 × 1.66 × 2.42 | 320 / 96 | — |
 | 岩(B・平たい) | `rock_b.glb` | 自然 | 3.57 × 1.08 × 2.81 | 400 / 120 | — |
 | 岩(C・海岸の大岩) | `rock_c.glb` | 自然 | 6.41 × 4.13 × 4.03 | 720 / 216 | — |
 | プレイヤー(旅人) | `player.glb` | 人物 | 0.64 × 1.81 × 0.59 | 1860 / — | player_leg_l, player_arm_l, player_leg_r, player_arm_r |
+| なぎ(操作キャラ・港町の子猫) | `nagi.glb` | 人物 | 0.8 × 1.25 × 0.76 | 4312 / — | nagi_head, nagi_arm_l, nagi_leg_l, nagi_arm_r, nagi_leg_r, nagi_tail |
 | 漁師(ゴム前掛け・長靴) | `fisherman.glb` | 人物 | 0.65 × 1.82 × 0.42 | 1748 / — | fisherman_leg_l, fisherman_arm_l, fisherman_leg_r, fisherman_arm_r |
 | お店のおばちゃん | `shopkeeper.glb` | 人物 | 0.6 × 1.69 × 0.49 | 1528 / — | shopkeeper_leg_l, shopkeeper_arm_l, shopkeeper_leg_r, shopkeeper_arm_r |
 | 町の人(買い物帰り) | `townsman.glb` | 人物 | 0.64 × 1.78 × 0.42 | 1564 / — | townsman_leg_l, townsman_arm_l, townsman_leg_r, townsman_arm_r |

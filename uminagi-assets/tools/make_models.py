@@ -58,7 +58,9 @@ PALETTE = {
     'antifoul': P((0.5, 0.12, 0.07), 0.7), 'boat_blue': P((0.05, 0.22, 0.55), 0.45), 'deck_green': P((0.25, 0.4, 0.3), 0.7),
     'skin': P((0.95, 0.72, 0.56), 0.7), 'hair': P((0.05, 0.04, 0.035), 0.7), 'hair_grey': P((0.6, 0.6, 0.6), 0.7),
     'cloth_khaki': P((0.55, 0.5, 0.36), 0.9), 'denim': P((0.15, 0.22, 0.38), 0.9), 'apron': P((0.08, 0.1, 0.12), 0.4),
-    'boot': P((0.1, 0.1, 0.1), 0.5), 'fur_orange': P((0.85, 0.5, 0.2), 0.9), 'fur_white': P((0.92, 0.9, 0.86), 0.9),
+    'fur_dark': P((0.5, 0.24, 0.08), 0.9), 'cheek': P((1.0, 0.55, 0.6), 0.8), 'nose_pink': P((0.95, 0.45, 0.5), 0.5), 'eye': P((0.02, 0.02, 0.03), 0.15),
+    'raincoat': P((1.0, 0.78, 0.08), 0.35),
+    'boot': P((0.1, 0.1, 0.1), 0.5), 'fur_orange': P((0.95, 0.36, 0.07), 0.9), 'fur_white': P((0.92, 0.9, 0.86), 0.9),
     'bark': P((0.28, 0.21, 0.16), 0.95), 'bark_pine': P((0.3, 0.24, 0.2), 0.95), 'leaf': P((0.16, 0.36, 0.12), 0.85),
     'leaf_dark': P((0.07, 0.22, 0.09), 0.85), 'leaf_light': P((0.36, 0.55, 0.2), 0.85), 'pine': P((0.08, 0.24, 0.12), 0.85),
     'sakura': P((1.0, 0.72, 0.8), 0.8), 'hydrangea': P((0.45, 0.5, 0.92), 0.8), 'hydrangea_pink': P((0.92, 0.55, 0.75), 0.8),
@@ -1708,10 +1710,10 @@ def pine(h, lean, seed):
         base = pts[min(6, max(2, int(z / top.z * 6)))]
         rod('bark_pine', base, c, 0.07, 5)
         sx, sy = rnd.uniform(1.2, 1.8), rnd.uniform(1.0, 1.5)
-        ico('pine', 0.75, c, (sx, sy, 0.35), 2, 0.3, seed * 10 + k)
-        cards('pine_card', c + Vector((0, 0, 0.1)), 1.0, 22, 1.0, seed * 10 + k, (sx, sy, 0.38), up=0.9, flat=0.6)
-    ico('pine', 0.75, top + Vector((0, 0, 0.3)), (1.6, 1.4, 0.45), 2, 0.3, seed)
-    cards('pine_card', top + Vector((0, 0, 0.4)), 1.0, 22, 1.0, seed, (1.6, 1.4, 0.45), up=0.9, flat=0.6)
+        ico('pine', 0.5, c, (sx, sy, 0.35), 2, 0.3, seed * 10 + k)
+        cards('pine_card', c + Vector((0, 0, 0.1)), 1.0, 34, 1.1, seed * 10 + k, (sx, sy, 0.4), up=0.9, flat=0.6, shell=(0.2, 1.0))
+    ico('pine', 0.5, top + Vector((0, 0, 0.3)), (1.6, 1.4, 0.45), 2, 0.3, seed)
+    cards('pine_card', top + Vector((0, 0, 0.4)), 1.0, 34, 1.1, seed, (1.6, 1.4, 0.45), up=0.9, flat=0.6, shell=(0.2, 1.0))
 
 @model('tree_pine', '黒松', '自然')
 def tree_pine(): pine(9.0, 1.4, 3)
@@ -1719,12 +1721,12 @@ def tree_pine(): pine(9.0, 1.4, 3)
 @model('tree_pine_b', '黒松(海辺・傾き)', '自然')
 def tree_pine_b(): pine(7.5, 2.6, 7)
 
-def canopy(clumps, dark='leaf_dark', card='leaf_card', card_dark='leaf_card_dark', seed=0, size=1.0, per=26):
+def canopy(clumps, dark='leaf_dark', card='leaf_card', card_dark='leaf_card_dark', seed=0, size=1.25, per=44):
     """Broadleaf crown: each clump = a dark inner blob (fills gaps) + leaf cards on its shell (lighter on top)."""
     rnd = random.Random(seed)
     for k, (c, r) in enumerate(clumps):
-        ico(dark, r * 0.6, c, (1, 1, 0.8), 2, 0.2, seed + k)
-        cards(card, c, r, per, size, seed * 31 + k, (1, 1, 0.82), up=0.6, shell=(0.35, 1.0))
+        ico(dark, r * 0.38, c, (1, 1, 0.8), 2, 0.2, seed + k)
+        cards(card, c, r, per, size, seed * 31 + k, (1, 1, 0.82), up=0.6, shell=(0.15, 1.0))
         cards(card_dark, Vector(c) - Vector((0, 0, r * 0.25)), r * 0.85, per // 3, size, seed * 37 + k, (1, 1, 0.7), up=-0.6)
 
 @model('tree_broadleaf', '広葉樹(クスノキ)', '自然')
@@ -1751,7 +1753,7 @@ def tree_shinboku():
     for k in range(15):
         a = k * 2.2; r = rnd.uniform(1.0, 4.2)
         cl.append(((math.cos(a) * r, math.sin(a) * r, rnd.uniform(7, 10.8)), rnd.uniform(1.7, 2.5)))
-    canopy(cl, seed=8, size=1.4, per=30)
+    canopy(cl, seed=8, size=1.6, per=48)
     torus('rope', 1.1, 0.12, (0, 0, 2.2), seg=20, rseg=8)
     for k in range(4):
         a = k * math.pi / 2
@@ -1768,7 +1770,7 @@ def tree_sakura():
     for k in range(9):
         a = k * 2.4; r = rnd.uniform(0.5, 2.1)
         cl.append(((math.cos(a) * r, math.sin(a) * r, rnd.uniform(3.2, 4.7)), rnd.uniform(0.95, 1.35)))
-    canopy(cl, dark='sakura', card='sakura_card', card_dark='sakura_card', seed=5, size=0.9, per=24)
+    canopy(cl, dark='sakura', card='sakura_card', card_dark='sakura_card', seed=5, size=1.1, per=40)
 
 @model('tree_cedar', '杉', '自然')
 def tree_cedar():
@@ -1782,15 +1784,15 @@ def tree_cedar():
 def bush():
     for k in range(4):
         c = (math.cos(k * 1.7) * 0.5, math.sin(k * 1.7) * 0.4, 0.45)
-        ico('leaf_dark', 0.45, c, (1, 1, 0.8), 2, 0.3, k)
-        cards('shrub_card', c, 0.6, 12, 0.6, 70 + k, (1, 1, 0.8), up=0.5)
+        ico('leaf_dark', 0.3, c, (1, 1, 0.8), 2, 0.3, k)
+        cards('shrub_card', c, 0.6, 20, 0.65, 70 + k, (1, 1, 0.8), up=0.5, shell=(0.2, 1.0))
 
 @model('hydrangea', '紫陽花', '自然')
 def hydrangea():
     for k in range(4):
         c = (math.cos(k * 1.6) * 0.45, math.sin(k * 1.6) * 0.4, 0.4)
-        ico('leaf_dark', 0.42, c, (1, 1, 0.8), 2, 0.25, k)
-        cards('shrub_card', c, 0.55, 10, 0.55, 80 + k, (1, 1, 0.8), up=0.4)
+        ico('leaf_dark', 0.3, c, (1, 1, 0.8), 2, 0.25, k)
+        cards('shrub_card', c, 0.55, 18, 0.6, 80 + k, (1, 1, 0.8), up=0.4, shell=(0.2, 1.0))
     for k in range(11):
         a = k * 2.1; r = 0.45 + (k % 3) * 0.14
         ico('hydrangea' if k % 3 else 'hydrangea_pink', 0.17, (math.cos(a) * r, math.sin(a) * r, 0.62 + (k % 2) * 0.2), sub=2, jitter=0.18, seed=k)
@@ -1855,6 +1857,55 @@ def person(cloth_top, cloth_bottom, hat=None, h=1.0, apron=False, boots=False, b
 
 @model('player', 'プレイヤー(旅人)', '人物', lod=False)
 def player(): person('cloth_white', 'denim', 'straw', 1.0, backpack=True, prefix='player')
+
+@model('nagi', 'なぎ(操作キャラ・港町の子猫)', '人物', lod=False)
+def nagi():
+    # Original chibi mascot (about 2 heads tall, 1.2 m): an orange tabby kitten in a straw hat, a yellow raincoat,
+    # a red neckerchief, a fish-shaped pouch and yellow rain boots. Parts: nagi_head (pivot at the neck),
+    # nagi_arm_l/r (shoulders), nagi_leg_l/r (hips), nagi_tail (base of the tail).
+    cyl('raincoat', 0.22, 0.34, (0, 0, 0.27), 20, r2=0.16)
+    torus('raincoat', 0.215, 0.025, (0, 0, 0.28), seg=20, rseg=6)
+    ico('raincoat', 0.16, (0, 0, 0.6), (1.05, 0.95, 0.45), 2)
+    for z in (0.36, 0.45, 0.54): ico('white', 0.022, (0, -0.205 + (z - 0.27) * 0.18, z), sub=1)
+    torus('cloth_red', 0.12, 0.035, (0, 0, 0.64), seg=18, rseg=6)
+    prism('cloth_red', [(-0.07, 0.0), (0.07, 0.0), (0, -0.12)], 0.025, loc=(0, -0.155, 0.63), axis='Y')
+    rod('cloth_khaki', (-0.15, -0.1, 0.6), (0.2, -0.05, 0.36), 0.012, 4)
+    ico('cloth_blue', 0.075, (0.22, -0.05, 0.34), (1.6, 0.6, 1.0), 2)  # fish pouch
+    prism('cloth_blue', [(0, 0), (0.08, 0.06), (0.08, -0.06)], 0.03, loc=(0.335, -0.05, 0.34), axis='Y')
+    ico('white', 0.016, (0.165, -0.1, 0.355), sub=1); ico('eye', 0.009, (0.165, -0.112, 0.355), sub=1)
+    part('nagi_head', (0, 0, 0.64))
+    ico('fur_orange', 0.3, (0, 0, 0.9), (1.12, 1.0, 0.93), 3)
+    ico('fur_white', 0.15, (0, -0.215, 0.83), (1.35, 0.55, 0.8), 3)  # muzzle
+    for sx in (-1, 1):
+        ico('eye', 0.058, (sx * 0.115, -0.262, 0.915), (0.82, 0.42, 1.25), 3)
+        ico('white', 0.019, (sx * 0.115 + 0.015, -0.29, 0.945), sub=2)
+        ico('white', 0.009, (sx * 0.115 - 0.017, -0.285, 0.89), sub=1)
+        ico('cheek', 0.05, (sx * 0.2, -0.215, 0.8), (1.1, 0.35, 0.65), 2)
+        for k in (-1, 1): rod('ink', (sx * 0.25, -0.22, 0.83 + k * 0.02), (sx * 0.38, -0.2, 0.84 + k * 0.045), 0.004, 3)  # whiskers
+        o = cyl('fur_orange', 0.11, 0.21, (sx * 0.2, 0.0, 1.02), 10, r2=0.0); o.rotation_euler = (0, sx * 0.45, 0)  # ears
+        o = cyl('nose_pink', 0.07, 0.15, (sx * 0.2, -0.035, 1.03), 10, r2=0.0); o.rotation_euler = (0, sx * 0.45, 0)
+    ico('nose_pink', 0.026, (0, -0.3, 0.865), (1.2, 0.7, 0.8), 2)
+    for sx in (-1, 1): rod('ink', (0, -0.3, 0.84), (sx * 0.035, -0.295, 0.815), 0.006, 3)  # mouth
+    for k in (-1, 0, 1): ico('fur_dark', 0.05, (k * 0.07, -0.18, 1.07 - abs(k) * 0.02), (0.35, 0.5, 1.0), 2)  # tabby stripes
+    with xf((0, 0.06, 1.13), rx=-0.28):  # small straw hat tipped back
+        cyl('straw', 0.27, 0.018, (0, 0, 0), 28, r2=0.25)
+        ico('straw', 0.16, (0, 0, 0.0), (1, 1, 0.75), 3, flat_bottom=0)
+        torus('cloth_red', 0.152, 0.016, (0, 0, 0.03), seg=24, rseg=5)
+    part(None)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        part(f'nagi_arm_{sd}', (sx * 0.19, 0, 0.56))
+        rod('raincoat', (sx * 0.19, 0, 0.56), (sx * 0.27, -0.03, 0.4), 0.062, 10)
+        ico('fur_white', 0.062, (sx * 0.28, -0.035, 0.37), sub=2)
+        part(f'nagi_leg_{sd}', (sx * 0.09, 0, 0.28))
+        cyl('fur_orange', 0.068, 0.16, (sx * 0.09, 0, 0.12), 10)
+        cyl('raincoat', 0.085, 0.13, (sx * 0.09, 0, 0.0), 12, r2=0.078)  # rain boots
+        ico('raincoat', 0.085, (sx * 0.09, -0.05, 0.035), (1, 1.3, 0.55), 2, flat_bottom=-0.035)
+        part(None)
+    part('nagi_tail', (0, 0.17, 0.33))
+    pts = [(0, 0.17, 0.33), (0, 0.3, 0.38), (0.0, 0.4, 0.52), (0.04, 0.4, 0.68), (0.09, 0.33, 0.78)]
+    for i in range(4): rod('fur_orange' if i % 2 == 0 else 'fur_dark', pts[i], pts[i + 1], 0.045 - i * 0.004, 8)
+    ico('fur_white', 0.04, pts[-1], sub=2)
+    part(None)
 
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
 def fisherman(): person('cloth_navy', 'cloth_navy', 'towel', 1.02, apron=True, boots=True, hair='hair_grey', prefix='fisherman')

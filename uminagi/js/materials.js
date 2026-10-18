@@ -61,7 +61,7 @@ export class MaterialLib {
       if (t.nrm) { m.normalMap = t.nrm; m.normalScale.set(0.9, 0.9); }
       if (t.rough) { m.roughnessMap = t.rough; m.roughness = 1; }
     }
-    if (t && this.texMeta[d.tex]?.alpha) { m.alphaTest = 0.45; m.side = THREE.DoubleSide; m.normalMap = null; }  // foliage cards
+    if (t && this.texMeta[d.tex]?.alpha) { m.alphaTest = 0.45; m.side = THREE.DoubleSide; m.normalMap = null; m.vertexColors = true; }  // foliage cards (crown shading in vertex colours)
     if (d.emit) { m.emissive = new THREE.Color().setRGB(...d.emit, THREE.LinearSRGBColorSpace); m.emissiveIntensity = d.emit_strength; this.glow[name] = { m, base: d.emit_strength }; }
     if (name === 'glass') { m.metalness = 0.1; m.roughness = 0.05; m.envMapIntensity = 1.6; }
     if (name === 'concrete_wet') m.envMapIntensity = 1.3;

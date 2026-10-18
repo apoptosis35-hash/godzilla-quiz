@@ -1948,12 +1948,12 @@
   "jp": "黒松",
   "category": "自然",
   "size_m": [
-   6.58,
-   7.86,
-   7.06
+   6.78,
+   7.88,
+   7.12
   ],
-  "tris": 1412,
-  "lod1_tris": 346,
+  "tris": 1628,
+  "lod1_tris": 373,
   "materials": [
    "bark_pine",
    "pine",
@@ -1962,19 +1962,19 @@
   "parts": [
    "tree_pine_body"
   ],
-  "kb": 124.4
+  "kb": 140.7
  },
  {
   "name": "tree_pine_b",
   "jp": "黒松(海辺・傾き)",
   "category": "自然",
   "size_m": [
-   6.88,
-   6.75,
-   5.94
+   6.93,
+   6.78,
+   5.88
   ],
-  "tris": 1412,
-  "lod1_tris": 346,
+  "tris": 1628,
+  "lod1_tris": 373,
   "materials": [
    "bark_pine",
    "pine",
@@ -1983,19 +1983,19 @@
   "parts": [
    "tree_pine_b_body"
   ],
-  "kb": 126.8
+  "kb": 142.3
  },
  {
   "name": "tree_broadleaf",
   "jp": "広葉樹(クスノキ)",
   "category": "自然",
   "size_m": [
-   6.46,
-   7.71,
-   7.46
+   6.64,
+   7.78,
+   7.68
   ],
-  "tris": 1696,
-  "lod1_tris": 381,
+  "tris": 2176,
+  "lod1_tris": 541,
   "materials": [
    "bark",
    "leaf_card",
@@ -2005,19 +2005,19 @@
   "parts": [
    "tree_broadleaf_body"
   ],
-  "kb": 169.6
+  "kb": 211.2
  },
  {
   "name": "tree_shinboku",
   "jp": "ご神木(大楠・しめ縄)",
   "category": "神社",
   "size_m": [
-   9.98,
-   13.05,
-   10.73
+   10.49,
+   13.14,
+   10.81
   ],
-  "tris": 3036,
-  "lod1_tris": 698,
+  "tris": 3756,
+  "lod1_tris": 942,
   "materials": [
    "bark",
    "leaf_card",
@@ -2029,19 +2029,19 @@
   "parts": [
    "tree_shinboku_body"
   ],
-  "kb": 291.7
+  "kb": 354.5
  },
  {
   "name": "tree_sakura",
   "jp": "桜",
   "category": "自然",
   "size_m": [
-   5.76,
-   5.63,
-   5.21
+   6.08,
+   5.82,
+   5.28
   ],
-  "tris": 1512,
-  "lod1_tris": 343,
+  "tris": 1890,
+  "lod1_tris": 438,
   "materials": [
    "bark",
    "sakura",
@@ -2050,7 +2050,7 @@
   "parts": [
    "tree_sakura_body"
   ],
-  "kb": 151.0
+  "kb": 180.9
  },
  {
   "name": "tree_cedar",
@@ -2078,12 +2078,12 @@
   "jp": "植え込み",
   "category": "自然",
   "size_m": [
-   2.5,
-   1.19,
-   2.16
+   2.45,
+   1.4,
+   2.19
   ],
-  "tris": 416,
-  "lod1_tris": 106,
+  "tris": 480,
+  "lod1_tris": 114,
   "materials": [
    "leaf_dark",
    "shrub_card"
@@ -2091,19 +2091,19 @@
   "parts": [
    "bush_body"
   ],
-  "kb": 49.3
+  "kb": 53.6
  },
  {
   "name": "hydrangea",
   "jp": "紫陽花",
   "category": "自然",
   "size_m": [
-   2.19,
-   1.27,
-   1.93
+   2.43,
+   1.32,
+   2.17
   ],
-  "tris": 1280,
-  "lod1_tris": 366,
+  "tris": 1344,
+  "lod1_tris": 376,
   "materials": [
    "hydrangea",
    "hydrangea_pink",
@@ -2113,7 +2113,7 @@
   "parts": [
    "hydrangea_body"
   ],
-  "kb": 161.5
+  "kb": 166.1
  },
  {
   "name": "grass_tuft",
@@ -2223,6 +2223,43 @@
   "kb": 155.6
  },
  {
+  "name": "nagi",
+  "jp": "なぎ(操作キャラ・港町の子猫)",
+  "category": "人物",
+  "size_m": [
+   0.8,
+   1.25,
+   0.76
+  ],
+  "tris": 4312,
+  "lod1_tris": 0,
+  "materials": [
+   "cheek",
+   "cloth_blue",
+   "cloth_khaki",
+   "cloth_red",
+   "eye",
+   "fur_dark",
+   "fur_orange",
+   "fur_white",
+   "ink",
+   "nose_pink",
+   "raincoat",
+   "straw",
+   "white"
+  ],
+  "parts": [
+   "nagi_body",
+   "nagi_head",
+   "nagi_arm_l",
+   "nagi_leg_l",
+   "nagi_arm_r",
+   "nagi_leg_r",
+   "nagi_tail"
+  ],
+  "kb": 371.9
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",
@@ -2326,7 +2363,7 @@
    "cat_body",
    "cat_tail"
   ],
-  "kb": 27.0
+  "kb": 27.1
  },
  {
   "name": "seagull",

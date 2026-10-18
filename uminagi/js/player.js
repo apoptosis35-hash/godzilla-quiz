@@ -9,9 +9,10 @@ export class Player {
     this.town = town; this.ground = ground;
     this.pos = new THREE.Vector3(0, 1.6, 19);
     this.vy = 0; this.heading = Math.PI; this.speed = 0; this.t = 0;
-    this.yaw = Math.PI; this.pitch = 0.32; this.dist = 9; this.camDist = 9;
-    this.model = town.clone('player', 0, 0, 0, 0, true);
-    this.limbs = {}; for (const s of ['arm_l', 'arm_r', 'leg_l', 'leg_r']) this.limbs[s] = this.model.getObjectByName('player_' + s);
+    this.yaw = Math.PI; this.pitch = 0.28; this.dist = 7; this.camDist = 7;
+    // なぎ: the chibi kitten the player controls (../uminagi-assets nagi.glb)
+    this.model = town.clone('nagi', 0, 0, 0, 0, true);
+    this.limbs = {}; for (const s of ['arm_l', 'arm_r', 'leg_l', 'leg_r', 'head', 'tail']) this.limbs[s] = this.model.getObjectByName('nagi_' + s);
     this.camPos = new THREE.Vector3(); this.camTarget = new THREE.Vector3();
   }
   place(x, z, yaw) {
@@ -94,16 +95,26 @@ export class Player {
     else { this.vy = 0; this.pos.y += (g - this.pos.y) * Math.min(1, dt * 18); if (Math.abs(g - this.pos.y) < 0.01) this.pos.y = g; }
     // model + walk cycle
     this.model.position.copy(this.pos); this.model.rotation.y = this.heading;
-    const sw = Math.sin(this.t * (this.speed > WALK + 0.5 ? 11 : 8)) * Math.min(1, this.speed / WALK) * 0.7;
-    const L = this.limbs;
-    if (L.leg_l) { L.leg_l.rotation.x = sw; L.leg_r.rotation.x = -sw; L.arm_l.rotation.x = -sw * 0.8; L.arm_r.rotation.x = sw * 0.8; }
-    this.model.position.y += Math.abs(Math.sin(this.t * 8)) * Math.min(1, this.speed / WALK) * 0.04;
+    // chibi walk: quick short steps, a hop on every step, swinging arms, bobbing head, waving tail; idle breathing
+    const run = this.speed > WALK + 0.5, k = Math.min(1, this.speed / WALK), f = run ? 15 : 11;
+    this.phase = (this.phase || 0) + dt * f * (k > 0.05 ? 1 : 0);
+    const sw = Math.sin(this.phase) * k * (run ? 0.9 : 0.7), L = this.limbs;
+    if (L.leg_l) { L.leg_l.rotation.x = sw; L.leg_r.rotation.x = -sw; }
+    if (L.arm_l) {
+      L.arm_l.rotation.x = -sw * 1.1; L.arm_r.rotation.x = sw * 1.1;
+      L.arm_l.rotation.z = -0.15 - (run ? 0.35 : 0.1) * k; L.arm_r.rotation.z = 0.15 + (run ? 0.35 : 0.1) * k;   // arms out when running
+    }
+    const breathe = Math.sin(this.t * 2.2) * 0.012 * (1 - k);
+    if (L.head) { L.head.rotation.z = Math.sin(this.phase) * 0.06 * k + Math.sin(this.t * 0.9) * 0.03 * (1 - k); L.head.rotation.x = (run ? 0.12 : 0.04) * k + breathe * 3; }
+    if (L.tail) { L.tail.rotation.z = Math.sin(this.t * (k > 0.05 ? 7 : 2.4)) * (0.25 + 0.2 * k); L.tail.rotation.x = -0.3 * k; }
+    this.model.position.y += Math.abs(Math.sin(this.phase)) * k * (run ? 0.09 : 0.06) + breathe;
+    this.model.rotation.x = (run ? 0.12 : 0.04) * k;   // lean into the walk
   }
   // third-person camera; returns the camera position
   updateCamera(dt, camera, look, zoom) {
     this.yaw -= look.x; this.pitch = Math.max(-0.25, Math.min(1.25, this.pitch + look.y));
     this.dist = Math.max(2.5, Math.min(30, this.dist * Math.exp(zoom)));
-    const tgt = this.camTarget.set(this.pos.x, this.pos.y + 1.45, this.pos.z);
+    const tgt = this.camTarget.set(this.pos.x, this.pos.y + 1.0, this.pos.z);
     const dir = new THREE.Vector3(Math.sin(this.yaw) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.yaw) * Math.cos(this.pitch));
     // pull in when a building or the ground is in the way
     let d = this.dist;

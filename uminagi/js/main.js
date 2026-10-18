@@ -264,7 +264,7 @@ class App {
     }
     this.town.root.traverse((o) => {
       const name = o.name;
-      if (o.parent === this.town.root && this.town.protos[name] && name !== 'player') out.push({ model: name, p: [r4(o.position.x), r4(o.position.y), r4(o.position.z)], r: [0, r4(o.rotation.y), 0], s: 1, animated: true });
+      if (o.parent === this.town.root && this.town.protos[name] && name !== 'nagi') out.push({ model: name, p: [r4(o.position.x), r4(o.position.y), r4(o.position.z)], r: [0, r4(o.rotation.y), 0], s: 1, animated: true });
     });
     const ground = this.scene.getObjectByName('ground');
     const glb = await new GLTFExporter().parseAsync(ground, { binary: true, onlyVisible: true });

@@ -27,7 +27,7 @@ export const MODELS = {
     'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff'],
   nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c'],
   // animated (cloned)
-  dynamic: ['fishing_boat', 'fishing_boat_b', 'lighthouse', 'lighthouse_red', 'player', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
+  dynamic: ['fishing_boat', 'fishing_boat_b', 'lighthouse', 'lighthouse_red', 'nagi', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {
@@ -202,18 +202,18 @@ export class Town {
         leafBox.union(b);
         const ca = pr.geometry.attributes.color;
         if (ca) { leafCol = new THREE.Color(0, 0, 0); for (let i = 0; i < ca.count; i += 7) leafCol.r += ca.getX(i), leafCol.g += ca.getY(i), leafCol.b += ca.getZ(i); leafCol.multiplyScalar(7 / ca.count); }
-        else leafCol = this.mats.flatColor(pr.material);
+        else leafCol = this.mats.flatColor(pr.material).multiply(new THREE.Color(0.6, 0.66, 0.58));  // cards: crown shading darkens the texture
       }
     }
     if (leafBox.isEmpty()) leafBox.copy(box);
     const s = leafBox.getSize(new THREE.Vector3()), c = leafBox.getCenter(new THREE.Vector3());
     const parts = [];
-    const canopy = name === 'tree_cedar' ? new THREE.ConeGeometry(s.x * 0.45, s.y * 1.05, 7, 1) : new THREE.IcosahedronGeometry(0.5, 0);
+    const canopy = name === 'tree_cedar' ? new THREE.ConeGeometry(s.x * 0.42, s.y * 1.05, 8, 2) : new THREE.IcosahedronGeometry(0.5, 1);
     if (name !== 'tree_cedar') canopy.scale(s.x * 0.95, s.y * 0.95, s.z * 0.95);
     canopy.translate(c.x, c.y, c.z);
     const trunk = new THREE.CylinderGeometry(s.x * 0.04, s.x * 0.06, leafBox.min.y + s.y * 0.2, 5, 1, true);
     trunk.translate(0, (leafBox.min.y + s.y * 0.2) / 2, 0);
-    for (const [g, col] of [[canopy.index ? canopy.toNonIndexed() : canopy, leafCol.clone().multiplyScalar(0.85)], [trunk.toNonIndexed(), new THREE.Color(0.18, 0.13, 0.1)]]) {
+    for (const [g, col] of [[canopy.index ? canopy.toNonIndexed() : canopy, leafCol.clone().multiplyScalar(0.78)], [trunk.toNonIndexed(), new THREE.Color(0.18, 0.13, 0.1)]]) {
       const n = g.attributes.position.count, cc = new Float32Array(n * 3);
       for (let i = 0; i < n; i++) cc.set([col.r, col.g, col.b], i * 3);
       g.setAttribute('color', new THREE.BufferAttribute(cc, 3)); g.deleteAttribute('uv'); parts.push(g);
@@ -657,11 +657,17 @@ function canopyNormals(geo, matrix) {
   for (let i = 0; i < P.count; i++) box.expandByPoint(v.fromBufferAttribute(P, i));
   box.getCenter(c); const size = box.getSize(new THREE.Vector3()); c.y -= size.y * 0.15;
   const inv = new THREE.Vector3(1 / Math.max(size.x, 1e-3), 1 / Math.max(size.y, 1e-3), 1 / Math.max(size.z, 1e-3));
+  const col = new Float32Array(P.count * 3);
   for (let i = 0; i < P.count; i++) {
-    v.fromBufferAttribute(P, i).sub(c).multiply(inv); v.y += 0.35; v.normalize();
+    v.fromBufferAttribute(P, i).sub(c).multiply(inv);
+    // self-shadowing: leaves deep inside and underneath the crown are darker, the sunlit top is brighter
+    const depth = Math.min(1, v.length() * 2.2), top = THREE.MathUtils.clamp(v.y * 1.6 + 0.5, 0, 1);
+    const k = 0.42 + 0.4 * depth + 0.25 * top;
+    col.set([k, k, k * 0.97], i * 3);
+    v.y += 0.35; v.normalize();
     n.set([v.x, v.y, v.z], i * 3);
   }
-  const g = geo.clone(); g.setAttribute('normal', new THREE.BufferAttribute(n, 3));
+  const g = geo.clone(); g.setAttribute('normal', new THREE.BufferAttribute(n, 3)); g.setAttribute('color', new THREE.BufferAttribute(col, 3));
   void matrix; return g;
 }
 
@@ -670,6 +676,7 @@ function bakeMerge(list) {
   let nv = 0, ni = 0;
   for (const pr of list) { nv += pr.geometry.attributes.position.count; ni += pr.geometry.index ? pr.geometry.index.count : pr.geometry.attributes.position.count; }
   const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), uv = new Float32Array(nv * 2), idx = new Uint32Array(ni);
+  const hasCol = list.some((pr) => pr.geometry.attributes.color), col = hasCol ? new Float32Array(nv * 3).fill(1) : null;
   const v = new THREE.Vector3(), nm = new THREE.Matrix3(); let ov = 0, oi = 0;
   for (const pr of list) {
     const g = pr.geometry, P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv;
@@ -678,6 +685,7 @@ function bakeMerge(list) {
       v.fromBufferAttribute(P, i).applyMatrix4(pr.matrix); pos.set([v.x, v.y, v.z], (ov + i) * 3);
       if (N) { v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); nor.set([v.x, v.y, v.z], (ov + i) * 3); }
       if (U) uv.set([U.getX(i), U.getY(i)], (ov + i) * 2);
+      const C = g.attributes.color; if (C) col.set([C.getX(i), C.getY(i), C.getZ(i)], (ov + i) * 3);
     }
     if (g.index) for (let i = 0; i < g.index.count; i++) idx[oi++] = g.index.getX(i) + ov; else for (let i = 0; i < P.count; i++) idx[oi++] = ov + i;
     ov += P.count;
@@ -685,6 +693,7 @@ function bakeMerge(list) {
   const geo = new THREE.BufferGeometry();
   geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(nor, 3));
   geo.setAttribute('uv', new THREE.BufferAttribute(uv, 2)); geo.setIndex(new THREE.BufferAttribute(idx, 1));
+  if (col) geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
   return geo;
 }
 
