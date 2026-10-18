@@ -282,7 +282,7 @@ def slab(mat, e0, e1, r0, r1, t=0.1, period=0.0, amp=0.0, cols=None):
 RIDGE = {'roof_tile': 'ridge_tile', 'roof_tile_brown': 'ridge_brown', 'roof_tile_blue': 'ridge_tile'}
 
 def gable_roof(w, d, rise, z, mat='roof_tile', over_e=0.6, over_g=0.45, t=0.12, ridge=True, rafters=True, barge='wood_frame',
-               fascia='wood_frame', wave=0.032):
+               fascia='wood_frame', wave=0.032, eave_tiles=True, gegyo=False):
     """Kawara gable roof over a w (X) x d (Y) box, ridge along X. z = top of the walls at the eaves."""
     s = rise / (d / 2); hw = w / 2 + over_g; he = d / 2 + over_e
     z += (t + wave) * math.sqrt(1 + s * s) + 0.01
@@ -294,13 +294,17 @@ def gable_roof(w, d, rise, z, mat='roof_tile', over_e=0.6, over_g=0.45, t=0.12, 
         if rafters:
             for x in frange(-w / 2 + 0.2, w / 2 - 0.1, 0.5):
                 rod(fascia or 'wood_frame', (x, sg * (d / 2 - 0.05), z - 0.17), (x, sg * (he - 0.05), ze - 0.17), 0.035, 4)
+    tiled = mat in RIDGE
     if ridge:
         rm = RIDGE.get(mat, mat)
-        box(rm, (2 * hw + 0.1, 0.34, 0.22), (0, 0, zr - 0.04))
-        rod(rm, (-hw - 0.05, 0, zr + 0.2), (hw + 0.05, 0, zr + 0.2), 0.12, 10)
+        ridge_cap(-hw - 0.02, hw + 0.02, zr, rm, noshi=tiled)
         for sx in (-1, 1):  # onigawara end tiles
-            box(rm, (0.12, 0.5, 0.5), (sx * (hw + 0.02), 0, zr - 0.08))
-            rod(rm, (sx * (hw - 0.04), 0, zr + 0.42), (sx * (hw + 0.08), 0, zr + 0.42), 0.2, 12)
+            onigawara((sx * (hw + 0.04), 0, zr - 0.12), sx, rm, 0.85 if tiled else 0.6)
+    if tiled and eave_tiles and period:  # 軒瓦 row along both eaves and 袖瓦 (verge rolls) along the gable edges
+        for sg in (-1, 1):
+            eave_tile_row(-hw, hw, sg * he, ze, s, sg, RIDGE.get(mat, mat), period)
+            for sx in (-1, 1):
+                rod(RIDGE.get(mat, mat), (sx * (hw - 0.06), sg * (he + 0.02), ze + 0.06), (sx * (hw - 0.06), 0, zr + 0.04), 0.075, 6)
     if barge:
         for sx in (-1, 1):
             for sg in (-1, 1):
@@ -308,7 +312,31 @@ def gable_roof(w, d, rise, z, mat='roof_tile', over_e=0.6, over_g=0.45, t=0.12, 
                 d_ = b - a
                 o = box(barge, (0.06, d_.length + 0.1, 0.24), (a + b) / 2 - Vector((0, 0, 0.12)))
                 o.rotation_euler = (math.atan2(d_.z, d_.y) * (1 if sg < 0 else 1) + (0 if sg < 0 else math.pi), 0, 0)
+            if gegyo:  # 懸魚: carved board hanging under the barge boards at the gable apex
+                prism(barge, [(-0.28, zr - 0.25), (0.28, zr - 0.25), (0.18, zr - 0.6), (0, zr - 0.78), (-0.18, zr - 0.6)], 0.05, loc=(sx * (hw + 0.01), 0, 0))
     return zr
+
+def ridge_cap(x0, x1, zr, rm, noshi=True, y=0.0):
+    """棟: stacked noshi tiles (熨斗瓦) under a round cap tile (冠瓦), running along X at height zr."""
+    box(rm, (x1 - x0, 0.36, 0.2), ((x0 + x1) / 2, y, zr - 0.06))
+    if noshi:
+        for k, (wd, dz) in enumerate(((0.42, 0.12), (0.36, 0.2), (0.3, 0.28))):
+            box(rm, (x1 - x0 - 0.04 * k, wd, 0.06), ((x0 + x1) / 2, y, zr + dz - 0.02))
+    rod(rm, (x0 - 0.03, y, zr + (0.36 if noshi else 0.2)), (x1 + 0.03, y, zr + (0.36 if noshi else 0.2)), 0.11, 10)
+
+def onigawara(loc, sx, rm, s=0.85):
+    """鬼瓦: arched end plate with a raised rim and a round boss, facing ±X."""
+    with xf(loc, s=s):
+        prism(rm, [(-0.38, 0), (0.38, 0), (0.36, 0.42), (0.24, 0.64), (0.12, 0.84), (0, 0.72), (-0.12, 0.84), (-0.24, 0.64), (-0.36, 0.42)], 0.12, loc=(0, 0, 0))
+        prism(rm, [(-0.26, 0.08), (0.26, 0.08), (0.24, 0.42), (0, 0.6), (-0.24, 0.42)], 0.06, loc=(sx * 0.08, 0, 0))
+        rod(rm, (sx * 0.06, 0, 0.32), (sx * 0.16, 0, 0.32), 0.12, 10)
+
+def eave_tile_row(x0, x1, y, z, s, sg, rm, period=0.3):
+    """Round eave-end tiles (軒丸瓦) on the ridges of the corrugation at the eave line y (slope s, side sg)."""
+    ln = math.sqrt(1 + s * s); dy, dz = sg / ln * 0.07, -s / ln * 0.07
+    box2(rm, x0, x1, y + sg * 0.005 - 0.03, y + sg * 0.005 + 0.03, z - 0.07, z + 0.02)  # 平瓦 lip
+    for x in frange(x0 + period / 4, x1, period):
+        rod(rm, (x, y - dy * 0.5, z + 0.02 - dz * 0.5), (x, y + dy, z + 0.02 + dz), 0.065, 6)
 
 def gable_fill(mat, w, d, rise, z, t=0.15):
     """Triangular gable walls at both X ends (between wall top z and the ridge)."""
@@ -316,7 +344,7 @@ def gable_fill(mat, w, d, rise, z, t=0.15):
         x = sx * w / 2
         prism(mat, [(-d / 2, z), (d / 2, z), (0, z + rise)], t, loc=(x - sx * t / 2, 0, 0))
 
-def hip_roof(w, d, rise, z, mat='roof_tile', over=0.6, t=0.12, ridge_k=None, wave=0.032, fascia='wood_frame'):
+def hip_roof(w, d, rise, z, mat='roof_tile', over=0.6, t=0.12, ridge_k=None, wave=0.032, fascia='wood_frame', eave_tiles=True, rafters=True):
     """Kawara hipped roof (寄棟) over w x d, ridge along X."""
     s = rise / (d / 2); hw, hd = w / 2 + over, d / 2 + over
     z += (t + wave) * math.sqrt(1 + s * s) + 0.01
@@ -329,19 +357,40 @@ def hip_roof(w, d, rise, z, mat='roof_tile', over=0.6, t=0.12, ridge_k=None, wav
         slab(mat, (sg * hw, -hd, ze), (sg * hw, hd, ze), (sg * rx, -0.001, zr), (sg * rx, 0.001, zr), t, period, wave)
         if fascia:
             box(fascia, (2 * hw, 0.05, 0.2), (0, sg * (hd - 0.03), ze - 0.26)); box(fascia, (0.05, 2 * hd, 0.2), (sg * (hw - 0.03), 0, ze - 0.26))
-    rm = RIDGE.get(mat, mat)
-    if rx > 0.05: rod(rm, (-rx - 0.1, 0, zr + 0.08), (rx + 0.1, 0, zr + 0.08), 0.13, 10)
+    rm = RIDGE.get(mat, mat); tiled = mat in RIDGE
+    if rx > 0.05:
+        ridge_cap(-rx - 0.05, rx + 0.05, zr - 0.02, rm, noshi=tiled)
+        if tiled:
+            for sx in (-1, 1): onigawara((sx * (rx + 0.1), 0, zr - 0.14), sx, rm, 0.7)
     for sx in (-1, 1):
         for sy in (-1, 1):
             rod(rm, (sx * hw, sy * hd, ze + 0.05), (sx * rx, 0, zr + 0.05), 0.09, 6)
+            if tiled:  # 隅棟: a second, narrower roll on top of the hip and a small end tile at the corner
+                rod(rm, (sx * (hw - 0.05), sy * (hd - 0.05), ze + 0.15), (sx * rx, 0, zr + 0.15), 0.07, 6)
+                ico(rm, 0.13, (sx * (hw - 0.02), sy * (hd - 0.02), ze + 0.12), (1, 1, 1.2), 1)
+    if tiled and eave_tiles and period:
+        se = rise / max(0.3, hw - rx)
+        for sg in (-1, 1):
+            eave_tile_row(-hw + 0.1, hw - 0.1, sg * hd, ze, s, sg, rm, period)
+            with xf((0, 0, 0), math.pi / 2): eave_tile_row(-hd + 0.1, hd - 0.1, -sg * hw, ze, se, -sg, rm, period)
+    if rafters:
+        for sg in (-1, 1):
+            for x in frange(-w / 2 + 0.2, w / 2 - 0.1, 0.5):
+                rod(fascia or 'wood_frame', (x, sg * (d / 2 - 0.05), z - 0.17), (x, sg * (hd - 0.05), ze - 0.17), 0.035, 4)
     return zr
 
-def pent_roof(w, depth, z, mat='roof_tile', drop=0.35, wave=0.03):
+def pent_roof(w, depth, z, mat='roof_tile', drop=0.35, wave=0.03, tiles=True):
     """庇: small lean-to tiled roof sticking out of a wall (wall plane at y=0, roof towards -Y), top edge at z."""
     slab(mat, (-w / 2, -depth, z - drop), (w / 2, -depth, z - drop), (-w / 2, 0.02, z), (w / 2, 0.02, z), 0.08, 0.3 if wave else 0, wave)
     box('wood_frame', (w, 0.05, 0.14), (0, -depth + 0.02, z - drop - 0.2))
     for x in (-w / 2 + 0.1, w / 2 - 0.1):  # brackets
         prism('wood_frame', [(0, z - 0.6), (0, z - 0.1), (-depth + 0.1, z - drop - 0.1)], 0.07, loc=(x, 0, 0))
+    if mat in RIDGE:
+        rm = RIDGE[mat]
+        box2(rm, -w / 2, w / 2, -0.12, 0.02, z - 0.02, z + 0.1)  # 水切り flashing against the wall
+        if wave and tiles: eave_tile_row(-w / 2, w / 2, -depth, z - drop + 0.04, drop / depth, -1, rm, 0.3)
+        for x in frange(-w / 2 + 0.35, w / 2 - 0.2, 0.6):  # rafter tails
+            rod('wood_frame', (x, 0.0, z - 0.13), (x, -depth + 0.06, z - drop - 0.11), 0.03, 4)
 
 def frange(a, b, step):
     x = a
@@ -374,14 +423,32 @@ def wall(mat, L, H, T=0.15, openings=()):
     quad((L, 0, 0), (L, T, 0), (L, T, H), (L, 0, H))
     return mesh(mat, v, f)
 
-def window(x0, x1, z0, z1, T=0.15, frame='alu', lattice=None, behind='shoji', sill=True, panes=2, bars=False):
+def window(x0, x1, z0, z1, T=0.15, frame='alu', lattice=None, behind='shoji', sill=True, panes=2, bars=False, casing=True, hood=None, tobukuro=0,
+           tob_mat='wood_dark', planter=None):
     """Window filling a wall opening (wall-local coords, see wall())."""
     w, h = x1 - x0, z1 - z0; y = T * 0.45; fw = 0.045
     box2(frame, x0, x1, y - 0.03, y + 0.03, z0, z0 + fw); box2(frame, x0, x1, y - 0.03, y + 0.03, z1 - fw, z1)
     box2(frame, x0, x0 + fw, y - 0.03, y + 0.03, z0, z1); box2(frame, x1 - fw, x1, y - 0.03, y + 0.03, z0, z1)
-    for k in range(1, panes):
-        xm = x0 + w * k / panes; box2(frame, xm - 0.02, xm + 0.02, y - 0.04, y + 0.04, z0, z1)
+    for k in range(panes):  # sliding sashes on two tracks (引き違い): each pane has its own stiles and rails
+        a, b = x0 + w * k / panes - (0.02 if k else 0), x0 + w * (k + 1) / panes + (0.02 if k < panes - 1 else 0)
+        yy = y + (0.022 if k % 2 else -0.022)
+        box2(frame, a, a + 0.035, yy - 0.012, yy + 0.012, z0, z1); box2(frame, b - 0.035, b, yy - 0.012, yy + 0.012, z0, z1)
+        box2(frame, a, b, yy - 0.012, yy + 0.012, z1 - fw - 0.02, z1 - fw + 0.01); box2(frame, a, b, yy - 0.012, yy + 0.012, z0 + fw - 0.01, z0 + fw + 0.03)
     box2('glass', x0, x1, y - 0.005, y + 0.005, z0, z1)
+    if casing:  # 額縁 trim proud of the wall face
+        cm = casing if isinstance(casing, str) else frame
+        box2(cm, x0 - 0.07, x1 + 0.07, -0.035, 0.0, z1, z1 + 0.07); box2(cm, x0 - 0.07, x0, -0.035, 0.0, z0, z1); box2(cm, x1, x1 + 0.07, -0.035, 0.0, z0, z1)
+    if hood:  # 霧除け庇: small sheet hood over the window
+        slab(hood, (x0 - 0.18, -0.42, z1 + 0.16), (x1 + 0.18, -0.42, z1 + 0.16), (x0 - 0.18, 0.0, z1 + 0.32), (x1 + 0.18, 0.0, z1 + 0.32), 0.04)
+        box2('wood_frame' if hood.startswith('roof') else hood, x0 - 0.18, x1 + 0.18, -0.44, -0.4, z1 + 0.08, z1 + 0.16)
+    if tobukuro:  # 戸袋 storm-shutter box beside the window (tobukuro = -1 left, +1 right) and the shutter rail on top
+        tx = x0 - 0.06 - w / panes * 0.55 if tobukuro < 0 else x1 + 0.06
+        box2(tob_mat, tx, tx + w / panes * 0.55, -0.16, 0.0, z0 - 0.08, z1 + 0.1)
+        for k in range(1, 4): box2('wood_frame', tx, tx + w / panes * 0.55, -0.175, -0.16, z0 + (h + 0.18) * k / 4 - 0.1, z0 + (h + 0.18) * k / 4 - 0.08)
+        box2('alu' if frame == 'alu' else 'wood_frame', x0 - 0.05, x1 + 0.05, -0.16, 0.0, z1 + 0.02, z1 + 0.1)
+    if planter:  # flower box on the sill
+        box2('terracotta' if planter is True else planter, x0 + 0.05, x1 - 0.05, -0.3, -0.06, z0 - 0.02, z0 + 0.16)
+        cards('shrub_card', ((x0 + x1) / 2, -0.18, z0 + 0.26), max(0.25, w * 0.3), max(3, round(w * 3)), 0.28, round(x0 * 7) % 97, scale=(w / max(0.25, w * 0.3) * 0.45, 0.4, 0.5), up=0.6)
     if bars:  # muntins (glass lattice of old wooden windows)
         for k in range(1, 3): box2(frame, x0, x1, y - 0.015, y - 0.005, z0 + h * k / 3 - 0.012, z0 + h * k / 3 + 0.012)
     if behind == 'shoji':
@@ -402,8 +469,12 @@ def window(x0, x1, z0, z1, T=0.15, frame='alu', lattice=None, behind='shoji', si
         box2(lattice, x0 - 0.04, x1 + 0.04, -0.1, -0.03, z1 + 0.02, z1 + 0.08); box2(lattice, x0 - 0.04, x1 + 0.04, -0.1, -0.03, z0 - 0.08, z0 - 0.02)
     if sill: box2('wood_frame' if frame == 'wood_frame' else 'alu', x0 - 0.05, x1 + 0.05, -0.06, T * 0.4, z0 - 0.04, z0)
 
-def door(x0, x1, z0, z1, T=0.15, kind='slide_glass', frame='wood_frame'):
+def door(x0, x1, z0, z1, T=0.15, kind='slide_glass', frame='wood_frame', casing=True):
     w, h = x1 - x0, z1 - z0; y = T * 0.5
+    if casing and kind != 'big_slide':  # door frame (枠) proud of the wall and a threshold
+        cm = 'wood_frame' if frame not in ('steel_dark', 'tin_blue', 'alu') else 'steel_dark'
+        box2(cm, x0 - 0.08, x1 + 0.08, -0.04, 0.0, z1, z1 + 0.09); box2(cm, x0 - 0.08, x0, -0.04, 0.0, z0, z1); box2(cm, x1, x1 + 0.08, -0.04, 0.0, z0, z1)
+        box2('granite' if cm == 'wood_frame' else 'concrete', x0 - 0.05, x1 + 0.05, -0.08, T, z0 - 0.02, z0 + 0.03)
     if kind == 'slide_glass':  # 格子戸: wooden sliding doors with glass and a grid of muntins
         for k in range(2):
             a, b = x0 + w * k / 2, x0 + w * (k + 1) / 2; yy = y + (0.03 if k else -0.03)
@@ -446,11 +517,68 @@ def wall_xf(frames, side):
     loc, rz, L = frames[side]
     return xf(loc, rz), L
 
-def downpipe(x, y, z_top, mat='alu'):
-    cyl(mat, 0.05, z_top, (x, y, 0), 8)
+def downpipe(x, y, z_top, mat='alu', wall_dy=None, z0=0.0):
+    """竪樋 with wall brackets, a swan neck at the top (towards the gutter) and a shoe at the bottom.
+    wall_dy: offset from the pipe to the wall (sign gives the direction), adds brackets."""
+    cyl(mat, 0.05, z_top - 0.25 - z0, (x, y, z0 + 0.12), 8)
+    rod(mat, (x, y, z0 + 0.14), (x, y - 0.12 if (wall_dy or 1) > 0 else y + 0.12, z0 + 0.02), 0.05, 8)  # shoe
+    cyl(mat, 0.07, 0.12, (x, y, z_top - 0.17), 8, r2=0.05)  # funnel
+    if wall_dy:
+        for zz in frange(z0 + 0.9, z_top - 0.5, 1.4): box('steel_dark', (0.03, abs(wall_dy) + 0.02, 0.03), (x, y + wall_dy / 2, zz))
 
-def gutter(x0, x1, y, z, mat='alu'):
-    rod(mat, (x0, y, z), (x1, y, z), 0.07, 8)
+def gutter(x0, x1, y, z, mat='alu', hangers=True):
+    """軒樋: half-round gutter with end caps and hangers up to the fascia."""
+    prism(mat, [(-0.075, 0.03), (-0.07, -0.02), (-0.045, -0.06), (0, -0.075), (0.045, -0.06), (0.07, -0.02), (0.075, 0.03), (0.06, 0.03), (0, -0.055), (-0.06, 0.03)],
+          x1 - x0, loc=((x0 + x1) / 2, y, z))
+    if hangers:
+        for x in frange(x0 + 0.3, x1 - 0.2, 0.9): box('steel_dark', (0.02, 0.2, 0.02), (x, y, z + 0.03))
+
+def battens(L, H, openings=(), step=0.45, mat='wood_frame', z0=0.0, w=0.045, out=0.03):
+    """押縁: vertical battens over a board wall in wall-local coords, cut around openings."""
+    for x in frange(step * 0.5, L - 0.05, step):
+        cuts = sorted((o[2], o[3]) for o in openings if o[0] - 0.08 <= x <= o[1] + 0.08)
+        zz = z0
+        for (a, b) in cuts + [(H, H)]:
+            if a - zz > 0.15: box2(mat, x - w / 2, x + w / 2, -out, 0.0, zz, a)
+            zz = max(zz, b + 0.08)
+
+def skirting(w, d, z0, h=0.3, mat='concrete', out=0.04):
+    """水切り/基礎: a slightly proud base band around a w x d box."""
+    box(mat, (w + 2 * out, d + 2 * out, h), (0, 0, z0))
+
+def meter_box(loc, rz=0.0):
+    with xf(loc, rz):
+        box('white', (0.28, 0.12, 0.42), (0, 0, 0)); box('glass', (0.16, 0.02, 0.12), (0, -0.065, 0.24))
+        rod('steel_dark', (0, 0, 0.42), (0, 0, 0.9), 0.02, 4)
+
+def vent_hood(loc, rz=0.0, r=0.1):
+    """Kitchen/bath exhaust hood (換気口) on a wall, facing -Y."""
+    with xf(loc, rz):
+        cyl('alu', r, 0.12, (0, 0, 0), 8, rot=(math.pi / 2, 0, 0)); box('alu', (2.4 * r, 0.16, 0.03), (0, -0.08, r + 0.02))
+
+def tv_antenna(loc, h=1.6, rz=0.3):
+    with xf(loc, rz):
+        rod('alu', (0, 0, 0), (0, 0, h), 0.025, 6)
+        rod('alu', (0, -0.9, h - 0.05), (0, 0.6, h - 0.05), 0.015, 4)
+        for k in range(6): rod('alu', (-0.35 + k * 0.03, -0.8 + k * 0.25, h - 0.05), (0.35 - k * 0.03, -0.8 + k * 0.25, h - 0.05), 0.008, 4)
+        for sx in (-1, 1): rod('steel_dark', (0, 0, h * 0.6), (sx * 0.9, 0.5, -0.3), 0.004, 3)  # guy wires
+
+def solar_heater(loc, rz=0.0, slope=0.0):
+    """太陽熱温水器: tank + collector panels on a roof slope (very common on seaside houses)."""
+    with xf(loc, rz, rx=slope):
+        box('alu', (2.0, 1.4, 0.08), (0, 0, 0)); box('glass', (1.9, 1.3, 0.02), (0, 0, 0.08))
+        for k in range(1, 5): box('alu', (0.03, 1.3, 0.03), (-0.95 + k * 0.38, 0, 0.08))
+        cyl('white', 0.22, 2.0, (-1.0, 0.75, 0.25), 12, rot=(0, math.pi / 2, 0))
+        for x in (-0.8, 0.8): box('alu', (0.06, 0.06, 0.3), (x, 0.75, 0.0))
+
+def entry_hood(x, w, z, depth=0.7, mat='roof_tile'):
+    """玄関庇 with a lamp under it (wall plane y=0, front -Y)."""
+    with xf((x, 0, 0)): pent_roof(w, depth, z, mat, drop=0.22, wave=0.03 if mat in RIDGE else 0.0)
+    box('steel_dark', (0.14, 0.08, 0.2), (w / 2 * 0.0 + x + w / 2 - 0.15, -0.04, z - 0.65)); box('lamp', (0.1, 0.06, 0.12), (x + w / 2 - 0.15, -0.1, z - 0.61))
+
+def mailbox(loc, rz=0.0, mat='red'):
+    with xf(loc, rz):
+        box(mat, (0.34, 0.14, 0.4), (0, 0, 0)); box('black', (0.22, 0.01, 0.03), (0, -0.075, 0.3))
 
 def ac_unit(loc, rz=0.0):
     with xf(loc, rz):
