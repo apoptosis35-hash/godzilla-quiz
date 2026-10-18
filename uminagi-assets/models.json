@@ -4,83 +4,31 @@
   "jp": "細長い家(R1)",
   "category": "住宅",
   "size_m": [
-   6.26,
-   8.67,
+   6.45,
+   8.66,
    9.34
   ],
-  "tris": 6846,
-  "lod1_tris": 1865,
+  "tris": 10513,
+  "lod1_tris": 2885,
   "materials": [
    "alu",
    "black",
-   "cloth_blue",
-   "cloth_check",
-   "cloth_grey",
    "cloth_navy",
-   "cloth_orange",
    "cloth_pink",
-   "cloth_red",
    "cloth_white",
-   "cloth_yellow",
-   "concrete",
-   "curtain",
-   "denim",
-   "futon_red",
-   "glass",
-   "hydrangea",
-   "leaf_dark",
-   "metal",
-   "ridge_tile",
-   "roof_tile",
-   "shoji",
-   "shrub_card",
-   "soil",
-   "steel_dark",
-   "stone_wall",
-   "terracotta",
-   "white",
-   "wood_dark",
-   "wood_frame",
-   "wood_light"
-  ],
-  "parts": [
-   "house_narrow_body"
-  ],
-  "kb": 626.4
- },
- {
-  "name": "house_standard",
-  "jp": "標準的な家(R2)",
-  "category": "住宅",
-  "size_m": [
-   11.23,
-   8.39,
-   8.26
-  ],
-  "tris": 10754,
-  "lod1_tris": 2934,
-  "materials": [
-   "alu",
-   "black",
-   "cloth_blue",
-   "cloth_check",
-   "cloth_green",
-   "cloth_grey",
-   "cloth_navy",
-   "cloth_orange",
-   "cloth_pink",
-   "cloth_red",
-   "cloth_white",
-   "cloth_yellow",
    "concrete",
    "curtain",
    "denim",
    "flower_red",
-   "flower_yellow",
+   "futon_red",
    "glass",
+   "granite",
+   "hydrangea",
+   "ink",
+   "lamp",
    "leaf_dark",
    "metal",
-   "plaster",
+   "red",
    "ridge_tile",
    "roof_tile",
    "shoji",
@@ -91,6 +39,65 @@
    "terracotta",
    "tin_rust",
    "white",
+   "window_lit",
+   "wood_dark",
+   "wood_frame",
+   "wood_light"
+  ],
+  "parts": [
+   "house_narrow_body"
+  ],
+  "kb": 956.4
+ },
+ {
+  "name": "house_standard",
+  "jp": "標準的な家(R2)",
+  "category": "住宅",
+  "size_m": [
+   11.63,
+   8.38,
+   8.26
+  ],
+  "tris": 13366,
+  "lod1_tris": 3703,
+  "materials": [
+   "alu",
+   "black",
+   "cloth_green",
+   "cloth_grey",
+   "cloth_khaki",
+   "cloth_navy",
+   "cloth_pink",
+   "cloth_red",
+   "cloth_white",
+   "cloth_yellow",
+   "concrete",
+   "crate_blue",
+   "curtain",
+   "denim",
+   "flower_red",
+   "flower_yellow",
+   "glass",
+   "granite",
+   "hydrangea",
+   "ink",
+   "lamp",
+   "leaf_dark",
+   "metal",
+   "plaster",
+   "red",
+   "ridge_tile",
+   "roof_tile",
+   "shoji",
+   "shrub_card",
+   "soil",
+   "steel_dark",
+   "stone_wall",
+   "terracotta",
+   "tin_blue",
+   "tin_rust",
+   "white",
+   "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
@@ -99,19 +106,19 @@
   "parts": [
    "house_standard_body"
   ],
-  "kb": 958.1
+  "kb": 1222.0
  },
  {
   "name": "house_twostory",
   "jp": "二階建ての家(R3)",
   "category": "住宅",
   "size_m": [
-   10.33,
-   8.11,
-   8.74
+   10.39,
+   8.37,
+   8.87
   ],
-  "tris": 11550,
-  "lod1_tris": 3142,
+  "tris": 14733,
+  "lod1_tris": 4074,
   "materials": [
    "alu",
    "black",
@@ -119,21 +126,26 @@
    "cloth_check",
    "cloth_green",
    "cloth_grey",
+   "cloth_khaki",
    "cloth_navy",
    "cloth_orange",
    "cloth_pink",
-   "cloth_red",
    "cloth_white",
    "cloth_yellow",
    "concrete",
    "curtain",
    "denim",
+   "flower_red",
    "futon_red",
    "glass",
+   "granite",
    "hydrangea",
+   "ink",
+   "lamp",
    "leaf_dark",
    "metal",
    "plaster_cream",
+   "red",
    "ridge_tile",
    "roof_tile",
    "shoji",
@@ -142,36 +154,45 @@
    "steel_dark",
    "stone_wall",
    "terracotta",
+   "tin_blue",
    "white",
+   "window_lit",
    "wood",
+   "wood_dark",
    "wood_frame",
    "wood_light"
   ],
   "parts": [
    "house_twostory_body"
   ],
-  "kb": 1058.2
+  "kb": 1361.2
  },
  {
   "name": "house_hira",
   "jp": "平屋(R5)",
   "category": "住宅",
   "size_m": [
-   11.33,
-   5.79,
-   8.02
+   11.73,
+   5.78,
+   8.13
   ],
-  "tris": 6792,
-  "lod1_tris": 1932,
+  "tris": 10356,
+  "lod1_tris": 2900,
   "materials": [
    "alu",
    "black",
    "concrete",
+   "crate_blue",
    "curtain",
    "glass",
+   "granite",
+   "hull",
    "hydrangea",
+   "ink",
    "leaf_dark",
    "metal",
+   "net",
+   "red",
    "ridge_tile",
    "roof_tile",
    "shoji",
@@ -180,8 +201,10 @@
    "steel_dark",
    "stone_wall",
    "terracotta",
+   "tin_blue",
    "tin_rust",
    "white",
+   "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
@@ -190,30 +213,37 @@
   "parts": [
    "house_hira_body"
   ],
-  "kb": 598.1
+  "kb": 951.4
  },
  {
   "name": "house_old",
   "jp": "古い木造の家(R6)",
   "category": "住宅",
   "size_m": [
-   7.88,
-   8.25,
-   7.55
+   7.75,
+   8.24,
+   7.63
   ],
-  "tris": 6094,
-  "lod1_tris": 1707,
+  "tris": 10139,
+  "lod1_tris": 2787,
   "materials": [
    "alu",
    "black",
+   "cloth_green",
    "concrete",
    "curtain",
    "flower_red",
    "glass",
+   "granite",
+   "hull",
    "hydrangea",
+   "ink",
+   "lamp",
    "leaf_dark",
    "metal",
+   "net",
    "ridge_brown",
+   "ridge_tile",
    "roof_tile",
    "roof_tile_brown",
    "shoji",
@@ -223,6 +253,8 @@
    "stone_wall",
    "terracotta",
    "white",
+   "window_lit",
+   "wood_dark",
    "wood_frame",
    "wood_grey",
    "wood_light"
@@ -230,38 +262,38 @@
   "parts": [
    "house_old_body"
   ],
-  "kb": 549.3
+  "kb": 922.8
  },
  {
   "name": "house_hipped",
   "jp": "寄棟の家(R7)",
   "category": "住宅",
   "size_m": [
-   8.83,
-   8.17,
-   9.16
+   8.89,
+   8.27,
+   9.22
   ],
-  "tris": 8496,
-  "lod1_tris": 2295,
+  "tris": 12078,
+  "lod1_tris": 3304,
   "materials": [
    "alu",
    "black",
-   "cloth_blue",
-   "cloth_check",
    "cloth_green",
-   "cloth_grey",
+   "cloth_khaki",
+   "cloth_navy",
    "cloth_orange",
    "cloth_pink",
-   "cloth_red",
    "cloth_white",
-   "cloth_yellow",
    "concrete",
    "curtain",
    "denim",
    "flower_red",
    "flower_yellow",
    "glass",
+   "granite",
    "hydrangea",
+   "ink",
+   "lamp",
    "leaf_dark",
    "metal",
    "plaster_white",
@@ -275,13 +307,15 @@
    "stone_wall",
    "terracotta",
    "white",
+   "window_lit",
+   "wood_dark",
    "wood_frame",
    "wood_light"
   ],
   "parts": [
    "house_hipped_body"
   ],
-  "kb": 780.6
+  "kb": 1106.5
  },
  {
   "name": "house_hillside",
@@ -289,22 +323,18 @@
   "category": "住宅",
   "size_m": [
    10.41,
-   10.65,
+   10.63,
    9.0
   ],
-  "tris": 8722,
-  "lod1_tris": 2369,
+  "tris": 11225,
+  "lod1_tris": 3069,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
-   "cloth_check",
    "cloth_green",
    "cloth_grey",
-   "cloth_navy",
-   "cloth_orange",
    "cloth_pink",
-   "cloth_red",
    "cloth_white",
    "cloth_yellow",
    "concrete",
@@ -314,6 +344,8 @@
    "glass",
    "granite",
    "hydrangea",
+   "ink",
+   "lamp",
    "leaf_dark",
    "metal",
    "plaster",
@@ -325,7 +357,9 @@
    "steel_dark",
    "stone_wall",
    "terracotta",
+   "tin_blue",
    "white",
+   "window_lit",
    "wood_dark",
    "wood_frame",
    "wood_light"
@@ -333,19 +367,19 @@
   "parts": [
    "house_hillside_body"
   ],
-  "kb": 786.9
+  "kb": 1023.1
  },
  {
   "name": "shop_general",
   "jp": "雑貨店 まるはち(S1)",
   "category": "商店",
   "size_m": [
-   8.06,
-   8.9,
+   8.28,
+   8.89,
    11.26
   ],
-  "tris": 8282,
-  "lod1_tris": 2314,
+  "tris": 11502,
+  "lod1_tris": 3234,
   "materials": [
    "alu",
    "black",
@@ -356,25 +390,30 @@
    "cloth_yellow",
    "concrete",
    "crate_blue",
+   "curtain",
+   "flower_red",
    "glass",
+   "granite",
    "hydrangea",
    "ink",
    "ink_white",
    "lamp",
    "leaf_dark",
+   "leaf_light",
    "metal",
    "orange",
    "paper",
    "plaster",
    "ridge_tile",
    "roof_tile",
-   "shoji",
    "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
    "terracotta",
+   "tin_blue",
    "white",
+   "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
@@ -384,30 +423,30 @@
   "parts": [
    "shop_general_body"
   ],
-  "kb": 740.6
+  "kb": 1043.0
  },
  {
   "name": "shop_restaurant",
   "jp": "海鮮食堂(S2)",
   "category": "商店",
   "size_m": [
-   8.56,
-   8.9,
-   10.99
+   8.78,
+   8.89,
+   11.13
   ],
-  "tris": 14492,
-  "lod1_tris": 4098,
+  "tris": 15532,
+  "lod1_tris": 4409,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
-   "cloth_green",
    "cloth_navy",
-   "cloth_red",
-   "cloth_yellow",
    "concrete",
    "crate_blue",
+   "curtain",
+   "flower_red",
    "glass",
+   "granite",
    "hydrangea",
    "ink",
    "ink_white",
@@ -416,7 +455,6 @@
    "leaf_dark",
    "metal",
    "orange",
-   "paper",
    "plaster",
    "ridge_tile",
    "roof_tile",
@@ -426,58 +464,62 @@
    "soil",
    "steel_dark",
    "terracotta",
+   "tin_blue",
    "white",
    "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
-   "wood_light"
+   "wood_light",
+   "yellow"
   ],
   "parts": [
    "shop_restaurant_body"
   ],
-  "kb": 1197.7
+  "kb": 1335.0
  },
  {
   "name": "shop_izakaya",
   "jp": "居酒屋 やまもと(S3)",
   "category": "商店",
   "size_m": [
-   7.56,
-   8.9,
+   7.78,
+   8.89,
    11.26
   ],
-  "tris": 8950,
-  "lod1_tris": 2484,
+  "tris": 12950,
+  "lod1_tris": 3666,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
-   "cloth_green",
    "cloth_red",
    "cloth_white",
-   "cloth_yellow",
    "concrete",
-   "crate_blue",
+   "curtain",
    "flower_red",
    "glass",
+   "granite",
+   "hydrangea",
    "ink",
+   "ink_red",
    "ink_white",
    "lamp",
    "lantern_red",
    "leaf_dark",
    "metal",
-   "orange",
-   "paper",
    "plaster",
    "ridge_tile",
    "roof_tile",
+   "rope",
    "shoji",
    "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
+   "straw",
    "terracotta",
+   "tin_blue",
    "white",
    "window_lit",
    "wood",
@@ -488,19 +530,19 @@
   "parts": [
    "shop_izakaya_body"
   ],
-  "kb": 796.8
+  "kb": 1122.1
  },
  {
   "name": "shop_souvenir",
   "jp": "お土産 海の幸(S4)",
   "category": "商店",
   "size_m": [
-   8.06,
-   8.9,
+   8.28,
+   8.89,
    11.26
   ],
-  "tris": 8998,
-  "lod1_tris": 2526,
+  "tris": 11916,
+  "lod1_tris": 3374,
   "materials": [
    "alu",
    "black",
@@ -512,7 +554,10 @@
    "cloth_yellow",
    "concrete",
    "crate_blue",
+   "curtain",
+   "flower_red",
    "glass",
+   "granite",
    "hydrangea",
    "ink",
    "ink_white",
@@ -525,13 +570,14 @@
    "plaster_cream",
    "ridge_tile",
    "roof_tile",
-   "shoji",
    "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
    "terracotta",
+   "tin_blue",
    "white",
+   "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
@@ -540,21 +586,22 @@
   "parts": [
    "shop_souvenir_body"
   ],
-  "kb": 796.7
+  "kb": 1068.5
  },
  {
   "name": "shop_fish",
   "jp": "鮮魚店(S5)",
   "category": "商店",
   "size_m": [
-   9.06,
-   8.9,
+   9.28,
+   9.02,
    11.26
   ],
-  "tris": 8618,
-  "lod1_tris": 2367,
+  "tris": 12202,
+  "lod1_tris": 3371,
   "materials": [
    "alu",
+   "antifoul",
    "black",
    "cloth_blue",
    "cloth_green",
@@ -562,9 +609,15 @@
    "cloth_white",
    "cloth_yellow",
    "concrete",
+   "crate_blue",
+   "curtain",
    "flower_red",
    "glass",
+   "granite",
+   "hull",
+   "hydrangea",
    "ink",
+   "ink_red",
    "ink_white",
    "lamp",
    "leaf_dark",
@@ -574,14 +627,16 @@
    "plaster",
    "ridge_tile",
    "roof_tile",
-   "shoji",
    "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
    "styro",
    "terracotta",
+   "tin_blue",
+   "tin_rust",
    "white",
+   "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
@@ -590,31 +645,35 @@
   "parts": [
    "shop_fish_body"
   ],
-  "kb": 772.4
+  "kb": 1099.1
  },
  {
   "name": "shop_cafe",
   "jp": "喫茶 しおかぜ(S6・角の店)",
   "category": "商店",
   "size_m": [
-   8.06,
-   8.9,
+   8.28,
+   8.89,
    11.26
   ],
-  "tris": 6622,
-  "lod1_tris": 1840,
+  "tris": 11014,
+  "lod1_tris": 3055,
   "materials": [
    "alu",
    "black",
    "cloth_blue",
    "cloth_green",
-   "cloth_pink",
    "cloth_red",
+   "cloth_white",
    "cloth_yellow",
    "concrete",
    "crate_blue",
+   "curtain",
+   "flower_red",
    "glass",
+   "granite",
    "ink",
+   "ink_white",
    "lamp",
    "leaf_dark",
    "metal",
@@ -624,11 +683,13 @@
    "plaster_white",
    "ridge_tile",
    "roof_tile",
+   "shoji",
    "shrub_card",
    "sign_wood",
    "soil",
    "steel_dark",
    "terracotta",
+   "tin_blue",
    "white",
    "window_lit",
    "wood",
@@ -639,21 +700,22 @@
   "parts": [
    "shop_cafe_body"
   ],
-  "kb": 609.7
+  "kb": 1002.5
  },
  {
   "name": "shop_sake",
   "jp": "酒屋(S7・平屋)",
   "category": "商店",
   "size_m": [
-   7.06,
-   6.05,
+   7.28,
+   6.04,
    10.26
   ],
-  "tris": 5872,
-  "lod1_tris": 1677,
+  "tris": 8282,
+  "lod1_tris": 2321,
   "materials": [
    "alu",
+   "black",
    "cloth_blue",
    "cloth_green",
    "cloth_navy",
@@ -661,14 +723,21 @@
    "cloth_yellow",
    "concrete",
    "crate_blue",
+   "curtain",
    "flower_red",
+   "glass",
+   "granite",
+   "hydrangea",
    "ink",
    "ink_white",
    "lamp",
    "leaf_dark",
+   "leaf_light",
    "metal",
    "orange",
    "paper",
+   "pine",
+   "pine_card",
    "plaster",
    "ridge_tile",
    "roof_tile",
@@ -677,137 +746,166 @@
    "soil",
    "steel_dark",
    "terracotta",
+   "tin_blue",
    "white",
+   "window_lit",
    "wood",
    "wood_dark",
    "wood_frame",
-   "wood_light",
-   "yellow"
+   "wood_light"
   ],
   "parts": [
    "shop_sake_body"
   ],
-  "kb": 526.8
+  "kb": 771.3
  },
  {
   "name": "fish_market",
   "jp": "魚市場",
   "category": "漁港",
   "size_m": [
-   31.36,
-   9.99,
+   31.55,
+   10.34,
    20.23
   ],
-  "tris": 14574,
-  "lod1_tris": 4293,
+  "tris": 20452,
+  "lod1_tris": 5889,
   "materials": [
    "alu",
+   "antifoul",
    "black",
    "cloth_navy",
    "cloth_white",
    "concrete",
    "concrete_wet",
+   "crate_blue",
    "glass",
+   "granite",
+   "hull",
    "ink",
    "ink_white",
    "lamp",
    "metal",
+   "navy",
    "ridge_tile",
    "roof_tile",
    "sign_wood",
    "steel_dark",
+   "styro",
+   "tarp_blue",
+   "tin_blue",
+   "tin_rust",
    "white",
    "wood_frame",
-   "wood_grey"
+   "wood_grey",
+   "wood_light",
+   "yellow"
   ],
   "parts": [
    "fish_market_body"
   ],
-  "kb": 1148.4
+  "kb": 1722.8
  },
  {
   "name": "suisan_office",
   "jp": "水産会社の事務所兼倉庫(第一水産)",
   "category": "漁港",
   "size_m": [
-   12.06,
-   9.25,
-   10.95
+   12.56,
+   9.24,
+   11.09
   ],
-  "tris": 5612,
-  "lod1_tris": 1602,
+  "tris": 8552,
+  "lod1_tris": 2410,
   "materials": [
    "alu",
    "black",
+   "blue",
    "concrete",
+   "crate_blue",
    "curtain",
    "glass",
+   "granite",
    "ink",
+   "lamp",
    "metal",
    "ridge_tile",
    "roof_tile",
+   "rust",
    "sign_wood",
    "steel_dark",
+   "styro",
    "tin_blue",
    "white",
    "wood_frame",
-   "wood_grey"
+   "wood_grey",
+   "wood_light"
   ],
   "parts": [
    "suisan_office_body"
   ],
-  "kb": 479.5
+  "kb": 750.0
  },
  {
   "name": "warehouse_wood",
   "jp": "漁業倉庫(木造)",
   "category": "漁港",
   "size_m": [
-   18.33,
-   8.7,
-   11.5
+   18.43,
+   8.93,
+   11.56
   ],
-  "tris": 6688,
-  "lod1_tris": 1921,
+  "tris": 8272,
+  "lod1_tris": 2329,
   "materials": [
    "alu",
    "black",
    "concrete",
    "crate_blue",
+   "float_orange",
+   "float_yellow",
    "glass",
-   "ink",
+   "granite",
+   "lamp",
    "metal",
+   "navy",
    "ridge_tile",
    "roof_tile",
-   "sign_wood",
+   "rope",
    "steel_dark",
    "tin_rust",
+   "white",
    "wood",
+   "wood_dark",
    "wood_frame",
    "wood_grey"
   ],
   "parts": [
    "warehouse_wood_body"
   ],
-  "kb": 572.2
+  "kb": 747.0
  },
  {
   "name": "warehouse_tin",
   "jp": "漁業倉庫(トタン)",
   "category": "漁港",
   "size_m": [
-   13.06,
-   7.81,
-   10.5
+   13.0,
+   7.99,
+   10.53
   ],
-  "tris": 1930,
-  "lod1_tris": 483,
+  "tris": 3070,
+  "lod1_tris": 794,
   "materials": [
    "alu",
    "black",
    "concrete",
    "glass",
+   "granite",
+   "ink_white",
+   "lamp",
    "metal",
+   "rust",
    "steel_dark",
    "tin_blue",
    "tin_rust",
@@ -816,7 +914,7 @@
   "parts": [
    "warehouse_tin_body"
   ],
-  "kb": 175.2
+  "kb": 277.1
  },
  {
   "name": "gear_shed",
@@ -827,17 +925,23 @@
    3.1,
    5.2
   ],
-  "tris": 2322,
-  "lod1_tris": 693,
+  "tris": 3408,
+  "lod1_tris": 1001,
   "materials": [
    "concrete",
    "crate_blue",
    "float_orange",
    "float_white",
    "float_yellow",
+   "ink",
+   "lamp",
    "net",
    "net_green",
    "rope",
+   "rubber",
+   "sign_wood",
+   "steel_dark",
+   "tarp_blue",
    "tin_rust",
    "wood",
    "wood_frame"
@@ -845,18 +949,18 @@
   "parts": [
    "gear_shed_body"
   ],
-  "kb": 273.7
+  "kb": 376.5
  },
  {
   "name": "lighthouse",
   "jp": "灯台(白・高台)",
   "category": "灯台・展望台",
   "size_m": [
-   8.75,
+   8.93,
    18.9,
-   6.25
+   6.43
   ],
-  "tris": 2938,
+  "tris": 4642,
   "lod1_tris": 0,
   "materials": [
    "alu",
@@ -864,6 +968,9 @@
    "black",
    "concrete",
    "glass",
+   "granite",
+   "ink",
+   "lamp",
    "metal",
    "plaster_white",
    "steel_dark",
@@ -873,20 +980,21 @@
    "lighthouse_body",
    "lighthouse_lamp"
   ],
-  "kb": 187.5
+  "kb": 298.2
  },
  {
   "name": "lighthouse_red",
   "jp": "赤灯台(防波堤)",
   "category": "灯台・展望台",
   "size_m": [
-   3.6,
+   3.7,
    9.0,
-   3.6
+   3.7
   ],
-  "tris": 2000,
+  "tris": 2616,
   "lod1_tris": 0,
   "materials": [
+   "alu",
    "beacon_red",
    "concrete",
    "glass",
@@ -899,40 +1007,41 @@
    "lighthouse_red_body",
    "lighthouse_red_lamp"
   ],
-  "kb": 118.9
+  "kb": 160.3
  },
  {
   "name": "torii",
   "jp": "鳥居(朱)",
   "category": "神社",
   "size_m": [
-   5.2,
-   5.43,
-   0.64
+   5.33,
+   5.46,
+   0.68
   ],
-  "tris": 1572,
-  "lod1_tris": 467,
+  "tris": 1936,
+  "lod1_tris": 577,
   "materials": [
    "black",
    "gold",
+   "granite",
    "vermilion"
   ],
   "parts": [
    "torii_body"
   ],
-  "kb": 124.6
+  "kb": 153.4
  },
  {
   "name": "shrine_hall",
   "jp": "社殿(小さな拝殿)",
   "category": "神社",
   "size_m": [
-   7.93,
-   6.78,
-   7.5
+   8.01,
+   6.53,
+   7.54
   ],
-  "tris": 3210,
-  "lod1_tris": 909,
+  "tris": 5014,
+  "lod1_tris": 1423,
   "materials": [
    "black",
    "cloth_red",
@@ -940,8 +1049,9 @@
    "copper",
    "gold",
    "granite",
-   "ink_white",
+   "lantern_white",
    "paper",
+   "plaster_white",
    "straw",
    "vermilion",
    "wood_dark",
@@ -951,7 +1061,7 @@
   "parts": [
    "shrine_hall_body"
   ],
-  "kb": 284.2
+  "kb": 443.0
  },
  {
   "name": "saisen_box",
@@ -959,32 +1069,34 @@
   "category": "神社",
   "size_m": [
    1.3,
-   0.81,
+   0.78,
    0.7
   ],
-  "tris": 736,
-  "lod1_tris": 218,
+  "tris": 1408,
+  "lod1_tris": 419,
   "materials": [
-   "ink_white",
+   "black",
+   "gold",
+   "wood",
    "wood_dark",
    "wood_frame"
   ],
   "parts": [
    "saisen_box_body"
   ],
-  "kb": 61.6
+  "kb": 119.1
  },
  {
   "name": "ishidoro",
   "jp": "石灯籠",
   "category": "神社",
   "size_m": [
-   1.24,
-   2.4,
-   1.07
+   1.26,
+   2.48,
+   1.1
   ],
-  "tris": 248,
-  "lod1_tris": 73,
+  "tris": 1352,
+  "lod1_tris": 396,
   "materials": [
    "granite",
    "lamp",
@@ -994,26 +1106,30 @@
   "parts": [
    "ishidoro_body"
   ],
-  "kb": 29.3
+  "kb": 131.7
  },
  {
   "name": "komainu",
   "jp": "狛犬",
   "category": "神社",
   "size_m": [
-   0.8,
-   1.83,
-   1.08
+   0.86,
+   1.93,
+   1.04
   ],
-  "tris": 320,
-  "lod1_tris": 96,
+  "tris": 2284,
+  "lod1_tris": 678,
   "materials": [
-   "granite"
+   "cloth_red",
+   "granite",
+   "ink",
+   "moss",
+   "rock"
   ],
   "parts": [
    "komainu_body"
   ],
-  "kb": 38.5
+  "kb": 253.6
  },
  {
   "name": "azumaya",
@@ -1021,12 +1137,15 @@
   "category": "灯台・展望台",
   "size_m": [
    6.4,
-   4.66,
+   4.76,
    6.4
   ],
-  "tris": 2380,
-  "lod1_tris": 827,
+  "tris": 3354,
+  "lod1_tris": 964,
   "materials": [
+   "copper",
+   "gold",
+   "granite",
    "planks",
    "ridge_tile",
    "roof_tile",
@@ -1036,51 +1155,64 @@
   "parts": [
    "azumaya_body"
   ],
-  "kb": 241.8
+  "kb": 324.0
  },
  {
   "name": "telescope",
   "jp": "有料望遠鏡",
   "category": "灯台・展望台",
   "size_m": [
-   0.5,
-   1.42,
-   0.83
+   0.56,
+   1.47,
+   0.74
   ],
-  "tris": 264,
-  "lod1_tris": 78,
+  "tris": 1436,
+  "lod1_tris": 427,
   "materials": [
+   "black",
+   "glass",
+   "ink",
    "metal",
+   "rubber",
+   "st_tele",
    "steel_dark",
    "yellow"
   ],
   "parts": [
    "telescope_body"
   ],
-  "kb": 26.4
+  "kb": 141.3
  },
  {
   "name": "info_board",
   "jp": "案内板(港町マップ)",
   "category": "灯台・展望台",
   "size_m": [
-   2.0,
-   1.66,
+   2.08,
+   1.77,
    0.44
   ],
-  "tris": 1368,
-  "lod1_tris": 405,
+  "tris": 1796,
+  "lod1_tris": 522,
   "materials": [
+   "concrete",
+   "ink",
    "ink_white",
-   "paper",
+   "red",
+   "ridge_tile",
+   "roof_tile",
    "sign_blue",
-   "sign_green",
+   "st_map_hill",
+   "st_map_land",
+   "st_map_sea",
+   "vermilion",
+   "white",
    "wood_frame"
   ],
   "parts": [
    "info_board_body"
   ],
-  "kb": 143.6
+  "kb": 191.3
  },
  {
   "name": "fishing_boat",
@@ -1088,15 +1220,16 @@
   "category": "船",
   "size_m": [
    4.27,
-   9.45,
-   14.2
+   9.56,
+   14.26
   ],
-  "tris": 6848,
+  "tris": 13480,
   "lod1_tris": 0,
   "materials": [
    "antifoul",
    "beacon_red",
    "beacon_white",
+   "black",
    "boat_blue",
    "cloth_white",
    "crate_blue",
@@ -1107,8 +1240,13 @@
    "green",
    "hull",
    "ink",
+   "iron",
+   "lamp",
    "metal",
    "net",
+   "pv_chrome",
+   "pv_paint_white",
+   "red",
    "rope",
    "rubber",
    "rust",
@@ -1121,7 +1259,7 @@
    "fishing_boat_radar",
    "fishing_boat_prop"
   ],
-  "kb": 519.2
+  "kb": 951.1
  },
  {
   "name": "fishing_boat_b",
@@ -1129,52 +1267,70 @@
   "category": "船",
   "size_m": [
    3.8,
-   8.5,
-   12.15
+   8.62,
+   12.22
   ],
-  "tris": 4810,
+  "tris": 9738,
   "lod1_tris": 0,
   "materials": [
    "antifoul",
+   "beacon_red",
    "beacon_white",
+   "black",
    "boat_blue",
    "crate_blue",
    "deck_green",
    "float_orange",
    "float_yellow",
    "glass",
+   "green",
    "hull",
    "ink",
+   "lamp",
    "metal",
    "net_green",
+   "pv_chrome",
+   "pv_paint_white",
    "rope",
    "rubber",
+   "rust",
    "steel_dark",
-   "white"
+   "white",
+   "yellow"
   ],
   "parts": [
    "fishing_boat_b_body",
    "fishing_boat_b_radar",
    "fishing_boat_b_prop"
   ],
-  "kb": 352.6
+  "kb": 681.1
  },
  {
   "name": "skiff",
   "jp": "小型の和船(船外機付き)",
   "category": "船",
   "size_m": [
-   1.82,
-   1.37,
-   6.39
+   1.83,
+   1.5,
+   6.53
   ],
-  "tris": 544,
-  "lod1_tris": 161,
+  "tris": 3610,
+  "lod1_tris": 1074,
   "materials": [
+   "antifoul",
+   "black",
    "boat_blue",
+   "cloth_red",
    "crate_blue",
+   "deck_green",
    "float_orange",
+   "metal",
+   "pv_chrome",
+   "pv_cowl",
+   "pv_teak",
+   "red",
    "rope",
+   "rubber",
    "steel_dark",
    "white",
    "wood_light"
@@ -1182,356 +1338,442 @@
   "parts": [
    "skiff_body"
   ],
-  "kb": 55.3
+  "kb": 342.3
  },
  {
   "name": "dock_straight",
   "jp": "桟橋(直線4m・D1)",
   "category": "岸壁モジュール",
   "size_m": [
-   3.33,
+   3.39,
    3.3,
    4.0
   ],
-  "tris": 780,
-  "lod1_tris": 234,
+  "tris": 2120,
+  "lod1_tris": 618,
   "materials": [
-   "planks",
+   "hb_pile_wet",
+   "hb_slime",
+   "hb_wood_weather",
+   "iron",
+   "rope",
    "rubber",
-   "wood_dark"
+   "wood",
+   "wood_dark",
+   "wood_grey"
   ],
   "parts": [
    "dock_straight_body"
   ],
-  "kb": 68.6
+  "kb": 206.4
  },
  {
   "name": "dock_end",
   "jp": "桟橋の先端(D4・係船柱付き)",
   "category": "岸壁モジュール",
   "size_m": [
-   3.33,
-   3.97,
-   4.03
+   3.39,
+   3.98,
+   4.01
   ],
-  "tris": 1144,
-  "lod1_tris": 340,
+  "tris": 2924,
+  "lod1_tris": 854,
   "materials": [
+   "hb_iron_rust",
+   "hb_iron_worn",
+   "hb_pile_wet",
+   "hb_slime",
+   "hb_wood_weather",
    "iron",
-   "planks",
+   "rope",
    "rubber",
-   "rust",
-   "wood_dark"
+   "wood",
+   "wood_dark",
+   "wood_grey"
   ],
   "parts": [
    "dock_end_body"
   ],
-  "kb": 103.0
+  "kb": 274.6
  },
  {
   "name": "bollard",
   "jp": "係船柱(ビット)",
   "category": "港の小物",
   "size_m": [
-   0.62,
-   0.87,
-   0.61
+   0.65,
+   0.88,
+   0.65
   ],
-  "tris": 176,
-  "lod1_tris": 52,
+  "tris": 1224,
+  "lod1_tris": 363,
   "materials": [
+   "hb_iron_rust",
+   "hb_iron_worn",
+   "hb_rope_white",
    "iron",
-   "rust"
+   "rope"
   ],
   "parts": [
    "bollard_body"
   ],
-  "kb": 18.4
+  "kb": 113.5
  },
  {
   "name": "tire_fender",
   "jp": "防舷タイヤ",
   "category": "港の小物",
   "size_m": [
-   1.0,
-   1.14,
-   0.28
+   1.06,
+   1.19,
+   0.37
   ],
-  "tris": 268,
-  "lod1_tris": 79,
+  "tris": 1572,
+  "lod1_tris": 468,
   "materials": [
-   "rope",
-   "rubber"
+   "hb_iron_rust",
+   "hb_rope_blue",
+   "hb_rubber_worn",
+   "rubber",
+   "steel_dark"
   ],
   "parts": [
    "tire_fender_body"
   ],
-  "kb": 29.0
+  "kb": 152.5
  },
  {
   "name": "quay_ladder",
   "jp": "岸壁のはしご",
   "category": "港の小物",
   "size_m": [
-   0.49,
-   3.51,
-   0.49
+   0.52,
+   3.5,
+   0.5
   ],
-  "tris": 188,
-  "lod1_tris": 52,
+  "tris": 1996,
+  "lod1_tris": 588,
   "materials": [
-   "steel_dark"
+   "hb_barnacle",
+   "hb_iron_rust",
+   "hb_paint_yellow",
+   "hb_slime",
+   "iron"
   ],
   "parts": [
    "quay_ladder_body"
   ],
-  "kb": 19.0
+  "kb": 197.9
  },
  {
   "name": "tetrapod",
   "jp": "テトラポッド(消波ブロック)",
   "category": "岸壁モジュール",
   "size_m": [
-   2.48,
-   2.26,
-   2.78
+   2.47,
+   2.37,
+   2.75
   ],
-  "tris": 288,
-  "lod1_tris": 86,
+  "tris": 1128,
+  "lod1_tris": 334,
   "materials": [
-   "concrete"
+   "concrete",
+   "hb_concrete_dark",
+   "hb_concrete_stain",
+   "hb_iron_rust"
   ],
   "parts": [
    "tetrapod_body"
   ],
-  "kb": 28.8
+  "kb": 113.7
  },
  {
   "name": "crates_blue",
   "jp": "魚箱(青・積み重ね)",
   "category": "港の小物",
   "size_m": [
-   1.28,
-   0.88,
-   0.88
+   1.32,
+   0.84,
+   0.93
   ],
-  "tris": 620,
-  "lod1_tris": 248,
+  "tris": 2548,
+  "lod1_tris": 744,
   "materials": [
    "crate_blue",
-   "metal"
+   "hb_fish",
+   "hb_fish_back",
+   "hb_ice",
+   "hb_shadow",
+   "ink_white"
   ],
   "parts": [
    "crates_blue_body"
   ],
-  "kb": 62.2
+  "kb": 244.3
  },
  {
   "name": "styro_boxes",
   "jp": "発泡スチロール箱",
   "category": "港の小物",
   "size_m": [
-   2.2,
-   0.88,
-   0.48
+   2.21,
+   0.89,
+   0.53
   ],
-  "tris": 848,
-  "lod1_tris": 245,
+  "tris": 2438,
+  "lod1_tris": 716,
   "materials": [
+   "hb_fish_back",
+   "hb_fish_red",
+   "hb_ice",
+   "hb_styro_dirty",
+   "hb_tape",
+   "hb_tape_blue",
+   "ink",
    "ink_red",
+   "paper",
    "styro"
   ],
   "parts": [
    "styro_boxes_body"
   ],
-  "kb": 67.1
+  "kb": 245.7
  },
  {
   "name": "pallet",
   "jp": "パレット",
   "category": "港の小物",
   "size_m": [
-   1.12,
-   0.14,
+   1.1,
+   0.15,
    1.1
   ],
-  "tris": 132,
-  "lod1_tris": 35,
+  "tris": 1220,
+  "lod1_tris": 361,
   "materials": [
+   "hb_paint_blue",
+   "hb_wood_weather",
+   "iron",
    "wood",
-   "wood_light"
+   "wood_dark",
+   "wood_grey"
   ],
   "parts": [
    "pallet_body"
   ],
-  "kb": 14.9
+  "kb": 121.8
  },
  {
   "name": "handcart",
   "jp": "台車(リヤカー)",
   "category": "港の小物",
   "size_m": [
-   1.34,
-   0.82,
-   2.33
+   1.37,
+   0.84,
+   2.44
   ],
-  "tris": 456,
-  "lod1_tris": 131,
+  "tris": 2444,
+  "lod1_tris": 698,
   "materials": [
+   "black",
+   "cloth_grey",
    "metal",
+   "pv_chrome",
+   "rope",
    "rubber",
+   "tarp_blue",
    "wood_frame",
    "wood_light"
   ],
   "parts": [
    "handcart_body"
   ],
-  "kb": 46.3
+  "kb": 219.5
  },
  {
   "name": "forklift",
   "jp": "フォークリフト",
   "category": "港の小物",
   "size_m": [
-   1.29,
-   2.52,
-   2.9
+   1.22,
+   2.45,
+   3.09
   ],
-  "tris": 1124,
-  "lod1_tris": 331,
+  "tris": 4338,
+  "lod1_tris": 1263,
   "materials": [
    "black",
+   "lamp",
    "metal",
    "orange",
+   "pv_amber",
+   "pv_chrome",
+   "pv_seat",
+   "pv_tail_light",
    "rubber",
-   "steel_dark"
+   "steel_dark",
+   "yellow"
   ],
   "parts": [
    "forklift_body"
   ],
-  "kb": 105.0
+  "kb": 397.6
  },
  {
   "name": "keitora",
   "jp": "軽トラック(白)",
   "category": "乗り物",
   "size_m": [
-   1.51,
-   1.77,
-   3.25
+   1.63,
+   1.71,
+   3.34
   ],
-  "tris": 1104,
-  "lod1_tris": 321,
+  "tris": 4776,
+  "lod1_tris": 1374,
   "materials": [
+   "black",
+   "cloth_grey",
    "crate_blue",
    "glass",
+   "ink",
    "lamp",
    "metal",
-   "red",
+   "pv_amber",
+   "pv_chrome",
+   "pv_paint_white",
+   "pv_plate",
+   "pv_tail_light",
+   "rope",
    "rubber",
-   "steel_dark",
-   "white"
+   "steel_dark"
   ],
   "parts": [
    "keitora_body"
   ],
-  "kb": 108.2
+  "kb": 440.1
  },
  {
   "name": "net_pile",
   "jp": "漁網の山",
   "category": "港の小物",
   "size_m": [
-   2.14,
-   0.66,
-   1.67
+   2.02,
+   0.65,
+   1.75
   ],
-  "tris": 180,
-  "lod1_tris": 54,
+  "tris": 2716,
+  "lod1_tris": 814,
   "materials": [
    "float_orange",
    "float_yellow",
-   "net"
+   "hb_net_dark",
+   "hb_net_heap",
+   "hb_net_heap2",
+   "rope",
+   "steel_dark"
   ],
   "parts": [
    "net_pile_body"
   ],
-  "kb": 24.9
+  "kb": 265.0
  },
  {
   "name": "floats",
   "jp": "浮き・ブイ",
   "category": "港の小物",
   "size_m": [
-   1.62,
-   1.06,
-   1.08
+   1.6,
+   1.13,
+   1.07
   ],
-  "tris": 592,
-  "lod1_tris": 175,
+  "tris": 2334,
+  "lod1_tris": 694,
   "materials": [
    "float_orange",
+   "float_white",
    "float_yellow",
+   "hb_glass_green",
+   "hb_iron_rust",
+   "hb_rope_blue",
    "rope",
    "steel_dark"
   ],
   "parts": [
    "floats_body"
   ],
-  "kb": 78.1
+  "kb": 223.3
  },
  {
   "name": "crab_traps",
   "jp": "カゴ網(積み重ね)",
   "category": "港の小物",
   "size_m": [
-   2.94,
-   1.62,
-   0.94
+   2.97,
+   1.61,
+   0.98
   ],
-  "tris": 2352,
-  "lod1_tris": 879,
+  "tris": 2704,
+  "lod1_tris": 809,
   "materials": [
-   "net",
+   "float_orange",
+   "hb_net_dark",
+   "hb_net_trap",
+   "hb_rope_blue",
+   "hb_rope_white",
    "steel_dark"
   ],
   "parts": [
    "crab_traps_body"
   ],
-  "kb": 242.5
+  "kb": 253.3
  },
  {
   "name": "rope_coil",
   "jp": "ロープの束",
   "category": "港の小物",
   "size_m": [
-   0.9,
+   0.85,
    0.36,
-   0.89
+   0.92
   ],
-  "tris": 864,
-  "lod1_tris": 258,
+  "tris": 1640,
+  "lod1_tris": 492,
   "materials": [
-   "rope"
+   "hb_rope_blue",
+   "hb_rope_manila",
+   "hb_rope_white"
   ],
   "parts": [
    "rope_coil_body"
   ],
-  "kb": 73.5
+  "kb": 142.5
  },
  {
   "name": "market_tent",
   "jp": "青いテント(露店)",
   "category": "港の小物",
   "size_m": [
-   4.2,
-   2.65,
-   3.22
+   4.26,
+   2.62,
+   3.42
   ],
-  "tris": 176,
-  "lod1_tris": 45,
+  "tris": 2634,
+  "lod1_tris": 758,
   "materials": [
-   "metal",
+   "alu",
+   "black",
+   "blue",
+   "cloth_navy",
+   "cloth_white",
+   "crate_blue",
+   "hb_fish",
+   "hb_fish_back",
+   "hb_fish_red",
+   "hb_ice",
+   "hb_rope_white",
+   "hb_shadow",
+   "ink_red",
+   "paper",
    "steel_dark",
    "styro",
    "tarp_blue",
@@ -1540,7 +1782,7 @@
   "parts": [
    "market_tent_body"
   ],
-  "kb": 23.0
+  "kb": 248.6
  },
  {
   "name": "utility_pole",
@@ -1548,15 +1790,20 @@
   "category": "道の小物",
   "size_m": [
    1.8,
-   10.5,
-   0.84
+   10.56,
+   0.9
   ],
-  "tris": 532,
-  "lod1_tris": 147,
+  "tris": 2952,
+  "lod1_tris": 850,
   "materials": [
+   "alu",
    "black",
    "concrete",
-   "metal",
+   "ink",
+   "ink_white",
+   "sign_blue",
+   "sign_green",
+   "st_trafo",
    "steel_dark",
    "white",
    "yellow"
@@ -1564,48 +1811,60 @@
   "parts": [
    "utility_pole_body"
   ],
-  "kb": 54.4
+  "kb": 273.1
  },
  {
   "name": "street_light",
   "jp": "街灯",
   "category": "道の小物",
   "size_m": [
-   0.5,
+   0.35,
    5.43,
-   0.97
+   1.13
   ],
-  "tris": 252,
-  "lod1_tris": 74,
+  "tris": 746,
+  "lod1_tris": 217,
   "materials": [
+   "concrete",
+   "ink",
    "lamp",
-   "steel_dark"
+   "st_galv",
+   "steel_dark",
+   "white"
   ],
   "parts": [
    "street_light_body"
   ],
-  "kb": 24.9
+  "kb": 72.2
  },
  {
   "name": "vending_machine",
   "jp": "自動販売機",
   "category": "道の小物",
   "size_m": [
-   1.02,
-   2.1,
-   0.83
+   1.08,
+   2.07,
+   0.84
   ],
-  "tris": 1508,
-  "lod1_tris": 452,
+  "tris": 2198,
+  "lod1_tris": 584,
   "materials": [
+   "alu",
    "black",
    "blue",
-   "cloth_blue",
+   "cloth_khaki",
+   "cloth_pink",
    "green",
+   "ink",
    "ink_white",
    "metal",
+   "navy",
    "orange",
+   "paper",
    "red",
+   "rubber",
+   "st_pet",
+   "st_tele",
    "steel_dark",
    "vend_panel",
    "white",
@@ -1614,51 +1873,62 @@
   "parts": [
    "vending_machine_body"
   ],
-  "kb": 141.6
+  "kb": 219.0
  },
  {
   "name": "bicycle",
   "jp": "自転車(ママチャリ)",
   "category": "道の小物",
   "size_m": [
-   0.56,
-   1.0,
-   1.79
+   0.61,
+   1.01,
+   1.8
   ],
-  "tris": 968,
-  "lod1_tris": 274,
+  "tris": 3016,
+  "lod1_tris": 829,
   "materials": [
-   "alu",
    "black",
-   "cloth_red",
+   "cloth_grey",
+   "lamp",
    "metal",
+   "pv_chrome",
+   "pv_frame_red",
+   "pv_seat",
+   "pv_tail_light",
    "rubber",
    "steel_dark"
   ],
   "parts": [
    "bicycle_body"
   ],
-  "kb": 101.0
+  "kb": 276.5
  },
  {
   "name": "ac_outdoor",
   "jp": "室外機",
   "category": "道の小物",
   "size_m": [
-   0.8,
-   0.7,
-   0.32
+   0.89,
+   0.75,
+   0.37
   ],
-  "tris": 168,
-  "lod1_tris": 43,
+  "tris": 1456,
+  "lod1_tris": 389,
   "materials": [
-   "steel_dark",
-   "white"
+   "alu",
+   "black",
+   "cloth_white",
+   "concrete",
+   "gold",
+   "paper",
+   "rubber",
+   "st_ac_body",
+   "steel_dark"
   ],
   "parts": [
    "ac_outdoor_body"
   ],
-  "kb": 17.3
+  "kb": 142.8
  },
  {
   "name": "a_frame_sign",
@@ -1666,20 +1936,23 @@
   "category": "道の小物",
   "size_m": [
    0.6,
-   0.94,
-   0.44
+   0.95,
+   0.39
   ],
-  "tris": 2260,
-  "lod1_tris": 672,
+  "tris": 1572,
+  "lod1_tris": 452,
   "materials": [
-   "black",
-   "ink_white",
-   "wood_frame"
+   "metal",
+   "st_chalk_pink",
+   "st_chalk_white",
+   "st_chalk_yellow",
+   "st_chalkboard",
+   "wood"
   ],
   "parts": [
    "a_frame_sign_body"
   ],
-  "kb": 212.9
+  "kb": 158.4
  },
  {
   "name": "bench",
@@ -1687,75 +1960,81 @@
   "category": "道の小物",
   "size_m": [
    1.6,
-   0.86,
-   0.49
+   0.85,
+   0.52
   ],
-  "tris": 132,
-  "lod1_tris": 32,
+  "tris": 288,
+  "lod1_tris": 77,
   "materials": [
    "steel_dark",
-   "wood_light"
+   "wood"
   ],
   "parts": [
    "bench_body"
   ],
-  "kb": 15.0
+  "kb": 29.1
  },
  {
   "name": "postbox",
   "jp": "郵便ポスト",
   "category": "道の小物",
   "size_m": [
-   0.5,
+   0.46,
    1.26,
-   0.45
+   0.44
   ],
-  "tris": 76,
-  "lod1_tris": 20,
+  "tris": 928,
+  "lod1_tris": 271,
   "materials": [
    "black",
-   "red",
+   "ink",
+   "ink_white",
+   "metal",
+   "st_post_red",
    "steel_dark",
    "white"
   ],
   "parts": [
    "postbox_body"
   ],
-  "kb": 12.9
+  "kb": 87.0
  },
  {
   "name": "nobori",
   "jp": "のぼり旗",
   "category": "道の小物",
   "size_m": [
-   0.67,
-   3.0,
-   0.29
+   0.7,
+   3.04,
+   0.3
   ],
-  "tris": 944,
-  "lod1_tris": 274,
+  "tris": 1714,
+  "lod1_tris": 505,
   "materials": [
+   "alu",
+   "cloth_grey",
    "cloth_red",
+   "cloth_white",
+   "cloth_yellow",
    "ink_white",
-   "metal",
    "steel_dark"
   ],
   "parts": [
    "nobori_body"
   ],
-  "kb": 73.6
+  "kb": 149.2
  },
  {
   "name": "chochin_hanging",
   "jp": "提灯(吊り下げ)",
   "category": "道の小物",
   "size_m": [
-   0.44,
-   0.89,
-   0.44
+   0.43,
+   0.93,
+   0.45
   ],
-  "tris": 668,
-  "lod1_tris": 197,
+  "tris": 1488,
+  "lod1_tris": 444,
   "materials": [
    "black",
    "ink",
@@ -1764,62 +2043,67 @@
   "parts": [
    "chochin_hanging_body"
   ],
-  "kb": 60.4
+  "kb": 127.4
  },
  {
   "name": "street_lantern",
   "jp": "石灯籠風の街灯",
   "category": "道の小物",
   "size_m": [
-   0.64,
-   2.3,
-   0.64
+   0.68,
+   2.43,
+   0.68
   ],
-  "tris": 76,
-  "lod1_tris": 21,
+  "tris": 512,
+  "lod1_tris": 136,
   "materials": [
    "granite",
-   "lantern_white"
+   "lantern_white",
+   "wood_frame"
   ],
   "parts": [
    "street_lantern_body"
   ],
-  "kb": 10.3
+  "kb": 49.4
  },
  {
   "name": "direction_sign",
   "jp": "道しるべ(方向看板)",
   "category": "道の小物",
   "size_m": [
-   2.3,
-   2.4,
-   1.01
+   2.24,
+   2.43,
+   1.08
   ],
-  "tris": 1136,
-  "lod1_tris": 336,
+  "tris": 2288,
+  "lod1_tris": 678,
   "materials": [
+   "granite",
    "ink",
-   "wood_frame",
-   "wood_light"
+   "iron",
+   "sign_wood",
+   "wood",
+   "wood_frame"
   ],
   "parts": [
    "direction_sign_body"
   ],
-  "kb": 96.4
+  "kb": 190.8
  },
  {
   "name": "laundry_pole",
   "jp": "物干し台(洗濯物付き)",
   "category": "住宅の小物",
   "size_m": [
-   2.8,
-   1.9,
-   0.67
+   2.9,
+   1.82,
+   0.74
   ],
-  "tris": 948,
-  "lod1_tris": 252,
+  "tris": 1700,
+  "lod1_tris": 477,
   "materials": [
    "alu",
+   "blue",
    "cloth_blue",
    "cloth_check",
    "cloth_green",
@@ -1838,122 +2122,143 @@
   "parts": [
    "laundry_pole_body"
   ],
-  "kb": 106.0
+  "kb": 169.8
  },
  {
   "name": "fence_wood",
   "jp": "木の塀(2m)",
   "category": "住宅の小物",
   "size_m": [
-   2.09,
-   1.3,
-   0.11
+   2.11,
+   1.35,
+   0.12
   ],
-  "tris": 204,
-  "lod1_tris": 56,
+  "tris": 264,
+  "lod1_tris": 73,
   "materials": [
-   "wood",
+   "concrete",
+   "st_cedar",
    "wood_frame"
   ],
   "parts": [
    "fence_wood_body"
   ],
-  "kb": 22.3
+  "kb": 29.3
  },
  {
   "name": "fence_rail",
   "jp": "白い鉄柵(2m)",
   "category": "灯台・展望台",
   "size_m": [
-   2.08,
-   1.1,
-   0.08
+   2.14,
+   1.12,
+   0.1
   ],
-  "tris": 96,
-  "lod1_tris": 28,
+  "tris": 704,
+  "lod1_tris": 195,
   "materials": [
    "white"
   ],
   "parts": [
    "fence_rail_body"
   ],
-  "kb": 10.2
+  "kb": 81.2
  },
  {
   "name": "fence_log",
   "jp": "丸太の柵(2m)",
   "category": "灯台・展望台",
   "size_m": [
-   2.14,
+   2.17,
    1.05,
-   0.14
+   0.18
   ],
-  "tris": 112,
-  "lod1_tris": 32,
+  "tris": 548,
+  "lod1_tris": 163,
   "materials": [
-   "wood"
+   "rope",
+   "wood",
+   "wood_light"
   ],
   "parts": [
    "fence_log_body"
   ],
-  "kb": 11.4
+  "kb": 52.9
  },
  {
   "name": "plant_pots",
   "jp": "植木鉢の寄せ植え",
   "category": "住宅の小物",
   "size_m": [
-   1.31,
-   0.78,
-   1.0
+   1.36,
+   0.82,
+   1.05
   ],
-  "tris": 770,
-  "lod1_tris": 211,
+  "tris": 2234,
+  "lod1_tris": 621,
   "materials": [
+   "bamboo",
+   "cloth_pink",
+   "concrete",
    "flower_red",
    "flower_yellow",
    "hydrangea",
+   "leaf",
    "leaf_dark",
+   "leaf_light",
+   "orange",
    "shrub_card",
    "soil",
-   "terracotta"
+   "st_glaze_blue",
+   "styro",
+   "terracotta",
+   "white"
   ],
   "parts": [
    "plant_pots_body"
   ],
-  "kb": 86.5
+  "kb": 249.8
  },
  {
   "name": "propane",
   "jp": "プロパンボンベ",
   "category": "住宅の小物",
   "size_m": [
-   0.8,
-   1.28,
-   0.38
+   0.86,
+   1.25,
+   0.42
   ],
-  "tris": 212,
-  "lod1_tris": 61,
+  "tris": 2204,
+  "lod1_tris": 620,
   "materials": [
+   "alu",
+   "concrete",
+   "gold",
+   "ink_red",
    "metal",
-   "steel_dark"
+   "red",
+   "rubber",
+   "st_propane",
+   "steel_dark",
+   "white",
+   "yellow"
   ],
   "parts": [
    "propane_body"
   ],
-  "kb": 21.0
+  "kb": 200.3
  },
  {
   "name": "tree_pine",
   "jp": "黒松",
   "category": "自然",
   "size_m": [
-   6.78,
-   7.88,
-   7.12
+   6.73,
+   7.37,
+   7.43
   ],
-  "tris": 1628,
-  "lod1_tris": 373,
+  "tris": 3082,
+  "lod1_tris": 697,
   "materials": [
    "bark_pine",
    "pine",
@@ -1962,19 +2267,19 @@
   "parts": [
    "tree_pine_body"
   ],
-  "kb": 140.7
+  "kb": 266.1
  },
  {
   "name": "tree_pine_b",
   "jp": "黒松(海辺・傾き)",
   "category": "自然",
   "size_m": [
-   6.93,
-   6.78,
-   5.88
+   6.18,
+   6.35,
+   7.1
   ],
-  "tris": 1628,
-  "lod1_tris": 373,
+  "tris": 2616,
+  "lod1_tris": 595,
   "materials": [
    "bark_pine",
    "pine",
@@ -1983,7 +2288,7 @@
   "parts": [
    "tree_pine_b_body"
   ],
-  "kb": 142.3
+  "kb": 227.3
  },
  {
   "name": "tree_broadleaf",
@@ -2012,185 +2317,198 @@
   "jp": "ご神木(大楠・しめ縄)",
   "category": "神社",
   "size_m": [
-   10.07,
-   12.91,
-   10.88
+   10.96,
+   12.59,
+   10.77
   ],
-  "tris": 3636,
-  "lod1_tris": 888,
+  "tris": 5172,
+  "lod1_tris": 1287,
   "materials": [
-   "bark",
+   "bark_kusu",
    "leaf_card",
    "leaf_card_dark",
    "leaf_dark",
    "paper",
-   "rope"
+   "straw"
   ],
   "parts": [
    "tree_shinboku_body"
   ],
-  "kb": 339.7
+  "kb": 494.3
  },
  {
   "name": "tree_sakura",
   "jp": "桜",
   "category": "自然",
   "size_m": [
-   5.91,
-   5.8,
-   5.23
+   5.53,
+   5.85,
+   5.89
   ],
-  "tris": 1836,
-  "lod1_tris": 420,
+  "tris": 3516,
+  "lod1_tris": 826,
   "materials": [
-   "bark",
+   "bark_sakura",
    "sakura",
    "sakura_card"
   ],
   "parts": [
    "tree_sakura_body"
   ],
-  "kb": 173.8
+  "kb": 336.4
  },
  {
   "name": "tree_cedar",
   "jp": "杉",
   "category": "自然",
   "size_m": [
-   4.61,
-   12.45,
-   4.58
+   4.82,
+   12.54,
+   4.75
   ],
-  "tris": 412,
-  "lod1_tris": 89,
+  "tris": 4072,
+  "lod1_tris": 925,
   "materials": [
-   "bark",
+   "cedar_card",
    "pine",
-   "pine_card"
+   "wood_red"
   ],
   "parts": [
    "tree_cedar_body"
   ],
-  "kb": 37.5
+  "kb": 373.9
  },
  {
   "name": "bush",
   "jp": "植え込み",
   "category": "自然",
   "size_m": [
-   2.45,
-   1.4,
+   2.54,
+   1.5,
    2.19
   ],
-  "tris": 480,
-  "lod1_tris": 114,
+  "tris": 972,
+  "lod1_tris": 210,
   "materials": [
+   "bark",
    "leaf_dark",
    "shrub_card"
   ],
   "parts": [
    "bush_body"
   ],
-  "kb": 53.6
+  "kb": 96.8
  },
  {
   "name": "hydrangea",
   "jp": "紫陽花",
   "category": "自然",
   "size_m": [
-   2.43,
-   1.32,
-   2.17
+   2.13,
+   1.45,
+   2.02
   ],
-  "tris": 1344,
-  "lod1_tris": 376,
+  "tris": 1660,
+  "lod1_tris": 444,
   "materials": [
    "hydrangea",
    "hydrangea_pink",
-   "leaf_dark",
-   "shrub_card"
+   "leaf_card",
+   "leaf_card_dark",
+   "leaf_dark"
   ],
   "parts": [
    "hydrangea_body"
   ],
-  "kb": 166.1
+  "kb": 196.5
  },
  {
   "name": "grass_tuft",
   "jp": "草むら",
   "category": "自然",
   "size_m": [
-   1.17,
-   0.7,
-   1.16
+   1.06,
+   0.63,
+   1.08
   ],
-  "tris": 78,
+  "tris": 180,
   "lod1_tris": 0,
   "materials": [
    "grass_blade",
+   "leaf",
    "leaf_light"
   ],
   "parts": [
    "grass_tuft_body"
   ],
-  "kb": 8.3
+  "kb": 16.4
  },
  {
   "name": "rock_a",
   "jp": "岩(A)",
   "category": "自然",
   "size_m": [
-   2.96,
-   1.66,
-   2.42
+   2.8,
+   1.68,
+   2.26
   ],
-  "tris": 320,
-  "lod1_tris": 96,
+  "tris": 808,
+  "lod1_tris": 242,
   "materials": [
+   "hb_rock_dark",
+   "hb_rock_warm",
+   "moss",
    "rock"
   ],
   "parts": [
    "rock_a_body"
   ],
-  "kb": 40.6
+  "kb": 82.7
  },
  {
   "name": "rock_b",
   "jp": "岩(B・平たい)",
   "category": "自然",
   "size_m": [
-   3.57,
-   1.08,
-   2.81
+   3.3,
+   1.09,
+   2.92
   ],
-  "tris": 400,
-  "lod1_tris": 120,
+  "tris": 1194,
+  "lod1_tris": 358,
   "materials": [
+   "hb_rock_dark",
+   "hb_rock_warm",
+   "moss",
    "rock"
   ],
   "parts": [
    "rock_b_body"
   ],
-  "kb": 43.9
+  "kb": 119.6
  },
  {
   "name": "rock_c",
   "jp": "岩(C・海岸の大岩)",
   "category": "自然",
   "size_m": [
-   6.41,
-   4.13,
-   4.03
+   6.13,
+   4.16,
+   4.5
   ],
-  "tris": 720,
-  "lod1_tris": 216,
+  "tris": 1326,
+  "lod1_tris": 396,
   "materials": [
+   "hb_rock_dark",
+   "hb_rock_warm",
+   "hb_rock_wet",
+   "moss",
    "rock"
   ],
   "parts": [
    "rock_c_body"
   ],
-  "kb": 89.0
+  "kb": 138.0
  },
  {
   "name": "player",
@@ -2231,7 +2549,7 @@
    1.25,
    0.76
   ],
-  "tris": 4312,
+  "tris": 3924,
   "lod1_tris": 0,
   "materials": [
    "cheek",
@@ -2244,6 +2562,7 @@
    "fur_white",
    "ink",
    "nose_pink",
+   "pv_shoe_brown",
    "raincoat",
    "straw",
    "white"
@@ -2257,27 +2576,32 @@
    "nagi_leg_r",
    "nagi_tail"
   ],
-  "kb": 371.9
+  "kb": 320.5
  },
  {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",
   "size_m": [
-   0.65,
-   1.82,
-   0.42
+   0.68,
+   1.78,
+   0.33
   ],
-  "tris": 1748,
+  "tris": 3966,
   "lod1_tris": 0,
   "materials": [
-   "apron",
-   "black",
-   "boot",
    "cloth_navy",
    "cloth_white",
+   "eye",
    "hair_grey",
-   "skin"
+   "ink",
+   "pv_boot_white",
+   "pv_iris",
+   "pv_mouth",
+   "pv_rubber_orange",
+   "pv_skin_tan",
+   "rubber",
+   "white"
   ],
   "parts": [
    "fisherman_body",
@@ -2286,26 +2610,36 @@
    "fisherman_leg_r",
    "fisherman_arm_r"
   ],
-  "kb": 143.8
+  "kb": 298.4
  },
  {
   "name": "shopkeeper",
   "jp": "お店のおばちゃん",
   "category": "人物",
   "size_m": [
-   0.6,
-   1.69,
-   0.49
+   0.62,
+   1.67,
+   0.44
   ],
-  "tris": 1528,
+  "tris": 3962,
   "lod1_tris": 0,
   "materials": [
-   "apron",
-   "black",
+   "cheek",
    "cloth_khaki",
-   "cloth_pink",
+   "cloth_navy",
+   "cloth_red",
+   "cloth_white",
+   "eye",
    "hair_grey",
-   "skin"
+   "ink",
+   "pv_apron_cloth",
+   "pv_blouse",
+   "pv_iris",
+   "pv_mouth",
+   "pv_shoe_brown",
+   "rubber",
+   "skin",
+   "white"
   ],
   "parts": [
    "shopkeeper_body",
@@ -2314,26 +2648,36 @@
    "shopkeeper_leg_r",
    "shopkeeper_arm_r"
   ],
-  "kb": 130.8
+  "kb": 318.8
  },
  {
   "name": "townsman",
   "jp": "町の人(買い物帰り)",
   "category": "人物",
   "size_m": [
-   0.64,
-   1.78,
-   0.42
+   0.66,
+   1.79,
+   0.36
   ],
-  "tris": 1564,
+  "tris": 3532,
   "lod1_tris": 0,
   "materials": [
-   "black",
    "cloth_blue",
-   "cloth_green",
+   "cloth_grey",
    "cloth_khaki",
+   "eye",
    "hair",
-   "skin"
+   "ink",
+   "metal",
+   "pv_bag",
+   "pv_iris",
+   "pv_jacket",
+   "pv_jacket_dk",
+   "pv_leek",
+   "pv_mouth",
+   "pv_sneaker",
+   "skin",
+   "white"
   ],
   "parts": [
    "townsman_body",
@@ -2342,50 +2686,59 @@
    "townsman_leg_r",
    "townsman_arm_r"
   ],
-  "kb": 133.0
+  "kb": 274.2
  },
  {
   "name": "cat",
   "jp": "猫(茶トラ)",
   "category": "動物",
   "size_m": [
-   0.27,
-   0.56,
-   0.87
+   0.24,
+   0.6,
+   0.82
   ],
-  "tris": 292,
+  "tris": 1588,
   "lod1_tris": 0,
   "materials": [
+   "eye",
+   "fur_dark",
    "fur_orange",
-   "fur_white"
+   "fur_white",
+   "nose_pink",
+   "pv_cat_eye",
+   "white"
   ],
   "parts": [
    "cat_body",
    "cat_tail"
   ],
-  "kb": 27.1
+  "kb": 128.7
  },
  {
   "name": "seagull",
   "jp": "カモメ",
   "category": "動物",
   "size_m": [
-   1.6,
-   0.22,
-   0.77
+   1.68,
+   0.18,
+   0.68
   ],
-  "tris": 117,
+  "tris": 556,
   "lod1_tris": 0,
   "materials": [
    "black",
+   "eye",
    "fur_white",
-   "yellow"
+   "pv_beak",
+   "pv_feet",
+   "pv_gull_grey",
+   "red"
   ],
   "parts": [
    "seagull_body",
    "seagull_wing_l",
    "seagull_wing_r"
   ],
-  "kb": 15.8
+  "kb": 49.5
  }
 ]

@@ -307,7 +307,92 @@ def leaves():
             for _ in range(40):
                 x, y = r.uniform(S * 0.15, S * 0.85, 2); d.ellipse([x - 6, y - 3, x + 6, y + 3], fill=(96, 140, 60, 255))
         atlas.paste(im, (qx * S, qy * S))
-    quad(0, 0, 'broad'); quad(1, 0, 'pine'); quad(0, 1, 'sakura'); quad(1, 1, 'shrub')
+    g = np.random.default_rng(907)  # own generator: the pine / sakura / shrub quadrants do not disturb the broadleaf one
+    def col(c, a=255): return tuple(int(v) for v in np.clip(c, 0, 255)) + (a,)
+    def pine(qx, qy):
+        # needle pad: tufts of needle fans (fascicles) round a dark core, sunlit yellow-green on top, blue-green below;
+        # the needles stick out of the silhouette so the cloud-pruned pads get a spiky painterly edge
+        im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        cx = cy = S / 2; tufts = []
+        for i in range(32):
+            a = g.uniform(0, 2 * np.pi); rr = S * 0.3 * np.sqrt(g.uniform(0, 1))
+            tufts.append((cy + np.sin(a) * rr * 0.85, cx + np.cos(a) * rr))
+        tufts.sort(reverse=True)  # lower tufts first, the sunlit upper ones overlap them
+        shade, sun = np.array([34, 82, 70]), np.array([158, 184, 74])
+        wn = max(2, S // 160)
+        for y, x in tufts:
+            top = np.clip(1 - y / S, 0, 1); tone = g.uniform(-1, 1)
+            lit = np.clip(top * 1.1 - 0.05 + tone * 0.22, 0, 1)
+            base = shade + (sun - shade) * lit
+            R = S * g.uniform(0.11, 0.15)
+            d.ellipse([x - R * 0.3, y - R * 0.1, x + R * 0.3, y + R * 0.35], fill=col(base * 0.45))
+            for k in range(54):
+                ang = -np.pi / 2 + g.normal(0, 1.0)  # fans spray upwards and out
+                L = R * g.uniform(0.6, 1.15); ca, sa = np.cos(ang), np.sin(ang)
+                up = -sa  # needles pointing up catch the sun
+                c = base * (0.62 + 0.45 * k / 54) * (1 + 0.18 * up) * (1 + 0.1 * g.uniform(-1, 1))
+                x0, y0 = x + ca * L * 0.12, y + sa * L * 0.12 + R * 0.15
+                d.line([(x0, y0), (x0 + ca * L, y0 + sa * L)], fill=col(c), width=wn)
+        atlas.paste(im, (qx * S, qy * S))
+    def sakura(qx, qy):
+        # blossom clusters: pom-poms of five-petal flowers on dark twigs; petals are drawn a little cool (lilac) because
+        # the game's crown shading warms the sunlit side, so they end up a soft pink on top and mauve underneath
+        im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        cx = cy = S / 2
+        for k in range(7):  # twigs
+            a = g.uniform(0, 2 * np.pi); L = S * g.uniform(0.25, 0.4)
+            d.line([(cx, cy), (cx + np.cos(a) * L, cy + np.sin(a) * L)], fill=(70, 46, 50, 255), width=max(2, S // 140))
+        poms = []
+        for i in range(24):
+            a = g.uniform(0, 2 * np.pi); rr = S * 0.31 * np.sqrt(g.uniform(0, 1))
+            poms.append((cy + np.sin(a) * rr * 0.9, cx + np.cos(a) * rr))
+        poms.sort(reverse=True)
+        pr = S * 0.016
+        for y, x in poms:
+            top = np.clip(1 - y / S, 0, 1); R = S * g.uniform(0.075, 0.1)
+            d.ellipse([x - R * 0.8, y - R * 0.7, x + R * 0.8, y + R * 0.8], fill=col(np.array([196, 128, 176]) * (0.75 + 0.2 * top)))
+            fl = []
+            for j in range(26):
+                a = g.uniform(0, 2 * np.pi); rr = R * np.sqrt(g.uniform(0, 1))
+                fl.append((y + np.sin(a) * rr, x + np.cos(a) * rr))
+            fl.sort(reverse=True)
+            for fy, fx in fl:
+                lit = np.clip(top * 0.6 + (y - fy) / R * 0.35 + g.uniform(-0.2, 0.2), 0, 1)
+                pc = np.array([228, 160, 206]) + (np.array([255, 218, 238]) - np.array([228, 160, 206])) * lit
+                rot = g.uniform(0, 2 * np.pi)
+                for p in range(5):
+                    t = rot + p * 2 * np.pi / 5; px, py = fx + np.cos(t) * pr * 0.9, fy + np.sin(t) * pr * 0.9
+                    d.ellipse([px - pr * 0.75, py - pr * 0.75, px + pr * 0.75, py + pr * 0.75], fill=col(pc * 0.92))
+                d.ellipse([fx - pr * 0.9, fy - pr * 0.9, fx + pr * 0.9, fy + pr * 0.9], fill=col(pc))
+                d.ellipse([fx - pr * 0.3, fy - pr * 0.3, fx + pr * 0.3, fy + pr * 0.3], fill=(214, 92, 140, 255))
+        atlas.paste(im, (qx * S, qy * S))
+    def shrub(qx, qy):
+        # small glossy evergreen leaves (tsutsuji / boxwood) in sprigs, two painted tones like the broadleaf quadrant
+        im = Image.new('RGBA', (S, S), (0, 0, 0, 0)); d = ImageDraw.Draw(im)
+        cx = cy = S / 2; lv = []
+        for i in range(100):
+            a = g.uniform(0, 2 * np.pi); rr = S * 0.36 * np.sqrt(g.uniform(0, 1))
+            sx, sy = cx + np.cos(a) * rr, cy + np.sin(a) * rr * 0.92
+            out = np.arctan2(sy - cy, sx - cx) if rr > S * 0.04 else g.uniform(0, 2 * np.pi)
+            for k in range(int(g.integers(3, 6))):
+                ang = out + g.uniform(-1.2, 1.2) - 0.4 * (1 if sy > cy else 0)
+                L = S * g.uniform(0.075, 0.105); dist = L * g.uniform(0.2, 0.5)
+                lv.append((sy + np.sin(ang) * dist, sx + np.cos(ang) * dist, ang, L, sx, sy))
+        lv.sort()
+        shade, sun = np.array([34, 80, 62]), np.array([146, 172, 64])
+        for y, x, ang, L, sx, sy in lv:
+            top = np.clip(1 - y / S, 0, 1); lit = np.clip(top * 0.9 + g.uniform(-0.3, 0.3), 0, 1)
+            base = shade + (sun - shade) * lit; ca, sa = np.cos(ang), np.sin(ang)
+            def poly(sc, dx=0.0, dy=0.0):
+                pts = []
+                for t in np.linspace(0, 2 * np.pi, 16, endpoint=False):
+                    ex = np.cos(t) * L / 2 * (1.15 if np.cos(t) > 0 else 0.85); ey = np.sin(t) * L * 0.24 * (1 - 0.3 * np.cos(t) ** 6)
+                    pts.append((x + dx + (ex * ca - ey * sa) * sc, y + dy + (ex * sa + ey * ca) * sc))
+                return pts
+            d.polygon(poly(1.0), fill=col(base * 0.6)); d.polygon(poly(0.86), fill=col(base))
+            if lit > 0.4: d.polygon(poly(0.55, -L * 0.06, -L * 0.07), fill=col(base * 1.12 + np.array([14, 12, -4])))
+        atlas.paste(im, (qx * S, qy * S))
+    quad(0, 0, 'broad'); pine(1, 0); sakura(0, 1); shrub(1, 1)
     atlas.save(f'{OUT}/leaves.png', optimize=True)
     META['leaves'] = {'size_m': [1.0, 1.0], 'file': 'leaves.png', 'alpha': True}
     print('leaves         atlas', atlas.size)

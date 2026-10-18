@@ -72,6 +72,7 @@ class App {
     prog(0.92, '町を組み立てています…');
     await new Promise((r) => setTimeout(r, 30));
     this.town.build();
+    this.world.setupReflection([this.scene.getObjectByName('ground'), ...this.town.boats.map((b) => b.o), this.town.lighthouse, this.town.redLighthouse]);
     this.player = new Player(this.town, this.ground);
     this.input = new Input($('stick'), $('knob'), $('dash'));
     this.sound = new Sound();

@@ -15,7 +15,7 @@ const TOD = {
 export const TOD_NAMES = { day: '昼', evening: '夕方', night: '夜' };
 
 const SKY_FN = `
-  uniform vec3 uTop, uHor, uSunDir, uSunCol; uniform float uTime, uStars, uSunDisk;
+  uniform vec3 uTop, uHor, uSunDir, uSunCol; uniform float uTime, uStars, uSunDisk, uReflPass;
   float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
   float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
     return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
@@ -25,7 +25,7 @@ const SKY_FN = `
     vec3 col = mix(uHor, uTop, smoothstep(-0.02, 0.55, h));
     float sd = max(0.0, dot(d, uSunDir));
     col += uSunCol * (pow(sd, 6.0) * 0.18 + pow(sd, 60.0) * 0.35) * (0.4 + 0.6 * uSunDisk);
-    col += uSunCol * smoothstep(0.9993, 0.9997, sd) * 6.0 * uSunDisk;
+    col += uSunCol * smoothstep(0.9993, 0.9997, sd) * 6.0 * uSunDisk * (1.0 - uReflPass);   // no hard-edged disk in the sea's mirror (the glitter draws it)
     if (clouds && d.y > 0.0) {
       vec2 uv = d.xz / (d.y + 0.08) * 1.4 + vec2(uTime * 0.004, uTime * 0.002);
       float c = fbm(uv * 1.1); c = smoothstep(0.5, 0.82, c) * smoothstep(0.0, 0.18, d.y);
@@ -47,7 +47,7 @@ export class World {
     this.time = 0; this.todName = 'day'; this.cur = this.copy(TOD.day); this.target = TOD.day;
     this.skyU = {
       uTop: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3() },
-      uSunCol: { value: new THREE.Color() }, uTime: { value: 0 }, uStars: { value: 0 }, uSunDisk: { value: 1 },
+      uSunCol: { value: new THREE.Color() }, uTime: { value: 0 }, uStars: { value: 0 }, uSunDisk: { value: 1 }, uReflPass: { value: 0 },
     };
     this.hazeU = { uHaze: { value: new THREE.Color() }, uHazeDist: { value: 2600 } };
     this.buildSky(); this.buildLights(); this.buildSea(); this.buildIslands();
@@ -65,7 +65,7 @@ export class World {
     const mat = new THREE.ShaderMaterial({
       uniforms: this.skyU, side: THREE.BackSide, depthWrite: false, fog: false,
       vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }',
-      fragmentShader: SKY_FN + '\nvarying vec3 vD; void main(){ gl_FragColor = vec4(skyColor(normalize(vD), true), 1.0); }',
+      fragmentShader: SKY_FN + '\nvarying vec3 vD; void main(){ gl_FragColor = vec4(skyColor(normalize(vD), true), 1.0 - uReflPass); }   // alpha 0 marks sky in the reflection',
     });
     this.sky = new THREE.Mesh(geo, mat); this.sky.frustumCulled = false; this.sky.renderOrder = -10;
     this.scene.add(this.sky);
@@ -104,6 +104,7 @@ export class World {
       uDepth: { value: this.depthTex }, uFar: { value: null }, uFarBox: { value: new THREE.Vector4(FAR.x0, FAR.z0, FAR.x1 - FAR.x0, FAR.z1 - FAR.z0) }, uBox: { value: new THREE.Vector4(WATER_BOX.x0, WATER_BOX.z0, WATER_BOX.x1 - WATER_BOX.x0, WATER_BOX.z1 - WATER_BOX.z0) },
       uCam: { value: new THREE.Vector3() },
       uScene: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uRefract: { value: 0 }, uLinear: { value: 0 },
+      uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uUseRefl: { value: 0 },
     }]);
     Object.assign(this.seaU, this.skyU, this.hazeU);
     this.seaU.uDepth.value = this.depthTex;
@@ -114,7 +115,7 @@ export class World {
         varying vec3 vW; varying float vSwell; varying float vAmp;
         float swellAmp(vec2 p){
           float harbour = smoothstep(118.0, 95.0, p.y) * step(-82.0, p.x) * step(p.x, 64.0) * step(-150.0, p.y);
-          return mix(0.32, 0.08, harbour); }
+          return mix(0.5, 0.08, harbour); }
         void main(){
           vec3 p = position + vec3(uCam.x, 0.0, uCam.z);
           float a = swellAmp(p.xz);
@@ -128,6 +129,7 @@ export class World {
       fragmentShader: SKY_FN + `
         uniform sampler2D uDepth; uniform vec4 uBox; uniform sampler2D uScene; uniform vec2 uRes; uniform float uRefract; uniform float uLinear;
         uniform sampler2D uFar; uniform vec4 uFarBox; uniform vec3 uHaze; uniform float uHazeDist;
+        uniform sampler2D uRefl; uniform mat4 uReflMat; uniform float uUseRefl;
         varying float vAmp;
         varying vec3 vW; varying float vSwell;
         // ripple slope. Each wave fades out once it is smaller than about a pixel (foot = metres per pixel), which
@@ -159,7 +161,7 @@ export class World {
           float foamMask = mix(df.g * inFar, dt.g, inBox);
           vec3 V = normalize(cameraPosition - vW);
           float dist = length(cameraPosition - vW);
-          float foot = max(length(dFdx(vW.xz)), length(dFdy(vW.xz)));
+          float foot = sqrt(length(dFdx(vW.xz)) * length(dFdy(vW.xz)));   // geometric mean: ripples survive longer at grazing angles
           float rough = smoothstep(0.04, 1.6, foot);
           // wind patches: slowly drifting areas of rougher and calmer water, as seen from a hill
           float wind = vn(vW.xz * 0.0045 + vec2(uTime * 0.004, uTime * 0.002)) * 0.65 + vn(vW.xz * 0.013 - uTime * 0.003) * 0.35;
@@ -170,10 +172,19 @@ export class World {
           // a rough (far) surface reflects a spread of directions, on average higher in the sky
           R.y = max(R.y, rough * mix(0.05, 0.11, gust - 0.55)); R = normalize(R);
           float fres = 0.02 + 0.98 * pow(1.0 - max(dot(N, V), 0.0), 5.0);
-          fres = min(fres, mix(1.0, 0.8, rough));   // facets tilted toward the viewer: the far sea stays a little darker than the sky
+          fres = min(fres, mix(0.86, 0.74, rough));   // a rippled sea never mirrors perfectly: keep some of the water's own blue at grazing angles   // facets tilted toward the viewer: the far sea stays a little darker than the sky
           vec3 refl = skyColor(R, rough < 0.6);
           refl -= uSunCol * smoothstep(0.9993, 0.9997, max(0.0, dot(R, uSunDir))) * 6.0 * uSunDisk;   // the sun's mirror image comes from the glitter below (no hard-edged disk)
           refl = mix(refl, mix(uHor, uTop, 0.35), rough * 0.25);
+          if (uUseRefl > 0.5) {
+            // planar mirror of the far scene (islands, mountains, quays, boats), rippled by the surface normal
+            vec4 rp = uReflMat * vec4(vW.x, 0.0, vW.z, 1.0);
+            vec2 ruv = rp.xy / rp.w + vec2(g.x * 0.035, g.y * 0.11) * (1.0 - rough * 0.4) / (1.0 + dist * 0.003);
+            vec4 rc = texture2D(uRefl, clamp(ruv, 0.001, 0.999));
+            vec3 obj = uLinear > 0.5 ? rc.rgb : pow(max(rc.rgb, 0.0), vec3(1.0 / 2.2)) * 1.08;   // scene objects are linear, the sky is display-ready
+            vec3 mir = mix(rc.rgb, obj * 0.82, rc.a);   // objects reflect a little darker than they look
+            refl = mix(mir, refl, (1.0 - rc.a) * (0.35 + 0.4 * rough));
+          }
           // light absorbed along the path through the water (Beer-Lambert): red goes first, then green -> clear shallows, blue depths
           float path = depth / max(0.22, V.y) + depth;
           vec3 T = exp(-vec3(0.20, 0.040, 0.030) * path);
@@ -224,7 +235,7 @@ export class World {
     this.refract = !!this.q.refraction;
     this.seaU.uRefract.value = this.refract ? 1 : 0;
     const size = new THREE.Vector2();
-    this.sea.onBeforeRender = (r, scene) => {
+    this.sea.onBeforeRender = (r, scene, camera) => {
       if (!this.refract || scene.overrideMaterial) return;
       const rt = r.getRenderTarget();
       if (rt) size.set(rt.width, rt.height); else r.getDrawingBufferSize(size);
@@ -237,13 +248,46 @@ export class World {
         this.seaU.uScene.value = this.fbTex; this.seaU.uRes.value.copy(size);
       }
       r.copyFramebufferToTexture(this.fbTex);
+      if (this.reflRT) this.renderReflection(r, camera);
     };
     this.scene.add(this.sea);
+  }
+  // planar reflection for the sea: a mirrored camera renders only the objects on layer 1 (sky, islands, ranges, terrain,
+  // quays, boats, lighthouses) into a half-resolution target, clipped at the water plane (oblique near plane)
+  setupReflection(objects) {
+    if (!this.q.refraction) return;
+    const L = 1, add = (o) => o && o.traverse((c) => c.layers.enable(L));
+    for (const o of [this.sky, this.hemi, this.sun, ...objects]) add(o);
+    this.scene.traverse((o) => { if (o.name === 'island' || o.name === 'ranges') o.layers.enable(L); });
+    this.reflRT = new THREE.WebGLRenderTarget(2, 2, { type: THREE.HalfFloatType });
+    this.vcam = new THREE.PerspectiveCamera(); this.vcam.layers.set(L);
+    this.seaU.uRefl.value = this.reflRT.texture; this.seaU.uUseRefl.value = 1;
+  }
+  renderReflection(r, camera) {
+    const v = this.vcam, cp = new THREE.Vector3().setFromMatrixPosition(camera.matrixWorld);
+    if (cp.y < 0.1) return;
+    const size = r.getDrawingBufferSize(new THREE.Vector2()), w = Math.max(2, size.x >> 1), h = Math.max(2, size.y >> 1);
+    if (this.reflRT.width !== w || this.reflRT.height !== h) this.reflRT.setSize(w, h);
+    const rot = new THREE.Matrix4().extractRotation(camera.matrixWorld);
+    const look = new THREE.Vector3(0, 0, -1).applyMatrix4(rot).add(cp);
+    v.position.set(cp.x, -cp.y, cp.z); v.up.set(0, 1, 0).applyMatrix4(rot); v.up.y = -v.up.y;
+    v.lookAt(look.x, -look.y, look.z); v.far = camera.far; v.updateMatrixWorld();
+    v.projectionMatrix.copy(camera.projectionMatrix);
+    this.seaU.uReflMat.value.set(0.5, 0, 0, 0.5, 0, 0.5, 0, 0.5, 0, 0, 0.5, 0.5, 0, 0, 0, 1).multiply(v.projectionMatrix).multiply(v.matrixWorldInverse);
+    // oblique clip plane at y = 0 (nothing under the water gets mirrored)
+    const plane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0).applyMatrix4(v.matrixWorldInverse);
+    const c = new THREE.Vector4(plane.normal.x, plane.normal.y, plane.normal.z, plane.constant), e = v.projectionMatrix.elements;
+    const q = new THREE.Vector4((Math.sign(c.x) + e[8]) / e[0], (Math.sign(c.y) + e[9]) / e[5], -1, (1 + e[10]) / e[14]);
+    c.multiplyScalar(2 / c.dot(q)); e[2] = c.x; e[6] = c.y; e[10] = c.z + 1 - 0.003; e[14] = c.w;
+    const rt = r.getRenderTarget(), shadow = r.shadowMap.autoUpdate, skyPos = this.sky.position.clone();
+    r.shadowMap.autoUpdate = false; this.skyU.uReflPass.value = 1; this.sky.position.copy(v.position);
+    r.setRenderTarget(this.reflRT); r.clear(); r.render(this.scene, v);
+    r.setRenderTarget(rt); r.shadowMap.autoUpdate = shadow; this.skyU.uReflPass.value = 0; this.sky.position.copy(skyPos);
   }
   // swell height at a point (same formula as the shader) for boats
   swell(x, z) {
     const t = this.time, inH = x > -82 && x < 64 && z < 118 && z > G.z0;
-    const a = inH ? (z < 95 ? 0.08 : 0.08 + (0.32 - 0.08) * Math.min(1, (z - 95) / 23)) : 0.32;
+    const a = inH ? (z < 95 ? 0.08 : 0.08 + (0.5 - 0.08) * Math.min(1, (z - 95) / 23)) : 0.5;
     const w = Math.sin(0.08 * x + 0.11 * z + t * 0.9) + 0.6 * Math.sin(-0.13 * x + 0.07 * z + t * 1.3) + 0.35 * Math.sin(0.21 * x - 0.17 * z + t * 1.9);
     return w * a * 0.6;
   }
