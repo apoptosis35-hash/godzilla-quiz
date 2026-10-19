@@ -1,19 +1,26 @@
 // Touch: virtual stick on the left half, drag on the right half to look around, pinch to zoom, dash button.
 // Desktop: WASD / arrows to walk, Shift to dash, drag the mouse to look, wheel to zoom, Q/E to turn.
+// Web button / Space / left mouse (while the mouse is captured): tap to jump, hold in the air to swing on a web.
 export class Input {
-  constructor(stickEl, knobEl, dashEl) {
+  constructor(stickEl, knobEl, dashEl, webEl) {
     this.keys = new Set(); this.move = { x: 0, y: 0 }; this.look = { x: 0, y: 0 }; this.zoom = 0;
     this.stick = null; this.cams = new Map(); this.dashHeld = false; this.enabled = false;
+    this.jumpEdge = false; this.jump = false; this.webHeld = false; this.mouseHeld = false; this.btnHeld = false;
     this.stickEl = stickEl; this.knobEl = knobEl;
-    addEventListener('keydown', (e) => { this.keys.add(e.code); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); });
+    addEventListener('keydown', (e) => { if (e.code === 'Space' && !e.repeat && this.enabled) this.jumpEdge = true; this.keys.add(e.code); if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault(); });
     addEventListener('keyup', (e) => this.keys.delete(e.code));
     addEventListener('blur', () => { this.keys.clear(); this.stick = null; this.cams.clear(); this.stickEl.classList.remove('on'); });
     const opt = { passive: false };
     addEventListener('pointerdown', (e) => this.down(e), opt);
     addEventListener('pointermove', (e) => this.moveP(e), opt);
-    addEventListener('pointerup', (e) => this.up(e));
+    addEventListener('pointerup', (e) => { if (e.pointerType === 'mouse' && e.button === 0) this.mouseHeld = false; this.up(e); });
     addEventListener('pointercancel', (e) => this.up(e));
     addEventListener('wheel', (e) => { if (this.enabled) this.zoom += Math.sign(e.deltaY) * 0.12; }, { passive: true });
+    if (webEl) {
+      webEl.addEventListener('pointerdown', (e) => { e.preventDefault(); this.btnHeld = true; this.jumpEdge = true; webEl.classList.add('on'); });
+      const off = () => { this.btnHeld = false; webEl.classList.remove('on'); };
+      for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) webEl.addEventListener(ev, off);
+    }
     if (dashEl) {
       const on = (e) => { e.preventDefault(); this.dashHeld = !this.dashHeld; dashEl.classList.toggle('on', this.dashHeld); };
       dashEl.addEventListener('pointerdown', on);
@@ -24,7 +31,7 @@ export class Input {
     const touch = e.pointerType !== 'mouse';
     // PC: clicking the scene captures the mouse (free look like a PC game); Esc releases it
     if (!touch && !document.pointerLockElement && e.target.id === 'gl') document.getElementById('gl').requestPointerLock?.()?.catch?.(() => {});
-    if (!touch && document.pointerLockElement) return;
+    if (!touch && document.pointerLockElement) { if (e.button === 0) { this.mouseHeld = true; this.jumpEdge = true; } return; }
     if (touch && e.clientX < innerWidth * 0.45 && !this.stick) {
       this.stick = { id: e.pointerId, x0: e.clientX, y0: e.clientY, x: e.clientX, y: e.clientY };
       this.stickEl.style.left = e.clientX + 'px'; this.stickEl.style.top = e.clientY + 'px'; this.stickEl.classList.add('on');
@@ -80,6 +87,8 @@ export class Input {
     const l = Math.hypot(x, y);
     if (l > 1) { x /= l; y /= l; }
     this.move.x = x; this.move.y = y;
+    this.jump = this.jumpEdge; this.jumpEdge = false;
+    this.webHeld = this.btnHeld || this.mouseHeld || k.has('Space');
     this.run = this.dashHeld || k.has('ShiftLeft') || k.has('ShiftRight') || (this.stick && this.stickMag > 0.98 && false);
   }
   takeLook() { const l = { ...this.look }; this.look.x = this.look.y = 0; return l; }
