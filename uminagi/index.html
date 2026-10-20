@@ -34,6 +34,8 @@
     <button class="chip btn" id="mute" aria-label="サウンド">🔊</button>
     <span class="chip small" id="fps"></span>
   </div>
+  <div id="scorebox"><span class="bone">🦴</span><b id="score">0</b><small id="rank"></small><em id="combo"></em></div>
+  <div id="pops"></div>
   <canvas id="map" width="150" height="150"></canvas>
   <div class="zoom"><button class="btn round" id="zin" aria-label="カメラを近づける">＋</button><button class="btn round" id="zout" aria-label="カメラを離す">－</button></div>
   <button id="dash" class="btn" aria-label="ダッシュ">ダッシュ</button>
@@ -78,8 +80,8 @@
   <h1>海凪の港町<small>UMINAGI PORT TOWN</small></h1>
   <p class="lead">海と人と暮らしがとけあう、小さな漁港の町。<br>港町の豆柴「なぎ」になって、港から商店街、坂の住宅街、神社、そして灯台の丘まで、自由に歩いてみよう。</p>
   <div class="row"><button id="continue" class="big alt" hidden>つづきから</button><button id="startbtn" class="big">港から歩きはじめる</button></div>
-  <p class="small touch-only">左半分で歩く・右半分で見まわす・🕸️でジャンプ(空中で長押しでクモの糸)・壁に向かって進むと壁登り・🗺️で地図</p>
-  <p class="small pc-only">WASDで歩く・Shiftで走る・Spaceでジャンプ(空中で長押しでクモの糸スイング)・壁に向かって進むと壁登り・クリックでマウス操作(マウス操作中は左クリックでも糸)・ホイールでズーム・Mで地図</p>
+  <p class="small touch-only">左半分で歩く・右半分で見まわす・🕸️でジャンプ(空中で長押しでクモの糸)・🦴おやつを集めてコンボをつなごう・壁に向かって進むと壁登り・🗺️で地図</p>
+  <p class="small pc-only">🦴おやつを集めてコンボをつなごう・WASDで歩く・Shiftで走る・Spaceでジャンプ(空中で長押しでクモの糸スイング)・壁に向かって進むと壁登り・クリックでマウス操作(マウス操作中は左クリックでも糸)・ホイールでズーム・Mで地図</p>
 </div>
 
 <script type="module" src="js/main.js"></script>

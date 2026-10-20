@@ -7,6 +7,7 @@ import { Town } from './town.js';
 import { Player } from './player.js';
 import { Input } from './input.js';
 import { Sound } from './audio.js';
+import { Treats } from './treats.js';
 
 // aerial perspective: fog thickens exponentially with distance (like real air) instead of the linear ramp
 THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
@@ -89,6 +90,7 @@ class App {
     this.player = new Player(this.town, this.ground);
     this.input = new Input($('stick'), $('knob'), $('dash'), $('web'));
     this.sound = new Sound();
+    this.treats = new Treats(this.scene, this.ground, this.town, this.player, this.sound);
     this.drawMapBase();
     const s = load();
     if (s) { this.player.place(s.x, s.z, s.yaw); this.player.dist = s.dist || 9; this.world.setTimeOfDay(s.tod || 'day', true); }
@@ -180,7 +182,7 @@ class App {
     $('mute').onclick = () => { $('mute').textContent = this.sound.toggle() ? '🔊' : '🔇'; };
     $('reset').onclick = () => { try { localStorage.removeItem(SAVE); } catch { /* ignore */ } location.search = ''; };
     this.syncButtons();
-    document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
+    document.addEventListener('visibilitychange', () => { if (document.hidden) { this.save(); this.treats.saveNow(); } });
     addEventListener('keydown', (e) => {
       if (!this.playing) return;
       if (e.code === 'KeyM') { if (document.pointerLockElement) document.exitPointerLock(); this.toggleMap(); }
@@ -268,7 +270,7 @@ class App {
     if (this.playing) {
       this.input.update();
       pl.update(dt, this.input, pl.yaw);
-      this.saveT = (this.saveT || 0) + dt; if (this.saveT > 5) { this.saveT = 0; this.save(); }
+      this.saveT = (this.saveT || 0) + dt; if (this.saveT > 5) { this.saveT = 0; this.save(); this.treats.saveNow(); }
       this.area();
       this.sound.update(dt, pl, this.world.todName, this.ground);
     }
@@ -277,6 +279,7 @@ class App {
     this.world.update(dt, pl.pos, cam, this.mats);
     this.mats.wind.value = this.world.time;
     this.town.update(dt, cam, pl.pos, Q.lod);
+    this.treats.update(dt, this.camera, this.playing);
     if (this.playing && !this.mapT) this.drawMap($('map'), 0);
     this.mapT = ((this.mapT || 0) + 1) % 3;
     if (!draw) return;
