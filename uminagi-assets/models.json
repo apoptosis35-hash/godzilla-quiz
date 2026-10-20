@@ -2807,6 +2807,58 @@
   "kb": 67.7
  },
  {
+  "name": "enoden",
+  "jp": "江ノ電風の電車(1両)",
+  "category": "乗り物",
+  "size_m": [
+   2.55,
+   5.23,
+   12.38
+  ],
+  "tris": 1802,
+  "lod1_tris": 527,
+  "materials": [
+   "eno_cream",
+   "eno_dest",
+   "eno_green",
+   "eno_roof",
+   "eno_skirt",
+   "glass",
+   "ink",
+   "lamp",
+   "pv_tail_light",
+   "steel_dark"
+  ],
+  "parts": [
+   "enoden_body"
+  ],
+  "kb": 178.9
+ },
+ {
+  "name": "eno_station",
+  "jp": "小さな駅(江ノ島駅風)",
+  "category": "乗り物",
+  "size_m": [
+   12.4,
+   3.08,
+   2.92
+  ],
+  "tris": 1048,
+  "lod1_tris": 311,
+  "materials": [
+   "navy",
+   "roof_tile",
+   "steel_dark",
+   "white",
+   "wood",
+   "wood_dark"
+  ],
+  "parts": [
+   "eno_station_body"
+  ],
+  "kb": 88.9
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",

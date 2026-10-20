@@ -48,7 +48,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 #bigmap { position: fixed; inset: 0; background: rgba(0, 0, 0, .45); display: flex; align-items: center; justify-content: center; z-index: 15; }
 #bigmap[hidden] { display: none; }
 .mapbox { display: flex; gap: 14px; align-items: flex-start; max-width: 96vw; max-height: 94vh; }
-#bigmapcv { width: min(60vw, 75vh * 1.064); height: auto; max-height: 86vh; border-radius: 10px; }
+#bigmapcv { width: min(60vw, 80vh * 0.777); height: auto; max-height: 86vh; border-radius: 10px; }
 .go { display: flex; flex-direction: column; gap: 8px; min-width: 110px; }
 @media (orientation: portrait) { .mapbox { flex-direction: column; } #bigmapcv { width: 88vw; } .go { flex-direction: row; flex-wrap: wrap; } }
 

@@ -41,7 +41,7 @@ export class Player {
     if (!s.plat && s.h < -0.3) return null;                 // the sea
     if (dh > MAX_UP) return null;                           // wall or high step
     if (!s.plat && dh > 0.04 && dh / Math.max(step, 0.01) > MAX_SLOPE) return null;   // steep hillside
-    if (x < -165 || x > 125 || z < -145 || z > 127) return null;
+    if (x < -165 || x > 125 || z < -145 || z > 233) return null;
     return s;
   }
   collide(p, yAt) {
@@ -202,7 +202,7 @@ export class Player {
     const q = { x: n.x, z: n.z }; this.collide(q, ny);
     if (this.ground.height(q.x, q.z) > ny + 0.5) { q.x = p.x; q.z = p.z; v.x = v.z = 0; }   // bonk on a terrain wall
     if (q.x !== n.x || q.z !== n.z) { v.x = (q.x - p.x) / dt; v.z = (q.z - p.z) / dt; }
-    if (q.x < -165 || q.x > 125 || q.z < -145 || q.z > 127) { q.x = p.x; q.z = p.z; v.x = v.z = 0; }
+    if (q.x < -165 || q.x > 125 || q.z < -145 || q.z > 233) { q.x = p.x; q.z = p.z; v.x = v.z = 0; }
     p.x = q.x; p.z = q.z;
     const g = this.support(p.x, p.z, Math.max(p.y, ny));
     if (ny <= g && v.y <= 0) { this.landOrRespawn(g); return true; }

@@ -14,6 +14,10 @@ export const STAIRS = [[[-40, -37.5], [4, 6.5]], [[-24, -21.5], [12, 14.5]], [[-
 export const TIER_X1 = 24;
 export const SHRINE = { x0: -28, x1: 8, z0: -132, z1: -116, y: 21 };
 export const PLATEAU = { x0: -140, x1: -96, z0: -40, z1: 8, y: 34 };
+// the little island off the beach (like Enoshima), joined to the shore by a long bridge; the coastal tram line
+export const ISLAND = { x: 97, z: 200, r: 24 };
+export const BRIDGE = { x0: 95, x1: 99, z0: 92, z1: 182, y: 3.2 };
+export const TRAM = { x0: 64, x1: 126, z0: 6, z1: 12, y0: 1.6, y1: 3.8 };
 
 // ---------------------------------------------------------------- platforms
 // {x0,x1,z0,z1, y | ramp:[axis, a, b, ya, yb], mat, wall:'stone'|'concrete'|'none', stairs, blend, top, curb}
@@ -74,6 +78,15 @@ function layout() {
   P({ name: 'east_pad4', x0: 77, x1: 91, z0: -46, z1: -34, y: 'auto', mat: 'dirt', wall: 'stone' });
   P({ name: 'east_pad5', x0: 78, x1: 92, z0: -72, z1: -60, y: 'auto', mat: 'dirt', wall: 'stone' });
   P({ name: 'east_pad6', x0: 76, x1: 90, z0: -22, z1: -10, y: 'auto', mat: 'dirt', wall: 'stone' });
+  // the bridge to the island: ramps at both ends, a level deck over the water (no walls: it stands on piers)
+  const B = BRIDGE, hb = naturalRaw((B.x0 + B.x1) / 2, B.z0) + 0.05, hi = naturalRaw((B.x0 + B.x1) / 2, B.z1) + 0.05;
+  P({ name: 'bridge_s', x0: B.x0, x1: B.x1, z0: B.z0, z1: B.z0 + 7, ramp: rampZ(B.z0, B.z0 + 7, hb, B.y), mat: 'paving', wall: 'none', blend: false });
+  P({ name: 'bridge', x0: B.x0, x1: B.x1, z0: B.z0 + 7, z1: B.z1 - 7, y: B.y, mat: 'paving', wall: 'none', blend: false });
+  P({ name: 'bridge_n', x0: B.x0, x1: B.x1, z0: B.z1 - 7, z1: B.z1, ramp: rampZ(B.z1 - 7, B.z1, B.y, hi), mat: 'paving', wall: 'none', blend: false });
+  // the coastal tram: a ballast bed from the end of the harbour apron along the shore, and a station platform
+  P({ name: 'tram', x0: TRAM.x0, x1: TRAM.x1, z0: TRAM.z0, z1: TRAM.z1, ramp: rampX(TRAM.x0, TRAM.x1, TRAM.y0, TRAM.y1), mat: 'granite', wall: 'stone', blend: true });
+  const sy = TRAM.y0 + (TRAM.y1 - TRAM.y0) * (78 - TRAM.x0) / (TRAM.x1 - TRAM.x0) + 0.9;
+  P({ name: 'tram_station', x0: 70, x1: 86, z0: TRAM.z1, z1: TRAM.z1 + 3.2, y: sy, mat: 'paving', wall: 'stone' });
 }
 
 export function platformY(p, x, z) {
@@ -115,6 +128,15 @@ export function fbm(x, z, oct = 4) { let s = 0, a = 0.5, f = 1; for (let k = 0; 
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
 export function naturalRaw(x, z) {
+  const sea = naturalBase(x, z);
+  // the island: a wooded dome with steep rocky shores, rising out of the sea floor
+  const id = Math.hypot(x - ISLAND.x, (z - ISLAND.z) * 1.15), k = 1 - id / ISLAND.r;
+  if (k < -0.5) return sea;
+  const n = fbm(x * 0.05 + 11, z * 0.05);
+  const hi = k > 0 ? 1.4 + 23 * Math.pow(k, 1.35) * (0.8 + 0.4 * n) : 1.4 + k * 40;   // walkable slopes, rock-cliff shore
+  return Math.max(sea, hi);
+}
+function naturalBase(x, z) {
   const d = coastDist(x, z);
   const n = fbm(x * 0.02, z * 0.02);
   if (d < 0) {  // sea floor: shallow near the beach in the east, deeper elsewhere
@@ -141,7 +163,7 @@ export function naturalRaw(x, z) {
 }
 
 // ---------------------------------------------------------------- the grid
-export const G = { x0: -170, z0: -150, x1: 130, z1: 132, res: 0.5 };
+export const G = { x0: -170, z0: -150, x1: 130, z1: 236, res: 0.5 };
 export const WATER_BOX = { x0: -500, z0: -200, x1: 500, z1: 800 };
 G.nx = Math.round((G.x1 - G.x0) / G.res); G.nz = Math.round((G.z1 - G.z0) / G.res);
 

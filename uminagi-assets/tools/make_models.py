@@ -3969,6 +3969,65 @@ def kanban_shirasu(): _enz_kanban('しらす丼')
 def kanban_tako(): _enz_kanban('たこせん')
 
 
+PALETTE.update({'eno_green': P((0.04, 0.28, 0.12), 0.45), 'eno_cream': P((0.86, 0.8, 0.62), 0.45), 'eno_roof': P((0.45, 0.47, 0.48), 0.6, 0.3),
+                'eno_skirt': P((0.08, 0.08, 0.08), 0.6), 'eno_dest': P((0.95, 0.95, 0.9), 0.5, e=(1.0, 0.98, 0.9), es=0.6)})
+
+@model('enoden', '江ノ電風の電車(1両)', '乗り物')
+def enoden():
+    # a retro coastal tram car: green below, cream above, rounded cab ends with a big two-pane windscreen,
+    # a lit destination board 「江ノ島」, headlights, pantograph, bogies. Length 12 m along Y, cab at -Y (the train
+    # runs either way; the game couples two cars back to back).
+    L, W, F, H = 12.0, 2.5, 0.95, 3.45
+    _pv_rbox('eno_green', (W, L - 0.6, 1.25), (0, 0, F), 0.25)                          # lower body
+    _pv_rbox('eno_cream', (W, L - 0.6, H - F - 1.25 - 0.25), (0, 0, F + 1.25), 0.25)    # upper body
+    _pv_rbox('eno_roof', (W - 0.2, L - 0.9, 0.3), (0, 0, H - 0.3), 0.15)
+    box('eno_green', (W + 0.02, L - 0.7, 0.08), (0, 0, F + 1.24))                       # belt line
+    for sy, y0 in ((-1, -L / 2 + 0.3), (1, L / 2 - 0.3)):                               # rounded ends
+        with xf((0, y0, 0)):
+            ico('eno_green', 1.0, (0, 0, F + 0.62), (W / 2, 0.45, 0.62), 2)
+            ico('eno_cream', 1.0, (0, 0, F + 1.75), (W / 2, 0.45, 0.55), 2)
+    # windows down both sides, doors
+    for sx in (-1, 1):
+        for k in range(8):
+            y = -L / 2 + 1.6 + k * 1.15
+            if k in (1, 6): box('glass', (0.04, 0.9, 1.75), (sx * (W / 2 + 0.005), y, F + 0.25)); continue   # door glass
+            box('glass', (0.04, 0.85, 0.8), (sx * (W / 2 + 0.005), y, F + 1.4))
+    # cab: windscreen, headlights, destination board
+    with xf((0, -L / 2 - 0.12, 0)):
+        for sx in (-1, 1): box('glass', (0.95, 0.05, 0.85), (sx * 0.5, -0.02, F + 1.35))
+        _pv_rbox('eno_dest', (1.2, 0.06, 0.32), (0, -0.04, F + 2.25), 0.04)
+        text3d('ink', '江ノ島', 0.2, (0, -0.075, F + 2.36), depth=0.01)
+        for sx in (-1, 1):
+            cyl('lamp', 0.12, 0.08, (sx * 0.8, -0.03, F + 0.75), 12).rotation_euler = (math.pi / 2, 0, 0)
+            cyl('pv_tail_light', 0.06, 0.06, (sx * 0.95, -0.02, F + 0.4), 10).rotation_euler = (math.pi / 2, 0, 0)
+        box('eno_skirt', (W - 0.2, 0.15, 0.45), (0, 0.05, 0.4))
+    # bogies and wheels, underfloor boxes
+    for y in (-L / 2 + 2.2, L / 2 - 2.2):
+        box('eno_skirt', (W - 0.5, 2.2, 0.45), (0, y, 0.45))
+        for dy in (-0.7, 0.7):
+            for sx in (-1, 1): cyl('steel_dark', 0.38, 0.12, (sx * 0.72, y + dy, 0.38), 14).rotation_euler = (0, math.pi / 2, 0)
+    box('eno_skirt', (W - 0.6, L - 6.0, 0.4), (0, 0, 0.5))
+    # pantograph and roof gear
+    with xf((0, -L / 4, H)):
+        box('steel_dark', (1.0, 1.0, 0.15), (0, 0, 0))
+        for sy in (-1, 1): rod('steel_dark', (0, sy * 0.4, 0.15), (0, sy * 0.05, 1.1), 0.03, 4); rod('steel_dark', (0, sy * 0.05, 1.1), (0, sy * 0.35, 1.7), 0.025, 4)
+        box('steel_dark', (1.6, 0.08, 0.06), (0, 0, 1.72))
+    _pv_rbox('eno_roof', (1.2, 1.6, 0.35), (0, L / 4, H), 0.1)
+
+@model('eno_station', '小さな駅(江ノ島駅風)', '乗り物')
+def eno_station():
+    # a small open platform shelter: posts, a tiled roof, a bench and a station sign 「えのしま」
+    for x in (-5.5, 0, 5.5):
+        for y in (-0.9, 0.9): cyl('wood_dark', 0.08, 2.9, (x, y, 0), 8)
+    with xf((0, 0, 2.9)): box('roof_tile', (12.4, 2.8, 0.18), (0, 0, 0))
+    box('wood_dark', (12.4, 0.12, 0.3), (0, -1.4, 2.75)); box('wood_dark', (12.4, 0.12, 0.3), (0, 1.4, 2.75))
+    for x in (-3, 3): box('wood', (2.0, 0.45, 0.08), (x, 0.6, 0.45)); box('wood_dark', (2.0, 0.08, 0.45), (x, 0.82, 0.5))
+    for x in (-3.9, -2.1, 2.1, 3.9): box('steel_dark', (0.06, 0.4, 0.45), (x, 0.6, 0))
+    with xf((0, 0, 2.2)):
+        box('white', (2.4, 0.08, 0.55), (0, 0, 0)); text3d('navy', 'えのしま', 0.3, (0, -0.05, 0.12), depth=0.01)
+        for sx in (-1, 1): rod('steel_dark', (sx * 1.0, 0, 0.55), (sx * 1.0, 0, 0.7), 0.02, 4)
+
+
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
 def fisherman():
     # weathered fisherman: navy work shirt with rolled sleeves, orange rubber apron (前掛け) on a neck strap, white rubber boots,

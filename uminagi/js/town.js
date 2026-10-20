@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ASSETS } from './materials.js';
-import { QY, streetY, TIERS, STAIRS, TIER_X1, SHRINE, PLATEAU, PLATFORMS, platformY, fbm, naturalRaw, G } from './terrain.js';
+import { QY, streetY, TIERS, STAIRS, TIER_X1, SHRINE, PLATEAU, PLATFORMS, platformY, fbm, naturalRaw, G, ISLAND, BRIDGE, TRAM } from './terrain.js';
 
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 const H = Math.PI / 2, PI = Math.PI;
@@ -27,7 +27,7 @@ export const MODELS = {
     'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging', 'parasol', 'surfboards', 'kanban_shirasu', 'kanban_tako'],
   nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c'],
   // animated (cloned)
-  dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
+  dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {
@@ -332,7 +332,7 @@ export class Town {
   // ------------------------------------------------------------------ build everything
   build() {
     const r = rng(7);
-    this.harbour(r); this.street(r); this.terraces(r); this.shrine(r); this.hill(r); this.east(r); this.hillside(r);
+    this.harbour(r); this.street(r); this.terraces(r); this.shrine(r); this.hill(r); this.east(r); this.islandBridge(r); this.tramLine(r); this.hillside(r);
     this.nature(r); this.wires(); this.people(r); this.birds(r);
     this.pool.finalize();
   }
@@ -574,6 +574,76 @@ export class Town {
       const h = this.at(x, z); if (h > -2 && h < 3) this.put(['rock_a', 'rock_b', 'rock_c'][i % 3], x, h - 0.4, z, r() * 6, { s: 0.8 + r() * 1.2 });
     }
   }
+  // ------------------------------------------------------------------ the island and its bridge (like Enoshima)
+  islandBridge(r) {
+    const B = BRIDGE, bx = (B.x0 + B.x1) / 2, boxes = [];   // [material, cx, cy, cz, sx, sy, sz]
+    // piers standing on the sea floor, edge beams, railings
+    for (let z = B.z0 + 11; z <= B.z1 - 10; z += 9) {
+      const floor = Math.min(-1, naturalRaw(bx, z));
+      boxes.push(['concrete', bx, (floor + B.y - 0.35) / 2, z, 4.6, B.y - 0.35 - floor, 1.1]);
+      boxes.push(['concrete', bx, B.y - 0.55, z, 5.6, 0.5, 1.6]);
+    }
+    for (const sx of [-1, 1]) {
+      const x = sx < 0 ? B.x0 - 0.12 : B.x1 + 0.12;
+      boxes.push(['concrete', x, B.y - 0.35, (B.z0 + B.z1) / 2, 0.35, 0.75, B.z1 - B.z0 - 12]);       // edge beam
+      for (let z = B.z0 + 7; z <= B.z1 - 7; z += 2) boxes.push(['white', x, B.y + 0.5, z, 0.08, 1.0, 0.08]);   // posts
+      boxes.push(['white', x, B.y + 1.02, (B.z0 + B.z1) / 2, 0.12, 0.08, B.z1 - B.z0 - 14]);            // top rail
+      boxes.push(['white', x, B.y + 0.55, (B.z0 + B.z1) / 2, 0.05, 0.05, B.z1 - B.z0 - 14]);            // mid rail
+    }
+    this.boxMeshes(boxes, 'bridge');
+    for (let z = B.z0 + 14; z <= B.z1 - 12; z += 18) { this.put('street_light', B.x0 - 0.35, B.y, z, H, { col: false }); this.put('street_light', B.x1 + 0.35, B.y, z + 9, -H, { col: false }); }
+    // the island: a little shrine at the top (facing the bridge), lanterns, a lookout, trees and a rocky shore
+    const I = ISLAND, top = this.at(I.x, I.z - 3);
+    this.put('shrine_hall', I.x, this.at(I.x, I.z + 3), I.z + 3, PI, { s: 0.8 });
+    this.put('torii', I.x, this.at(I.x, I.z - 6), I.z - 6, PI, { s: 0.9 });
+    for (const dx of [-2.6, 2.6]) this.put('ishidoro', I.x + dx, this.at(I.x + dx, I.z - 3.5), I.z - 3.5, PI, { s: 0.8 });
+    this.put('bench', I.x - 7, this.at(I.x - 7, I.z - 2), I.z - 2, H); this.put('telescope', I.x + 8, this.at(I.x + 8, I.z + 4), I.z + 4, -H);
+    for (let i = 0; i < 46; i++) {
+      const a = r() * Math.PI * 2, rr = I.r * (0.25 + r() * 0.7), x = I.x + Math.cos(a) * rr, z = I.z + Math.sin(a) * rr / 1.15;
+      if (Math.abs(x - I.x) < 3.5 && z < I.z) continue;                                   // keep the path from the bridge up to the shrine
+      if (Math.hypot(x - I.x, z - I.z) < 9) continue;
+      const h = this.at(x, z); if (h < 1.5) continue;
+      const k = r(); this.put(k < 0.4 ? 'tree_pine_b' : k < 0.75 ? 'tree_broadleaf' : k < 0.85 ? 'tree_sakura' : 'bush', x, h - 0.2, z, r() * 6, { s: 0.7 + r() * 0.5 });
+    }
+    for (let i = 0; i < 28; i++) {
+      const a = r() * Math.PI * 2, x = I.x + Math.cos(a) * I.r * (0.98 + r() * 0.15), z = I.z + Math.sin(a) * I.r * (0.98 + r() * 0.15) / 1.15;
+      if (Math.abs(x - bx) < 5 && z < I.z) continue;
+      this.put(['rock_c', 'rock_a', 'rock_b'][i % 3], x, this.at(x, z) - 0.8, z, r() * 6, { s: 1 + r() * 1.4, col: false });
+    }
+  }
+  // ------------------------------------------------------------------ the coastal tram (in the spirit of the Enoden)
+  tramLine(r) {
+    const T = TRAM, zc = (T.z0 + T.z1) / 2, yAt = (x) => T.y0 + (T.y1 - T.y0) * (x - T.x0) / (T.x1 - T.x0), boxes = [];
+    const slope = Math.atan2(T.y1 - T.y0, T.x1 - T.x0);
+    for (let x = T.x0 + 0.4; x < T.x1; x += 0.7) boxes.push(['wood_dark', x, yAt(x) + 0.06, zc, 0.22, 0.12, 2.3]);   // sleepers
+    for (const dz of [-0.72, 0.72]) for (let x = T.x0; x < T.x1 - 0.1; x += 6) {
+      const x1 = Math.min(T.x1, x + 6); boxes.push(['steel_dark', (x + x1) / 2, yAt((x + x1) / 2) + 0.17, zc + dz, x1 - x, 0.12, 0.08, slope]);
+    }
+    // catenary: poles with an arm over the track, and the contact wire
+    for (let x = T.x0 + 4; x < T.x1; x += 12) {
+      boxes.push(['steel_dark', x, yAt(x) + 3.2, T.z0 - 0.4, 0.18, 6.4, 0.18]);
+      boxes.push(['steel_dark', x, yAt(x) + 6.2, zc - 1.2, 0.1, 0.1, 3.2]);
+    }
+    boxes.push(['black', (T.x0 + T.x1) / 2, (yAt(T.x0) + yAt(T.x1)) / 2 + 5.5, zc, T.x1 - T.x0, 0.03, 0.03, slope]);
+    this.boxMeshes(boxes, 'tram_track');
+    const st = PLATFORMS.find((p) => p.name === 'tram_station');
+    this.station = this.clone('eno_station', 78, st.y, (st.z0 + st.z1) / 2 + 0.2, PI, 'tex');
+    this.collide('eno_station', 78, st.y, (st.z0 + st.z1) / 2 + 0.2, PI, 1, 3, [[0.4, 0.4, -5.5, 0.9], [0.4, 0.4, 0, 0.9], [0.4, 0.4, 5.5, 0.9], [0.4, 0.4, -5.5, -0.9], [0.4, 0.4, 0, -0.9], [0.4, 0.4, 5.5, -0.9]]);
+    // the train: two cars coupled back to back, shuttling between the station and the far end of the line
+    const cars = [this.clone('enoden', 0, 0, 0, H, 'tex'), this.clone('enoden', 0, 0, 0, -H, 'tex')];
+    const cols = cars.map(() => { const c = { type: 'b', x: 0, z: zc, hw: 1.3, hd: 6.2, c: Math.cos(H), s: Math.sin(H), y0: 0, y1: 0 }; this.colliders.push(c); return c; });
+    this.tram = { cars, cols, a: 78, b: T.x1 - 13, x: 78, from: 78, to: T.x1 - 13, t: 0, wait: 4, yAt, zc };
+  }
+  // static decorative boxes merged per material (bridge structure, track): [mat, cx, cy, cz, sx, sy, sz, rotZ?]
+  boxMeshes(list, name) {
+    const by = new Map(), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
+    for (const b of list) { if (!by.has(b[0])) by.set(b[0], []); by.get(b[0]).push(b); }
+    for (const [mat, items] of by) {
+      const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), this.mats.get(mat), items.length);
+      items.forEach(([, x, y, z, sx, sy, sz, rz = 0], i) => { m.compose(new THREE.Vector3(x, y, z), q.setFromEuler(e.set(0, 0, rz)), new THREE.Vector3(sx, sy, sz)); im.setMatrixAt(i, m); });
+      im.castShadow = im.receiveShadow = true; im.name = name; this.root.add(im);
+    }
+  }
   // houses climbing the natural hillsides around the town (the concept's stacked village): each faces downhill
   // and stands on a dry-stone retaining base that makes up the slope under it
   hillside(r) {
@@ -759,6 +829,19 @@ export class Town {
       const y = this.world.swell(b.x, b.z);
       b.o.position.y = y - 0.05; b.o.rotation.set(Math.sin(t * 0.8 + b.ph) * 0.025, b.ry + Math.sin(t * 0.13 + b.ph) * 0.01, Math.sin(t * 1.1 + b.ph) * 0.04);
       if (b.radar) b.radar.rotation.y += dt * 2.5;
+    }
+    const tr = this.tram;
+    if (tr) {
+      if (tr.wait > 0) { tr.wait -= dt; if (tr.wait <= 0) { tr.from = tr.x; tr.to = tr.to === tr.a ? tr.b : tr.a; tr.t = 0; } }
+      else {
+        const dur = Math.abs(tr.to - tr.from) / 5.5 + 3; tr.t = Math.min(1, tr.t + dt / dur);
+        const e = tr.t * tr.t * (3 - 2 * tr.t); tr.x = tr.from + (tr.to - tr.from) * e;
+        if (tr.t >= 1) tr.wait = 7;
+      }
+      tr.cars.forEach((c, i) => {
+        const x = tr.x + (i ? -6.2 : 6.2), y = tr.yAt(x);
+        c.position.set(x, y, tr.zc); const col = tr.cols[i]; col.x = x; col.y0 = y - 0.5; col.y1 = y + 3.5;
+      });
     }
     for (const s of this.sailers || []) {
       const a = t * s.sp + s.ph, x = s.cx + Math.cos(a) * s.rad, z = s.cz + Math.sin(a) * s.rad;

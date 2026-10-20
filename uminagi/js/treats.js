@@ -69,6 +69,8 @@ export class Treats {
     for (let z = -92; z <= -8; z += 1.6) out.push(new THREE.Vector3(40 + Math.sin(z * 0.09) * 3, streetY(z) + 4.5 + Math.sin(z * 0.15) * 2.2, z));   // over the street
     for (let x = -72; x <= 50; x += 1.8) out.push(new THREE.Vector3(x, QY + 4.5 + Math.sin(x * 0.12) * 2.2, 18 + Math.sin(x * 0.05) * 2));        // over the harbour quay
     for (let z = 24; z <= 100; z += 3) out.push(new THREE.Vector3(-80 + this.rnd() * 4, 9 + Math.sin(z * 0.2) * 2, z));                  // along the west breakwater
+    for (let z = 100; z <= 176; z += 1.8) out.push(new THREE.Vector3(97 + Math.sin(z * 0.2) * 1.2, 5.5 + Math.sin(z * 0.11) * 1.5, z));       // over the bridge to the island
+    for (let x = 66; x <= 124; x += 2) out.push(new THREE.Vector3(x, 7.5 + Math.sin(x * 0.2) * 1.2, 9));                                  // along the tram line
     for (let x = -60; x <= 20; x += 3) out.push(new THREE.Vector3(x, 8 + this.rnd() * 6, -20 - this.rnd() * 70));                       // over the terraces
     return out;
   }

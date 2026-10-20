@@ -39,6 +39,9 @@ const Q = QUALITY[qName] || QUALITY.medium;
 
 // areas shown on entry (first match wins)
 const AREAS = [
+  { name: '凪ノ島', sub: 'なぎのしま', x0: 70, x1: 126, z0: 176, z1: 230 },
+  { name: '弁天橋', sub: 'べんてんばし', x0: 92, x1: 102, z0: 92, z1: 178 },
+  { name: '海辺の駅', sub: 'うみべのえき', x0: 64, x1: 126, z0: 2, z1: 16 },
   { name: '魚市場', sub: 'うおいちば', x0: -18, x1: 14, z0: -3, z1: 16 },
   { name: '展望台', sub: 'てんぼうだい', x0: -106, x1: -94, z0: -4, z1: 10 },
   { name: '灯台の丘', sub: 'とうだいのおか', x0: -142, x1: -94, z0: -42, z1: 10 },
@@ -200,7 +203,7 @@ class App {
   toggleMap(show = $('bigmap').hidden) { $('bigmap').hidden = !show; if (show) this.drawMap($('bigmapcv'), 1); }
   // ------------------------------------------------------------------ minimap
   drawMapBase() {
-    const W = 300, Hh = 282, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh;
+    const W = G.x1 - G.x0, Hh = G.z1 - G.z0, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh;
     const g = cv.getContext('2d'), img = g.createImageData(W, Hh), gr = this.ground;
     const col = { concrete_wet: [150, 150, 146], concrete: [168, 166, 160], paving: [196, 186, 160], dirt: [176, 156, 122], granite: [190, 188, 182], grass: [120, 160, 80], asphalt: [96, 96, 98] };
     for (let j = 0; j < Hh; j++) for (let i = 0; i < W; i++) {
@@ -223,7 +226,7 @@ class App {
     const g = cv.getContext('2d'), p = this.player.pos, W = cv.width, H = cv.height;
     g.clearRect(0, 0, W, H);
     if (big) {
-      const s = Math.min(W / 300, H / 282); g.save(); g.scale(s, s); g.drawImage(this.mapBase, 0, 0);
+      const s = Math.min(W / (G.x1 - G.x0), H / (G.z1 - G.z0)); g.save(); g.scale(s, s); g.drawImage(this.mapBase, 0, 0);
       this.marker(g, p.x - G.x0, p.z - G.z0, this.player.heading, 7);
       g.font = 'bold 9px sans-serif'; g.fillStyle = '#123'; g.textAlign = 'center';
       for (const a of AREAS.slice(0, 13)) if (!a.test) g.fillText(a.name, (a.x0 + a.x1) / 2 - G.x0, (a.z0 + a.z1) / 2 - G.z0);
