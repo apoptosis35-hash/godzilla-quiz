@@ -400,6 +400,7 @@ export class World {
       const m = new THREE.Mesh(geo, mat); m.name = 'island'; m.receiveShadow = false; this.scene.add(m);
     }
     this.buildFarDepth(isl, edgeOf);
+    this.buildFuji();
     // --- mountain ranges on the horizon: three layers of ridged strips, further = taller and hazier
     const ranges = [[2000, -2.2, -0.4, 180, 11], [2800, -2.7, 0.1, 280, 12], [3600, -3.3, 0.5, 420, 13], [2600, 0.55, 1.15, 230, 14], [3400, 0.35, 1.45, 380, 15]];
     for (const [R, a0, a1, Hh, seed] of ranges) {
@@ -423,6 +424,34 @@ export class World {
       const mm = new THREE.Mesh(geo, mat.clone()); mm.material.side = THREE.DoubleSide; mm.material.onBeforeCompile = mat.onBeforeCompile;
       mm.name = 'ranges'; mm.frustumCulled = false; this.scene.add(mm);
     }
+  }
+  // Mount Fuji far across the bay to the south-west (as seen from Enoshima): a broad concave cone with a snow cap
+  // and a few ravines, hazed by the same atmosphere as the islands
+  buildFuji() {
+    const cx = -1600, cz = 2250, H = 640, R = 1550, A = 96, RINGS = 24, pos = [], col = [], idx = [];
+    for (let ri = 0; ri <= RINGS; ri++) for (let ai = 0; ai < A; ai++) {
+      const t = ai / A * Math.PI * 2, rr = ri / RINGS, crater = 0.045;
+      const prof = rr < crater ? 0.985 : Math.pow(1 - (rr - crater) / (1 - crater), 1.9);   // concave slopes, small flat summit
+      const ravine = Math.pow(Math.abs(Math.sin(t * 9 + Math.sin(t * 3) * 1.4)), 6) * 0.015 * Math.sin(rr * Math.PI);
+      const h = ri === RINGS ? -20 : H * (prof - ravine);
+      const r = rr * R * (1 + 0.05 * Math.sin(t * 5 + 1.3)), x = cx + Math.cos(t) * r, z = cz + Math.sin(t) * r;
+      pos.push(x, h, z);
+      const snowLine = 0.5 + 0.08 * Math.sin(t * 7 + 2) + 0.05 * Math.sin(t * 13);
+      const snow = h / H > snowLine + (Math.sin(t * 9 + Math.sin(t * 3) * 1.4) > 0.6 ? 0.05 : -0.06) ? 1 : 0;
+      const c = snow ? new THREE.Color(0.92, 0.94, 0.98) : new THREE.Color().setRGB(0.2, 0.24, 0.3).lerp(new THREE.Color(0.17, 0.25, 0.16), Math.min(1, (1 - h / H) * 1.4 - 0.4));
+      col.push(c.r, c.g, c.b);
+    }
+    for (let ri = 0; ri < RINGS; ri++) for (let ai = 0; ai < A; ai++) {
+      const a = ri * A + ai, b = ri * A + (ai + 1) % A, c = a + A, d = b + A; idx.push(a, c, b, b, c, d);
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+    geo.setIndex(idx); geo.computeVertexNormals();
+    // a big mountain stays readable through more air: thinner haze than the nearer ranges, so the snow cap shows
+    const mat = this.farMat.clone(), base = this.farMat.onBeforeCompile;
+    mat.onBeforeCompile = (sh) => { base(sh); sh.fragmentShader = sh.fragmentShader.replace('float dd = length(vWPi - cameraPosition);', 'float dd = length(vWPi - cameraPosition) * 0.55;'); };
+    mat.customProgramCacheKey = () => 'fuji';
+    const m = new THREE.Mesh(geo, mat); m.name = 'ranges'; m.frustumCulled = false; this.scene.add(m);
   }
   // depth of the open sea around the islands and the mainland outside the near box (same encoding as Ground.waterTexture)
   buildFarDepth(isl, edgeOf) {

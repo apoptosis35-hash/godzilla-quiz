@@ -2614,6 +2614,199 @@
   "kb": 385.1
  },
  {
+  "name": "sea_candle",
+  "jp": "展望灯台(シーキャンドル風)",
+  "category": "灯台・展望台",
+  "size_m": [
+   10.8,
+   39.82,
+   10.8
+  ],
+  "tris": 4328,
+  "lod1_tris": 0,
+  "materials": [
+   "alu",
+   "beacon_red",
+   "concrete",
+   "glass",
+   "lamp",
+   "plaster_white",
+   "steel_dark",
+   "white"
+  ],
+  "parts": [
+   "sea_candle_body",
+   "sea_candle_lamp"
+  ],
+  "kb": 295.4
+ },
+ {
+  "name": "yacht",
+  "jp": "ヨット(係留)",
+  "category": "船",
+  "size_m": [
+   3.04,
+   14.4,
+   9.0
+  ],
+  "tris": 708,
+  "lod1_tris": 196,
+  "materials": [
+   "alu",
+   "black",
+   "boat_blue",
+   "cloth_white",
+   "enz_canvas_blue",
+   "enz_teak",
+   "glass",
+   "steel_dark",
+   "white"
+  ],
+  "parts": [
+   "yacht_body"
+  ],
+  "kb": 73.2
+ },
+ {
+  "name": "yacht_sail",
+  "jp": "ヨット(帆走)",
+  "category": "船",
+  "size_m": [
+   3.04,
+   14.4,
+   9.0
+  ],
+  "tris": 674,
+  "lod1_tris": 184,
+  "materials": [
+   "alu",
+   "black",
+   "boat_blue",
+   "cloth_white",
+   "enz_sail",
+   "enz_teak",
+   "glass",
+   "steel_dark",
+   "white"
+  ],
+  "parts": [
+   "yacht_sail_body"
+  ],
+  "kb": 70.3
+ },
+ {
+  "name": "parasol",
+  "jp": "ビーチパラソル",
+  "category": "自然",
+  "size_m": [
+   2.5,
+   2.82,
+   2.75
+  ],
+  "tris": 76,
+  "lod1_tris": 19,
+  "materials": [
+   "alu",
+   "cloth_blue",
+   "cloth_red",
+   "cloth_white",
+   "cloth_yellow",
+   "white"
+  ],
+  "parts": [
+   "parasol_body"
+  ],
+  "kb": 16.3
+ },
+ {
+  "name": "surfboards",
+  "jp": "サーフボード(立てかけ)",
+  "category": "自然",
+  "size_m": [
+   1.3,
+   2.19,
+   0.43
+  ],
+  "tris": 324,
+  "lod1_tris": 93,
+  "materials": [
+   "black",
+   "cloth_yellow",
+   "enz_board_blue",
+   "enz_board_white",
+   "enz_teak"
+  ],
+  "parts": [
+   "surfboards_body"
+  ],
+  "kb": 46.4
+ },
+ {
+  "name": "tonbi",
+  "jp": "トンビ",
+  "category": "動物",
+  "size_m": [
+   2.24,
+   0.19,
+   0.95
+  ],
+  "tris": 344,
+  "lod1_tris": 0,
+  "materials": [
+   "enz_tb_brown",
+   "enz_tb_dark",
+   "enz_tb_light"
+  ],
+  "parts": [
+   "tonbi_body",
+   "tonbi_wing_l",
+   "tonbi_wing_r"
+  ],
+  "kb": 32.5
+ },
+ {
+  "name": "kanban_shirasu",
+  "jp": "立て看板(しらす丼)",
+  "category": "道の小物",
+  "size_m": [
+   0.61,
+   2.51,
+   0.55
+  ],
+  "tris": 676,
+  "lod1_tris": 200,
+  "materials": [
+   "ink_red",
+   "white",
+   "wood_dark"
+  ],
+  "parts": [
+   "kanban_shirasu_body"
+  ],
+  "kb": 67.6
+ },
+ {
+  "name": "kanban_tako",
+  "jp": "立て看板(たこせんべい)",
+  "category": "道の小物",
+  "size_m": [
+   0.61,
+   2.51,
+   0.55
+  ],
+  "tris": 648,
+  "lod1_tris": 194,
+  "materials": [
+   "ink_red",
+   "white",
+   "wood_dark"
+  ],
+  "parts": [
+   "kanban_tako_body"
+  ],
+  "kb": 67.7
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",

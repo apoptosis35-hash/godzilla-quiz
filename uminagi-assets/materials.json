@@ -969,9 +969,9 @@
  },
  "bark": {
   "color": [
-   0.15,
-   0.11,
-   0.07
+   0.24,
+   0.17,
+   0.11
   ],
   "rough": 0.95,
   "metal": 0.0,
@@ -2075,6 +2075,162 @@
   "emit": null,
   "emit_strength": 0.0
  },
+ "shiba_red": {
+  "color": [
+   0.66,
+   0.26,
+   0.07
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "shiba_cream": {
+  "color": [
+   0.93,
+   0.84,
+   0.68
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "shiba_inner": {
+  "color": [
+   0.98,
+   0.72,
+   0.62
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "shiba_band": {
+  "color": [
+   0.05,
+   0.1,
+   0.32
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "shiba_tongue": {
+  "color": [
+   0.95,
+   0.38,
+   0.42
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_teak": {
+  "color": [
+   0.5,
+   0.32,
+   0.17
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_sail": {
+  "color": [
+   0.95,
+   0.94,
+   0.9
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_tb_brown": {
+  "color": [
+   0.26,
+   0.15,
+   0.07
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_tb_dark": {
+  "color": [
+   0.09,
+   0.06,
+   0.04
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_tb_light": {
+  "color": [
+   0.5,
+   0.36,
+   0.2
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_board_blue": {
+  "color": [
+   0.1,
+   0.45,
+   0.8
+  ],
+  "rough": 0.35,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_board_white": {
+  "color": [
+   0.93,
+   0.93,
+   0.9
+  ],
+  "rough": 0.35,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "enz_canvas_blue": {
+  "color": [
+   0.05,
+   0.25,
+   0.6
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
  "pv_skin_tan": {
   "color": [
    0.86,
@@ -2390,66 +2546,6 @@
    0.1
   ],
   "rough": 0.35,
-  "metal": 0.0,
-  "tex": null,
-  "emit": null,
-  "emit_strength": 0.0
- },
- "shiba_red": {
-  "color": [
-   0.66,
-   0.26,
-   0.07
-  ],
-  "rough": 0.85,
-  "metal": 0.0,
-  "tex": null,
-  "emit": null,
-  "emit_strength": 0.0
- },
- "shiba_cream": {
-  "color": [
-   0.93,
-   0.84,
-   0.68
-  ],
-  "rough": 0.85,
-  "metal": 0.0,
-  "tex": null,
-  "emit": null,
-  "emit_strength": 0.0
- },
- "shiba_inner": {
-  "color": [
-   0.98,
-   0.72,
-   0.62
-  ],
-  "rough": 0.8,
-  "metal": 0.0,
-  "tex": null,
-  "emit": null,
-  "emit_strength": 0.0
- },
- "shiba_band": {
-  "color": [
-   0.05,
-   0.1,
-   0.32
-  ],
-  "rough": 0.8,
-  "metal": 0.0,
-  "tex": null,
-  "emit": null,
-  "emit_strength": 0.0
- },
- "shiba_tongue": {
-  "color": [
-   0.95,
-   0.38,
-   0.42
-  ],
-  "rough": 0.4,
   "metal": 0.0,
   "tex": null,
   "emit": null,

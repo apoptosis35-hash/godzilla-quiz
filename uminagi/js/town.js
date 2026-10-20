@@ -24,10 +24,10 @@ export const MODELS = {
   props: ['dock_straight', 'dock_end', 'bollard', 'tire_fender', 'quay_ladder', 'tetrapod', 'crates_blue', 'styro_boxes', 'pallet', 'handcart', 'forklift',
     'keitora', 'net_pile', 'floats', 'crab_traps', 'rope_coil', 'market_tent', 'utility_pole', 'street_light', 'vending_machine', 'bicycle', 'ac_outdoor',
     'a_frame_sign', 'bench', 'postbox', 'nobori', 'street_lantern', 'direction_sign', 'laundry_pole', 'fence_wood', 'fence_rail', 'fence_log', 'plant_pots',
-    'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging'],
+    'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging', 'parasol', 'surfboards', 'kanban_shirasu', 'kanban_tako'],
   nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c'],
   // animated (cloned)
-  dynamic: ['fishing_boat', 'fishing_boat_b', 'lighthouse', 'lighthouse_red', 'shiba', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
+  dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {
@@ -35,7 +35,7 @@ const FOOT = {
   shop_general: [[7, 9]], shop_restaurant: [[7.5, 9]], shop_izakaya: [[6.5, 9]], shop_souvenir: [[7, 9]], shop_fish: [[8, 9]], shop_cafe: [[7, 9]], shop_sake: [[6, 8]],
   house_narrow: [[5.4, 7.7]], house_standard: [[8.2, 6.7], [2.4, 3, 5.2, -1.75]], house_twostory: [[9.2, 7.2]], house_hira: [[8.7, 6.7], [2, 3.2, 5.35, -1.65]],
   house_old: [[6.7, 6.2]], house_hipped: [[7.7, 7.7]], house_hillside: [[9, 9, 0, -1.5]], shrine_hall: [[7, 6.2]], azumaya: [[0.3, 0.3, -2.2, -2.2], [0.3, 0.3, 2.2, -2.2], [0.3, 0.3, -2.2, 2.2], [0.3, 0.3, 2.2, 2.2]],
-  torii: [[0.6, 0.6, -1.75, 0], [0.6, 0.6, 1.75, 0]], lighthouse: [[5.8, 5.8], [4.1, 3.3, 3.6, -1.5]], lighthouse_red: [[3.4, 3.4]],
+  torii: [[0.6, 0.6, -1.75, 0], [0.6, 0.6, 1.75, 0]], sea_candle: [[10.4, 10.4]], lighthouse: [[5.8, 5.8], [4.1, 3.3, 3.6, -1.5]], lighthouse_red: [[3.4, 3.4]],
   vending_machine: [[1.0, 0.8]], keitora: [[1.4, 3.3]], forklift: [[1.2, 2.6]], market_tent: [[3.8, 1.0, 0, 0.6]], styro_boxes: [[2.2, 0.5]],
   crates_blue: [[1.3, 0.9]], crab_traps: [[2.9, 0.9]], info_board: [[1.9, 0.3]], bench: [[1.6, 0.5]], postbox: [[0.5, 0.45]], handcart: [[1.3, 2]],
   propane: [[0.8, 0.4]], net_pile: [[1.8, 1.4]], fence_wood: [[2, 0.12]], fence_rail: [[2, 0.1]], fence_log: [[2.1, 0.14]], laundry_pole: [[0.2, 0.2, -1.2, 0], [0.2, 0.2, 1.2, 0]],
@@ -392,11 +392,15 @@ export class Town {
       ['fishing_boat_b', 25.4, 33, 0], ['fishing_boat', 33.0, 34, 0.02], ['fishing_boat', 49.8, 52, PI], ['fishing_boat_b', 50.1, 70, PI],
       // moored alongside the main quay, bows alternating (the concept's crowded quay)
       ['fishing_boat', -66, 24.4, H], ['fishing_boat_b', -30, 24.4, -H], ['fishing_boat', 9, 24.4, -H], ['fishing_boat_b', 43, 24.4, H]];
+    // yacht marina: white yachts moored south of the T-pier and along the east quay
+    for (const [x, z, ry] of [[23, 54, PI], [27, 54, PI], [31, 54, PI], [35, 54, PI], [48.6, 30, 0], [48.6, 40, 0], [48.6, 84, PI]]) boats.push(['yacht', x, z, ry]);
     for (const [n, x, z, ry] of boats) {
       const o = this.clone(n, x, 0, z, ry, 'tex');   // merged per part and material: textures kept, far fewer draw calls
       this.boats.push({ o, x, z, ry, ph: r() * 10, radar: o.getObjectByName(n + '_radar') });
-      this.colliders.push({ type: 'b', x, z, hw: 2.0, hd: n === 'fishing_boat' ? 7 : 6, c: Math.cos(ry), s: Math.sin(ry), y0: -2, y1: 6 });
+      this.colliders.push({ type: 'b', x, z, hw: n === 'yacht' ? 1.5 : 2.0, hd: n === 'fishing_boat' ? 7 : n === 'yacht' ? 4.5 : 6, c: Math.cos(ry), s: Math.sin(ry), y0: -2, y1: n === 'yacht' ? 2.4 : 6 });
     }
+    this.sailers = [];
+    for (let i = 0; i < 5; i++) this.sailers.push({ o: this.clone('yacht_sail', 0, 0, 0, 0, 'tex'), cx: -200 + r() * 450, cz: 220 + r() * 300, rad: 60 + r() * 90, sp: (0.012 + r() * 0.01) * (r() < 0.5 ? 1 : -1), ph: r() * 6 });
   }
   street(r) {
     const P = (...a) => this.put(...a);
@@ -419,8 +423,10 @@ export class Town {
       ['hydrangea', 33.3, -17.6, 0], ['hydrangea', 33.3, -43.2, 0], ['bush', 33.3, -56.1, 0], ['direction_sign', 45.6, -97, -H], ['bench', 30, -110, 0], ['bench', 48, -110, 0],
       ['street_lantern', 26, -99, 0], ['street_lantern', 54, -99, 0], ['tree_sakura', 52, -114, 0], ['tree_broadleaf', 28, -116, 0], ['vending_machine', 55.2, -104, -H], ['plant_pots', 33, -100, 0]])
       P(n, x, null, z, ry);
+    // the big torii at the foot of the street: the approach (参道) up to the shrine, as on Enoshima
+    P('torii', 40, null, -8.5, 0, { s: 2.1 });
     // a busier shopping street: banners, signboards, goods out front, potted plants, bicycles on both pavements
-    const W = [34.9, H], E = [45.1, -H], goods = ['styro_boxes', 'crates_blue', 'plant_pots', 'a_frame_sign', 'nobori', 'nobori', 'bicycle', 'plant_pots', 'crates_blue'];
+    const W = [34.9, H], E = [45.1, -H], goods = ['styro_boxes', 'crates_blue', 'plant_pots', 'kanban_shirasu', 'kanban_tako', 'nobori', 'nobori', 'bicycle', 'plant_pots', 'a_frame_sign', 'kanban_shirasu'];
     for (let z = -12; z >= -92; z -= 3.3 + r() * 2.2) for (const [x, ry] of [W, E]) {
       if (r() < 0.25) continue;
       const n = goods[Math.floor(r() * goods.length)], dx = (x < 40 ? 1 : -1) * (n === 'nobori' ? 0.9 : 0.35);
@@ -509,9 +515,10 @@ export class Town {
   }
   hill(r) {
     const y = PLATEAU.y;
-    this.lighthouse = this.clone('lighthouse', -124, y, -14, 0);
-    this.collide('lighthouse', -124, y, -14, 0, 1, 19);
-    this.spinners.push({ o: this.lighthouse.getObjectByName('lighthouse_lamp'), speed: 0.8 });
+    // the observation lighthouse on the hilltop, in the spirit of Enoshima's Sea Candle
+    this.lighthouse = this.clone('sea_candle', -124, y, -14, 0);
+    this.collide('sea_candle', -124, y, -14, 0, 1, 39.8);
+    this.spinners.push({ o: this.lighthouse.getObjectByName('sea_candle_lamp'), speed: 0.8 });
     this.put('azumaya', -100, y + 0.2, 3, 0, { col: [...FOOT.azumaya, [4.4, 0.15, 0, -2.25]] });
     this.put('telescope', -97.6, y, -3.2, H * 0.6); this.put('telescope', -97.6, y, -6.2, H * 0.6);
     this.put('info_board', -104, y, -8, PI * 0.25); this.put('bench', -112, y, 6.4, 0); this.put('bench', -98, y, -11, H);
@@ -545,6 +552,11 @@ export class Town {
     // the beach: rocks, a boat pulled up on the sand
     for (const [n, x, z, s] of [['rock_c', 118, 66, 1.4], ['rock_c', 104, 94, 1], ['rock_a', 92, 102, 1.2], ['rock_b', 110, 80, 1.3], ['rock_a', 70, 96, 1.5], ['rock_c', 66, 104, 1.3]]) this.put(n, x, null, z, r() * 6, { s });
     this.put('skiff', 86, null, 74, 2.2, { rz: 0.12 });
+    // a summer beach: parasols with towels, surfboard racks
+    for (const [x, z] of [[80, 46], [86, 52], [92, 44], [98, 52], [104, 46], [110, 54], [84, 60], [96, 62], [108, 64], [116, 58]]) {
+      const y = this.at(x, z); if (y > 0.2 && y < 3) this.put('parasol', x, y, z, r() * 6, { col: false });
+    }
+    for (const [x, z, ry] of [[76, 38, 0.3], [102, 38, -0.2], [118, 46, -0.6]]) { const y = this.at(x, z); if (y > 0.2) this.put('surfboards', x, y, z, ry); }
     // rocks and weed on the clear sea floor (seen through the water)
     for (let i = 0; i < 70; i++) {
       const x = -70 + r() * 125, z = 24 + r() * 90, h = this.at(x, z);
@@ -717,6 +729,12 @@ export class Town {
       this.gulls.push({ o, cx: -20 + r() * 80, cz: 30 + r() * 70, rad: 15 + r() * 30, h: 12 + r() * 20, sp: (0.18 + r() * 0.15) * (r() < 0.5 ? 1 : -1), ph: r() * 6,
         wl: o.getObjectByName('seagull_wing_l'), wr: o.getObjectByName('seagull_wing_r') });
     }
+    // black kites (トンビ) soaring high over the hill and the town on wide, slow circles, wings barely moving
+    for (let i = 0; i < 7; i++) {
+      const o = this.clone('tonbi', 0, 40, 0, 0, true);
+      this.gulls.push({ o, cx: -110 + r() * 150, cz: -80 + r() * 90, rad: 25 + r() * 35, h: 40 + r() * 30, sp: (0.08 + r() * 0.05) * (r() < 0.5 ? 1 : -1), ph: r() * 6,
+        wl: o.getObjectByName('tonbi_wing_l'), wr: o.getObjectByName('tonbi_wing_r'), soar: true });
+    }
   }
   // ------------------------------------------------------------------ per frame
   // a few point lights follow the lamps nearest to the player in the evening and at night
@@ -742,12 +760,17 @@ export class Town {
       b.o.position.y = y - 0.05; b.o.rotation.set(Math.sin(t * 0.8 + b.ph) * 0.025, b.ry + Math.sin(t * 0.13 + b.ph) * 0.01, Math.sin(t * 1.1 + b.ph) * 0.04);
       if (b.radar) b.radar.rotation.y += dt * 2.5;
     }
+    for (const s of this.sailers || []) {
+      const a = t * s.sp + s.ph, x = s.cx + Math.cos(a) * s.rad, z = s.cz + Math.sin(a) * s.rad;
+      s.o.position.set(x, this.world.swell(x, z) - 0.05, z);
+      s.o.rotation.set(Math.sin(t * 0.7 + s.ph) * 0.03, -a + (s.sp > 0 ? PI : 0), (s.sp > 0 ? -1 : 1) * 0.16 + Math.sin(t * 0.9 + s.ph) * 0.03);   // heeling
+    }
     for (const s of this.spinners) if (s.o) { if (s.speed) s.o.rotation.y += dt * s.speed; if (s.blink) s.o.visible = (t % 4) < 2.2; }
     for (const g of this.gulls) {
       const a = t * g.sp + g.ph;
       g.o.position.set(g.cx + Math.cos(a) * g.rad, g.h + Math.sin(t * 0.5 + g.ph) * 2, g.cz + Math.sin(a) * g.rad);
       g.o.rotation.set(0, -a + (g.sp > 0 ? PI : 0), (g.sp > 0 ? 1 : -1) * 0.25);
-      const f = Math.sin(t * 7 + g.ph) * 0.5 * (0.5 + 0.5 * Math.sin(t * 0.7 + g.ph));
+      const f = g.soar ? 0.06 + Math.sin(t * 1.3 + g.ph) * 0.05 : Math.sin(t * 7 + g.ph) * 0.5 * (0.5 + 0.5 * Math.sin(t * 0.7 + g.ph));
       if (g.wl) g.wl.rotation.z = f; if (g.wr) g.wr.rotation.z = -f;
     }
     for (const n of this.npcs) this.npc(n, dt, player);

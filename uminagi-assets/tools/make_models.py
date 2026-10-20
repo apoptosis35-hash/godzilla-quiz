@@ -61,7 +61,7 @@ PALETTE = {
     'fur_dark': P((0.5, 0.24, 0.08), 0.9), 'cheek': P((1.0, 0.55, 0.6), 0.8), 'nose_pink': P((0.95, 0.45, 0.5), 0.5), 'eye': P((0.02, 0.02, 0.03), 0.15),
     'raincoat': P((1.0, 0.78, 0.08), 0.35),
     'boot': P((0.1, 0.1, 0.1), 0.5), 'fur_orange': P((0.95, 0.36, 0.07), 0.9), 'fur_white': P((0.92, 0.9, 0.86), 0.9),
-    'bark': P((0.15, 0.11, 0.07), 0.95), 'bark_pine': P((0.12, 0.1, 0.09), 0.95), 'bark_sakura': P((0.17, 0.12, 0.12), 0.9), 'bark_kusu': P((0.42, 0.36, 0.3), 0.95, tex='wood'), 'leaf': P((0.16, 0.36, 0.12), 0.85),
+    'bark': P((0.24, 0.17, 0.11), 0.95), 'bark_pine': P((0.12, 0.1, 0.09), 0.95), 'bark_sakura': P((0.17, 0.12, 0.12), 0.9), 'bark_kusu': P((0.42, 0.36, 0.3), 0.95, tex='wood'), 'leaf': P((0.16, 0.36, 0.12), 0.85),
     'leaf_dark': P((0.07, 0.22, 0.09), 0.85), 'leaf_light': P((0.36, 0.55, 0.2), 0.85), 'pine': P((0.08, 0.24, 0.12), 0.85),
     'sakura': P((1.0, 0.72, 0.8), 0.8), 'hydrangea': P((0.2, 0.27, 0.78), 0.8), 'hydrangea_pink': P((0.8, 0.3, 0.56), 0.8),
     'flower_red': P((0.85, 0.12, 0.1), 0.8), 'flower_yellow': P((0.95, 0.8, 0.2), 0.8), 'soil': P((0.25, 0.17, 0.1), 1.0),
@@ -3766,6 +3766,10 @@ def nagi():
 
 
 
+PALETTE.update({'shiba_red': P((0.66, 0.26, 0.07), 0.85), 'shiba_cream': P((0.93, 0.84, 0.68), 0.85),
+                'shiba_inner': P((0.98, 0.72, 0.62), 0.8), 'shiba_band': P((0.05, 0.1, 0.32), 0.8),
+                'shiba_tongue': P((0.95, 0.38, 0.42), 0.4)})
+
 @model('shiba', 'なぎ(操作キャラ・豆柴)', '人物', lod=False)
 def shiba():
     # The player: a chibi Shiba Inu (about 2.2 heads tall, 1.25 m) with the breed's markings: red coat, white "urajiro"
@@ -3773,9 +3777,6 @@ def shiba():
     # A navy bandana with a white wave pattern. Parts (the game nests them: body > head > ears, body > arms, tail):
     # shiba_body (hips), shiba_head (neck), shiba_ear_l/r (ear roots), shiba_arm_l/r (shoulders), shiba_leg_l/r (hips),
     # shiba_tail (tail root).
-    PALETTE.update({'shiba_red': P((0.66, 0.26, 0.07), 0.85), 'shiba_cream': P((0.93, 0.84, 0.68), 0.85),
-                    'shiba_inner': P((0.98, 0.72, 0.62), 0.8), 'shiba_band': P((0.05, 0.1, 0.32), 0.8),
-                    'shiba_tongue': P((0.95, 0.38, 0.42), 0.4)})
     part('shiba_body', (0, 0, 0.3))
     ico('shiba_red', 0.22, (0, 0.01, 0.47), (1.0, 0.86, 1.12), 3)                     # torso
     ico('shiba_cream', 0.17, (0, -0.1, 0.47), (0.86, 0.5, 1.12), 3)                   # white chest and belly
@@ -3825,6 +3826,147 @@ def shiba():
     _pv_tube('shiba_cream', [(0, 0.2, 0.42), (0, 0.29, 0.5), (0, 0.32, 0.59)], [0.05, 0.055, 0.045], 8)   # white underside of the curl
     ico('shiba_cream', 0.04, curl[-1], sub=2)
     part(None)
+
+
+# ================================================================= 江ノ島 (Enoshima) atmosphere
+PALETTE.update({'enz_teak': P((0.5, 0.32, 0.17), 0.7), 'enz_sail': P((0.95, 0.94, 0.9), 0.85), 'enz_tb_brown': P((0.26, 0.15, 0.07), 0.85),
+                'enz_tb_dark': P((0.09, 0.06, 0.04), 0.85), 'enz_tb_light': P((0.5, 0.36, 0.2), 0.85), 'enz_board_blue': P((0.1, 0.45, 0.8), 0.35),
+                'enz_board_white': P((0.93, 0.93, 0.9), 0.35), 'enz_canvas_blue': P((0.05, 0.25, 0.6), 0.9)})
+
+@model('sea_candle', '展望灯台(シーキャンドル風)', '灯台・展望台')
+def sea_candle():
+    # observation lighthouse in the spirit of Enoshima's Sea Candle: a slim white core wrapped in a twisting lattice,
+    # a glazed observation deck, an open roof deck and the lantern on top. Part: sea_candle_lamp (turns).
+    cyl('concrete', 5.4, 0.4, (0, 0, 0), 24)                                     # podium
+    cyl('plaster_white', 4.6, 3.6, (0, 0, 0.4), 24)                              # entrance pavilion
+    for k in range(8):
+        a = k / 8 * math.tau
+        with xf((math.cos(a) * 4.62, math.sin(a) * 4.62, 0.4), rz=a + math.pi / 2): box('glass', (2.6, 0.06, 2.6), (0, 0, 0.3))
+    cyl('white', 4.9, 0.25, (0, 0, 4.0), 24)
+    cyl('plaster_white', 1.35, 29.0, (0, 0, 4.2), 16, r2=1.2)                    # core
+    # twisting lattice: 10 helical members and rings, wider at the bottom
+    N, H0, H1 = 10, 4.2, 29.5
+    for k in range(N):
+        pts = []
+        for j in range(13):
+            t = j / 12; z = H0 + (H1 - H0) * t; r = 3.4 - 0.9 * t; a = k / N * math.tau + t * 1.6
+            pts.append((math.cos(a) * r, math.sin(a) * r, z))
+        _pv_tube('white', pts, 0.12, 5, cap=False)
+    for j in range(7):
+        t = j / 6; torus('white', 3.4 - 0.9 * t, 0.09, (0, 0, H0 + (H1 - H0) * t), seg=24, rseg=4)
+    # glazed observation deck and open roof deck
+    cyl('white', 4.4, 0.35, (0, 0, 29.4), 24)
+    cyl('glass', 4.1, 2.8, (0, 0, 29.75), 24)
+    for k in range(12):
+        a = k / 12 * math.tau; rod('white', (math.cos(a) * 4.12, math.sin(a) * 4.12, 29.75), (math.cos(a) * 4.12, math.sin(a) * 4.12, 32.55), 0.06, 4)
+    cyl('white', 4.6, 0.3, (0, 0, 32.55), 24)
+    torus('alu', 4.45, 0.04, (0, 0, 33.9), seg=32, rseg=4)
+    for k in range(16):
+        a = k / 16 * math.tau; rod('alu', (math.cos(a) * 4.45, math.sin(a) * 4.45, 32.85), (math.cos(a) * 4.45, math.sin(a) * 4.45, 33.9), 0.03, 4)
+    cyl('plaster_white', 1.5, 1.6, (0, 0, 32.85), 16)
+    # lantern
+    cyl('white', 1.35, 0.25, (0, 0, 34.45), 16)
+    part('sea_candle_lamp', (0, 0, 35.6))
+    cyl('glass', 1.15, 2.0, (0, 0, 34.7), 16)
+    ico('lamp', 0.5, (0, 0, 35.6), (1, 1, 1.2), 2)
+    box('lamp', (0.12, 2.0, 0.6), (0, 0, 35.3))
+    part(None)
+    for k in range(8):
+        a = k / 8 * math.tau; rod('white', (math.cos(a) * 1.16, math.sin(a) * 1.16, 34.7), (math.cos(a) * 1.16, math.sin(a) * 1.16, 36.7), 0.035, 4)
+    ico('white', 1.25, (0, 0, 36.75), (1, 1, 0.45), 2, flat_bottom=0)
+    rod('steel_dark', (0, 0, 37.2), (0, 0, 39.6), 0.05, 5)
+    ico('beacon_red', 0.12, (0, 0, 39.7), sub=1)
+
+def _enz_yacht(sails):
+    L, B, D = 9.0, 3.0, 1.15
+    rings = []
+    for i in range(17):
+        t = i / 16; y = -L / 2 + L * t                                            # bow (-Y) .. stern (+Y)
+        hb = B / 2 * (min(1.0, (t / 0.55)) ** 0.55 if t < 0.55 else 1.0 - 0.12 * (t - 0.55) / 0.45)
+        hb = max(0.03, hb); sh = D + 0.25 * (1 - t) ** 2
+        rings.append([(-hb, y, sh), (-hb * 0.97, y, 0.35), (-hb * 0.55, y, -0.1), (0, y, -0.28 * (0.3 + 0.7 * math.sin(math.pi * min(1, t * 1.1)))),
+                      (hb * 0.55, y, -0.1), (hb * 0.97, y, 0.35), (hb, y, sh)])
+    loft('white', rings, closed=False, cap=False)
+    deck = [[r[0], ((r[0][0] + r[6][0]) / 2, r[0][1], r[0][2] + 0.06), r[6]] for r in rings]
+    loft('enz_teak', deck, closed=False, cap=False)
+    loft('boat_blue', [[(r[1][0] * 1.005, r[1][1], 0.33), (r[1][0] * 1.005, r[1][1], 0.42)] for r in rings], closed=False, cap=False)
+    loft('boat_blue', [[(r[5][0] * 1.005, r[5][1], 0.42), (r[5][0] * 1.005, r[5][1], 0.33)] for r in rings], closed=False, cap=False)
+    box('steel_dark', (0.18, 1.2, 1.4), (0, 0.3, -1.6))                           # fin keel
+    box('steel_dark', (0.4, 1.4, 0.3), (0, 0.4, -1.75))
+    box('steel_dark', (0.08, 0.6, 1.0), (0, L / 2 - 0.6, -0.9))                   # rudder
+    # coachroof with dark windows, cockpit, rails
+    box('white', (1.9, 3.2, 0.55), (0, -0.4, D + 0.05)); box('white', (1.7, 2.9, 0.12), (0, -0.4, D + 0.6))
+    for sx in (-1, 1): box('glass', (0.02, 2.0, 0.22), (sx * 0.955, -0.5, D + 0.22))
+    box('black', (1.6, 1.8, 0.4), (0, 2.6, D - 0.3))                              # cockpit well
+    for sx in (-1, 1):
+        for y in (-3.6, -1.8, 0.0, 1.8, 3.6): rod('alu', (sx * 1.3 * (0.6 if y < -3 else 1), y, D + 0.1), (sx * 1.3 * (0.6 if y < -3 else 1), y, D + 0.7), 0.02, 4)
+        rod('alu', (sx * 0.8, -3.6, D + 0.68), (sx * 1.3, 3.6, D + 0.68), 0.015, 3)
+    # rig: mast, boom, stays
+    mast = (0, -1.2, D + 0.6)
+    rod('alu', mast, (0, -1.2, D + 11.5), 0.07, 8)
+    rod('alu', (0, -1.15, D + 1.6), (0, 2.8, D + 1.75), 0.05, 6)                  # boom
+    rod('steel_dark', (0, -L / 2 + 0.1, D + 0.5), (0, -1.2, D + 11.0), 0.012, 3)  # forestay
+    rod('steel_dark', (0, L / 2 - 0.1, D + 0.4), (0, -1.2, D + 11.3), 0.012, 3)   # backstay
+    for sx in (-1, 1): rod('steel_dark', (sx * 1.35, -1.0, D + 0.1), (0, -1.2, D + 9.0), 0.01, 3)
+    if sails:
+        mesh('enz_sail', [(0, -1.12, D + 1.8), (0, -1.12, D + 11.2), (0.0, 2.7, D + 1.9)], [(0, 1, 2), (0, 2, 1)])
+        mesh('enz_sail', [(0, -L / 2 + 0.3, D + 0.7), (0, -1.3, D + 10.5), (0.35, 0.6, D + 0.8)], [(0, 1, 2), (0, 2, 1)])
+    else:
+        cyl('enz_canvas_blue', 0.2, 3.7, (0, -1.0, D + 1.85), 10).rotation_euler = (-math.pi / 2, 0, 0)   # sail cover on the boom
+    for k, y in enumerate((-2.5, 3.2)): ico('cloth_white', 0.18, (1.45, y, 0.5), (0.6, 0.6, 1.4), 1)        # fenders
+
+@model('yacht', 'ヨット(係留)', '船')
+def yacht(): _enz_yacht(False)
+
+@model('yacht_sail', 'ヨット(帆走)', '船')
+def yacht_sail(): _enz_yacht(True)
+
+@model('parasol', 'ビーチパラソル', '自然')
+def parasol():
+    rod('alu', (0, 0, -0.3), (0, 0, 2.3), 0.025, 6)
+    n = 12
+    for k in range(n):
+        a0, a1 = k / n * math.tau, (k + 1) / n * math.tau
+        mesh('cloth_red' if k % 2 else 'cloth_white', [(0, 0, 2.45), (math.cos(a0) * 1.25, math.sin(a0) * 1.25, 1.95), (math.cos(a1) * 1.25, math.sin(a1) * 1.25, 1.95)], [(0, 1, 2), (0, 2, 1)])
+    ico('white', 0.05, (0, 0, 2.47), sub=1)
+    box('cloth_blue', (0.9, 1.8, 0.02), (0.4, 0.6, 0.0))                        # beach towel
+    box('cloth_yellow', (0.25, 0.25, 0.22), (-0.4, -0.3, 0.0))                  # cool box
+
+@model('surfboards', 'サーフボード(立てかけ)', '自然')
+def surfboards():
+    for k, (x, col) in enumerate([(-0.35, 'enz_board_blue'), (0.0, 'enz_board_white'), (0.35, 'cloth_yellow')]):
+        with xf((x, 0.0, 0.0), rx=-0.18 + k * 0.05):
+            ico(col, 0.5, (0, 0, 1.05), (0.28, 0.06, 2.2), 2)
+            box('black', (0.02, 0.03, 0.2), (0, 0.04, 0.2))
+    box('enz_teak', (1.3, 0.12, 0.1), (0, 0.3, 0.0)); box('enz_teak', (1.3, 0.08, 0.08), (0, 0.38, 1.3))
+    for sx in (-1, 1): rod('enz_teak', (sx * 0.6, 0.35, 0), (sx * 0.6, 0.35, 1.4), 0.04, 4)
+
+@model('tonbi', 'トンビ', '動物', lod=False)
+def tonbi():
+    # black kite circling on thermals: brown body, long fingered wings with pale patches, a slightly forked tail
+    _pv_tube('enz_tb_brown', [(0, -0.3, 0.04), (0, -0.22, 0.03), (0, -0.05, 0.01), (0, 0.12, 0.0), (0, 0.3, 0.0)], [0.04, 0.07, 0.085, 0.07, 0.03], 8)
+    ico('enz_tb_light', 0.065, (0, -0.31, 0.05), (0.9, 1.1, 0.95), 2)
+    _pv_tube('enz_tb_dark', [(0, -0.37, 0.05), (0, -0.4, 0.04)], [0.014, 0.004], 4)
+    mesh('enz_tb_brown', [(0, 0.25, 0.01), (-0.12, 0.55, 0.0), (0, 0.5, 0.0), (0.12, 0.55, 0.0)], [(0, 1, 2), (0, 2, 3), (0, 2, 1), (0, 3, 2)])
+    st = [(0.0, -0.12, 0.16, 0.035), (0.25, -0.15, 0.2, 0.03), (0.5, -0.15, 0.2, 0.022), (0.72, -0.12, 0.17, 0.015), (0.9, -0.06, 0.1, 0.008)]
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        part(f'tonbi_wing_{sd}', (sx * 0.07, 0, 0.03))
+        rings = [[(sx * (0.07 + x), le, 0.03 + t), (sx * (0.07 + x), te, 0.03 - t * 0.3), (sx * (0.07 + x), le * 0.4 + te * 0.6, 0.03 - t)] for x, le, te, t in st]
+        loft('enz_tb_brown', rings[:4], closed=True, cap=True); loft('enz_tb_dark', rings[3:], closed=True, cap=True)
+        ico('enz_tb_light', 0.05, (sx * 0.62, 0.02, 0.025), (1.2, 0.8, 0.2), 1)
+        for f in range(5): rod('enz_tb_dark', (sx * 0.95, -0.05 + f * 0.035, 0.03), (sx * (1.08 + 0.02 * (2 - abs(f - 2))), -0.07 + f * 0.045, 0.03), 0.012, 3)   # primaries
+        part(None)
+
+def _enz_kanban(text):
+    for sx in (-1, 1):
+        rod('wood_dark', (sx * 0.28, -0.25, 0), (sx * 0.28, 0.0, 1.7), 0.025, 4); rod('wood_dark', (sx * 0.28, 0.25, 0), (sx * 0.28, 0.0, 1.7), 0.025, 4)
+    signboard(text, 0.5, 1.45, (0, -0.07, 1.75), board='white', ink='ink_red', frame='wood_dark', vertical=True, depth=0.04, rz=0.0)
+
+@model('kanban_shirasu', '立て看板(しらす丼)', '道の小物')
+def kanban_shirasu(): _enz_kanban('しらす丼')
+
+@model('kanban_tako', '立て看板(たこせんべい)', '道の小物')
+def kanban_tako(): _enz_kanban('たこせん')
 
 
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
