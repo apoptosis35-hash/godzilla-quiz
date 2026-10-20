@@ -5,13 +5,14 @@ import * as THREE from 'three';
 
 const R = 0.34, MAX_UP = 0.6, MAX_SLOPE = 1.05, WALK = 3.4, RUN = 7.0, GRAV = 22;
 const JUMP = 9.5, CLIMB = 4.2, SWING_MAX = 38;
+const SIZE = 0.7;   // the Shiba model is 1.3 m tall; the dog in the game stands about 0.9 m
 
 export class Player {
   constructor(town, ground) {
     this.town = town; this.ground = ground;
     this.pos = new THREE.Vector3(0, 1.6, 19);
     this.vy = 0; this.heading = Math.PI; this.speed = 0; this.t = 0;
-    this.yaw = Math.PI; this.pitch = 0.28; this.dist = 7; this.camDist = 7;
+    this.yaw = Math.PI; this.pitch = 0.28; this.dist = 8.5; this.camDist = 8.5;
     // なぎ: the chibi Shiba Inu the player controls (../uminagi-assets shiba.glb). The parts come as siblings; nest them
     // into a little skeleton: body (hips) > head > ears, body > arms, body > tail; the legs hang from the root.
     this.model = town.clone('shiba', 0, 0, 0, 0, true); this.model.rotation.order = 'YXZ';
@@ -261,7 +262,7 @@ export class Player {
   animate(dt) {
     const L = this.limbs, st = this.state, t = this.t, R0 = this.rest;
     for (const [k, o] of Object.entries(L)) { o.rotation.set(0, 0, 0); o.position.copy(R0[k]); }
-    L.body.scale.set(1, 1, 1); this.model.scale.set(1, 1, 1);
+    L.body.scale.set(1, 1, 1); this.model.scale.setScalar(SIZE);
     const v = this.vel, hs = Math.hypot(v.x, v.z), clamp = THREE.MathUtils.clamp;
     let pitch = 0, roll = 0, lift = 0;
     const wag = (f, a) => { L.tail.rotation.z = Math.sin(t * f) * a; L.tail.rotation.y = Math.sin(t * f) * a * 0.4; };
@@ -274,7 +275,7 @@ export class Player {
       L.arm_l.rotation.x = -s * stride * (run ? 1.25 : 0.9) + pump; L.arm_r.rotation.x = s * stride * (run ? 1.25 : 0.9) + pump;
       L.arm_l.rotation.z = -0.1 - 0.12 * k; L.arm_r.rotation.z = 0.1 + 0.12 * k;
       L.body.rotation.y = s * 0.16 * k; L.body.rotation.z = s * 0.05 * k; L.body.rotation.x = (run ? 0.24 : 0.07) * k;
-      lift = Math.abs(c) * k * (run ? 0.11 : 0.055);
+      lift = Math.abs(c) * k * (run ? 0.11 : 0.055) * SIZE;
       L.head.rotation.y = -L.body.rotation.y * 0.8; L.head.rotation.x = -L.body.rotation.x * 0.6 + Math.sin(this.phase * 2) * 0.05 * k;
       const earBack = run ? 0.55 * k : 0, flap = Math.abs(c) * 0.16 * k;
       L.ear_l.rotation.x = earBack + flap; L.ear_r.rotation.x = earBack + flap;
@@ -287,7 +288,7 @@ export class Player {
       wag(k > 0.05 ? 15 : 10, 0.22 + 0.12 * k);
       if (this.landT > 0) {   // landing: squash and crouch
         const f = this.landT / 0.32; this.landT = Math.max(0, this.landT - dt);
-        this.model.scale.set(1 + 0.1 * f, 1 - 0.2 * f, 1 + 0.1 * f); L.body.rotation.x += 0.35 * f;
+        this.model.scale.set(SIZE * (1 + 0.1 * f), SIZE * (1 - 0.2 * f), SIZE * (1 + 0.1 * f)); L.body.rotation.x += 0.35 * f;
         L.arm_l.rotation.z -= 0.6 * f; L.arm_r.rotation.z += 0.6 * f; L.ear_l.rotation.x -= 0.4 * f; L.ear_r.rotation.x -= 0.4 * f;
       }
       pitch = 0;
@@ -355,7 +356,7 @@ export class Player {
     }
     this.dist = Math.max(2.5, Math.min(30, this.dist * Math.exp(zoom)));
     this.heroCam = (this.heroCam || 0) + ((this.state === 'swing' || this.state === 'air' ? 3.5 : 0) - (this.heroCam || 0)) * Math.min(1, dt * 2);
-    const tgt = this.camTarget.set(this.pos.x, this.pos.y + 1.0, this.pos.z);
+    const tgt = this.camTarget.set(this.pos.x, this.pos.y + 0.8, this.pos.z);
     const dir = new THREE.Vector3(Math.sin(this.yaw) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.yaw) * Math.cos(this.pitch));
     // pull in when a building or the ground is in the way
     const want = this.dist + this.heroCam; let d = want;
