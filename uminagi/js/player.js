@@ -12,9 +12,15 @@ export class Player {
     this.pos = new THREE.Vector3(0, 1.6, 19);
     this.vy = 0; this.heading = Math.PI; this.speed = 0; this.t = 0;
     this.yaw = Math.PI; this.pitch = 0.28; this.dist = 7; this.camDist = 7;
-    // なぎ: the chibi kitten the player controls (../uminagi-assets nagi.glb)
-    this.model = town.clone('nagi', 0, 0, 0, 0, true);
-    this.limbs = {}; for (const s of ['arm_l', 'arm_r', 'leg_l', 'leg_r', 'head', 'tail']) this.limbs[s] = this.model.getObjectByName('nagi_' + s);
+    // なぎ: the chibi Shiba Inu the player controls (../uminagi-assets shiba.glb). The parts come as siblings; nest them
+    // into a little skeleton: body (hips) > head > ears, body > arms, body > tail; the legs hang from the root.
+    this.model = town.clone('shiba', 0, 0, 0, 0, true); this.model.rotation.order = 'YXZ';
+    this.limbs = {}; for (const s of ['body', 'head', 'ear_l', 'ear_r', 'arm_l', 'arm_r', 'leg_l', 'leg_r', 'tail']) this.limbs[s] = this.model.getObjectByName('shiba_' + s);
+    const L = this.limbs;
+    for (const s of ['head', 'arm_l', 'arm_r', 'tail']) L.body.attach(L[s]);
+    L.head.attach(L.ear_l); L.head.attach(L.ear_r);
+    this.rest = {}; for (const [k, o] of Object.entries(L)) this.rest[k] = o.position.clone();
+    this.phase = 0; this.landT = 0; this.flipT = 0;
     this.camPos = new THREE.Vector3(); this.camTarget = new THREE.Vector3();
     this.state = 'ground'; this.vel = new THREE.Vector3(); this.anchor = new THREE.Vector3(); this.rope = 0;
     this.wall = null; this.push = 0; this.lastSafe = new THREE.Vector3(0, 1.6, 19); this.safeT = 0;
@@ -124,6 +130,8 @@ export class Player {
     } else this.pos.y = g;
     const hs = Math.hypot(this.vel.x, this.vel.z);
     if (hs > 0.5) this.heading = Math.atan2(this.vel.x, this.vel.z);
+    const impact = -this.vel.y; if (impact > 6) this.landT = Math.min(0.32, 0.12 + impact * 0.012);   // squash on landing
+    this.flipT = 0;
     this.speed = Math.min(RUN * 1.3, hs); this.vel.set(0, 0, 0); this.vy = 0; this.state = 'ground'; this.web.visible = false;
   }
   // airborne / swinging / climbing; returns true when it handled this frame
@@ -168,7 +176,10 @@ export class Player {
     if (!input.webHeld) this.webLock = false;
     if (this.state === 'swing') {
       if (hs > 0.5) { v.x += v.x / hs * 3 * dt; v.z += v.z / hs * 3 * dt; }   // pumping
-      if (!input.webHeld) { this.state = 'air'; if (hs > 0.5) { v.x += v.x / hs * 2.5; v.z += v.z / hs * 2.5; } v.y = Math.max(v.y, 0) + 5; }
+      if (!input.webHeld) {
+        this.state = 'air'; if (hs > 0.5) { v.x += v.x / hs * 2.5; v.z += v.z / hs * 2.5; } v.y = Math.max(v.y, 0) + 5;
+        if (hs > 9) this.flipT = 1e-4;   // a fast release ends in a front flip
+      }
     }
     const sp = v.length(); if (sp > SWING_MAX) v.multiplyScalar(SWING_MAX / sp);
     const n = { x: p.x + v.x * dt, z: p.z + v.z * dt }; let ny = p.y + v.y * dt;
@@ -245,55 +256,93 @@ export class Player {
     if (this.state === 'ground' && g > -0.3) { this.safeT += dt; if (this.safeT > 0.5) { this.safeT = 0; this.lastSafe.copy(this.pos); } }
     this.animate(dt);
   }
+  // procedural animation: walk / run / idle, jump and fall, web swing (body follows the rope), release flip,
+  // landing squash and wall climbing. All angles are relative to the bind pose.
   animate(dt) {
-    // model + walk cycle
-    this.model.position.copy(this.pos); this.model.rotation.y = this.heading;
-    // chibi walk: quick short steps, a hop on every step, swinging arms, bobbing head, waving tail; idle breathing
-    const run = this.speed > WALK + 0.5, k = Math.min(1, this.speed / WALK), f = run ? 15 : 11;
-    this.phase = (this.phase || 0) + dt * f * (k > 0.05 ? 1 : 0);
-    const sw = Math.sin(this.phase) * k * (run ? 0.9 : 0.7), L = this.limbs;
-    if (L.leg_l) { L.leg_l.rotation.x = sw; L.leg_r.rotation.x = -sw; }
-    if (L.arm_l) {
-      L.arm_l.rotation.x = -sw * 1.1; L.arm_r.rotation.x = sw * 1.1;
-      L.arm_l.rotation.z = -0.15 - (run ? 0.35 : 0.1) * k; L.arm_r.rotation.z = 0.15 + (run ? 0.35 : 0.1) * k;   // arms out when running
+    const L = this.limbs, st = this.state, t = this.t, R0 = this.rest;
+    for (const [k, o] of Object.entries(L)) { o.rotation.set(0, 0, 0); o.position.copy(R0[k]); }
+    L.body.scale.set(1, 1, 1); this.model.scale.set(1, 1, 1);
+    const v = this.vel, hs = Math.hypot(v.x, v.z), clamp = THREE.MathUtils.clamp;
+    let pitch = 0, roll = 0, lift = 0;
+    const wag = (f, a) => { L.tail.rotation.z = Math.sin(t * f) * a; L.tail.rotation.y = Math.sin(t * f) * a * 0.4; };
+    if (st === 'ground') {
+      const k = Math.min(1, this.speed / WALK), run = this.speed > WALK + 0.5, idle = 1 - k;
+      this.phase += dt * (run ? 13 : 9.5) * (k > 0.05 ? 1 : 0);
+      const s = Math.sin(this.phase), c = Math.cos(this.phase), stride = k * (run ? 0.95 : 0.6);
+      L.leg_l.rotation.x = s * stride; L.leg_r.rotation.x = -s * stride;
+      const pump = run ? -0.55 * k : 0;   // running: elbows forward, arms pump
+      L.arm_l.rotation.x = -s * stride * (run ? 1.25 : 0.9) + pump; L.arm_r.rotation.x = s * stride * (run ? 1.25 : 0.9) + pump;
+      L.arm_l.rotation.z = -0.1 - 0.12 * k; L.arm_r.rotation.z = 0.1 + 0.12 * k;
+      L.body.rotation.y = s * 0.16 * k; L.body.rotation.z = s * 0.05 * k; L.body.rotation.x = (run ? 0.24 : 0.07) * k;
+      lift = Math.abs(c) * k * (run ? 0.11 : 0.055);
+      L.head.rotation.y = -L.body.rotation.y * 0.8; L.head.rotation.x = -L.body.rotation.x * 0.6 + Math.sin(this.phase * 2) * 0.05 * k;
+      const earBack = run ? 0.55 * k : 0, flap = Math.abs(c) * 0.16 * k;
+      L.ear_l.rotation.x = earBack + flap; L.ear_r.rotation.x = earBack + flap;
+      // idle: breathing, looking around, an ear twitch now and then, happy tail
+      L.body.scale.y = 1 + Math.sin(t * 2.4) * 0.018 * idle;
+      L.head.rotation.y += Math.sin(t * 0.45) * 0.45 * idle * (Math.sin(t * 0.13) > 0 ? 1 : 0.3);
+      L.head.rotation.z = Math.sin(t * 0.7) * 0.08 * idle;
+      if ((t * 0.37) % 1 < 0.05) L.ear_l.rotation.z = -0.3 * idle;
+      if ((t * 0.29 + 0.5) % 1 < 0.05) L.ear_r.rotation.z = 0.3 * idle;
+      wag(k > 0.05 ? 15 : 10, 0.22 + 0.12 * k);
+      if (this.landT > 0) {   // landing: squash and crouch
+        const f = this.landT / 0.32; this.landT = Math.max(0, this.landT - dt);
+        this.model.scale.set(1 + 0.1 * f, 1 - 0.2 * f, 1 + 0.1 * f); L.body.rotation.x += 0.35 * f;
+        L.arm_l.rotation.z -= 0.6 * f; L.arm_r.rotation.z += 0.6 * f; L.ear_l.rotation.x -= 0.4 * f; L.ear_r.rotation.x -= 0.4 * f;
+      }
+      pitch = 0;
+    } else if (st === 'climb') {
+      const a = Math.sin(this.climbPhase || 0), b = Math.cos(this.climbPhase || 0);
+      L.arm_l.rotation.set(-2.55 - a * 0.5, 0, -0.25); L.arm_r.rotation.set(-2.55 + a * 0.5, 0, 0.25);
+      L.leg_l.rotation.set(-0.7 + a * 0.6, 0, -0.18); L.leg_r.rotation.set(-0.7 - a * 0.6, 0, 0.18);
+      L.body.rotation.z = a * 0.09; L.body.position.y += Math.abs(b) * 0.03;
+      L.head.rotation.x = -0.4; L.ear_l.rotation.x = L.ear_r.rotation.x = 0.25;
+      wag(6, 0.25); pitch = -0.12;
+    } else if (st === 'swing') {
+      // the body hangs from the web: tilt it toward the anchor
+      const d = this.anchor.clone().sub(this.pos).setY(this.anchor.y - this.pos.y - 0.8).normalize();
+      const ch = Math.cos(this.heading), sh = Math.sin(this.heading);
+      const lx = d.x * ch - d.z * sh, lz = d.x * sh + d.z * ch;
+      pitch = Math.atan2(lz, d.y) * 0.85; roll = -Math.atan2(lx, d.y) * 0.85;
+      const fwd = v.x * sh + v.z * ch, sp = v.length();
+      L.arm_r.rotation.set(-3.05, 0, 0.12); L.arm_l.rotation.set(-0.5 + clamp(-fwd * 0.03, -0.6, 0.6), 0, -1.0);
+      const trail = clamp(fwd * 0.045, -0.3, 0.9), kick = Math.sin(t * 7) * 0.12;
+      L.leg_l.rotation.x = trail - 0.35 + kick; L.leg_r.rotation.x = trail + 0.3 - kick;
+      L.body.rotation.x = -0.15; L.head.rotation.x = -0.25;
+      const stream = clamp(0.35 + sp * 0.025, 0, 1.1);
+      L.ear_l.rotation.x = L.ear_r.rotation.x = stream + Math.sin(t * 22) * 0.06;
+      L.tail.rotation.x = 0.35; wag(9, 0.12);
+    } else {   // air
+      const up = v.y > 0;
+      if (this.flipT > 0) {   // front flip after letting go of a fast swing
+        this.flipT += dt; const f = Math.min(1, this.flipT / 0.65), e = f * f * (3 - 2 * f);
+        pitch = e * Math.PI * 2; if (f >= 1) this.flipT = 0;
+        const tuck = Math.sin(f * Math.PI);
+        L.leg_l.rotation.x = L.leg_r.rotation.x = -1.5 * tuck; L.arm_l.rotation.set(-1.4 * tuck, 0, -0.3); L.arm_r.rotation.set(-1.4 * tuck, 0, 0.3);
+        L.body.rotation.x = 0.4 * tuck; L.head.rotation.x = 0.4 * tuck;
+      } else if (up) {   // rising: knees up, arms reaching
+        L.leg_l.rotation.x = -1.1; L.leg_r.rotation.x = -0.45;
+        L.arm_l.rotation.set(-2.3, 0, -0.45); L.arm_r.rotation.set(-2.3, 0, 0.45);
+        L.head.rotation.x = -0.2; pitch = clamp(hs * 0.02, 0, 0.35);
+      } else {   // falling: spread out, paws paddling, ears blown up
+        const fl = Math.sin(t * 14) * 0.18;
+        L.arm_l.rotation.set(-0.7 + fl, 0, -1.25); L.arm_r.rotation.set(-0.7 - fl, 0, 1.25);
+        L.leg_l.rotation.set(0.25 - fl, 0, -0.28); L.leg_r.rotation.set(-0.15 + fl, 0, 0.28);
+        L.head.rotation.x = 0.15; pitch = clamp(hs * 0.025, 0, 0.5);
+      }
+      L.ear_l.rotation.x = L.ear_r.rotation.x = up ? 0.5 : -0.55 + Math.sin(t * 24) * 0.15;
+      L.tail.rotation.x = up ? 0.3 : -0.3; wag(12, 0.15);
     }
-    const breathe = Math.sin(this.t * 2.2) * 0.012 * (1 - k);
-    if (L.head) { L.head.rotation.z = Math.sin(this.phase) * 0.06 * k + Math.sin(this.t * 0.9) * 0.03 * (1 - k); L.head.rotation.x = (run ? 0.12 : 0.04) * k + breathe * 3; }
-    if (L.tail) { L.tail.rotation.z = Math.sin(this.t * (k > 0.05 ? 7 : 2.4)) * (0.25 + 0.2 * k); L.tail.rotation.x = -0.3 * k; }
-    this.model.position.y += Math.abs(Math.sin(this.phase)) * k * (run ? 0.09 : 0.06) + breathe;
-    this.model.rotation.x = (run ? 0.12 : 0.04) * k;   // lean into the walk
-    this.heroPose();
-  }
-  heroPose() {
-    const L = this.limbs, st = this.state;
-    if (st === 'ground') { this.web.visible = false; return; }
-    this.model.position.copy(this.pos); this.model.rotation.y = this.heading;
-    this.model.rotation.x = 0;
-    if (st === 'climb') {
-      const ph = this.climbPhase || 0, a = Math.sin(ph);
-      if (L.arm_l) { L.arm_l.rotation.set(-2.2 - a * 0.6, 0, -0.2); L.arm_r.rotation.set(-2.2 + a * 0.6, 0, 0.2); }
-      if (L.leg_l) { L.leg_l.rotation.x = -0.5 + a * 0.5; L.leg_r.rotation.x = -0.5 - a * 0.5; }
-      if (L.head) L.head.rotation.x = -0.25;
-      this.model.rotation.x = -0.12; this.web.visible = false;
-      return;
-    }
-    const v = this.vel, hs = Math.hypot(v.x, v.z);
+    this.model.position.set(this.pos.x, this.pos.y + lift, this.pos.z);
+    this.model.rotation.set(pitch, this.heading, roll);
+    // the web strand: from the raised right paw to the anchor
     if (st === 'swing') {
-      if (L.arm_r) { L.arm_r.rotation.set(-2.9, 0, 0.15); L.arm_l.rotation.set(-0.4, 0, -0.9); }
-      if (L.leg_l) { L.leg_l.rotation.x = -0.7; L.leg_r.rotation.x = 0.2; }
-      this.model.rotation.x = Math.max(-0.6, Math.min(0.6, -v.y * 0.03 + hs * 0.012));
-      // web line from the raised hand to the anchor
-      const hand = new THREE.Vector3(this.pos.x + Math.sin(this.heading) * 0.15, this.pos.y + 1.55, this.pos.z + Math.cos(this.heading) * 0.15);
+      this.model.updateMatrixWorld(true);
+      const hand = L.arm_r.localToWorld(new THREE.Vector3(0.07, -0.24, 0.04));
       const d = this.anchor.clone().sub(hand), len = d.length();
       this.web.position.copy(hand); this.web.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), d.divideScalar(len)); this.web.scale.set(1, len, 1);
       this.web.visible = true;
-    } else {   // air: tuck and spread
-      if (L.arm_l) { L.arm_l.rotation.set(-0.6, 0, -1.1); L.arm_r.rotation.set(-0.6, 0, 1.1); }
-      if (L.leg_l) { L.leg_l.rotation.x = v.y > 0 ? -0.9 : 0.3; L.leg_r.rotation.x = v.y > 0 ? 0.4 : -0.3; }
-      this.model.rotation.x = Math.max(-0.4, Math.min(0.5, hs * 0.02));
-      this.web.visible = false;
-    }
-    if (L.tail) L.tail.rotation.x = -0.8;
+    } else this.web.visible = false;
   }
   // third-person camera; returns the camera position
   updateCamera(dt, camera, look, zoom) {

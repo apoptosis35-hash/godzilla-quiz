@@ -3766,6 +3766,67 @@ def nagi():
 
 
 
+@model('shiba', 'なぎ(操作キャラ・豆柴)', '人物', lod=False)
+def shiba():
+    # The player: a chibi Shiba Inu (about 2.2 heads tall, 1.25 m) with the breed's markings: red coat, white "urajiro"
+    # cheeks, muzzle, chest, belly and paws, "maro" eyebrow dots, pricked triangular ears and a tail curled over the back.
+    # A navy bandana with a white wave pattern. Parts (the game nests them: body > head > ears, body > arms, tail):
+    # shiba_body (hips), shiba_head (neck), shiba_ear_l/r (ear roots), shiba_arm_l/r (shoulders), shiba_leg_l/r (hips),
+    # shiba_tail (tail root).
+    PALETTE.update({'shiba_red': P((0.66, 0.26, 0.07), 0.85), 'shiba_cream': P((0.93, 0.84, 0.68), 0.85),
+                    'shiba_inner': P((0.98, 0.72, 0.62), 0.8), 'shiba_band': P((0.05, 0.1, 0.32), 0.8),
+                    'shiba_tongue': P((0.95, 0.38, 0.42), 0.4)})
+    part('shiba_body', (0, 0, 0.3))
+    ico('shiba_red', 0.22, (0, 0.01, 0.47), (1.0, 0.86, 1.12), 3)                     # torso
+    ico('shiba_cream', 0.17, (0, -0.1, 0.47), (0.86, 0.5, 1.12), 3)                   # white chest and belly
+    ico('shiba_red', 0.17, (0, 0.06, 0.32), (1.05, 0.95, 0.6), 2)                     # hips
+    torus('shiba_band', 0.125, 0.032, (0, 0.0, 0.645), seg=20, rseg=6)                 # bandana round the neck
+    prism('shiba_band', [(-0.11, 0.0), (0.11, 0.0), (0, -0.15)], 0.03, loc=(0, -0.13, 0.64), axis='Y')
+    for k, (x, z) in enumerate([(-0.05, 0.6), (0.05, 0.6), (0.0, 0.55), (-0.025, 0.515), (0.025, 0.515)]):
+        torus('white', 0.017, 0.004, (x, -0.15 - abs(x) * 0.1, z), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)   # wave rings
+    part(None)
+    part('shiba_head', (0, 0, 0.66))
+    ico('shiba_red', 0.3, (0, 0.0, 0.94), (1.12, 0.98, 0.92), 3)                      # head
+    for sx in (-1, 1):
+        ico('shiba_cream', 0.13, (sx * 0.13, -0.19, 0.84), (1.0, 0.55, 0.78), 3)       # urajiro cheeks
+        ico('shiba_cream', 0.03, (sx * 0.1, -0.262, 1.05), (1.35, 0.4, 0.75), 2)       # maro eyebrows
+        ico('eye', 0.046, (sx * 0.112, -0.262, 0.945), (0.85, 0.45, 1.12), 2)          # eyes with highlights
+        ico('white', 0.016, (sx * 0.112 + 0.012, -0.284, 0.968), sub=1)
+        ico('white', 0.007, (sx * 0.112 - 0.014, -0.282, 0.925), sub=1)
+        ico('cheek', 0.04, (sx * 0.2, -0.205, 0.86), (1.1, 0.35, 0.6), 1)              # blush
+    ico('shiba_cream', 0.12, (0, -0.245, 0.855), (1.05, 0.95, 0.72), 3)                # muzzle
+    ico('shiba_cream', 0.11, (0, -0.16, 0.79), (1.2, 0.8, 0.6), 2)                     # chin
+    ico('ink', 0.036, (0, -0.352, 0.885), (1.35, 0.8, 0.85), 2)                         # nose
+    ico('white', 0.01, (0.012, -0.375, 0.9), sub=1)
+    rod('ink', (0, -0.352, 0.86), (0, -0.348, 0.835), 0.006, 3)
+    for sx in (-1, 1): _pv_tube('ink', [(0, -0.348, 0.835), (sx * 0.03, -0.345, 0.82), (sx * 0.058, -0.33, 0.835)], 0.006, 4)   # smile
+    ico('shiba_tongue', 0.026, (0.0, -0.335, 0.808), (1.1, 0.7, 1.2), 2)                 # tongue
+    part(None)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        part(f'shiba_ear_{sd}', (sx * 0.16, -0.01, 1.12))
+        with xf((sx * 0.16, -0.01, 1.1), ry=sx * 0.28, rx=0.12):
+            o = cyl('shiba_red', 0.105, 0.22, (0, 0, 0), 4, r2=0.0); o.rotation_euler = (0, 0, math.pi / 4); o.scale = (1.0, 0.55, 1.0)
+            o = cyl('shiba_inner', 0.075, 0.16, (0, -0.03, 0.01), 4, r2=0.0); o.rotation_euler = (0, 0, math.pi / 4); o.scale = (1.0, 0.3, 1.0)
+            o = cyl('shiba_cream', 0.05, 0.08, (0, -0.045, 0.0), 6, r2=0.0); o.scale = (1.0, 0.4, 1.0)   # fluffy inner fur
+        part(None)
+        part(f'shiba_arm_{sd}', (sx * 0.2, 0, 0.6))
+        _pv_tube('shiba_red', [(sx * 0.2, 0, 0.6), (sx * 0.25, -0.02, 0.5), (sx * 0.27, -0.035, 0.41)], [0.068, 0.06, 0.055], 10)
+        ico('shiba_cream', 0.062, (sx * 0.275, -0.04, 0.375), (1.0, 1.05, 0.95), 2)    # white paw
+        for k in (-1, 0, 1): rod('shiba_red', (sx * 0.275 + k * 0.022, -0.095, 0.375), (sx * 0.275 + k * 0.022, -0.1, 0.36), 0.006, 3)   # toe lines
+        part(None)
+        part(f'shiba_leg_{sd}', (sx * 0.1, 0, 0.3))
+        _pv_tube('shiba_red', [(sx * 0.1, 0.0, 0.3), (sx * 0.1, -0.005, 0.18), (sx * 0.1, 0.0, 0.1)], [0.085, 0.07, 0.062], 10)
+        ico('shiba_cream', 0.072, (sx * 0.1, -0.045, 0.045), (1.0, 1.45, 0.62), 2)        # white sock and foot
+        for k in (-1, 0, 1): rod('shiba_red', (sx * 0.1 + k * 0.024, -0.15, 0.045), (sx * 0.1 + k * 0.024, -0.15, 0.02), 0.006, 3)
+        part(None)
+    part('shiba_tail', (0, 0.16, 0.4))
+    curl = [(0, 0.16, 0.4), (0, 0.27, 0.48), (0, 0.32, 0.6), (0, 0.27, 0.71), (0, 0.17, 0.73), (0.02, 0.12, 0.66), (0.04, 0.16, 0.6)]
+    _pv_tube('shiba_red', curl, [0.07, 0.075, 0.075, 0.07, 0.062, 0.05, 0.035], 10)
+    _pv_tube('shiba_cream', [(0, 0.2, 0.42), (0, 0.29, 0.5), (0, 0.32, 0.59)], [0.05, 0.055, 0.045], 8)   # white underside of the curl
+    ico('shiba_cream', 0.04, curl[-1], sub=2)
+    part(None)
+
+
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
 def fisherman():
     # weathered fisherman: navy work shirt with rolled sleeves, orange rubber apron (前掛け) on a neck strap, white rubber boots,

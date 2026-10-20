@@ -27,7 +27,7 @@ export const MODELS = {
     'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff'],
   nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c'],
   // animated (cloned)
-  dynamic: ['fishing_boat', 'fishing_boat_b', 'lighthouse', 'lighthouse_red', 'nagi', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
+  dynamic: ['fishing_boat', 'fishing_boat_b', 'lighthouse', 'lighthouse_red', 'shiba', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {
