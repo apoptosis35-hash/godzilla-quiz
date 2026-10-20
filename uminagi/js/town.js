@@ -24,7 +24,7 @@ export const MODELS = {
   props: ['dock_straight', 'dock_end', 'bollard', 'tire_fender', 'quay_ladder', 'tetrapod', 'crates_blue', 'styro_boxes', 'pallet', 'handcart', 'forklift',
     'keitora', 'net_pile', 'floats', 'crab_traps', 'rope_coil', 'market_tent', 'utility_pole', 'street_light', 'vending_machine', 'bicycle', 'ac_outdoor',
     'a_frame_sign', 'bench', 'postbox', 'nobori', 'street_lantern', 'direction_sign', 'laundry_pole', 'fence_wood', 'fence_rail', 'fence_log', 'plant_pots',
-    'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff'],
+    'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging'],
   nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c'],
   // animated (cloned)
   dynamic: ['fishing_boat', 'fishing_boat_b', 'lighthouse', 'lighthouse_red', 'shiba', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
@@ -302,32 +302,37 @@ export class Town {
     }
   }
   clone(name, x, y, z, ry = 0, merge = false) {
-    const src = merge ? this.mergedScene(name) : this.protos[name].scene;
+    const src = merge ? this.mergedScene(name, merge === 'tex') : this.protos[name].scene;
     const o = src.clone(true); o.name = name;
     o.position.set(x, y, z); o.rotation.y = ry; this.root.add(o);
     return o;
   }
   // a copy of an articulated model where every part node is a single vertex-coloured mesh (1 draw call per part)
-  mergedScene(name) {
-    const p = this.protos[name];
-    if (p.merged) return p.merged;
+  mergedScene(name, keepTex = false) {
+    const p = this.protos[name], key = keepTex ? 'mergedTex' : 'merged';
+    if (p[key]) return p[key];
     const root = new THREE.Group(), inv = new THREE.Matrix4();
     p.scene.updateMatrixWorld(true);
-    const nodes = []; p.scene.traverse((o) => { if (o.name.startsWith(name + '_') && !o.name.endsWith('_lod1') && (o.isMesh || o.children.some((c) => c.isMesh))) nodes.push(o); });
+    // part nodes only: a group holding meshes, or a single mesh hanging straight off the model root
+    // (the meshes inside a part are named <part>_1, _2... and must not become parts of their own)
+    const nodes = []; p.scene.traverse((o) => {
+      if (!o.name.startsWith(name + '_') || o.name.endsWith('_lod1')) return;
+      if ((!o.isMesh && o.children.some((c) => c.isMesh)) || (o.isMesh && o.parent && !o.parent.name.startsWith(name + '_'))) nodes.push(o);
+    });
     for (const n of nodes) {
       const prims = [];
       n.traverse((o) => { if (o.isMesh) prims.push({ geometry: o.geometry, material: o.material, matrix: inv.copy(n.matrixWorld).invert().multiply(o.matrixWorld).clone() }); });
-      const merged = this.mergePlain(prims, true, false, true);
+      const merged = keepTex ? this.mergePlain(prims, false, true) : this.mergePlain(prims, true, false, true);
       const g = new THREE.Group(); g.name = n.name; n.matrixWorld.decompose(g.position, g.quaternion, g.scale);
       for (const pr of merged) { const m = new THREE.Mesh(pr.geometry, pr.material); m.castShadow = true; m.applyMatrix4(pr.matrix); g.add(m); }
       root.add(g);
     }
-    return (p.merged = root);
+    return (p[key] = root);
   }
   // ------------------------------------------------------------------ build everything
   build() {
     const r = rng(7);
-    this.harbour(r); this.street(r); this.terraces(r); this.shrine(r); this.hill(r); this.east(r);
+    this.harbour(r); this.street(r); this.terraces(r); this.shrine(r); this.hill(r); this.east(r); this.hillside(r);
     this.nature(r); this.wires(); this.people(r); this.birds(r);
     this.pool.finalize();
   }
@@ -362,6 +367,16 @@ export class Town {
       ['bicycle', 21, 12, 0.3], ['propane', 31, -2.5, 0], ['crates_blue', -78 + 6, 3, 0], ['direction_sign', 34.5, -4, -0.5]];
     for (const [n, x, z, ry] of clutter) P(n, x, QY, z, ry);
     for (const [x, z] of [[22, 24], [36, 30], [-44, 26]]) P('skiff', x, -0.05, z, 0.1, { pool: { lod: 60, cull: 500 } });
+    // working clutter heaped on the apron: stacks of fish crates, styrofoam, pallets, traps, nets, floats (lanes kept clear)
+    const zones = [[14, 24, 8, 15], [-37, -19, 8, 15], [-74, -52, 7, 15], [-16, 12, 15, 17.2]], kinds = ['crates_blue', 'crates_blue', 'styro_boxes', 'styro_boxes', 'pallet', 'crab_traps', 'floats', 'net_pile', 'rope_coil'];
+    const free = (x, z, rad) => !this.colliders.some((c) => Math.abs(c.x - x) < rad + (c.hw || c.r || 0) + 0.3 && Math.abs(c.z - z) < rad + (c.hd || c.r || 0) + 0.3);
+    let nc = 0;
+    for (let i = 0; i < 900 && nc < Math.round(46 * Math.min(1, this.q.lod / 0.85)); i++) {
+      const [x0, x1, z0, z1] = zones[i % zones.length], x = x0 + r() * (x1 - x0), z = z0 + r() * (z1 - z0);
+      const n = kinds[Math.floor(r() * kinds.length)], rad = n === 'net_pile' || n === 'crab_traps' ? 1.5 : 0.8;
+      if (!free(x, z, rad)) continue;
+      P(n, x, QY, z, (r() < 0.7 ? Math.round(r() * 4) * H : r() * 6) + (r() - 0.5) * 0.1); nc++;
+    }
     // breakwater: tetrapods on the seaward side, small red lighthouse at the tip
     const tet = (x, z) => P('tetrapod', x, -1.2 + r() * 2.2, z, r() * 6, { rx: r() * 0.8, s: 0.9 + r() * 0.3, pool: { lod: 50, cull: 700 } });
     for (let z = 4; z <= 118; z += 2.6) for (let k = 0; k < 2; k++) tet(-87.5 - k * 2.6 - r(), z + r() * 1.3);
@@ -374,9 +389,11 @@ export class Town {
     this.spinners.push({ o: this.redLighthouse.getObjectByName('lighthouse_red_lamp'), speed: 0, blink: true });
     // fishing boats moored along the piers and the east quay
     const boats = [['fishing_boat', -51.8, 33, 0], ['fishing_boat_b', -44.1, 36, 0], ['fishing_boat', -15.8, 33, 0.03], ['fishing_boat_b', -8.3, 31, -0.02],
-      ['fishing_boat_b', 25.4, 33, 0], ['fishing_boat', 33.0, 34, 0.02], ['fishing_boat', 49.8, 52, PI], ['fishing_boat_b', 50.1, 70, PI]];
+      ['fishing_boat_b', 25.4, 33, 0], ['fishing_boat', 33.0, 34, 0.02], ['fishing_boat', 49.8, 52, PI], ['fishing_boat_b', 50.1, 70, PI],
+      // moored alongside the main quay, bows alternating (the concept's crowded quay)
+      ['fishing_boat', -66, 24.4, H], ['fishing_boat_b', -30, 24.4, -H], ['fishing_boat', 9, 24.4, -H], ['fishing_boat_b', 43, 24.4, H]];
     for (const [n, x, z, ry] of boats) {
-      const o = this.clone(n, x, 0, z, ry);
+      const o = this.clone(n, x, 0, z, ry, 'tex');   // merged per part and material: textures kept, far fewer draw calls
       this.boats.push({ o, x, z, ry, ph: r() * 10, radar: o.getObjectByName(n + '_radar') });
       this.colliders.push({ type: 'b', x, z, hw: 2.0, hd: n === 'fishing_boat' ? 7 : 6, c: Math.cos(ry), s: Math.sin(ry), y0: -2, y1: 6 });
     }
@@ -402,6 +419,20 @@ export class Town {
       ['hydrangea', 33.3, -17.6, 0], ['hydrangea', 33.3, -43.2, 0], ['bush', 33.3, -56.1, 0], ['direction_sign', 45.6, -97, -H], ['bench', 30, -110, 0], ['bench', 48, -110, 0],
       ['street_lantern', 26, -99, 0], ['street_lantern', 54, -99, 0], ['tree_sakura', 52, -114, 0], ['tree_broadleaf', 28, -116, 0], ['vending_machine', 55.2, -104, -H], ['plant_pots', 33, -100, 0]])
       P(n, x, null, z, ry);
+    // a busier shopping street: banners, signboards, goods out front, potted plants, bicycles on both pavements
+    const W = [34.9, H], E = [45.1, -H], goods = ['styro_boxes', 'crates_blue', 'plant_pots', 'a_frame_sign', 'nobori', 'nobori', 'bicycle', 'plant_pots', 'crates_blue'];
+    for (let z = -12; z >= -92; z -= 3.3 + r() * 2.2) for (const [x, ry] of [W, E]) {
+      if (r() < 0.25) continue;
+      const n = goods[Math.floor(r() * goods.length)], dx = (x < 40 ? 1 : -1) * (n === 'nobori' ? 0.9 : 0.35);
+      if (this.colliders.some((c) => Math.abs(c.x - (x + dx)) < 0.9 + (c.hw || c.r || 0) && Math.abs(c.z - z) < 0.9 + (c.hd || c.r || 0))) continue;
+      P(n, x + dx, null, z, ry + (n === 'bicycle' ? 0.25 : 0), { col: n === 'nobori' || n === 'plant_pots' ? false : undefined });
+    }
+    // festival lantern strings across the street
+    this.lanternLines = [];
+    for (let z = -14; z >= -90; z -= 9) {
+      const y = streetY(z) + 5.4; this.lanternLines.push([34.6, 45.4, z, y]);
+      for (let k = 0; k < 5; k++) { const x = 36 + k * 2, sag = Math.sin((x - 34.6) / 10.8 * Math.PI) * 0.45; P('chochin_hanging', x, y - sag - 0.95, z, H, { col: false, shadow: false }); }
+    }
   }
   // stone/concrete plinths under buildings that stand on a slope (visible on the downhill side)
   plinths(list) {
@@ -495,6 +526,14 @@ export class Town {
     for (let z = c2.z0 + 7; z < c2.z1 - 1; z += 2.1) this.put('fence_log', c2.x1 - 0.3, platformY(c2, 0, z), z, H);
     for (const [x, z] of [[-134, 2], [-138, -30], [-110, -36], [-130, -36], [-102, -32], [-90, -60], [-90, -90], [-70, -112], [-50, -129]]) this.put('tree_pine_b', x, null, z, r() * 6, { s: 0.9 + r() * 0.3 });
     for (const [x, z] of [[-116, 4], [-136, -12]]) this.put('tree_pine', x, y, z, r() * 6);
+    // greenery round the hilltop: trees and shrubs inside the fence line (the concept's wooded headland)
+    for (let i = 0; i < 26; i++) {
+      const side = i % 4, t = r();
+      const x = side === 0 ? PLATEAU.x0 + 2 + r() * 3 : side === 1 ? PLATEAU.x1 - 3 - r() * 2 : PLATEAU.x0 + 4 + t * (PLATEAU.x1 - PLATEAU.x0 - 8);
+      const z = side < 2 ? PLATEAU.z0 + 4 + t * (PLATEAU.z1 - PLATEAU.z0 - 8) : side === 2 ? PLATEAU.z0 + 2 + r() * 3 : PLATEAU.z1 - 2.5 - r() * 1.5;
+      if (Math.hypot(x + 124, z + 14) < 8 || Math.hypot(x + 100, z - 3) < 6 || (x > -106 && x < -94 && z > -12 && z < 8)) continue;
+      const k = r(); this.put(k < 0.35 ? 'tree_pine' : k < 0.55 ? 'tree_broadleaf' : k < 0.65 ? 'hydrangea' : 'bush', x, y, z, r() * 6, { s: k < 0.55 ? 0.7 + r() * 0.4 : 1 + r() * 0.8, col: k < 0.55 ? undefined : false });
+    }
   }
   east(r) {
     ['house_twostory', 'house_standard', 'house_hipped', 'house_old', 'house_hira', 'house_narrow'].forEach((n, i) => {
@@ -523,6 +562,51 @@ export class Town {
       const h = this.at(x, z); if (h > -2 && h < 3) this.put(['rock_a', 'rock_b', 'rock_c'][i % 3], x, h - 0.4, z, r() * 6, { s: 0.8 + r() * 1.2 });
     }
   }
+  // houses climbing the natural hillsides around the town (the concept's stacked village): each faces downhill
+  // and stands on a dry-stone retaining base that makes up the slope under it
+  hillside(r) {
+    const g = this.ground, want = Math.round(62 * Math.min(1, this.q.lod / 0.85) ** 2), names = ['house_old', 'house_narrow', 'house_hira', 'house_standard', 'house_hillside', 'house_old', 'house_twostory'];
+    const nearPlat = (x, z, rad) => { for (let a = 0; a < 8; a++) if (g.platformAt(x + Math.cos(a * 0.785) * rad, z + Math.sin(a * 0.785) * rad)) return true; return g.platformAt(x, z); };
+    const placed = [], bases = [];
+    for (let i = 0; i < 6000 && placed.length < want; i++) {
+      const x = G.x0 + 8 + r() * (G.x1 - G.x0 - 16), z = G.z0 + 8 + r() * (G.z1 - G.z0 - 40);
+      if (x < -95 && z > -45) continue;                                       // keep the lighthouse headland wooded
+      const h = g.natAt(x, z); if (h < 4 || h > 46) continue;
+      const gx = (g.natAt(x + 3, z) - g.natAt(x - 3, z)) / 6, gz = (g.natAt(x, z + 3) - g.natAt(x, z - 3)) / 6;
+      if (Math.hypot(gx, gz) > 0.85) continue;                                // not on the cliffs
+      if (nearPlat(x, z, 8)) continue;
+      if (placed.some(([px, pz]) => Math.hypot(px - x, pz - z) < 9.5)) continue;
+      if (this.colliders.some((c) => Math.abs(c.x - x) < 9 + (c.hw || c.r || 0) && Math.abs(c.z - z) < 9 + (c.hd || c.r || 0))) continue;
+      const n = names[Math.floor(r() * names.length)], b = this.protos[n].box;
+      const ry = Math.round(Math.atan2(-gx, -gz) / (Math.PI / 12)) * (Math.PI / 12);   // front (+z) downhill, snapped to 15°
+      const c = Math.cos(ry), sn = Math.sin(ry), hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+      let hi = -1e9, lo = 1e9;
+      for (const [lx, lz] of [[-hw, -hd], [hw, -hd], [-hw, hd], [hw, hd], [0, 0]]) {
+        const wx = x + lx * c + lz * sn, wz = z - lx * sn + lz * c, hh = g.natAt(wx, wz);
+        if (g.platformAt(wx, wz)) { hi = 1e9; break; }
+        hi = Math.max(hi, hh); lo = Math.min(lo, hh);
+      }
+      if (hi > 1e8 || hi - lo > 5) continue;
+      const y = hi + 0.1;
+      this.put(n, x, y, z, ry, { tint: this.tint(r) });
+      placed.push([x, z]); bases.push([x, z, ry, hw * 2 * 0.92, hd * 2 * 0.92, y, lo - 0.6]);
+      // a bit of life round the house
+      const fx = x + Math.sin(ry) * (hd + 1.2), fz = z + Math.cos(ry) * (hd + 1.2);
+      if (r() < 0.45) this.put(r() < 0.5 ? 'plant_pots' : 'hydrangea', fx + Math.cos(ry) * 2, y, fz - Math.sin(ry) * 2, ry, { col: false });
+      if (r() < 0.3) this.put('laundry_pole', fx - Math.cos(ry) * 2, y, fz + Math.sin(ry) * 2, ry, { col: false });
+    }
+    // dry-stone bases (instanced boxes)
+    if (!bases.length) return;
+    const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), null, bases.length), m = new THREE.Matrix4();
+    bases.forEach(([x, z, ry, w, d, top, bot], i) => {
+      m.compose(new THREE.Vector3(x, (top + bot) / 2, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(w + 0.6, top - bot, d + 0.6));
+      im.setMatrixAt(i, m);
+    });
+    const mat = this.mats.get('stone_wall').clone(); mat.map = mat.map.clone(); mat.map.repeat.set(3, 1.2);
+    if (mat.normalMap) { mat.normalMap = mat.normalMap.clone(); mat.normalMap.repeat.set(3, 1.2); }
+    im.material = mat; im.castShadow = im.receiveShadow = true; im.name = 'hill_bases'; this.root.add(im);
+    this.hillHouses = placed.length;
+  }
   // ------------------------------------------------------------------ forest, grass and garden greenery on natural ground
   nature(r) {
     const g = this.ground, dens = this.q.trees;
@@ -545,7 +629,7 @@ export class Town {
       const h2 = inBox ? g.natAt(jx + 2, jz) : naturalRaw(jx + 2, jz), h3 = inBox ? g.natAt(jx, jz + 2) : naturalRaw(jx, jz + 2);
       if (Math.hypot(h2 - h, h3 - h) / 2 > 0.9) continue;
       const f = fbm(jx * 0.012 + 3, jz * 0.012);
-      if (f < 0.36) continue;
+      if (f < 0.3) continue;
       if (inBox && (nearPlat(jx, jz, 3.5) || blocked(jx, jz, 1))) continue;
       const kind = h > 30 && f > 0.5 ? 'tree_cedar' : f > 0.62 ? 'tree_cedar' : (r() < 0.6 ? 'tree_broadleaf' : (h < 16 && r() < 0.55 ? 'tree_pine' : 'tree_cedar'));
       this.put(kind, jx, h - 0.2, jz, r() * 6.28, { s: 0.75 + r() * 0.6, col: inBox ? undefined : false, pool: { lod: 40, lod2: 100, cull: 1100 } });
@@ -553,14 +637,17 @@ export class Town {
     }
     this.treeCount = n;
     // shrubs clinging to the steep slopes and cliffs, boulders on the steepest faces
-    for (let i = 0, placed = 0; i < 9000 && placed < this.q.trees * 0.35; i++) {
+    for (let i = 0, placed = 0; i < 16000 && placed < this.q.trees * 0.6; i++) {
       const x = G.x0 + r() * (G.x1 - G.x0), z = G.z0 + r() * (G.z1 - G.z0), h = g.natAt(x, z);
       if (h < 1.2 || g.platformAt(x, z)) continue;
       const sl = Math.hypot(g.natAt(x + 1.5, z) - h, g.natAt(x, z + 1.5) - h) / 1.5;
-      if (sl < 0.75) continue;
+      if (sl < 0.3) continue;
       if (nearPlat(x, z, 2.5)) continue;
-      const kind = sl > 2.2 && r() < 0.5 ? (r() < 0.5 ? 'rock_c' : 'rock_a') : r() < 0.15 ? 'tree_pine_b' : 'bush';
-      this.put(kind, x, h - (kind.startsWith('rock') ? 1.0 : 0.3), z, r() * 6, { s: kind === 'bush' ? 1.1 + r() * 1.3 : 0.8 + r() * 0.6, col: false, pool: { lod: 50, cull: 600 } });
+      // cliffs: big half-buried rock outcrops; slopes: scrub, hydrangea and wind-bent pines
+      const rock = sl > 1.3 && r() < 0.35;
+      const kind = rock ? (r() < 0.5 ? 'rock_c' : r() < 0.5 ? 'rock_a' : 'rock_b') : r() < 0.14 ? 'tree_pine_b' : r() < 0.08 ? 'hydrangea' : 'bush';
+      const sc = rock ? 0.9 + r() * 1.3 : kind === 'bush' ? 1.1 + r() * 1.4 : 0.8 + r() * 0.5;
+      this.put(kind, x, h - (rock ? 1.5 * sc : 0.3), z, r() * 6, { s: sc, rx: rock ? (r() - 0.5) * 0.6 : 0, col: false, pool: { lod: 50, cull: 600 } });
       placed++;
     }
     // grass tufts and bushes close to the town
@@ -590,6 +677,10 @@ export class Town {
         }
       }
     }
+    for (const [xa, xb, z, y] of this.lanternLines || []) {
+      const curve = new THREE.CatmullRomCurve3([...Array(7)].map((_, k) => { const t = k / 6; return new THREE.Vector3(xa + (xb - xa) * t, y - Math.sin(t * Math.PI) * 0.45, z); }));
+      geo.push(new THREE.TubeGeometry(curve, 8, 0.015, 3, false));
+    }
     if (!geo.length) return;
     const merged = mergeGeos(geo);
     const m = new THREE.Mesh(merged, mat); m.name = 'wires'; this.root.add(m);
@@ -605,9 +696,16 @@ export class Town {
     N('fisherman', -46, 23.8, 0); N('fisherman', -10, 18.5, PI * 0.9); N('fisherman', 2, 9, PI, null);
     N('fisherman', -60, 6, 0, [[-60, 6], [-30, 14], [-12, 16], [-30, 14]]);
     N('fisherman', 30, 20, 0, [[30, 20], [30, 40], [30, 47], [30, 40]]);
+    N('fisherman', -24, 18.6, PI * 0.95); N('fisherman', 16, 16.8, -0.4); N('fisherman', -66, 19.5, PI);
+    N('fisherman', -40, 19.5, 0, [[-40, 19.5], [-4, 19.5], [20, 19.8], [-4, 19.5]]);
+    N('shopkeeper', 8, 15.5, PI * 0.7);
     N('shopkeeper', 35.4, -10, H); N('shopkeeper', 35.4, -42, H); N('shopkeeper', 44.4, -28, -H); N('shopkeeper', 44.6, -57, -H);
     N('townsman', 39, -12, PI, [[39, -12], [39.5, -60], [40, -94], [39.5, -60]]);
     N('townsman', 41, -80, 0, [[41, -80], [41, -30], [42, -8], [41, -30]]);
+    N('shopkeeper', 38, -30, 0, [[38, -30], [38.5, -75], [38, -30], [38.5, -12]]);
+    N('townsman', 43, -45, PI, [[43, -45], [42.5, -15], [43, -45], [43.5, -88]]);
+    N('fisherman', 37.5, -64, 0, [[37.5, -64], [38, -22], [37.5, -64]]);
+    N('townsman', 36.6, -50, H); N('shopkeeper', 43.6, -38, -H); N('townsman', 36.8, -72, H * 0.8);
     N('shopkeeper', -10, -16, 0, [[-30, -16], [10, -16]]);
     N('townsman', -40, -36, 0, [[-50, -36], [0, -36], [16, -36]]);
     N('townsman', -9, -118, 0); N('townsman', -110, 4, PI * 0.8);
@@ -615,7 +713,7 @@ export class Town {
   }
   birds(r) {
     for (let i = 0; i < 12; i++) {
-      const o = this.clone('seagull', 0, 20, 0, 0);
+      const o = this.clone('seagull', 0, 20, 0, 0, true);
       this.gulls.push({ o, cx: -20 + r() * 80, cz: 30 + r() * 70, rad: 15 + r() * 30, h: 12 + r() * 20, sp: (0.18 + r() * 0.15) * (r() < 0.5 ? 1 : -1), ph: r() * 6,
         wl: o.getObjectByName('seagull_wing_l'), wr: o.getObjectByName('seagull_wing_r') });
     }

@@ -134,7 +134,9 @@ export function naturalRaw(x, z) {
   h += 26 * smooth(-150, -260, x);                                             // far western mountains
   h += (n - 0.5) * 6 + fbm(x * 0.09, z * 0.09, 3) * 1.5;
   const beachLand = smooth(64, 80, x) * smooth(20, 60, z) * (1 - smooth(100, 130, x));
-  const shore = smooth(0, beachLand > 0.5 ? 28 : 7, d);
+  // the lighthouse headland and the western coast drop into the sea as sheer rock cliffs
+  const cliff = Math.exp(-(((x + 122) / 70) ** 2) - (((z + 10) / 60) ** 2)) + 0.6 * smooth(-60, -110, x) * smooth(60, 20, z);
+  const shore = smooth(0, beachLand > 0.5 ? 28 : 7 - 4.6 * Math.min(1, cliff), d);
   return 0.5 + (h - 0.5) * shore;
 }
 
