@@ -71,3 +71,7 @@ h1 small { display: block; font-size: 13px; letter-spacing: .6em; opacity: .85; 
   .touch-only, #dash, #web, .zoom { display: none; }
   #gl { cursor: grab; }
 }
+
+/* lens vignette (the PC post chain draws its own) */
+#vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(0, 10, 20, .26) 100%); }
+body.post #vig { display: none; }

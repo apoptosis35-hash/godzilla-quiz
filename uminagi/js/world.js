@@ -9,37 +9,74 @@ const C = (h) => new THREE.Color(h);
 // time-of-day presets (blended): sun direction, sky colours, light colours/intensities, fog, lamp glow
 const TOD = {
   day: { sun: [0.35, 0.78, 0.52], top: C(0x2f6fc8), hor: C(0xbcdcf2), sunCol: C(0xfff4e6), sunI: 3.2, hemiS: C(0xcfe4ff), hemiG: C(0x7a7158), hemiI: 1.05, fog: C(0xbfd8ec), fogNear: 160, fogFar: 1500, glow: 0.04, exp: 0.95, stars: 0, sunDisk: 1 },
-  evening: { sun: [-0.78, 0.17, 0.6], top: C(0x3c4e8c), hor: C(0xffa868), sunCol: C(0xffa060), sunI: 2.6, hemiS: C(0xffc9a0), hemiG: C(0x4d3a3a), hemiI: 0.7, fog: C(0xe6a585), fogNear: 120, fogFar: 1100, glow: 0.7, exp: 1.0, stars: 0.05, sunDisk: 1 },
+  evening: { sun: [-0.78, 0.11, 0.6], top: C(0x3c4e8c), hor: C(0xffa868), sunCol: C(0xffa060), sunI: 2.6, hemiS: C(0xffc9a0), hemiG: C(0x4d3a3a), hemiI: 0.7, fog: C(0xe6a585), fogNear: 120, fogFar: 1100, glow: 0.7, exp: 1.0, stars: 0.05, sunDisk: 1 },
   night: { sun: [0.3, 0.62, -0.5], top: C(0x061030), hor: C(0x22345c), sunCol: C(0xa8bcff), sunI: 0.75, hemiS: C(0x4a5e90), hemiG: C(0x1c1c26), hemiI: 0.8, fog: C(0x14223e), fogNear: 90, fogFar: 750, glow: 1.0, exp: 1.5, stars: 1, sunDisk: 0 },
 };
 export const TOD_NAMES = { day: '昼', evening: '夕方', night: '夜' };
 
+// Physically based day sky: single scattering by air (Rayleigh, blue) and sea haze (Mie, white glow round the sun)
+// along the view ray, with sunlight reddened by the air mass it crosses (orange evenings). Night falls back to the
+// preset gradient (uStars). The same formula runs in JS (atmo below) for the horizon / fog / haze colours.
 const SKY_FN = `
-  uniform vec3 uTop, uHor, uSunDir, uSunCol; uniform float uTime, uStars, uSunDisk, uReflPass;
+  uniform vec3 uTop, uHor, uSunDir, uSunCol; uniform float uTime, uStars, uSunDisk, uReflPass, uSkyLinear, uEnvPass;
   float h21(vec2 p){ p = fract(p * vec2(123.34, 456.21)); p += dot(p, p + 45.32); return fract(p.x * p.y); }
   float vn(vec2 p){ vec2 i = floor(p), f = fract(p); f = f * f * (3.0 - 2.0 * f);
     return mix(mix(h21(i), h21(i + vec2(1, 0)), f.x), mix(h21(i + vec2(0, 1)), h21(i + vec2(1, 1)), f.x), f.y); }
   float fbm(vec2 p){ float s = 0.0, a = 0.5; for (int k = 0; k < 5; k++) { s += a * vn(p); p *= 2.07; a *= 0.5; } return s; }
+  const vec3 TAU_R = vec3(0.046, 0.108, 0.265); const float TAU_M = 0.04; const vec3 TAU_O = vec3(0.010, 0.032, 0.0015);   // ozone: keeps twilight skies blue, not green
+  vec3 sunTrans(){ float m = 1.0 / (max(uSunDir.y, 0.0) + 0.035); return exp(-(TAU_R + TAU_M + TAU_O) * min(m, 28.0)); }
+  vec3 atmo(vec3 d){
+    float y = max(d.y, 0.0), mu = dot(d, uSunDir);
+    float mV = min(1.0 / (y + 0.07), 14.0);
+    vec3 tau = TAU_R + TAU_M;
+    float pR = 0.75 * (1.0 + mu * mu), pM = 0.4224 / pow(1.5776 - 1.52 * mu, 1.5) * 0.11;
+    // light scattered high up has crossed less air than the direct sun: the Rayleigh (blue) part is reddened
+    // by ~55% of the sun's air mass, the haze glow round the sun by all of it (orange sunsets, blue zenith)
+    float mS = min(1.0 / (max(uSunDir.y, 0.0) + 0.035), 28.0);
+    vec3 ins = (TAU_R * pR * exp(-(tau + TAU_O * 1.6) * mS * 0.55) + TAU_M * pM * exp(-(tau + TAU_O) * mS)) / tau * (1.0 - exp(-tau * mV));
+    ins *= smoothstep(-0.12, 0.05, uSunDir.y) * 0.9 + 0.1;
+    vec3 c = ins * 3.8;   // exposure, then a hue-preserving roll-off (keeps sunset colours from washing out to white)
+    return c / (1.0 + dot(c, vec3(0.2126, 0.7152, 0.0722)) * 0.55);
+  }
   vec3 skyColor(vec3 d, bool clouds){
     float h = max(d.y, -0.2);
-    vec3 col = mix(uHor, uTop, smoothstep(-0.02, 0.55, h));
+    vec3 night = mix(uHor, uTop, smoothstep(-0.02, 0.55, h));
+    vec3 col = mix(atmo(d), night, uStars);
+    if (uEnvPass > 0.5 && d.y < 0.0) {   // environment map: sunlit ground below the horizon bounces warm light up
+      vec3 g = vec3(0.34, 0.31, 0.24) * (sunTrans() * max(uSunDir.y, 0.0) * 1.1 + atmo(vec3(0.0, 1.0, 0.0)) * 0.35);
+      col = mix(col, mix(g, night * 0.4, uStars), smoothstep(0.0, -0.08, d.y));
+    }
     float sd = max(0.0, dot(d, uSunDir));
-    col += uSunCol * (pow(sd, 6.0) * 0.18 + pow(sd, 60.0) * 0.35) * (0.4 + 0.6 * uSunDisk);
-    col += uSunCol * smoothstep(0.9993, 0.9997, sd) * 6.0 * uSunDisk * (1.0 - uReflPass);   // no hard-edged disk in the sea's mirror (the glitter draws it)
+    vec3 sunC = mix(sunTrans() * 1.25, uSunCol, uStars);
+    col += sunC * smoothstep(0.9993, 0.9997, sd) * 6.0 * uSunDisk * (1.0 - uReflPass);   // no hard-edged disk in the sea's mirror (the glitter draws it)
     if (clouds && d.y > 0.0) {
       vec2 uv = d.xz / (d.y + 0.08) * 1.4 + vec2(uTime * 0.004, uTime * 0.002);
-      float c = fbm(uv * 1.1); c = smoothstep(0.5, 0.82, c) * smoothstep(0.0, 0.18, d.y);
-      float lit = 0.75 + 0.35 * pow(sd, 3.0);
-      vec3 cc = mix(uHor * 0.9 + 0.12, vec3(1.0), 0.55) * lit;
-      cc = mix(cc, uHor * 0.35 + uTop * 0.2, uStars * 0.85);
-      col = mix(col, cc, c * 0.9);
+      float c = fbm(uv * 1.1);
+      // self-shadowing: denser cloud between this point and the sun -> darker underside
+      float c2 = fbm(uv * 1.1 + uSunDir.xz * 0.18);
+      float shade = clamp(0.62 + (c - c2) * 2.4, 0.25, 1.0);
+      float cov = smoothstep(0.48, 0.8, c) * smoothstep(0.0, 0.18, d.y);
+      vec3 amb = atmo(vec3(0.0, 1.0, 0.0)) * 0.55 + atmo(normalize(vec3(d.x, 0.05, d.z))) * 0.35;
+      vec3 lit = sunC * (0.55 + 0.45 * pow(sd, 4.0)) * shade + amb;
+      vec3 cc = mix(lit, uHor * 0.35 + uTop * 0.2, uStars * 0.85);
+      cc = mix(cc, col, smoothstep(0.35, 0.0, d.y) * 0.55);   // distant clouds fade into the haze
+      col = mix(col, cc, cov * 0.92);
       // stars
       vec2 sp = d.xz / (d.y + 0.3) * 260.0;
-      float st = step(0.9965, h21(floor(sp))) * smoothstep(0.05, 0.3, d.y) * (1.0 - c);
+      float st = step(0.9965, h21(floor(sp))) * smoothstep(0.05, 0.3, d.y) * (1.0 - cov);
       col += vec3(st) * uStars * (0.6 + 0.4 * sin(uTime * 3.0 + h21(floor(sp)) * 40.0));
     }
     return col;
   }`;
+// JS twin of atmo() (display-space colour) for horizon, zenith and fog colours
+function atmoJS(d, sun) {
+  const TR = [0.046, 0.108, 0.265], TO = [0.010, 0.032, 0.0015], TM = 0.04, y = Math.max(d[1], 0), mu = d[0] * sun.x + d[1] * sun.y + d[2] * sun.z;
+  const mV = Math.min(1 / (y + 0.07), 14), mS = Math.min(1 / (Math.max(sun.y, 0) + 0.035), 28);
+  const pR = 0.75 * (1 + mu * mu), pM = 0.4224 / Math.pow(1.5776 - 1.52 * mu, 1.5) * 0.11;
+  const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const k = sm(-0.12, 0.05, sun.y) * 0.9 + 0.1;
+  return TR.map((r, i) => { const t = r + TM, o = TO[i], ins = (r * pR * Math.exp(-(t + o * 1.6) * mS * 0.55) + TM * pM * Math.exp(-(t + o) * mS)) / t * (1 - Math.exp(-t * mV)) * k; return ins * 3.8; }).map((c, _, a) => c / (1 + (a[0] * 0.2126 + a[1] * 0.7152 + a[2] * 0.0722) * 0.55));
+}
 
 export class World {
   constructor(scene, renderer, ground, quality) {
@@ -47,7 +84,7 @@ export class World {
     this.time = 0; this.todName = 'day'; this.cur = this.copy(TOD.day); this.target = TOD.day;
     this.skyU = {
       uTop: { value: new THREE.Color() }, uHor: { value: new THREE.Color() }, uSunDir: { value: new THREE.Vector3() },
-      uSunCol: { value: new THREE.Color() }, uTime: { value: 0 }, uStars: { value: 0 }, uSunDisk: { value: 1 }, uReflPass: { value: 0 },
+      uSunCol: { value: new THREE.Color() }, uTime: { value: 0 }, uStars: { value: 0 }, uSunDisk: { value: 1 }, uReflPass: { value: 0 }, uSkyLinear: { value: 0 }, uEnvPass: { value: 0 },
     };
     this.hazeU = { uHaze: { value: new THREE.Color() }, uHazeDist: { value: 2600 } };
     this.buildSky(); this.buildLights(); this.buildSea(); this.buildIslands();
@@ -55,6 +92,7 @@ export class World {
     this.pmrem = new THREE.PMREMGenerator(renderer);
     this.apply(true);
   }
+  setLinearSky(on) { this.linearSky = on; this.skyU.uSkyLinear.value = on ? 1 : 0; this.apply(true); }
   copy(t) { return { ...t, top: t.top.clone(), hor: t.hor.clone(), sunCol: t.sunCol.clone(), hemiS: t.hemiS.clone(), hemiG: t.hemiG.clone(), fog: t.fog.clone(), sun: [...t.sun] }; }
   setTimeOfDay(name, instant = false) {
     this.todName = name; this.target = TOD[name]; this.blend = instant ? 1 : 0;
@@ -65,7 +103,7 @@ export class World {
     const mat = new THREE.ShaderMaterial({
       uniforms: this.skyU, side: THREE.BackSide, depthWrite: false, fog: false,
       vertexShader: 'varying vec3 vD; void main(){ vD = normalize(position); vec4 p = projectionMatrix * modelViewMatrix * vec4(position, 1.0); gl_Position = p.xyww; }',
-      fragmentShader: SKY_FN + '\nvarying vec3 vD; void main(){ gl_FragColor = vec4(skyColor(normalize(vD), true), 1.0 - uReflPass); }   // alpha 0 marks sky in the reflection',
+      fragmentShader: SKY_FN + '\nvarying vec3 vD; void main(){ vec3 c = skyColor(normalize(vD), true); if (uSkyLinear > 0.5) c = pow(max(c, 0.0), vec3(2.2));   // linear pipelines (PC post, environment map)\n  gl_FragColor = vec4(c, 1.0 - uReflPass); }   // alpha 0 marks sky in the reflection',
     });
     this.sky = new THREE.Mesh(geo, mat); this.sky.frustumCulled = false; this.sky.renderOrder = -10;
     this.scene.add(this.sky);
@@ -176,6 +214,7 @@ export class World {
           vec3 refl = skyColor(R, rough < 0.6);
           refl -= uSunCol * smoothstep(0.9993, 0.9997, max(0.0, dot(R, uSunDir))) * 6.0 * uSunDisk;   // the sun's mirror image comes from the glitter below (no hard-edged disk)
           refl = mix(refl, mix(uHor, uTop, 0.35), rough * 0.25);
+          if (uLinear > 0.5) refl = pow(max(refl, 0.0), vec3(2.2));   // float target: the sky is linear there
           if (uUseRefl > 0.5) {
             // planar mirror of the far scene (islands, mountains, quays, boats), rippled by the surface normal
             vec4 rp = uReflMat * vec4(vW.x, 0.0, vW.z, 1.0);
@@ -225,8 +264,10 @@ export class World {
           col = mix(col, vec3(0.92, 0.96, 0.98) * (0.4 + 0.6 * max(0.15, uSunDir.y)) * mix(1.0, 0.75, uLinear), clamp(foam, 0.0, 0.85));
           // atmospheric haze shared with the islands and mountains (scene fog would bleach the open sea white)
           float haze = clamp((1.0 - exp(-dist / uHazeDist)) * 1.05, 0.0, 0.93);
-          col = mix(col, uHaze, haze);
-          col = mix(col, uHor, smoothstep(3500.0, 6200.0, dist));   // melt into the sky at the horizon line
+          vec3 hz = uLinear > 0.5 ? uHaze : pow(max(uHaze, 0.0), vec3(1.0 / 2.2));
+          vec3 hor = uLinear > 0.5 ? pow(max(uHor, 0.0), vec3(2.2)) : uHor;
+          col = mix(col, hz, haze);
+          col = mix(col, hor, smoothstep(3500.0, 6200.0, dist));   // melt into the sky at the horizon line
           gl_FragColor = vec4(col, max(alpha, max(foam, haze)));
         }`,
     });
@@ -415,16 +456,26 @@ export class World {
   apply(env) {
     const c = this.cur, s = new THREE.Vector3(...c.sun).normalize();
     this.skyU.uTop.value.copy(c.top); this.skyU.uHor.value.copy(c.hor); this.skyU.uSunDir.value.copy(s);
+    if (c.stars < 1) {
+      const hor = [0, 0, 0];
+      for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2, v = atmoJS([Math.cos(a), 0.02, Math.sin(a)], s); for (let j = 0; j < 3; j++) hor[j] += v[j] / 8; }
+      const top = atmoJS([0, 1, 0], s), k = 1 - c.stars;
+      this.skyU.uHor.value.lerp(new THREE.Color().setRGB(...hor), k); this.skyU.uTop.value.lerp(new THREE.Color().setRGB(...top), k);
+      // fog / haze: the horizon colour (display space -> linear for the lit materials)
+      c.fogAtmo = new THREE.Color().setRGB(...hor.map((v) => Math.pow(v, 2.2) * 1.05)).lerp(c.fog, c.stars);
+    }
     this.skyU.uSunCol.value.copy(c.sunCol); this.skyU.uStars.value = c.stars; this.skyU.uSunDisk.value = c.sunDisk;
     this.hemi.color.copy(c.hemiS); this.hemi.groundColor.copy(c.hemiG); this.hemi.intensity = c.hemiI;
     this.sun.color.copy(c.sunCol); this.sun.intensity = c.sunI; this.sunDir = s;
-    this.scene.fog.color.copy(c.fog); this.scene.fog.near = c.fogNear; this.scene.fog.far = c.fogFar;
+    this.scene.fog.color.copy(c.fogAtmo || c.fog); this.scene.fog.near = c.fogNear; this.scene.fog.far = c.fogFar;
     this.renderer.toneMappingExposure = c.exp;
     if (env) {
+      this.skyU.uSkyLinear.value = 1; this.skyU.uEnvPass.value = 1;   // the environment map is linear radiance, with a ground
       const rt = this.pmrem.fromScene(this.envScene, 0, 0.1, 200);
+      this.skyU.uSkyLinear.value = this.linearSky ? 1 : 0; this.skyU.uEnvPass.value = 0;
       if (this.envRT) this.envRT.dispose();
       this.envRT = rt; this.scene.environment = rt.texture;
-      this.scene.environmentIntensity = 0.55 + 0.25 * (1 - c.stars);
+      this.scene.environmentIntensity = 0.7 + 0.25 * (1 - c.stars);
     }
   }
   update(dt, focus, camPos, matlib) {
@@ -449,7 +500,7 @@ export class World {
     this.seaU.uCam.value.set(Math.round(camPos.x / 4) * 4, 0, Math.round(camPos.z / 4) * 4);
     this.sky.position.copy(camPos);
     // haze colour for the far scenery: between the fog colour and the sky at the horizon
-    this.hazeU.uHaze.value.copy(this.cur.fog).lerp(this.cur.hor, 0.5);
+    this.hazeU.uHaze.value.copy(this.cur.fogAtmo || this.cur.fog);
     this.hazeU.uHazeDist.value = this.cur.fogFar * 1.6;
   }
 }

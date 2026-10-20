@@ -8,6 +8,17 @@ import { Player } from './player.js';
 import { Input } from './input.js';
 import { Sound } from './audio.js';
 
+// aerial perspective: fog thickens exponentially with distance (like real air) instead of the linear ramp
+THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
+  #ifdef FOG_EXP2
+    float fogFactor = 1.0 - exp( - fogDensity * fogDensity * vFogDepth * vFogDepth );
+  #else
+    float fogFactor = 1.0 - exp( - max( vFogDepth - fogNear, 0.0 ) * 1.5 / max( fogFar - fogNear, 1.0 ) );
+  #endif
+  gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
+#endif`;
+const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping };
+
 const $ = (id) => document.getElementById(id);
 const SAVE = 'uminagi-save-v1';
 const load = () => { try { return JSON.parse(localStorage.getItem(SAVE)) || null; } catch { return null; } };
@@ -53,7 +64,7 @@ class App {
     this.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: !Q.post && !Q.refraction, powerPreference: 'high-performance' });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, Q.pixelRatio));
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
-    this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    this.renderer.toneMapping = TONE[new URLSearchParams(location.search).get('tm')] ?? THREE.ACESFilmicToneMapping;
     this.renderer.shadowMap.enabled = Q.shadows; this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(58, 1, 0.25, 6000);
@@ -66,6 +77,8 @@ class App {
     prog(0.08, '素材を読み込んでいます…');
     this.mats = await new MaterialLib(this.renderer, Q).load();
     this.world = new World(this.scene, this.renderer, this.ground, Q);
+    if (Q.post) this.world.setLinearSky(true);
+    document.body.classList.toggle('post', !!Q.post);   // the post chain works in linear light
     this.scene.add(this.ground.buildMeshes(this.mats.mats));
     this.town = new Town(this.scene, this.ground, this.mats, this.world, Q);
     await this.town.load((k) => prog(0.12 + k * 0.78, '港町の建物を読み込んでいます…'));
@@ -120,6 +133,23 @@ class App {
     this.bloom = new UnrealBloomPass(new THREE.Vector2(1, 1), 0.25, 0.55, 0.92);
     c.addPass(this.bloom);
     c.addPass(new OutputPass());
+    // film look after tone mapping: gentle S-curve, warm highlights / cool shadows, lens vignette, fine grain
+    this.grade = new ShaderPass({
+      uniforms: { tDiffuse: { value: null }, uTime: { value: 0 } },
+      vertexShader: 'varying vec2 vUv; void main(){ vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: `uniform sampler2D tDiffuse; uniform float uTime; varying vec2 vUv;
+        void main(){
+          vec3 c = clamp(texture2D(tDiffuse, vUv).rgb, 0.0, 1.0);
+          c = mix(c, c * c * (3.0 - 2.0 * c), 0.2);
+          float l = dot(c, vec3(0.2126, 0.7152, 0.0722));
+          c = mix(vec3(l), c, 1.08);
+          c *= mix(vec3(0.96, 0.99, 1.04), vec3(1.04, 1.0, 0.95), smoothstep(0.15, 0.85, l));
+          vec2 q = vUv - 0.5; c *= 1.0 - dot(q, q) * 0.6;
+          float n = fract(sin(dot(vUv * vec2(1789.3, 983.1) + fract(uTime) * 61.7, vec2(12.9898, 78.233))) * 43758.5453);
+          gl_FragColor = vec4(c + (n - 0.5) * 0.016, 1.0);
+        }`,
+    });
+    c.addPass(this.grade);
     this.smaa = new SMAAPass(1, 1); c.addPass(this.smaa);
   }
   resize() {
@@ -253,6 +283,7 @@ class App {
     if (this.composer) {
       this.bloom.strength = 0.22 + 0.55 * this.world.cur.glow;   // lamps and lit windows bloom at night
       this.bloom.threshold = 0.92 - 0.25 * this.world.cur.glow;
+      this.grade.uniforms.uTime.value = this.world.time;
       this.composer.render();
     } else this.renderer.render(this.scene, this.camera);
   }
