@@ -14,9 +14,9 @@ const RANKS = [[0, 'こいぬ'], [100, 'おさんぽ柴'], [300, '港の柴'], [
 const COMBO_TIME = 3.2, RESPAWN = 15;
 
 function boneGeometry() {
-  const shaft = new THREE.CylinderGeometry(0.07, 0.07, 0.42, 8); shaft.rotateZ(Math.PI / 2);
+  const shaft = new THREE.CylinderGeometry(0.07, 0.07, 0.42, 6, 1, true); shaft.rotateZ(Math.PI / 2);
   const parts = [shaft];
-  for (const x of [-0.22, 0.22]) for (const z of [-0.065, 0.065]) { const b = new THREE.SphereGeometry(0.095, 10, 8); b.translate(x, 0, z); parts.push(b); }
+  for (const x of [-0.22, 0.22]) for (const z of [-0.065, 0.065]) { const b = new THREE.SphereGeometry(0.095, 7, 5); b.translate(x, 0, z); parts.push(b); }
   return mergeGeometries(parts);
 }
 
