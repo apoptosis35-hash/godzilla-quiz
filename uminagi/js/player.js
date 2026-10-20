@@ -5,7 +5,7 @@ import * as THREE from 'three';
 
 const R = 0.34, MAX_UP = 0.6, MAX_SLOPE = 1.05, WALK = 3.4, RUN = 7.0, GRAV = 22;
 const JUMP = 9.5, CLIMB = 4.2, SWING_MAX = 38;
-const SIZE = 0.7;   // the Shiba model is 1.3 m tall; the dog in the game stands about 0.9 m
+const SIZE = 0.48;   // the Shiba model is 1.3 m tall; the dog in the game stands about 0.6 m (knee to hip height on the townsfolk)
 
 export class Player {
   constructor(town, ground) {
@@ -356,7 +356,7 @@ export class Player {
     }
     this.dist = Math.max(2.5, Math.min(30, this.dist * Math.exp(zoom)));
     this.heroCam = (this.heroCam || 0) + ((this.state === 'swing' || this.state === 'air' ? 3.5 : 0) - (this.heroCam || 0)) * Math.min(1, dt * 2);
-    const tgt = this.camTarget.set(this.pos.x, this.pos.y + 0.8, this.pos.z);
+    const tgt = this.camTarget.set(this.pos.x, this.pos.y + 0.65, this.pos.z);
     const dir = new THREE.Vector3(Math.sin(this.yaw) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.yaw) * Math.cos(this.pitch));
     // pull in when a building or the ground is in the way
     const want = this.dist + this.heroCam; let d = want;
