@@ -75,20 +75,3 @@ h1 small { display: block; font-size: 13px; letter-spacing: .6em; opacity: .85; 
 /* lens vignette (the PC post chain draws its own) */
 #vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(0, 10, 20, .26) 100%); }
 body.post #vig { display: none; }
-
-/* おやつ集め: score, rank, combo and floating pickups */
-#scorebox { position: absolute; left: 50%; top: max(10px, env(safe-area-inset-top)); transform: translateX(-50%); text-align: center; pointer-events: none; text-shadow: 0 2px 8px rgba(0, 0, 0, .55); font-family: system-ui, sans-serif; }
-#scorebox .bone { font-size: 20px; vertical-align: 3px; margin-right: 4px; }
-#scorebox b { font-size: 30px; font-weight: 800; letter-spacing: .02em; }
-#scorebox small { display: block; font-size: 11px; opacity: .85; letter-spacing: .15em; }
-#scorebox em { display: block; font-style: normal; font-weight: 800; font-size: 18px; color: #ffd23a; min-height: 22px; }
-#scorebox.bump b { animation: bump .25s ease; display: inline-block; }
-@keyframes bump { 0% { transform: scale(1); } 40% { transform: scale(1.25); } 100% { transform: scale(1); } }
-#pops { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-.pop { position: absolute; transform: translate(-50%, -50%); font: 800 18px system-ui, sans-serif; color: #fff; text-shadow: 0 2px 6px rgba(0, 0, 0, .6); animation: popup .9s ease-out forwards; white-space: nowrap; }
-.pop.gold { color: #ffd23a; font-size: 22px; }
-.pop.big { color: #ff7a3a; font-size: 30px; }
-.pop.rank { color: #ffe680; font-size: 26px; animation: rankup 2.6s ease-out forwards; }
-@keyframes popup { 0% { opacity: 0; margin-top: 0; } 15% { opacity: 1; } 100% { opacity: 0; margin-top: -60px; } }
-@keyframes rankup { 0% { opacity: 0; transform: translate(-50%, -50%) scale(.6); } 12% { opacity: 1; transform: translate(-50%, -50%) scale(1.15); } 25% { transform: translate(-50%, -50%) scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
-@media (max-height: 460px) { #scorebox b { font-size: 24px; } }

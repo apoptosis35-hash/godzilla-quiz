@@ -35,21 +35,6 @@ export class Sound {
     }
     o.connect(f).connect(g).connect(this.master); o.start(t); o.stop(t + n * 0.28 + 0.1);
   }
-  // おやつ集め: a bright pop that climbs a major scale with the combo, a ring chime, a rank-up fanfare
-  tone(freq, t, dur, vol, type = 'triangle') {
-    const c = this.ctx, o = c.createOscillator(), g = c.createGain();
-    o.type = type; o.frequency.setValueAtTime(freq, t); o.frequency.exponentialRampToValueAtTime(freq * 1.5, t + dur * 0.3);
-    g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g).connect(this.master); o.start(t); o.stop(t + dur + 0.02);
-  }
-  pop(combo, gold) {
-    if (!this.ctx) return;
-    const scale = [0, 2, 4, 5, 7, 9, 11], k = Math.min(combo - 1, 20), st = scale[k % 7] + 12 * Math.floor(k / 7);
-    const t = this.ctx.currentTime, f = 520 * Math.pow(2, st / 12);
-    this.tone(f, t, 0.12, 0.13); if (gold) { this.tone(f * 1.5, t + 0.06, 0.18, 0.1); this.tone(f * 2, t + 0.12, 0.25, 0.08); }
-  }
-  ring() { if (!this.ctx) return; const t = this.ctx.currentTime; [0, 4, 7, 12].forEach((s, i) => this.tone(660 * Math.pow(2, s / 12), t + i * 0.05, 0.3, 0.09, 'sine')); }
-  fanfare() { if (!this.ctx) return; const t = this.ctx.currentTime; [[0, 0.12], [4, 0.12], [7, 0.12], [12, 0.5]].forEach(([s, d], i) => this.tone(523 * Math.pow(2, s / 12), t + i * 0.13, d + 0.1, 0.12, 'square')); }
   step(hard) {
     const c = this.ctx, t = c.currentTime, s = c.createBufferSource(), g = c.createGain(), f = c.createBiquadFilter();
     s.buffer = this.noise; f.type = 'bandpass'; f.frequency.value = hard ? 1400 : 700; f.Q.value = 1.2;
