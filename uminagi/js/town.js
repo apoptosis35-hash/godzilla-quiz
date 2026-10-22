@@ -5,7 +5,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { ASSETS } from './materials.js';
-import { QY, streetY, TIERS, STAIRS, TIER_X1, SHRINE, PLATEAU, PLATFORMS, platformY, fbm, naturalRaw, G, ISLAND, BRIDGE, TRAM, ROAD } from './terrain.js';
+import { QY, streetY, TIERS, STAIRS, TIER_X1, SHRINE, PLATEAU, PLATFORMS, platformY, fbm, naturalRaw, G, ISLAND, BRIDGE, TRAM, ROAD, HILL_ROAD, HILL_LANES, hillRoadY, TUNNEL } from './terrain.js';
 
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 const H = Math.PI / 2, PI = Math.PI;
@@ -545,12 +545,6 @@ export class Town {
     }
   }
   east(r) {
-    ['house_twostory', 'house_standard', 'house_hipped', 'house_old', 'house_hira', 'house_narrow'].forEach((n, i) => {
-      const p = PLATFORMS.find((q) => q.name === 'east_pad' + (i + 1));
-      this.put(n, (p.x0 + p.x1) / 2, p.y, (p.z0 + p.z1) / 2 + 1, 0, { tint: this.tint(r) });
-      this.put('laundry_pole', p.x0 + 2, p.y, p.z0 + 1.2, 0.2);
-      this.put('plant_pots', p.x1 - 1.5, p.y, p.z1 - 0.8, 0);
-    });
     // the beach: rocks, a boat pulled up on the sand
     for (const [n, x, z, s] of [['rock_c', 118, 66, 1.4], ['rock_c', 104, 94, 1], ['rock_a', 92, 102, 1.2], ['rock_b', 110, 80, 1.3], ['rock_a', 70, 96, 1.5], ['rock_c', 66, 104, 1.3]]) this.put(n, x, null, z, r() * 6, { s });
     this.put('skiff', 86, null, 74, 2.2, { rz: 0.12 });
@@ -659,6 +653,26 @@ export class Town {
       if (Math.floor((x - ROAD.x0) / 2.5) % 3 === 0) B.push(['road_paint', xc, rY(xc) + 0.012, (ROAD.z0 + ROAD.z1) / 2, 2.5, th, line, rs]);
     }
     for (const xc of [80, 97]) for (let z = ROAD.z0 + 0.9; z < ROAD.z1 - 0.6; z += 0.9) B.push(['road_paint', xc, rY(xc) + 0.014, z, 4.0, th, 0.45, rs]);
+    // hill road and lanes: edge lines
+    const HR = HILL_ROAD, hs = -Math.atan((HR.y0 - HR.y1) / (HR.z1 - HR.z0));
+    for (let z = HR.z1 - 1; z > HR.z0 + 1; z -= 2) for (const x of [HR.x0 + 0.3, HR.x1 - 0.3]) {
+      const zc = z - 1; if (x > 59 && HILL_LANES.some((l) => Math.abs(zc - l) < 3)) continue;
+      B.push(['road_paint', x, hillRoadY(zc) + 0.012, zc, 0.12, th, 2.0, 0, hs]);
+    }
+    for (const [k, zc] of HILL_LANES.entries()) {
+      const L = PLATFORMS.find((p) => p.name === 'hill_lane' + (k + 1)), ls = Math.atan((L.ramp[4] - L.ramp[3]) / 44);
+      for (let x = L.x0 + 1; x < L.x1 - 1; x += 2) for (const z of [zc - 1.7, zc + 1.7]) B.push(['road_paint', x + 1, platformY(L, x + 1, zc) + 0.012, z, 2, th, 0.12, ls]);
+    }
+    // the tunnel at the east end of the coast: a concrete box tunnel through the cut in the headland, a portal face,
+    // dark inside, and the hillside filled back over its roof
+    const ty = rY(ROAD.x1), Tn = TUNNEL, zc2 = (Tn.z0 + Tn.z1) / 2, w = Tn.z1 - Tn.z0, L = Tn.x1 - Tn.x0, xm = (Tn.x0 + Tn.x1) / 2;
+    B.push(['concrete', Tn.x0 + 0.5, ty + 4.3, Tn.z0 - 0.9, 1.4, 9.0, 1.8], ['concrete', Tn.x0 + 0.5, ty + 4.3, Tn.z1 + 0.9, 1.4, 9.0, 1.8],
+      ['concrete', Tn.x0 + 0.5, ty + 7.9, zc2, 1.4, 1.8, w + 3.6], ['concrete', Tn.x0 + 0.3, ty + 9.0, zc2, 1.9, 0.5, w + 5]);   // portal frame and parapet
+    B.push(['concrete', xm, ty + 3.6, Tn.z0 - 0.6, L, 8.0, 1.2], ['concrete', xm, ty + 3.6, Tn.z1 + 0.6, L, 8.0, 1.2], ['concrete', xm, ty + 7.6, zc2, L, 0.8, w + 2.4]);
+    B.push(['hill_fill', xm + 1, ty + 8 + 9, zc2, L + 2, 18, w + 3.0]);
+    for (const [za, zb] of [[TRAM.z1, ROAD.z0], [Tn.z0 - 1.5, TRAM.z0], [ROAD.z1, Tn.z1 + 1.5]]) B.push(['hill_fill', 117.2, rY(117) - 1.2, (za + zb) / 2, 18.4, 2.2, zb - za]);   // ground in the cut between the tram and the road                                // earth back over the roof
+    B.push(['tunnel_dark', xm, ty + 3.0, Tn.z0 + 0.1, L, 7, 0.2], ['tunnel_dark', xm, ty + 3.0, Tn.z1 - 0.1, L, 7, 0.2], ['tunnel_dark', xm, ty + 6.6, zc2, L, 0.2, w],
+      ['tunnel_dark', Tn.x1 - 0.2, ty + 3.0, zc2, 0.3, 7, w], ['asphalt', xm, ty - 0.1, zc2, L, 0.2, w]);
     this.boxMeshes(B, 'road_marks');
   }
   // static decorative boxes merged per material (bridge structure, track, markings): [mat, cx, cy, cz, sx, sy, sz, rotZ?, rotX?]
@@ -668,7 +682,7 @@ export class Town {
     for (const [mat, items] of by) {
       const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), this.roadMat(mat), items.length);
       items.forEach(([, x, y, z, sx, sy, sz, rz = 0, rx = 0], i) => { m.compose(new THREE.Vector3(x, y, z), q.setFromEuler(e.set(rx, 0, rz)), new THREE.Vector3(sx, sy, sz)); im.setMatrixAt(i, m); });
-      const flat = mat === 'road_paint' || mat === 'gutter';
+      const flat = mat === 'road_paint' || mat === 'gutter' || mat === 'tunnel_dark';
       im.castShadow = !flat; im.receiveShadow = true; im.name = name; this.root.add(im);
     }
   }
@@ -689,7 +703,16 @@ export class Town {
     for (let x = ROAD.x0 + 3; x < ROAD.x1 - 2; x += 4) if (Math.abs(x - 80) > 4 && Math.abs(x - 97) > 4) P('guardrail', x, rY(x), ROAD.z1 + 0.25, 0, { col: [[4, 0.2]] });
     P('sign_speed', 67, rY(67), ROAD.z0 - 0.4, -H, { col: [[0.2, 0.2]] }); P('sign_speed', 123, rY(123), ROAD.z1 + 0.6, H, { col: [[0.2, 0.2]] });
     P('bus_stop', 106, rY(106), ROAD.z0 - 0.9, 0, { col: [[0.4, 0.4, 0, 0]] }); P('bus_stop', 72, rY(72), ROAD.z1 + 1.2, PI, { col: [[0.4, 0.4, 0, 0]] });
-    P('traffic_light', 99.5, rY(99.5), ROAD.z0 - 0.5, 0, { col: [[0.3, 0.3]] }); P('traffic_light', 94.5, rY(94.5), ROAD.z1 + 0.6, PI, { col: [[0.3, 0.3]] });
+    // the crossing signal: two heads (one per direction) that cycle green -> yellow -> red; the walker shows green on red
+    const lampMat = (on, off, e) => { const m = new THREE.MeshStandardMaterial({ color: off, emissive: e, emissiveIntensity: 0, roughness: 0.25 }); m.userData = { on, off }; return m; };
+    this.signal = { t: 0, state: 'green', m: { g: lampMat(0x1affc0, 0x041410, 0x22ffcc), y: lampMat(0xffb000, 0x140c02, 0xffaa00), r: lampMat(0xff1008, 0x150302, 0xff1a08), pr: lampMat(0xff1008, 0x150302, 0xff1a08), pg: lampMat(0x1affc0, 0x041410, 0x22ffcc) }, x: 97 };
+    const swap = { rd_sig_off_g: 'g', rd_sig_off_y: 'y', rd_sig_red: 'r', rd_sig_off_r: 'pr', rd_sig_green: 'pg' };
+    for (const [x, z, ry] of [[99.5, ROAD.z0 - 0.5, 0], [94.5, ROAD.z1 + 0.6, PI]]) {
+      const o = this.clone('traffic_light', x, rY(x), z, ry);
+      o.traverse((m) => { if (m.isMesh && swap[m.material.name]) m.material = this.signal.m[swap[m.material.name]]; });
+      this.collide('traffic_light', x, rY(x), z, ry, 1, 5, [[0.3, 0.3]]);
+    }
+    this.setSignal('green');
     // a small car park on the harbour apron, with painted bays
     const bays = [], cars = ['car_kei', 'car_kei_b', 'car_sedan'];
     for (let i = 0; i < 6; i++) {
@@ -698,88 +721,149 @@ export class Town {
     }
     bays.push(['road_paint', 36.5 + 6 * 2.6 - 1.3, QY + 0.012, 1.5, 0.12, 0.02, 5]);
     this.boxMeshes(bays, 'parking');
-    // cars parked by the hillside-pad houses
-    for (let i = 1; i <= 6; i++) {
-      const p = PLATFORMS.find((q) => q.name === 'east_pad' + i);
-      if (p && r() < 0.8) P(cars[Math.floor(r() * 3)], p.x0 + 1.3, p.y, p.z1 - 2.6, (r() < 0.5 ? 0 : PI));
-    }
-    // traffic: cars driving both ways on the coastal road (they keep left; they slow down for the player)
+    // traffic: cars follow a there-and-back route keeping left: out of the tunnel at the east end of the coast road,
+    // across the harbour apron, up the shopping street, round the plaza and back the same way into the tunnel
+    const out = [[150, 19], [127, 19], [64, 19], [58, 14.5], [55.5, 5], [52.5, -3.5], [42.5, -4.5], [40, -7.5], [40, -94], [40, -99]];
+    const turn = []; for (let k = 0; k <= 10; k++) { const a = Math.PI / 2 - k / 10 * Math.PI * 2; turn.push([40 + Math.cos(a) * 3.2, -103.2 + Math.sin(a) * 3.2]); }   // round the plaza
+    const ring = [...out, ...turn.slice(1, -1), ...out.slice().reverse()];
+    const pts = ring.map(([x, z]) => new THREE.Vector2(x, z)), cum = [0];
+    for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + pts[k].distanceTo(pts[k - 1]));
+    this.route = { pts, cum, len: cum[cum.length - 1] };
     this.traffic = [];
-    for (let i = 0; i < 5; i++) {
-      const name = cars[i % 3], east = i % 2 === 0, o = this.clone(name, 0, 0, 0, east ? H : -H, 'tex');
-      const col = { type: 'b', x: 0, z: 0, hw: 0.8, hd: 2.1, c: Math.cos(H), s: Math.sin(H), y0: 0, y1: 0 }; this.colliders.push(col);
-      this.traffic.push({ o, col, east, z: east ? 17.6 : 20.4, x: ROAD.x0 + 4 + r() * (ROAD.x1 - ROAD.x0 - 8), v: 8 + r() * 3, sp: 0 });
+    const n = Math.round(7 * Math.min(1, this.q.lod / 0.85)) || 3;
+    for (let k = 0; k < n; k++) {
+      const name = cars[k % 3], o = this.clone(name, 0, 0, 0, 0, 'tex');
+      const col = { type: 'b', x: 0, z: 0, hw: 0.85, hd: 2.15, c: 1, s: 0, y0: -9, y1: -9 }; this.colliders.push(col);
+      this.traffic.push({ o, col, s: this.route.len * k / n + r() * 8, v: 0, cruise: 0.9 + r() * 0.25, ry: 0 });
     }
     this.trafficY = rY;
   }
+  // position on the route (keep-left lane offset) and heading at distance s
+  routeAt(s) {
+    const R = this.route; s = ((s % R.len) + R.len) % R.len;
+    let k = 1; while (k < R.cum.length - 1 && R.cum[k] < s) k++;
+    const a = R.pts[k - 1], b = R.pts[k], t = (s - R.cum[k - 1]) / Math.max(1e-6, R.cum[k] - R.cum[k - 1]);
+    const dx = b.x - a.x, dz = b.y - a.y, l = Math.hypot(dx, dz) || 1, ux = dx / l, uz = dz / l;
+    return { x: a.x + dx * t + uz * 1.6, z: a.y + dz * t - ux * 1.6, ux, uz };
+  }
+  setSignal(st) {
+    const S = this.signal; S.state = st;
+    const on = { g: st === 'green', y: st === 'yellow', r: st === 'red', pr: st !== 'red', pg: st === 'red' };
+    for (const [k, m] of Object.entries(S.m)) { m.color.setHex(on[k] ? m.userData.on : m.userData.off); m.emissiveIntensity = on[k] ? 2.2 : 0; }
+  }
   updateTraffic(dt, player) {
+    const S = this.signal;
+    if (S) {   // green 14 s, yellow 3 s, red 9 s
+      S.t += dt; const c = S.t % 26, st = c < 14 ? 'green' : c < 17 ? 'yellow' : 'red';
+      if (st !== S.state) this.setSignal(st);
+    }
     const T = this.traffic; if (!T) return;
+    const R = this.route, obst = [];
+    if (player) obst.push(player);
+    for (const n of this.npcs) obst.push(n.o.position);
     for (const c of T) {
-      const dir = c.east ? 1 : -1;
-      // brake for the player or a car ahead in the same lane
-      let block = 99;
-      if (player && Math.abs(player.z - c.z) < 2.2) { const d = (player.x - c.x) * dir; if (d > 0) block = Math.min(block, d); }
-      for (const o of T) if (o !== c && o.east === c.east) { const d = (o.x - c.x) * dir; if (d > 0) block = Math.min(block, d); }
-      const want = block < 7 ? 0 : block < 16 ? c.v * (block - 7) / 9 : c.v;
-      c.sp += (want - c.sp) * Math.min(1, dt * (want < c.sp ? 4 : 1.2));
-      c.x += dir * c.sp * dt;
-      if (c.east ? c.x > ROAD.x1 + 1 : c.x < ROAD.x0 - 1) c.x = c.east ? ROAD.x0 - 1 : ROAD.x1 + 1;   // drive off and come round again
-      const edge = Math.min(c.x - (ROAD.x0 - 1), ROAD.x1 + 1 - c.x), k = Math.min(1, Math.max(0, edge / 3));
-      const y = this.trafficY(Math.min(ROAD.x1, Math.max(ROAD.x0, c.x)));
-      c.o.position.set(c.x, y, c.z); c.o.scale.setScalar(k < 1 ? Math.max(0.001, k) : 1);
-      c.col.x = c.x; c.col.z = c.z; c.col.y0 = y - 0.5; c.col.y1 = k > 0.5 ? y + 1.7 : y - 0.5;
+      const p = this.routeAt(c.s);
+      // free distance ahead: people on the lane, the car in front, the stop line on red / yellow
+      let free = 99;
+      for (const o of obst) {
+        const rx = o.x - p.x, rz = o.z - p.z, along = rx * p.ux + rz * p.uz, side = Math.abs(rx * p.uz - rz * p.ux);
+        if (along > 0 && along < 20 && side < 1.7) free = Math.min(free, along - 3);
+      }
+      for (const o of T) if (o !== c) { let d = o.s - c.s; d = ((d % R.len) + R.len) % R.len; if (d < 30) free = Math.min(free, d - 6.5); }
+      if (S && S.state !== 'green' && Math.abs(p.z - 19) < 4 && Math.abs(p.x - S.x) < 40) {
+        const d = (S.x - 3.4 * Math.sign(p.ux) - p.x) * Math.sign(p.ux);
+        if (Math.abs(p.ux) > 0.8 && d > (S.state === 'yellow' ? 4 : -0.5)) free = Math.min(free, d);
+      }
+      const limit = (p.x > 62 ? 11 : 6) * c.cruise;
+      const want = free <= 0 ? 0 : Math.min(limit, Math.sqrt(2 * 3.5 * free));
+      c.v += Math.max(-9 * dt, Math.min(2.5 * dt, want - c.v));
+      c.s = (c.s + c.v * dt) % R.len;
+      const q = this.routeAt(c.s), ry = Math.atan2(q.ux, q.uz);
+      let da = ry - c.ry; da = Math.atan2(Math.sin(da), Math.cos(da)); c.ry += da * Math.min(1, dt * 6);
+      const hidden = q.x > 128.5;   // inside the tunnel
+      const y = hidden ? -50 : this.at(q.x, q.z);
+      c.o.visible = !hidden; c.o.position.set(q.x, y, q.z); c.o.rotation.y = c.ry;
+      c.col.x = q.x; c.col.z = q.z; c.col.c = Math.cos(c.ry); c.col.s = Math.sin(c.ry); c.col.y0 = y - 0.5; c.col.y1 = hidden ? -50 : y + 1.7;
     }
   }
   // paint and gutter lids: worn road paint, darker concrete lids; drawn just above the road without z-fighting
   roadMat(name) {
+    if (name === 'tunnel_dark') return (this.tunnelMat ||= new THREE.MeshStandardMaterial({ name, color: 0x0a0b0c, roughness: 1 }));
+    if (name === 'hill_fill') return (this.fillMat ||= new THREE.MeshStandardMaterial({ name, color: 0x55703a, roughness: 1 }));
     if (name !== 'road_paint' && name !== 'gutter') return this.mats.get(name);
     this.roadMats ||= {};
     return (this.roadMats[name] ||= new THREE.MeshStandardMaterial({ name, color: name === 'road_paint' ? 0xd8d8d0 : 0x77756f, roughness: name === 'road_paint' ? 0.75 : 0.95, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
   }
   // houses climbing the natural hillsides around the town (the concept's stacked village): each faces downhill
   // and stands on a dry-stone retaining base that makes up the slope under it
+  // the upper town on the east hill: houses in rows along the hill road and its three lanes, each facing its road
+  // and standing on a dry-stone base that makes up the slope; cars parked beside some of them
   hillside(r) {
-    const g = this.ground, want = Math.round(62 * Math.min(1, this.q.lod / 0.85) ** 2), names = ['house_old', 'house_narrow', 'house_hira', 'house_standard', 'house_hillside', 'house_old', 'house_twostory'];
-    const nearPlat = (x, z, rad) => { for (let a = 0; a < 8; a++) if (g.platformAt(x + Math.cos(a * 0.785) * rad, z + Math.sin(a * 0.785) * rad)) return true; return g.platformAt(x, z); };
-    const placed = [], bases = [];
-    for (let i = 0; i < 6000 && placed.length < want; i++) {
-      const x = G.x0 + 8 + r() * (G.x1 - G.x0 - 16), z = G.z0 + 8 + r() * (G.z1 - G.z0 - 40);
-      if (x < -95 && z > -45) continue;                                       // keep the lighthouse headland wooded
-      const h = g.natAt(x, z); if (h < 4 || h > 46) continue;
-      const gx = (g.natAt(x + 3, z) - g.natAt(x - 3, z)) / 6, gz = (g.natAt(x, z + 3) - g.natAt(x, z - 3)) / 6;
-      if (Math.hypot(gx, gz) > 0.85) continue;                                // not on the cliffs
-      if (nearPlat(x, z, 8)) continue;
-      if (placed.some(([px, pz]) => Math.hypot(px - x, pz - z) < 9.5)) continue;
-      if (this.colliders.some((c) => Math.abs(c.x - x) < 9 + (c.hw || c.r || 0) && Math.abs(c.z - z) < 9 + (c.hd || c.r || 0))) continue;
-      const n = names[Math.floor(r() * names.length)], b = this.protos[n].box;
-      const ry = Math.round(Math.atan2(-gx, -gz) / (Math.PI / 12)) * (Math.PI / 12);   // front (+z) downhill, snapped to 15°
-      const c = Math.cos(ry), sn = Math.sin(ry), hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+    const g = this.ground, names = ['house_old', 'house_narrow', 'house_hira', 'house_standard', 'house_hillside', 'house_twostory', 'house_hipped'];
+    const HR = HILL_ROAD, bases = [], keep = Math.min(1, this.q.lod / 0.85);
+    const tryHouse = (n, cx, cz, ry, roadY) => {
+      const b = this.protos[n].box, c = Math.cos(ry), sn = Math.sin(ry), hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
       let hi = -1e9, lo = 1e9;
       for (const [lx, lz] of [[-hw, -hd], [hw, -hd], [-hw, hd], [hw, hd], [0, 0]]) {
-        const wx = x + lx * c + lz * sn, wz = z - lx * sn + lz * c, hh = g.natAt(wx, wz);
-        if (g.platformAt(wx, wz)) { hi = 1e9; break; }
-        hi = Math.max(hi, hh); lo = Math.min(lo, hh);
+        const wx = cx + lx * c + lz * sn, wz = cz - lx * sn + lz * c;
+        if (g.platformAt(wx, wz)) return false;
+        const hh = g.natAt(wx, wz); hi = Math.max(hi, hh); lo = Math.min(lo, hh);
       }
-      if (hi > 1e8 || hi - lo > 5) continue;
-      const y = hi + 0.1;
-      this.put(n, x, y, z, ry, { tint: this.tint(r) });
-      placed.push([x, z]); bases.push([x, z, ry, hw * 2 * 0.92, hd * 2 * 0.92, y, lo - 0.6]);
-      // a bit of life round the house
-      const fx = x + Math.sin(ry) * (hd + 1.2), fz = z + Math.cos(ry) * (hd + 1.2);
-      if (r() < 0.45) this.put(r() < 0.5 ? 'plant_pots' : 'hydrangea', fx + Math.cos(ry) * 2, y, fz - Math.sin(ry) * 2, ry, { col: false });
-      if (r() < 0.3) this.put('laundry_pole', fx - Math.cos(ry) * 2, y, fz + Math.sin(ry) * 2, ry, { col: false });
+      if (this.colliders.some((q) => Math.abs(q.x - cx) < hw + (q.hw || q.r || 0) + 0.5 && Math.abs(q.z - cz) < hd + (q.hd || q.r || 0) + 0.5)) return false;
+      const y = Math.max(roadY + 0.15, Math.min(hi, roadY + 2.5) + 0.1);
+      this.put(n, cx, y, cz, ry, { tint: this.tint(r) });
+      bases.push([cx, cz, ry, hw * 2 * 0.92, hd * 2 * 0.92, y, Math.min(lo, y) - 0.6]);
+      const fx = cx + sn * (hd + 0.9), fz = cz + c * (hd + 0.9);   // in front of the house, by the road
+      if (r() < 0.4) this.put(r() < 0.5 ? 'plant_pots' : 'hydrangea', fx + c * (hw - 0.8), y, fz - sn * (hw - 0.8), ry, { s: 0.8, col: false });
+      if (r() < 0.25) this.put('laundry_pole', cx - c * (hw + 1.2), y, cz + sn * (hw + 1.2), ry + H, { col: false });
+      return { hw, hd, y };
+    };
+    let count = 0;
+    // along the lanes: a row on each side, fronts facing the lane
+    for (const zc of HILL_LANES) {
+      const lane = PLATFORMS.find((p) => p.name === 'hill_lane' + (HILL_LANES.indexOf(zc) + 1));
+      for (const side of [-1, 1]) {
+        let x = HR.x1 + 11 + r() * 2;
+        while (x < lane.x1 - 4) {
+          if (r() > keep) { x += 10; continue; }
+          const n = names[Math.floor(r() * names.length)], b = this.protos[n].box, hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+          const cz = zc + side * (2 + 1.0 + hd), ry = side < 0 ? 0 : PI;
+          const roadY = platformY(lane, x + hw, zc);
+          const h = tryHouse(n, x + hw, cz, ry, roadY);
+          if (h && r() < 0.35) {   // a car parked in the gap next to the house
+            const cx = x + hw * 2 + 1.4; if (cx < lane.x1 - 3) this.put(['car_kei', 'car_kei_b', 'car_sedan'][Math.floor(r() * 3)], cx, h.y, zc + side * 4.6, ry + (r() - 0.5) * 0.1);
+            x += 3.2;
+          }
+          if (h) count++;
+          x += hw * 2 + 1.2 + r() * 2;
+        }
+      }
     }
+    // along the east side of the hill road, between the lanes
+    let z = HR.z1 - 6;
+    while (z > HR.z0 + 6) {
+      if (HILL_LANES.some((zc) => Math.abs(z - zc) < 9) || r() > keep) { z -= 4; continue; }
+      const n = names[Math.floor(r() * names.length)], b = this.protos[n].box, hw = (b.max.x - b.min.x) / 2, hd = (b.max.z - b.min.z) / 2;
+      if (HILL_LANES.some((zc) => Math.abs(z - hw - zc) < 2.5 + hw * 2)) { z -= 2; continue; }
+      if (tryHouse(n, HR.x1 + 1.0 + hd, z - hw, -H, hillRoadY(z - hw))) count++;
+      z -= hw * 2 + 1.5 + r() * 2;
+    }
+    // utility poles along the hill road and the lanes, with wires
+    const poles = []; for (let zz = HR.z1 - 4; zz > HR.z0 + 2; zz -= 14) { this.put('utility_pole', HR.x1 + 0.5, hillRoadY(zz), zz, 0); poles.push([HR.x1 + 0.5, zz]); }
+    this.poleLines.push(poles);
+    for (const zc of HILL_LANES) { const lp = []; for (let xx = HR.x1 + 6; xx < HR.x1 + 44; xx += 14) { this.put('utility_pole', xx, null, zc - 2.3, H); lp.push([xx, zc - 2.3]); } this.poleLines.push(lp); }
     // dry-stone bases (instanced boxes)
-    if (!bases.length) return;
-    const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), null, bases.length), m = new THREE.Matrix4();
-    bases.forEach(([x, z, ry, w, d, top, bot], i) => {
-      m.compose(new THREE.Vector3(x, (top + bot) / 2, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(w + 0.6, top - bot, d + 0.6));
-      im.setMatrixAt(i, m);
-    });
-    const mat = this.mats.get('stone_wall').clone(); mat.map = mat.map.clone(); mat.map.repeat.set(3, 1.2);
-    if (mat.normalMap) { mat.normalMap = mat.normalMap.clone(); mat.normalMap.repeat.set(3, 1.2); }
-    im.material = mat; im.castShadow = im.receiveShadow = true; im.name = 'hill_bases'; this.root.add(im);
-    this.hillHouses = placed.length;
+    if (bases.length) {
+      const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), null, bases.length), m = new THREE.Matrix4();
+      bases.forEach(([x, z, ry, w, d, top, bot], i) => {
+        m.compose(new THREE.Vector3(x, (top + bot) / 2, z), new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), ry), new THREE.Vector3(w + 0.6, top - bot, d + 0.6));
+        im.setMatrixAt(i, m);
+      });
+      const mat = this.mats.get('stone_wall').clone(); mat.map = mat.map.clone(); mat.map.repeat.set(3, 1.2);
+      if (mat.normalMap) { mat.normalMap = mat.normalMap.clone(); mat.normalMap.repeat.set(3, 1.2); }
+      im.material = mat; im.castShadow = im.receiveShadow = true; im.name = 'hill_bases'; this.root.add(im);
+    }
+    this.hillHouses = count;
   }
   // ------------------------------------------------------------------ forest, grass and garden greenery on natural ground
   nature(r) {
@@ -886,12 +970,12 @@ export class Town {
     N('fisherman', -40, 19.5, 0, [[-40, 19.5], [-4, 19.5], [20, 19.8], [-4, 19.5]]);
     N('shopkeeper', 8, 15.5, PI * 0.7);
     N('shopkeeper', 35.4, -10, H); N('shopkeeper', 35.4, -42, H); N('shopkeeper', 44.4, -28, -H); N('shopkeeper', 44.6, -57, -H);
-    N('townsman', 39, -12, PI, [[39, -12], [39.5, -60], [40, -94], [39.5, -60]]);
-    N('townsman', 41, -80, 0, [[41, -80], [41, -30], [42, -8], [41, -30]]);
-    N('shopkeeper', 38, -30, 0, [[38, -30], [38.5, -75], [38, -30], [38.5, -12]]);
-    N('townsman', 43, -45, PI, [[43, -45], [42.5, -15], [43, -45], [43.5, -88]]);
-    N('fisherman', 37.5, -64, 0, [[37.5, -64], [38, -22], [37.5, -64]]);
-    N('townsman', 36.6, -50, H); N('shopkeeper', 43.6, -38, -H); N('townsman', 36.8, -72, H * 0.8);
+    N('townsman', 35.6, -12, PI, [[35.6, -12], [35.8, -60], [35.6, -94], [35.8, -60]]);
+    N('townsman', 44.4, -80, 0, [[44.4, -80], [44.3, -30], [44.4, -9], [44.3, -30]]);
+    N('shopkeeper', 35.4, -30, 0, [[35.4, -30], [35.6, -75], [35.4, -30], [35.6, -12]]);
+    N('townsman', 44.6, -45, PI, [[44.6, -45], [44.5, -15], [44.6, -45], [44.5, -88]]);
+    N('fisherman', 35.8, -64, 0, [[35.8, -64], [35.6, -22], [35.8, -64]]);
+    N('townsman', 35.4, -50, H); N('shopkeeper', 44.6, -38, -H); N('townsman', 35.6, -72, H * 0.8);
     N('shopkeeper', -10, -16, 0, [[-30, -16], [10, -16]]);
     N('townsman', -40, -36, 0, [[-50, -36], [0, -36], [16, -36]]);
     N('townsman', -9, -118, 0); N('townsman', -110, 4, PI * 0.8);

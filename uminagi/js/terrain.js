@@ -20,6 +20,9 @@ export const BRIDGE = { x0: 95, x1: 99, z0: 92, z1: 182, y: 3.2 };
 export const TRAM = { x0: 64, x1: 126, z0: 6, z1: 12, y0: 1.6, y1: 3.8 };
 // the coastal road (two lanes, like the road along the beach at Enoshima)
 export const ROAD = { x0: 64, x1: 126, z0: 15.5, z1: 22.5, y0: 1.6, y1: 3.0 };
+export const HILL_ROAD = { x0: 56, x1: 60, z0: -110, z1: -14, y0: 16.6, y1: 1.6 };   // y0 at the top (z0), y1 at the harbour
+export const HILL_LANES = [-34, -58, -82];
+export const hillRoadY = (z) => HILL_ROAD.y1 + (HILL_ROAD.y0 - HILL_ROAD.y1) * (HILL_ROAD.z1 - z) / (HILL_ROAD.z1 - HILL_ROAD.z0);
 
 // ---------------------------------------------------------------- platforms
 // {x0,x1,z0,z1, y | ramp:[axis, a, b, ya, yb], mat, wall:'stone'|'concrete'|'none', stairs, blend, top, curb}
@@ -73,23 +76,24 @@ function layout() {
   P({ name: 'cliff3', x0: -96, x1: -86, z0: -26, z1: -20, ramp: rampX(-86, -96, 31, PLATEAU.y), mat: 'granite', wall: 'stone', stairs: true });
   P({ name: 'plateau', x0: PLATEAU.x0, x1: PLATEAU.x1, z0: PLATEAU.z0, z1: PLATEAU.z1, y: PLATEAU.y, mat: 'grass', wall: 'stone', fence: 'plateau' });
   P({ name: 'deck', x0: -103.2, x1: -96.8, z0: -0.2, z1: 6.2, y: PLATEAU.y + 0.2, wall: 'none', top: false });
-  // small terraces for houses on the east hillside (height follows the natural ground)
-  P({ name: 'east_pad1', x0: 59, x1: 73, z0: -36, z1: -24, y: 'auto', mat: 'dirt', wall: 'stone' });
-  P({ name: 'east_pad2', x0: 59, x1: 73, z0: -60, z1: -48, y: 'auto', mat: 'dirt', wall: 'stone' });
-  P({ name: 'east_pad3', x0: 60, x1: 74, z0: -84, z1: -72, y: 'auto', mat: 'dirt', wall: 'stone' });
-  P({ name: 'east_pad4', x0: 77, x1: 91, z0: -46, z1: -34, y: 'auto', mat: 'dirt', wall: 'stone' });
-  P({ name: 'east_pad5', x0: 78, x1: 92, z0: -72, z1: -60, y: 'auto', mat: 'dirt', wall: 'stone' });
-  P({ name: 'east_pad6', x0: 76, x1: 90, z0: -22, z1: -10, y: 'auto', mat: 'dirt', wall: 'stone' });
+  // the east hill: a road climbing north from the harbour behind the east-side shops, and three lanes branching
+  // off it up the hillside; the houses of the upper town stand along them
+  const HR = HILL_ROAD;
+  P({ name: 'hill_road', x0: HR.x0, x1: HR.x1, z0: HR.z0, z1: HR.z1, ramp: rampZ(HR.z1, HR.z0, HR.y1, HR.y0), mat: 'asphalt', wall: 'stone' });
+  for (const [i, zc] of HILL_LANES.entries()) {
+    const y0 = hillRoadY(zc), y1 = Math.min(y0 + 0.2 * 44, Math.max(y0, naturalRaw(HR.x1 + 44, zc) + 0.3));   // gentle enough to stay a smooth ramp
+    P({ name: 'hill_lane' + (i + 1), x0: HR.x1, x1: HR.x1 + 44, z0: zc - 2, z1: zc + 2, ramp: rampX(HR.x1, HR.x1 + 44, y0, y1), mat: 'asphalt', wall: 'stone' });
+  }
   // the bridge to the island: ramps at both ends, a level deck over the water (no walls: it stands on piers)
   const B = BRIDGE, hb = naturalRaw((B.x0 + B.x1) / 2, B.z0) + 0.05, hi = naturalRaw((B.x0 + B.x1) / 2, B.z1) + 0.05;
   P({ name: 'bridge_s', x0: B.x0, x1: B.x1, z0: B.z0, z1: B.z0 + 7, ramp: rampZ(B.z0, B.z0 + 7, hb, B.y), mat: 'paving', wall: 'none', blend: false });
   P({ name: 'bridge', x0: B.x0, x1: B.x1, z0: B.z0 + 7, z1: B.z1 - 7, y: B.y, mat: 'paving', wall: 'none', blend: false });
   P({ name: 'bridge_n', x0: B.x0, x1: B.x1, z0: B.z1 - 7, z1: B.z1, ramp: rampZ(B.z1 - 7, B.z1, B.y, hi), mat: 'paving', wall: 'none', blend: false });
   // the coastal tram: a ballast bed from the end of the harbour apron along the shore, and a station platform
-  P({ name: 'tram', x0: TRAM.x0, x1: TRAM.x1, z0: TRAM.z0, z1: TRAM.z1, ramp: rampX(TRAM.x0, TRAM.x1, TRAM.y0, TRAM.y1), mat: 'granite', wall: 'stone', blend: true });
+  P({ name: 'tram', x0: TRAM.x0, x1: TRAM.x1, z0: TRAM.z0, z1: TRAM.z1, ramp: rampX(TRAM.x0, TRAM.x1, TRAM.y0, TRAM.y1), mat: 'granite', wall: 'stone', blend: false });
   const sy = TRAM.y0 + (TRAM.y1 - TRAM.y0) * (78 - TRAM.x0) / (TRAM.x1 - TRAM.x0) + 0.9;
   P({ name: 'tram_station', x0: 70, x1: 86, z0: TRAM.z1, z1: TRAM.z1 + 3.2, y: sy, mat: 'paving', wall: 'stone' });
-  P({ name: 'coast_road', x0: ROAD.x0, x1: ROAD.x1, z0: ROAD.z0, z1: ROAD.z1, ramp: rampX(ROAD.x0, ROAD.x1, ROAD.y0, ROAD.y1), mat: 'asphalt', wall: 'concrete', blend: true });
+  P({ name: 'coast_road', x0: ROAD.x0, x1: ROAD.x1, z0: ROAD.z0, z1: ROAD.z1, ramp: rampX(ROAD.x0, ROAD.x1, ROAD.y0, ROAD.y1), mat: 'asphalt', wall: 'concrete', blend: false });
   const ry = (x) => ROAD.y0 + (ROAD.y1 - ROAD.y0) * (x - ROAD.x0) / (ROAD.x1 - ROAD.x0);
   P({ name: 'station_stair', x0: 86, x1: 90, z0: TRAM.z1 + 0.2, z1: ROAD.z0, ramp: rampX(86, 90, sy, ry(90)), mat: 'granite', wall: 'stone', stairs: true });
 }
@@ -132,7 +136,13 @@ function vnoise(x, z) {
 export function fbm(x, z, oct = 4) { let s = 0, a = 0.5, f = 1; for (let k = 0; k < oct; k++) { s += a * vnoise(x * f, z * f); f *= 2.03; a *= 0.5; } return s; }
 const smooth = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
+// the corridor cut through the east headland for the coastal road and the tram (covered by a box tunnel)
+export const TUNNEL = { x0: 126.4, x1: 175, z0: 4.8, z1: 23.5 };
 export function naturalRaw(x, z) {
+  if (x > 108 && x < TUNNEL.x1 && z > TUNNEL.z0 - 1.5 && z < TUNNEL.z1 + 1.5) return Math.min(naturalRaw0(x, z), 1.5 + Math.max(0, 122 - x) * 0.12);
+  return naturalRaw0(x, z);
+}
+function naturalRaw0(x, z) {
   const sea = naturalBase(x, z);
   // the island: a wooded dome with steep rocky shores, rising out of the sea floor
   const id = Math.hypot(x - ISLAND.x, (z - ISLAND.z) * 1.15), k = 1 - id / ISLAND.r;
@@ -159,6 +169,7 @@ function naturalBase(x, z) {
   h += 20 * Math.exp(-(((x + 98) / 30) ** 2)) * smooth(30, -30, z) * (1 - smooth(-140, -220, z));  // ridge west of the town
   h += 28 * smooth(60, 140, x) * smooth(30, -50, z);                           // eastern hills
   h += 26 * smooth(-150, -260, x);                                             // far western mountains
+  h += 20 * smooth(118, 128, x) * smooth(44, 28, z) * smooth(-30, -8, z);     // headland at the east end of the beach (the road tunnels through)
   h += (n - 0.5) * 6 + fbm(x * 0.09, z * 0.09, 3) * 1.5;
   const beachLand = smooth(64, 80, x) * smooth(20, 60, z) * (1 - smooth(100, 130, x));
   // the lighthouse headland and the western coast drop into the sea as sheer rock cliffs
