@@ -95,7 +95,7 @@ PALETTE.update({   # second pass (poles, lights)
     'st_stain': P((0.3, 0.29, 0.27), 0.95), 'st_rust': P((0.42, 0.22, 0.1), 0.85, 0.2), 'st_porcelain': P((0.55, 0.38, 0.25), 0.25),
     'st_closure': P((0.12, 0.12, 0.13), 0.6), 'st_lamp_body': P((0.46, 0.48, 0.5), 0.45, 0.5), 'st_reflector': P((0.95, 0.5, 0.05), 0.2, e=(1.0, 0.45, 0.05), es=0.2),
 })
-PALETTE.update({'st_ic_reader': P((0.08, 0.09, 0.1), 0.3), 'st_post_seam': P((0.32, 0.02, 0.015), 0.5), 'st_post_grime': P((0.36, 0.05, 0.035), 0.7), 'st_damp': P((0.1, 0.1, 0.06), 0.95), 'st_chochin_rib': P((0.45, 0.06, 0.03), 0.7), 'hb_buoy_grime': P((0.5, 0.22, 0.06), 0.6)})
+PALETTE.update({'st_ic_reader': P((0.08, 0.09, 0.1), 0.3), 'st_post_seam': P((0.32, 0.02, 0.015), 0.5), 'st_post_grime': P((0.36, 0.05, 0.035), 0.7), 'st_damp': P((0.1, 0.1, 0.06), 0.95), 'st_chochin_rib': P((0.45, 0.06, 0.03), 0.7), 'st_algae': P((0.3, 0.32, 0.26), 0.9), 'hb_buoy_grime': P((0.5, 0.22, 0.06), 0.6)})
 PALETTE.update({'st_lichen': P((0.62, 0.66, 0.5), 0.95), 'st_carved': P((0.25, 0.24, 0.22), 0.85), 'st_carved_dk': P((0.11, 0.11, 0.1), 0.9), 'st_moss_dk': P((0.1, 0.16, 0.05), 1.0)})
 # --- st palette end
 MATS, IMAGES = {}, {}
@@ -3005,7 +3005,7 @@ def tetrapod():
                    for t in (0.0, 0.5, 1.0)]
             _hb_tube('hb_iron_rust', pts, 0.0, 3, cap=False, radii=[0.02, 0.014, 0.003])
     for k, d in enumerate(dirs[1:]):   # green slime where the lower legs sat in the splash zone
-        _hb_lathe('hb_slime', [(0.478, 1.1), (0.454, 1.2), (0.426, 1.3)], 16, c, d.to_track_quat('Z', 'Y').to_euler(), caps=False)
+        _hb_lathe('st_algae', [(0.461, 1.15), (0.446, 1.22), (0.43, 1.28), (0.414, 1.34)], 16, c, d.to_track_quat('Z', 'Y').to_euler(), caps=False)
 
 def _hb_rrect(w, d, c, z):
     hw, hd = w / 2, d / 2
@@ -3657,9 +3657,9 @@ def utility_pole():
 def street_light():
     # galvanised street light: footing with anchor nuts, base cover with an access door, tapered pole with a
     # neighbourhood plate, a swan-neck arm with a scroll brace and a flat LED head (lit lens about 5 m up, 0.65 m out)
-    _st_rbox('concrete', 0.42, 0.42, [(0.0, 0.04, 0.0), (0.0, 0.04, 0.05), (0.02, 0.03, 0.08)], 2)
+    _st_rbox('concrete', 0.36, 0.36, [(0.0, 0.04, 0.0), (0.0, 0.04, 0.05), (0.015, 0.03, 0.08)], 2)
     for a in range(4):
-        x, y = 0.12 * math.cos(a * math.pi / 2 + math.pi / 4), 0.12 * math.sin(a * math.pi / 2 + math.pi / 4)
+        x, y = 0.11 * math.cos(a * math.pi / 2 + math.pi / 4), 0.11 * math.sin(a * math.pi / 2 + math.pi / 4)
         cyl('steel_dark', 0.016, 0.04, (x, y, 0.08), 6); cyl('st_galv', 0.007, 0.06, (x, y, 0.08), 4)
     cyl('st_galv', 0.15, 0.02, (0, 0, 0.08), 12)
     _st_lathe('st_galv', [(0.135, 0.1), (0.135, 0.14), (0.12, 0.17), (0.115, 0.6), (0.122, 0.62), (0.122, 0.65), (0.09, 0.7)], 12)
@@ -3686,8 +3686,8 @@ def street_light():
     for k in range(5):
         x = -0.1 + k * 0.05
         box2('steel_dark', x - 0.008, x + 0.008, -0.86, -0.5, zc + 0.06, zc + 0.115 - abs(x) * 0.25)
-    _hb_tube('st_galv', [(0.18, -0.45, zc - 0.045), (0.185, -0.7, zc - 0.05), (0.16, -0.9, zc - 0.045), (0.0, -1.0, zc - 0.035), (-0.16, -0.9, zc - 0.045),
-                         (-0.185, -0.7, zc - 0.05), (-0.18, -0.45, zc - 0.045)], 0.012, 4, cap=False)                # lens bezel
+    _hb_tube('st_galv', [(0.15, -0.45, zc - 0.045), (0.163, -0.7, zc - 0.05), (0.14, -0.9, zc - 0.045), (0.0, -0.99, zc - 0.035), (-0.14, -0.9, zc - 0.045),
+                         (-0.163, -0.7, zc - 0.05), (-0.15, -0.45, zc - 0.045)], 0.012, 4, cap=False)                # lens bezel
     o = cyl('lamp', 0.14, 0.02, (0, -0.68, zc - 0.07), 16); o.scale = (1.0, 1.45, 1.0)
     cyl('white', 0.028, 0.035, (0, -0.47, zc + 0.08), 8); ico('st_pet', 0.026, (0, -0.47, zc + 0.115), (1, 1, 0.6), 1)   # photocell
     box2('steel_dark', -0.04, 0.04, -0.4, -0.36, zc - 0.03, zc + 0.04)
@@ -3945,7 +3945,7 @@ def chochin_hanging():
     for i in range(2, N - 1, 2):   # bamboo ribs showing through the paper
         torus('st_chochin_rib', r * (0.55 + 0.45 * math.sin(i / N * math.pi)) * 1.012, 0.0045, (0, 0, i / N * h), seg=14, rseg=3)
     _hb_tube('rope', [(0, 0, -0.075), (0.005, -0.005, -0.09), (0.0, 0.0, -0.105)], 0.008, 4)            # tassel cord
-    _st_lathe('cloth_red', [(0.01, -0.105), (0.026, -0.14), (0.03, -0.165), (0.0, -0.17)], 8)          # tassel
+    _st_lathe('cloth_red', [(0.01, -0.1), (0.026, -0.125), (0.03, -0.145), (0.0, -0.15)], 8)          # tassel
     text3d('ink', '祭', 0.19, (0, -0.214, h / 2), depth=0.014)
     text3d('ink', '祭', 0.19, (0, 0.214, h / 2), rz=math.pi, depth=0.014)
 
