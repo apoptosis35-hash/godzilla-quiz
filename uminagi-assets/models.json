@@ -771,8 +771,8 @@
    10.34,
    20.23
   ],
-  "tris": 20452,
-  "lod1_tris": 5889,
+  "tris": 20620,
+  "lod1_tris": 5925,
   "materials": [
    "alu",
    "antifoul",
@@ -792,6 +792,7 @@
    "navy",
    "ridge_tile",
    "roof_tile",
+   "rust_streak",
    "sign_wood",
    "steel_dark",
    "styro",
@@ -807,7 +808,7 @@
   "parts": [
    "fish_market_body"
   ],
-  "kb": 1722.8
+  "kb": 1737.9
  },
  {
   "name": "suisan_office",
@@ -818,8 +819,8 @@
    9.24,
    11.09
   ],
-  "tris": 8552,
-  "lod1_tris": 2410,
+  "tris": 8672,
+  "lod1_tris": 2437,
   "materials": [
    "alu",
    "black",
@@ -829,12 +830,14 @@
    "curtain",
    "glass",
    "granite",
+   "grime",
    "ink",
    "lamp",
    "metal",
    "ridge_tile",
    "roof_tile",
    "rust",
+   "rust_streak",
    "sign_wood",
    "steel_dark",
    "styro",
@@ -847,7 +850,7 @@
   "parts": [
    "suisan_office_body"
   ],
-  "kb": 750.0
+  "kb": 763.0
  },
  {
   "name": "warehouse_wood",
@@ -858,8 +861,8 @@
    8.93,
    11.56
   ],
-  "tris": 8272,
-  "lod1_tris": 2329,
+  "tris": 8620,
+  "lod1_tris": 2408,
   "materials": [
    "alu",
    "black",
@@ -869,12 +872,14 @@
    "float_yellow",
    "glass",
    "granite",
+   "grime",
    "lamp",
    "metal",
    "navy",
    "ridge_tile",
    "roof_tile",
    "rope",
+   "rust_streak",
    "steel_dark",
    "tin_rust",
    "white",
@@ -886,7 +891,7 @@
   "parts": [
    "warehouse_wood_body"
   ],
-  "kb": 747.0
+  "kb": 780.4
  },
  {
   "name": "warehouse_tin",
@@ -894,30 +899,34 @@
   "category": "漁港",
   "size_m": [
    13.0,
-   7.99,
+   8.24,
    10.53
   ],
-  "tris": 3070,
-  "lod1_tris": 794,
+  "tris": 3854,
+  "lod1_tris": 1012,
   "materials": [
    "alu",
    "black",
    "concrete",
    "glass",
    "granite",
+   "grime",
    "ink_white",
    "lamp",
    "metal",
+   "navy",
    "rust",
+   "rust_streak",
    "steel_dark",
    "tin_blue",
    "tin_rust",
+   "white",
    "wood_frame"
   ],
   "parts": [
    "warehouse_tin_body"
   ],
-  "kb": 277.1
+  "kb": 345.8
  },
  {
   "name": "gear_shed",
@@ -928,14 +937,15 @@
    3.1,
    5.2
   ],
-  "tris": 3408,
-  "lod1_tris": 1001,
+  "tris": 3468,
+  "lod1_tris": 1014,
   "materials": [
    "concrete",
    "crate_blue",
    "float_orange",
    "float_white",
    "float_yellow",
+   "grime",
    "ink",
    "lamp",
    "net",
@@ -952,7 +962,7 @@
   "parts": [
    "gear_shed_body"
   ],
-  "kb": 376.5
+  "kb": 383.3
  },
  {
   "name": "lighthouse",
@@ -994,15 +1004,17 @@
    9.0,
    3.7
   ],
-  "tris": 2616,
+  "tris": 2804,
   "lod1_tris": 0,
   "materials": [
    "alu",
    "beacon_red",
    "concrete",
    "glass",
+   "grime",
    "ink_white",
    "red",
+   "rust_streak",
    "steel_dark",
    "white"
   ],
@@ -1010,7 +1022,7 @@
    "lighthouse_red_body",
    "lighthouse_red_lamp"
   ],
-  "kb": 160.3
+  "kb": 173.8
  },
  {
   "name": "torii",
@@ -1021,18 +1033,21 @@
    5.46,
    0.68
   ],
-  "tris": 1936,
-  "lod1_tris": 577,
+  "tris": 2148,
+  "lod1_tris": 640,
   "materials": [
    "black",
    "gold",
    "granite",
+   "moss",
+   "paper",
+   "straw",
    "vermilion"
   ],
   "parts": [
    "torii_body"
   ],
-  "kb": 153.4
+  "kb": 177.2
  },
  {
   "name": "shrine_hall",
@@ -1041,10 +1056,10 @@
   "size_m": [
    8.01,
    6.53,
-   7.54
+   7.65
   ],
-  "tris": 5014,
-  "lod1_tris": 1423,
+  "tris": 5310,
+  "lod1_tris": 1496,
   "materials": [
    "black",
    "cloth_red",
@@ -1064,7 +1079,7 @@
   "parts": [
    "shrine_hall_body"
   ],
-  "kb": 443.0
+  "kb": 468.5
  },
  {
   "name": "saisen_box",
@@ -1116,23 +1131,26 @@
   "jp": "狛犬",
   "category": "神社",
   "size_m": [
-   0.86,
-   1.93,
-   1.04
+   0.87,
+   1.92,
+   1.06
   ],
-  "tris": 2284,
-  "lod1_tris": 678,
+  "tris": 3046,
+  "lod1_tris": 906,
   "materials": [
    "cloth_red",
    "granite",
    "ink",
    "moss",
-   "rock"
+   "pv_mouth",
+   "rock",
+   "st_lichen",
+   "white"
   ],
   "parts": [
    "komainu_body"
   ],
-  "kb": 253.6
+  "kb": 340.7
  },
  {
   "name": "azumaya",

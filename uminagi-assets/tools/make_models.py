@@ -95,6 +95,7 @@ PALETTE.update({   # second pass (poles, lights)
     'st_stain': P((0.3, 0.29, 0.27), 0.95), 'st_rust': P((0.42, 0.22, 0.1), 0.85, 0.2), 'st_porcelain': P((0.55, 0.38, 0.25), 0.25),
     'st_closure': P((0.12, 0.12, 0.13), 0.6), 'st_lamp_body': P((0.46, 0.48, 0.5), 0.45, 0.5), 'st_reflector': P((0.95, 0.5, 0.05), 0.2, e=(1.0, 0.45, 0.05), es=0.2),
 })
+PALETTE.update({'st_lichen': P((0.62, 0.66, 0.5), 0.95)})
 # --- st palette end
 MATS, IMAGES = {}, {}
 
@@ -718,6 +719,7 @@ def uv_project(o):
             uvl[li].uv = (p.dot(t), p.dot(b))
 
 SMOOTH = {'自然': 75, '人物': 55, '動物': 55}
+SMOOTH_MODEL = {'komainu': 70}   # per-model override (organic carvings)
 
 def _join(objs, name, angle=35):
     for o in objs:
@@ -749,7 +751,7 @@ def build(name):
     for o in CUR: groups.setdefault(o['part'], []).append(o)
     top = bpy.data.objects.new(name, None); col.objects.link(top); meshes = []
     for pn, objs in groups.items():
-        o = _join(objs, pn if pn.startswith(name + "_") else f"{name}_{pn or 'body'}", SMOOTH.get(cat, 35))
+        o = _join(objs, pn if pn.startswith(name + "_") else f"{name}_{pn or 'body'}", SMOOTH_MODEL.get(name, SMOOTH.get(cat, 35)))
         pv = PART['pivots'].get(pn, Vector())
         o.data.transform(Matrix.Translation(-pv)); o.location = pv
         o.parent = top; meshes.append(o)
@@ -1104,7 +1106,7 @@ PALETTE.update({  # --- building facades (shops & houses)
     'copper_sheet': P((0.48, 0.86, 0.74), 0.6, 0.25, tex='plaster'), 'copper_seam': P((0.12, 0.3, 0.25), 0.55, 0.4),
     'mortar_grey': P((1.0, 0.99, 0.96), 0.92, tex='concrete'), 'mortar_cream': P((1.45, 1.24, 0.88), 0.9, tex='concrete'),
     'mortar_white': P((1.18, 1.17, 1.15), 0.88, tex='plaster'), 'plaster_dark': P((0.3, 0.29, 0.29), 0.85, tex='plaster'),
-    'yakisugi': P((0.3, 0.27, 0.26), 0.92, tex='wood'), 'wood_bleached': P((1.25, 1.18, 1.08), 0.9, tex='wood'),
+    'yakisugi': P((0.2, 0.18, 0.18), 0.92, tex='wood'), 'wood_bleached': P((1.25, 1.18, 1.08), 0.9, tex='wood'),
     'tin_teal': P((0.45, 1.35, 0.85), 0.55, 0.3, tex='tin_blue'), 'tin_red': P((0.95, 0.42, 0.36), 0.6, 0.25, tex='tin_rust'),
     'tin_green': P((0.5, 1.05, 0.5), 0.55, 0.3, tex='tin_blue'), 'roof_tile_red': P((2.0, 0.9, 0.62), 0.55, tex='roof_tile'),
     'tile_white': P((0.88, 0.9, 0.9), 0.25), 'tile_blue': P((0.1, 0.32, 0.55), 0.3), 'tile_green': P((0.08, 0.3, 0.2), 0.3), 'brick': P((0.5, 0.2, 0.11), 0.9),
@@ -1782,6 +1784,7 @@ def fish_market():
             with xf((0, 0, 3.6)):
                 wall('tin_blue', D, H - 3.6, 0.15, [(D / 2 - 2, D / 2 + 2, 0.6, 2.0)])
                 window(D / 2 - 2, D / 2 + 2, 0.6, 2.0, 0.15, 'wood_frame', behind=None, bars=True, sill=False)
+                streaks(D, H - 3.65, [k * D / 10 + 0.6 for k in range(10) if abs(k * D / 10 + 0.6 - D / 2) > 2.2], y=-0.012, seed=31 + sx)
         prism('tin_blue', [(-D / 2, H + 0.1), (D / 2, H + 0.1), (0, H + 0.1 + D / 2 * 0.36)], 0.15, loc=(sx * (W / 2 - 0.075), 0, 0))
         for y in frange(-D / 2 + 1.0, D / 2 - 0.9, 2.0):  # steel girts / posts over the tin
             box2('steel_dark', sx * (W / 2 + 0.02) - 0.06, sx * (W / 2 + 0.02) + 0.06, y - 0.07, y + 0.07, 3.72, H + 0.1 + D / 2 * 0.36 * (1 - abs(y) / (D / 2)) - 0.1)
@@ -1849,6 +1852,8 @@ def suisan_office():
     with xf(*fr['front'][:2]): battens(w, 3.4, fo1, step=0.6)
     with xf(*fr2['front'][:2]):
         battens(w, 2.8, fo2, step=0.6)
+        for x in (1.2, 4.4, 7.6): streaks(w, 0.75, [x + 0.3, x + 1.9], 'rust_streak', y=-0.04, seed=int(x * 3))  # rust from the sill brackets
+        streaks(w, 2.75, [0.6, 3.9, 7.1, 10.4], 'grime', y=-0.04, seed=8)
         for x in (1.2, 4.4, 7.6): slab('tin_blue', (x - 0.15, -0.5, 2.25), (x + 2.35, -0.5, 2.25), (x - 0.15, 0, 2.45), (x + 2.35, 0, 2.45), 0.03)
     for side in ('left', 'back', 'right'):
         with xf(*fr[side][:2]): battens(fr[side][2], 3.4, {'right': [(3.0, 5.0, 1.0, 2.2)], 'back': [(3.0, 4.6, 1.0, 2.0)]}.get(side, ()), step=0.6)
@@ -1918,6 +1923,11 @@ def warehouse(w, d, h, clad, roof_mat, seed, lean=True, sign=None):
                 for (a, b) in [(0, ops[side][0][0])] + [(ops[side][i][1], ops[side][i + 1][0] if i + 1 < len(ops[side]) else fr[side][2]) for i in range(len(ops[side]))]:
                     if b - a > 0.2: box2('wood_dark', a, b, -0.05, 0, 0, 0.9)
         gutter(-w / 2 - 0.3, w / 2 + 0.3, d / 2 + 0.6, 0.2 + h - 0.5)
+        for side in ('front', 'left', 'back'):  # salt grime and rust from the nails and the gutter hangers
+            with xf(*fr[side][:2]):
+                L = fr[side][2]; streaks(L, h - 0.05, [L * k / 6 + 0.5 for k in range(6)], 'grime', y=-0.035, seed=seed + len(side))
+                streaks(L, h * 0.55 - 0.1, [L * 0.15, L * 0.45, L * 0.8], 'rust_streak', y=-0.035, seed=seed + 7)
+        for (a, b) in ((-w / 2 + 0.6, -w / 2 + 1.5), (w / 2 - 3.6, w / 2 - 2.8)): box2('tin_rust', a, b, -d / 2 - 0.06, -d / 2 - 0.04, 0.3, 1.3)  # tin patches
         for x in (-1.6, 1.6):
             rod('steel_dark', (x, -d / 2 - 0.15, 0.2 + h - 0.3), (x, -d / 2 - 0.65, 0.2 + h - 0.15), 0.02, 4)
             cyl('steel_dark', 0.13, 0.1, (x, -d / 2 - 0.68, 0.2 + h - 0.25), 8, r2=0.04); cyl('lamp', 0.09, 0.02, (x, -d / 2 - 0.68, 0.2 + h - 0.26), 8)
@@ -1934,6 +1944,11 @@ def warehouse(w, d, h, clad, roof_mat, seed, lean=True, sign=None):
         for x in (-w / 4, w / 4):
             cyl('alu', 0.12, 0.25, (x, 0, zr + 0.2), 8); cyl('alu', 0.3, 0.35, (x, 0, zr + 0.45), 10, r2=0.2); ico('alu', 0.2, (x, 0, zr + 0.8), (1, 1, 0.6), 1)
         text3d('ink_white', 'No.2', 0.9, (-w / 4 - 0.6, -d / 2 - 0.03, 0.2 + h - 0.9), depth=0.01)
+        for side in ('front', 'right', 'left', 'back'):  # rust bleeding down the corrugated tin from the eaves and fixings
+            with xf(*fr[side][:2]):
+                L = fr[side][2]; streaks(L, h - 0.02, [L * k / 5 + 0.4 for k in range(5)], seed=seed + len(side))
+                if side == 'front': streaks(L, 1.0, [L * 0.2, L * 0.55, L * 0.85], 'grime', seed=seed + 3)
+        signboard('倉庫', 1.4, 0.6, (w / 4 + 0.5, -d / 2 - 0.06, 0.2 + h - 0.55), board='white', ink='navy', frame='steel_dark', depth=0.04)
         box('steel_dark', (0.25, 0.3, 0.2), (w / 2 - 2.6, -d / 2 - 0.15, 2.5)); box('lamp', (0.2, 0.05, 0.1), (w / 2 - 2.6, -d / 2 - 0.3, 2.52))
         downpipe(w / 2 + 0.2, -d / 2 - 0.55, 0.2 + h - 0.5); downpipe(-w / 2 - 0.2, -d / 2 - 0.55, 0.2 + h - 0.5)
         for x in (-w / 2 + 0.5, -w / 2 + 1.1): cyl('rust', 0.29, 0.88, (x, -d / 2 - 0.5, 0), 10)
@@ -1958,7 +1973,8 @@ def gear_shed():
     for k in range(4): box('crate_blue', (0.6, 0.42, 0.3), (2.8, -0.6 + 0.0, 0.15 + k * 0.3))
     torus('rope', 0.35, 0.06, (0.2, 1.6, 0.25), seg=14, rseg=6); torus('rope', 0.32, 0.06, (0.2, 1.6, 0.37), seg=14, rseg=6)
     # battens on the board walls (outside), purlins under the tin roof, a tarp lashed over gear, buoys hung on the back wall
-    with xf((w / 2, d / 2, 0.15), math.pi): battens(w, 2.75, (), step=0.6)
+    with xf((w / 2, d / 2, 0.15), math.pi):
+        battens(w, 2.75, (), step=0.6); streaks(w, 2.7, [0.8, 2.3, 4.1, 5.6, 7.2], 'grime', y=-0.035, seed=41)
     for sx in (-1, 1):
         with xf((sx * w / 2, -sx * d / 2, 0.15), sx * math.pi / 2): battens(d, 2.35, (), step=0.6)
     for k in range(4):
@@ -2063,9 +2079,14 @@ def lighthouse_red():
     for k in range(19):
         t = (k + 0.5) / 19; y = 1.2 - 0.25 * t; z = 0.6 + t * 5.85
         rod('steel_dark', (-0.2, y, z), (0.2, y, z), 0.012, 4)
-    for k in range(8):  # brackets under the gallery
+    for k in range(8):  # brackets under the gallery, each weeping a rust streak down the tower
         a = k / 8 * math.tau
         rod('red', (0.88 * math.cos(a), 0.88 * math.sin(a), 5.9), (1.2 * math.cos(a), 1.2 * math.sin(a), 6.38), 0.04, 4)
+        if k not in (5, 6):
+            with xf((1.12 * math.cos(a), 1.12 * math.sin(a), 0), a + math.pi / 2, rx=-0.043):
+                streaks(0.0, 5.88, [0.0], 'rust_streak', y=-0.01, seed=k)
+    for sx in (-1, 1): streaks(0.0, 2.38, [sx * 0.42], 'rust_streak', y=-1.25, seed=3 + sx)
+    cyl('grime', 1.81, 0.25, (0, 0, 0.12), 24)  # wet, algae-dark band at the foot of the plinth
     for k in range(6):  # lantern glazing bars
         a = k / 6 * math.tau + 0.3
         rod('red', (0.51 * math.cos(a), 0.51 * math.sin(a), 7.0), (0.51 * math.cos(a), 0.51 * math.sin(a), 7.9), 0.025, 4)
@@ -2100,6 +2121,14 @@ def torii():
         box('vermilion', (0.09, 0.27, 0.28), (sx * 2.33, 0, H - 0.75))
         cyl('granite', 0.34, 0.12, (sx * 1.75, 0, 0), 12)          # 亀腹 stone footing
     box('black', (0.36, 0.26, 0.06), (0, 0, H - 0.47))
+    rings = []
+    for i in range(9):  # 注連縄 sagging between the pillars under the nuki, with paper shide
+        t = i / 8; x = -1.5 + 3.0 * t; z = H - 1.05 - 0.22 * math.sin(t * math.pi); r_ = 0.05 + 0.03 * math.sin(t * math.pi)
+        rings.append([(x, -0.2 + r_ * math.cos(a / 6 * math.tau), z + r_ * math.sin(a / 6 * math.tau)) for a in range(6)])
+    loft('straw', rings)
+    for x in (-0.75, 0.0, 0.75):
+        prism('paper', [(0, 0), (0.1, -0.1), (0, -0.2), (0.1, -0.3), (0, -0.4)], 0.1, loc=(x, -0.22, H - 1.24 - 0.12 * math.cos(x)), axis='Y')
+    for k, x in enumerate((-2.0, 0.6, 2.2)): ico('moss', 0.22, (x, 0.0, H + 0.6 + 0.08 * abs(x) ** 2.6 / 6), (1.6, 1.1, 0.25), 1, 0.3, k)
 
 def irimoya_roof(w, d, z, over=1.2, H=2.45, ug=0.5, mat='copper', t=0.16, lift=0.3, edge='wood_frame', Nx=12, Nu=8, seams=(10, 5),
                  rm=None, gmat='gold', gable_mat='plaster_white'):
@@ -2234,6 +2263,16 @@ def shrine_hall():
         box('wood_dark', (1.2, 0.6, 0.7), (0, 0, 0))
         for k in range(6): box('wood_frame', (0.04, 0.6, 0.06), (-0.5 + k * 0.2, 0, 0.7))
         box('gold', (0.9, 0.02, 0.05), (0, -0.31, 0.45)); box('wood_frame', (1.26, 0.66, 0.08), (0, 0, 0))
+    with xf((w / 2 + 0.4, -d / 2 - 1.35, 0)):  # 絵馬掛け: a little roofed rack hung with votive plaques
+        for sx in (-1, 1): box('wood_frame', (0.09, 0.09, 1.75), (sx * 0.65, 0, 0))
+        for zz in (0.95, 1.35): box('wood_frame', (1.4, 0.06, 0.05), (0, 0, zz))
+        slab('copper', (-0.85, -0.4, 1.7), (0.85, -0.4, 1.7), (-0.85, 0.0, 1.92), (0.85, 0.0, 1.92), 0.04)
+        slab('copper', (-0.85, 0.4, 1.7), (0.85, 0.4, 1.7), (-0.85, 0.0, 1.92), (0.85, 0.0, 1.92), 0.04)
+        rnd_ = random.Random(5)
+        for row, zz in enumerate((0.95, 1.35)):
+            for k in range(7):
+                x = -0.55 + k * 0.18 + rnd_.uniform(-0.02, 0.02)
+                prism('wood_light', [(-0.07, -0.17), (0.07, -0.17), (0.07, -0.05), (0, 0.0), (-0.07, -0.05)], 0.015, loc=(x, -0.05 - 0.01 * (k % 2), zz), axis='Y', rot=(0, 0, rnd_.uniform(-0.25, 0.25)))
 
 @model('saisen_box', '賽銭箱', '神社')
 def saisen_box():
@@ -2281,41 +2320,79 @@ def ishidoro():
     _st_lathe('granite', [(0.13, 2.23), (0.15, 2.26), (0.11, 2.29), (0.07, 2.3), (0.1, 2.35), (0.095, 2.39), (0.05, 2.43), (0.005, 2.48)], 10)
     ico('moss', 0.2, (0.18, 0.16, 2.11), (1.4, 1, 0.3), 2, 0.3, 3); ico('moss', 0.14, (-0.28, 0.1, 0.17), (1.5, 1, 0.4), 1, 0.3, 5)
 
+def _st_blob(mat, elems, res=0.03, tris=None, seed=0, rough=0.0):
+    """Organic stone carving from metaballs: elems = [(co, R, size xyz or None, rot Euler or None, negative)] where R is the
+    surface radius. Converted to a mesh, optionally decimated to about `tris` triangles; rough adds chisel-like noise."""
+    from mathutils import Euler
+    mb = bpy.data.metaballs.new('blob'); mb.resolution = mb.render_resolution = res; mb.threshold = 0.6
+    ob = bpy.data.objects.new('blob', mb); bpy.context.scene.collection.objects.link(ob)
+    for co, R, size, rot, neg in elems:
+        e = mb.elements.new(type='ELLIPSOID' if size else 'BALL'); e.co = co; e.radius = R / 0.573
+        if size: e.size_x, e.size_y, e.size_z = size
+        if rot: e.rotation = Euler(rot).to_quaternion()
+        e.use_negative = bool(neg)
+    me = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+    bpy.data.objects.remove(ob); bpy.data.metaballs.remove(mb)
+    if rough:
+        off = Vector((seed * 1.3, seed * 2.1, seed * 0.7))
+        for v in me.vertices: v.co += v.normal * rough * noise.noise(v.co * 9.0 + off)
+    o = bpy.data.objects.new('blob', me); bpy.context.scene.collection.objects.link(o)
+    nt = sum(len(p.vertices) - 2 for p in me.polygons)
+    if tris and nt > tris:
+        dm = o.modifiers.new('dec', 'DECIMATE'); dm.ratio = tris / nt; dm.use_collapse_triangulate = True
+        with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
+            bpy.ops.object.modifier_apply(modifier='dec')
+    return _take(o, mat)
+
 @model('komainu', '狛犬', '神社')
 def komainu():
-    box2('granite', -0.42, 0.42, -0.52, 0.52, 0, 0.12)
-    box2('granite', -0.34, 0.34, -0.44, 0.44, 0.12, 0.62)
+    # a-gyo komainu (open mouth) sitting on a two-step granite plinth: one smooth carved body from metaballs (haunches,
+    # chest, forelegs, a mane of tight curls, a flame tail), deep-set eyes, red votive bib, moss and lichen on the stone
+    _st_rbox('granite', 0.84, 1.04, [(0.0, 0.03, 0.0), (0.0, 0.03, 0.1), (0.015, 0.02, 0.12)], 2)
+    _st_rbox('granite', 0.68, 0.88, [(0.0, 0.02, 0.12), (0.0, 0.02, 0.6), (0.0, 0.02, 0.62)], 2)
     box2('rock', -0.25, 0.25, -0.446, -0.44, 0.2, 0.54)
     text3d('ink', '奉納', 0.12, (0, -0.448, 0.37), depth=0.006, vertical=True)
-    box2('granite', -0.4, 0.4, -0.5, 0.5, 0.62, 0.72); box2('granite', -0.36, 0.36, -0.46, 0.46, 0.72, 0.76)
-    ico('granite', 0.3, (0, 0.02, 0.76), (1.0, 1.45, 0.38), 2, 0.15, 5, flat_bottom=0.0)
-    g = 'granite'
+    _st_rbox('granite', 0.8, 1.0, [(0.0, 0.03, 0.62), (0.0, 0.03, 0.7), (0.02, 0.02, 0.72)], 2)
+    _st_rbox('granite', 0.72, 0.92, [(0.0, 0.02, 0.72), (0.0, 0.02, 0.76)], 2)
+    E = []
+    def el(co, R, size=None, rot=None, neg=False): E.append((co, R, size, rot, neg))
+    el((0, 0.04, 0.8), 0.24, (1.0, 1.55, 0.28))                                  # base slab carved with the figure
     for sx in (-1, 1):
-        ico(g, 0.17, (sx * 0.15, 0.17, 0.98), (0.8, 1.3, 1.0), 2, 0.08, 6 + sx)          # haunches
-        ico(g, 0.07, (sx * 0.19, -0.03, 0.89), (1.0, 1.4, 0.6), 1)                        # hind paws
-        rod(g, (sx * 0.11, -0.16, 1.27), (sx * 0.12, -0.25, 0.9), 0.06, 8, r2=0.05)    # front legs
-        ico(g, 0.075, (sx * 0.12, -0.28, 0.89), (1.0, 1.35, 0.6), 1)                      # front paws
-        ico(g, 0.05, (sx * 0.15, -0.13, 1.1), (0.8, 1, 1.3), 1)                           # elbow tufts
-        ico(g, 0.042, (sx * 0.08, -0.34, 1.68), sub=1)                                    # bulging eyes
-        ico('ink', 0.02, (sx * 0.08, -0.374, 1.68), sub=1)
-        ico(g, 0.05, (sx * 0.09, -0.32, 1.735), (1.5, 0.8, 0.6), 1)                       # brows
-        ico(g, 0.06, (sx * 0.2, -0.2, 1.72), (1.4, 0.5, 0.8), 1)                          # ears
-        ico(g, 0.06, (sx * 0.12, 0.42, 1.18), (0.8, 0.8, 1.2), 1)                         # tail curls
-    o = ico(g, 0.22, (0, 0.05, 1.18), (0.85, 1.0, 1.35), 2, 0.05, 8); o.rotation_euler = (0.3, 0, 0)   # torso
-    ico(g, 0.16, (0, -0.12, 1.3), (1.0, 0.9, 1.2), 2, 0.05, 9)                            # chest
-    ico(g, 0.2, (0, -0.03, 1.56), (1.25, 0.8, 1.15), 2, 0.12, 10)                         # mane mass
-    for k in range(9):
-        a = math.radians(-30 + k * 30)
-        ico(g, 0.075, (0.23 * math.cos(a), -0.1, 1.62 + 0.23 * math.sin(a)), sub=1, jitter=0.15, seed=k)
-    ico(g, 0.19, (0, -0.2, 1.62), (1.15, 1.0, 0.95), 2, 0.05, 11)                         # head
-    ico(g, 0.1, (0, -0.35, 1.58), (1.3, 0.8, 0.7), 2, 0.05, 12)                           # muzzle
-    ico(g, 0.045, (0, -0.43, 1.62), (1.2, 1, 0.8), 1)                                     # nose
-    ico('ink', 0.05, (0, -0.37, 1.51), (1.4, 0.6, 0.5), 1)                                # open mouth (a-gyo)
-    ico(g, 0.08, (0, -0.33, 1.47), (1.1, 0.9, 0.45), 2)                                   # lower jaw
-    for k, (y, z, r) in enumerate(((0.33, 1.02, 0.11), (0.4, 1.2, 0.09), (0.36, 1.36, 0.07))):
-        ico(g, r, (0, y, z), (1.2, 0.6, 1.2), 2, 0.2, 13 + k)                             # flame tail
-    prism('cloth_red', [(-0.15, 0), (0.15, 0), (0, -0.2)], 0.012, loc=(0, -0.27, 1.43), axis='Y', rot=(0.25, 0, 0))   # red bib
-    ico('moss', 0.12, (0.28, -0.4, 0.73), (1.4, 1, 0.3), 1, 0.3, 4)
+        el((sx * 0.15, 0.17, 0.98), 0.15, (0.85, 1.3, 1.05))                       # haunches
+        el((sx * 0.2, -0.02, 0.86), 0.07, (1.0, 1.5, 0.65))                        # hind paws
+        el((sx * 0.115, -0.2, 1.08), 0.06, (1.0, 1.0, 3.2), (0.25, 0, 0))          # forelegs
+        el((sx * 0.12, -0.29, 0.86), 0.07, (1.05, 1.35, 0.65))                     # front paws
+        el((sx * 0.14, -0.14, 1.12), 0.05, (0.8, 1.0, 1.4))                        # elbow tufts
+        el((sx * 0.19, -0.22, 1.72), 0.055, (1.3, 0.55, 0.8))                      # ears
+        el((sx * 0.08, -0.34, 1.68), 0.045)                                        # bulging eyes
+        el((sx * 0.09, -0.33, 1.74), 0.045, (1.5, 0.8, 0.6))                       # heavy brows
+        el((sx * 0.07, -0.37, 1.56), 0.05, (1.0, 0.9, 0.8))                        # cheeks of the muzzle
+    el((0, 0.06, 1.18), 0.2, (0.9, 1.0, 1.35), (0.3, 0, 0))                        # torso
+    el((0, -0.12, 1.3), 0.16, (1.0, 0.9, 1.2))                                     # chest
+    el((0, -0.03, 1.56), 0.2, (1.25, 0.8, 1.15))                                   # mane mass
+    for k in range(11):                                                            # curls ringing the face
+        a = math.radians(-60 + k * 24)
+        el((0.24 * math.cos(a), -0.12, 1.61 + 0.24 * math.sin(a)), 0.065)
+    for k in range(6):                                                             # curls down the back of the mane
+        el(((k % 2 - 0.5) * 0.18, 0.1, 1.38 + k * 0.05), 0.06)
+    el((0, -0.2, 1.62), 0.18, (1.15, 1.0, 0.95))                                   # head
+    el((0, -0.35, 1.6), 0.09, (1.3, 0.8, 0.7))                                     # muzzle
+    el((0, -0.43, 1.63), 0.045, (1.25, 1.0, 0.85))                                 # nose
+    el((0, -0.33, 1.46), 0.075, (1.1, 0.9, 0.45))                                  # lower jaw
+    for k, (y, z, r) in enumerate(((0.3, 1.0, 0.11), (0.38, 1.16, 0.095), (0.38, 1.32, 0.08), (0.32, 1.44, 0.065))):
+        el((0, y, z), r, (1.25, 0.7, 1.1))                                        # flame tail
+        for sx in (-1, 1): el((sx * 0.09, y - 0.02, z + 0.02), r * 0.55)
+    _st_blob('granite', E, 0.026, 1750, seed=3, rough=0.003)
+    for sx in (-1, 1):
+        ico('ink', 0.018, (sx * 0.08, -0.383, 1.68), (1.0, 0.6, 1.0), 1)               # pupils
+    ico('pv_mouth', 0.05, (0, -0.375, 1.515), (1.35, 0.55, 0.45), 1)                    # open mouth (a-gyo)
+    for sx in (-1, 1): cyl('white', 0.012, 0.03, (sx * 0.04, -0.39, 1.5), 4, r2=0.0, rot=(math.pi, 0, 0))  # fangs
+    # red votive bib tied at the neck
+    _pv_shell('cloth_red', [(0.18, 1.26, 0.75), (0.19, 1.38, 0.95), (0.17, 1.45, 1.1)], seg=8, t=0.012, c=(0, -0.05, 0.0), sy=1.05)
+    _pv_tube('cloth_red', [(0.17 * math.cos(a), -0.05 + 0.18 * math.sin(a), 1.455) for a in (-math.pi / 2 + k * 0.35 for k in range(-6, 7))], 0.012, 4)
+    ico('moss', 0.1, (0.3, -0.42, 0.74), (1.4, 1, 0.25), 2, 0.3, 4)
+    ico('moss', 0.08, (-0.32, 0.45, 0.115), (1.6, 1, 0.3), 1, 0.3, 7)
+    ico('st_lichen', 0.06, (0.33, -0.44, 0.45), (0.5, 0.2, 1.4), 1, 0.3, 9)
 
 @model('azumaya', '展望台の東屋(四阿)', '灯台・展望台')
 def azumaya():
