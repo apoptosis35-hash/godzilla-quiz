@@ -18,6 +18,8 @@ export const PLATEAU = { x0: -140, x1: -96, z0: -40, z1: 8, y: 34 };
 export const ISLAND = { x: 97, z: 200, r: 24 };
 export const BRIDGE = { x0: 95, x1: 99, z0: 92, z1: 182, y: 3.2 };
 export const TRAM = { x0: 64, x1: 126, z0: 6, z1: 12, y0: 1.6, y1: 3.8 };
+// the coastal road (two lanes, like the road along the beach at Enoshima)
+export const ROAD = { x0: 64, x1: 126, z0: 15.5, z1: 22.5, y0: 1.6, y1: 3.0 };
 
 // ---------------------------------------------------------------- platforms
 // {x0,x1,z0,z1, y | ramp:[axis, a, b, ya, yb], mat, wall:'stone'|'concrete'|'none', stairs, blend, top, curb}
@@ -87,6 +89,9 @@ function layout() {
   P({ name: 'tram', x0: TRAM.x0, x1: TRAM.x1, z0: TRAM.z0, z1: TRAM.z1, ramp: rampX(TRAM.x0, TRAM.x1, TRAM.y0, TRAM.y1), mat: 'granite', wall: 'stone', blend: true });
   const sy = TRAM.y0 + (TRAM.y1 - TRAM.y0) * (78 - TRAM.x0) / (TRAM.x1 - TRAM.x0) + 0.9;
   P({ name: 'tram_station', x0: 70, x1: 86, z0: TRAM.z1, z1: TRAM.z1 + 3.2, y: sy, mat: 'paving', wall: 'stone' });
+  P({ name: 'coast_road', x0: ROAD.x0, x1: ROAD.x1, z0: ROAD.z0, z1: ROAD.z1, ramp: rampX(ROAD.x0, ROAD.x1, ROAD.y0, ROAD.y1), mat: 'asphalt', wall: 'concrete', blend: true });
+  const ry = (x) => ROAD.y0 + (ROAD.y1 - ROAD.y0) * (x - ROAD.x0) / (ROAD.x1 - ROAD.x0);
+  P({ name: 'station_stair', x0: 86, x1: 90, z0: TRAM.z1 + 0.2, z1: ROAD.z0, ramp: rampX(86, 90, sy, ry(90)), mat: 'granite', wall: 'stone', stairs: true });
 }
 
 export function platformY(p, x, z) {
@@ -100,7 +105,7 @@ export function platformY(p, x, z) {
 export const OVERLAYS = [];
 function overlays() {
   OVERLAYS.push({ x0: 37, x1: 43, z0: -96, z1: -6, mat: 'asphalt', on: 'street' });
-  TIERS.forEach((t, i) => OVERLAYS.push({ x0: t.x0, x1: TIER_X1, z0: t.zf - 3, z1: t.zf, mat: 'paving', on: `tier${i + 1}` }));
+  TIERS.forEach((t, i) => OVERLAYS.push({ x0: t.x0, x1: TIER_X1, z0: t.zf - 3, z1: t.zf, mat: 'asphalt', on: `tier${i + 1}` }));
   OVERLAYS.push({ x0: -11, x1: -7, z0: -132, z1: -116, mat: 'paving', on: 'shrine' });
   OVERLAYS.push({ x0: -11, x1: -7, z0: -104, z1: -94, mat: 'paving', on: 'tier7' });
 }
