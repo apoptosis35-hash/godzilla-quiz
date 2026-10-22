@@ -95,6 +95,8 @@ function layout() {
   P({ name: 'tram_station', x0: 70, x1: 86, z0: TRAM.z1, z1: TRAM.z1 + 3.2, y: sy, mat: 'paving', wall: 'stone' });
   P({ name: 'coast_road', x0: ROAD.x0, x1: ROAD.x1, z0: ROAD.z0, z1: ROAD.z1, ramp: rampX(ROAD.x0, ROAD.x1, ROAD.y0, ROAD.y1), mat: 'asphalt', wall: 'concrete', blend: false });
   const ry = (x) => ROAD.y0 + (ROAD.y1 - ROAD.y0) * (x - ROAD.x0) / (ROAD.x1 - ROAD.x0);
+  // inside the tunnel: a level floor the player can walk into (as far as the no-pedestrians barrier)
+  P({ name: 'tunnel_floor', x0: ROAD.x1, x1: 158, z0: TUNNEL.z0, z1: TUNNEL.z1, y: ROAD.y1, mat: 'asphalt', wall: 'none', blend: false });
   P({ name: 'station_stair', x0: 86, x1: 90, z0: TRAM.z1 + 0.2, z1: ROAD.z0, ramp: rampX(86, 90, sy, ry(90)), mat: 'granite', wall: 'stone', stairs: true });
 }
 
@@ -179,7 +181,7 @@ function naturalBase(x, z) {
 }
 
 // ---------------------------------------------------------------- the grid
-export const G = { x0: -170, z0: -150, x1: 130, z1: 236, res: 0.5 };
+export const G = { x0: -170, z0: -150, x1: 160, z1: 236, res: 0.5 };
 export const WATER_BOX = { x0: -500, z0: -200, x1: 500, z1: 800 };
 G.nx = Math.round((G.x1 - G.x0) / G.res); G.nz = Math.round((G.z1 - G.z0) / G.res);
 
