@@ -1083,7 +1083,7 @@ def house_hipped():
 def house_hillside():
     """House on a stone base: teal tin upper floor under a tiled 妻入り gable, a deck terrace with laundry and pots."""
     with xf((0, 1.5, 2.4)):
-        house(7.0, 6.0, 2, 'wood_dark', 'tin_teal', roof='gable_y', pitch=0.62, door_x=-1.8, seed=7, laundry=9, solar=True, balcony=True, pent=False,
+        house(7.0, 6.0, 2, 'wood_dark', 'tin_teal', roof='gable_y', pitch=0.55, door_x=-1.8, seed=7, laundry=9, solar=True, balcony=True, pent=False,
               entry='hood', posts=False)
         with xf((0, -3.0, 0)):  # wooden deck in front of the house
             box2('wood_light', -3.9, 3.9, -1.45, 0.0, 0.0, 0.12)
@@ -3442,15 +3442,13 @@ def utility_pole():
     _st_lathe('concrete', [(0.13, 10.5), (0.135, 10.52), (0.1, 10.6), (0.03, 10.66)], 10)          # cap
     rod('steel_dark', (0, 0, 10.6), (0, 0, 10.95), 0.012, 4)                                          # overhead earth spike
     for k, (a, z0, z1) in enumerate(((0.4, 3.2, 9.6), (2.3, 1.1, 6.4), (4.0, 4.0, 8.9))):          # rain streaks
-        for z in (z0, z1): pass
         o = _hb_tube('st_stain', [(R(z) * 1.003 * math.cos(a), R(z) * 1.003 * math.sin(a), z) for z in (z1, (z0 + z1) / 2, z0)], 0.0, 3, cap=False,
                      radii=[0.012, 0.022, 0.006])
     cyl('st_stain', R(0.02) + 0.004, 0.22, (0, 0, 0.0), 14, r2=R(0.22) + 0.004, cap=False)               # splash dirt at the foot
     for i in range(8):  # yellow/black guard sleeve
-        z = 0.25 + i * 0.15; cyl('yellow' if i % 2 == 0 else 'black', R(z) + 0.008, 0.15, (0, 0, z), 14, cap=False)
+        z = 0.25 + i * 0.15; cyl('yellow' if i % 2 == 0 else 'black', R(z) + 0.008, 0.15, (0, 0, z), 12, cap=False)
     def insulator(x, y, z, s=1.0, mat='white'):
-        _st_lathe(mat, [(0.02 * s, 0), (0.065 * s, 0.03 * s), (0.065 * s, 0.05 * s), (0.035 * s, 0.07 * s), (0.055 * s, 0.1 * s),
-                        (0.055 * s, 0.12 * s), (0.03 * s, 0.15 * s), (0.035 * s, 0.17 * s), (0.0, 0.18 * s)], 8, (x, y, z))
+        _st_lathe(mat, [(0.025 * s, 0), (0.065 * s, 0.035 * s), (0.04 * s, 0.07 * s), (0.055 * s, 0.11 * s), (0.03 * s, 0.17 * s)], 6, (x, y, z))
     def arm(z, w, xs, s=1.3):   # galvanised channel crossarm: web, flanges, end caps, braces, band clamp, insulators
         box2('st_galv', -w / 2, w / 2, -0.06, 0.06, z - 0.11, z)
         box2('steel_dark', -w / 2 + 0.01, w / 2 - 0.01, -0.062, 0.062, z - 0.085, z - 0.025)
@@ -3458,13 +3456,12 @@ def utility_pole():
             rod('st_galv', (sx * w * 0.36, 0.0, z - 0.11), (sx * 0.12, 0, z - 0.72), 0.022, 4)
             box2('steel_dark', sx * w / 2 - 0.012, sx * w / 2 + 0.012 * 0, -0.065, 0.065, z - 0.115, z + 0.005) if sx < 0 else \
                 box2('steel_dark', sx * w / 2, sx * w / 2 + 0.012, -0.065, 0.065, z - 0.115, z + 0.005)
-        torus('st_galv', R(z) + 0.012, 0.02, (0, 0, z - 0.06), seg=12, rseg=4)
-        torus('st_galv', R(z - 0.72) + 0.012, 0.018, (0, 0, z - 0.72), seg=12, rseg=3)
+        cyl('st_galv', R(z) + 0.014, 0.05, (0, 0, z - 0.085), 12, cap=False)
+        cyl('st_galv', R(z - 0.72) + 0.014, 0.04, (0, 0, z - 0.74), 12, cap=False)
         for x in xs:
             cyl('steel_dark', 0.016, 0.06, (x, 0, z), 6)
             insulator(x, 0, z + 0.05, s)
-            rod('black', (x - 0.04, 0, z + 0.05 + 0.13 * s), (x + 0.04, 0, z + 0.05 + 0.13 * s), 0.01, 4)   # tie wire
-    arm(9.7, 2.0, (-0.8, 0.8, -0.3))
+    arm(9.7, 1.9, (-0.8, 0.8, -0.3))
     arm(9.0, 1.6, (-0.62, 0.0, 0.62))
     # lightning arrester and jumpers between the arms
     for sx in (-1, 1):
@@ -3474,61 +3471,57 @@ def utility_pole():
         box2('st_galv', -0.62, 0.62, 0.14, 0.58, -0.08, 0.0)                                           # platform
         for x in (-0.55, 0.55): box2('st_galv', x - 0.03, x + 0.03, 0.12, 0.6, -0.12, 0.0)
         for sx in (-1, 1): rod('st_galv', (sx * 0.5, 0.5, -0.08), (sx * 0.05, R(6.0) + 0.02, -0.7), 0.02, 4)   # braces
-        torus('st_galv', R(6.6) + 0.012, 0.022, (0, 0, -0.05), seg=12, rseg=4); torus('st_galv', R(5.9) + 0.012, 0.02, (0, 0, -0.7), seg=12, rseg=3)
+        cyl('st_galv', R(6.6) + 0.014, 0.06, (0, 0, -0.09), 12, cap=False); cyl('st_galv', R(5.9) + 0.014, 0.05, (0, 0, -0.72), 12, cap=False)
         for k, x in enumerate((-0.31, 0.31)):
             with xf((x, 0.38, 0.0)):
-                _st_lathe('st_trafo', [(0.0, 0.0), (0.21, 0.0), (0.22, 0.03), (0.22, 0.66), (0.235, 0.67), (0.235, 0.71), (0.2, 0.74), (0.12, 0.78), (0.0, 0.79)], 14)
-                for j in range(6):   # cooling fins on the outward half
-                    a = math.pi * (-0.15 + 0.26 * j)
+                _st_lathe('st_trafo', [(0.2, 0.0), (0.22, 0.03), (0.22, 0.66), (0.235, 0.68), (0.2, 0.74), (0.1, 0.79)], 12)
+                for j in range(5):   # cooling fins on the outward half
+                    a = math.pi * (-0.1 + 0.3 * j)
                     box('st_trafo', (0.016, 0.06, 0.52), (0.235 * math.cos(a), 0.235 * math.sin(a), 0.08), (0, 0, a - math.pi / 2))
-                _st_lathe('st_rust', [(0.222, 0.02), (0.224, 0.08), (0.222, 0.14)], 14)                    # rust run at the base
+                _st_lathe('st_rust', [(0.222, 0.02), (0.224, 0.08), (0.222, 0.14)], 12, cap=False)                    # rust run at the base
                 box2('yellow', -0.06, 0.06, 0.205, 0.235, 0.42, 0.52); box2('ink', -0.04, 0.04, 0.21, 0.237, 0.445, 0.455)  # rating plate
-                box2('white', -0.05, 0.05, 0.205, 0.234, 0.3, 0.37); text3d('ink_red', '%d' % (k + 1), 0.05, (0, 0.236, 0.335), rz=math.pi, depth=0.004)
-                for bx in (-0.08, 0.08): insulator(bx, -0.04, 0.78, 0.65, 'st_porcelain')
-                insulator(0.0, 0.1, 0.78, 0.5, 'st_porcelain')
+                box2('white', -0.05, 0.05, 0.205, 0.234, 0.3, 0.37); box2('ink_red', -0.01, 0.01, 0.233, 0.236, 0.31, 0.36)
+                for bx in (-0.08, 0.08): _st_lathe('st_porcelain', [(0.04, 0.0), (0.03, 0.04), (0.04, 0.06), (0.02, 0.12)], 6, (bx, -0.04, 0.78))
                 rod('black', (-0.08, -0.04, 0.9), (-0.25 * (1 if x < 0 else -1) + 0.0, -0.3, 1.7), 0.008, 3)
     # cut-out switches on a small bracket with jumpers up to the 9 m arm
-    box2('st_galv', -0.42, 0.42, -0.05, 0.05, 8.12, 8.2); torus('st_galv', R(8.15) + 0.012, 0.018, (0, 0, 8.16), seg=12, rseg=3)
+    box2('st_galv', -0.42, 0.42, -0.05, 0.05, 8.12, 8.2); cyl('st_galv', R(8.15) + 0.014, 0.05, (0, 0, 8.13), 12, cap=False)
     for sx in (-1, 1):
         box('white', (0.07, 0.07, 0.26), (sx * 0.36, 0.0, 8.2)); box2('steel_dark', sx * 0.36 - 0.012, sx * 0.36 + 0.012, -0.0, 0.1, 8.32, 8.35)
         rod('black', (sx * 0.36, 0.0, 8.46), (sx * 0.62, 0.0, 9.17), 0.009, 3)
         rod('black', (sx * 0.36, 0.0, 8.2), (sx * 0.31, 0.38, 7.39), 0.009, 3)
     # low-voltage rack: three spool insulators stacked on a vertical bracket
     box2('st_galv', -0.03, 0.03, -R(7.9) - 0.16, -R(7.9) + 0.02, 7.5, 8.0)
-    for z in (7.58, 7.74, 7.9):
-        _st_lathe('st_porcelain', [(0.0, -0.04), (0.04, -0.04), (0.045, -0.03), (0.03, -0.015), (0.03, 0.015), (0.045, 0.03), (0.04, 0.04), (0.0, 0.04)], 8,
+    for z in (7.64, 7.86):
+        _st_lathe('st_porcelain', [(0.035, -0.04), (0.045, -0.025), (0.03, 0.0), (0.045, 0.025), (0.035, 0.04)], 6,
                   (0, -R(z) - 0.12, z))
-        rod('black', (0, -R(z) - 0.16, z), (0, -R(z) - 0.95, z - 0.25), 0.012, 4)                 # service drops leaving the pole
     for z in (7.05, 7.5):
-        torus('steel_dark', R(z) + 0.01, 0.014, (0, 0, z + 0.03), seg=12, rseg=3)
+        cyl('steel_dark', R(z) + 0.012, 0.04, (0, 0, z + 0.01), 12, cap=False)
     # telecom: thick black cable with a closure, a coiled slack loop and a drop down the pole
     yb = R(5.5) + 0.12
-    box2('st_galv', -0.03, 0.03, R(5.5) - 0.02, yb + 0.02, 5.45, 5.55); torus('st_galv', R(5.5) + 0.012, 0.018, (0, 0, 5.5), seg=12, rseg=3)
-    _hb_tube('black', [(-1.6, yb, 5.32), (-0.9, yb, 5.44), (-0.3, yb, 5.5), (0.3, yb, 5.5), (0.9, yb, 5.44), (1.6, yb, 5.32)], 0.035, 6)
+    box2('st_galv', -0.03, 0.03, R(5.5) - 0.02, yb + 0.02, 5.45, 5.55); cyl('st_galv', R(5.5) + 0.014, 0.05, (0, 0, 5.475), 12, cap=False)
+    _hb_tube('black', [(-0.85, yb, 5.47), (-0.3, yb, 5.5), (0.3, yb, 5.5), (0.85, yb, 5.47)], 0.035, 6)
     with xf((0.0, yb + 0.02, 5.4)):
-        _st_lathe('black', [(0.0, -0.32), (0.07, -0.31), (0.1, -0.26), (0.1, 0.26), (0.07, 0.31), (0.0, 0.32)], 10, rot=0.0) if False else None
         o = cyl('st_closure', 0.1, 0.6, (-0.3, 0.0, -0.06), 10, rot=(0, math.pi / 2, 0))
-        for x in (-0.24, 0.24): torus('steel_dark', 0.105, 0.012, (x, 0.0, -0.06), rot=(0, math.pi / 2, 0), seg=10, rseg=3)
+        for x in (-0.24, 0.24): cyl('steel_dark', 0.106, 0.03, (x - 0.015, 0.0, -0.06), 10, rot=(0, math.pi / 2, 0), cap=False)
     with xf((0.0, yb + 0.04, 4.55), rx=math.pi / 2):
-        torus('black', 0.34, 0.03, (0, 0, 0), seg=16, rseg=4); torus('black', 0.31, 0.026, (0.02, 0.01, 0.03), seg=16, rseg=4)
+        torus('black', 0.33, 0.04, (0, 0, 0), seg=14, rseg=4)
     for z in (4.2, 4.9): box2('steel_dark', -0.05, 0.05, R(z) - 0.01, yb + 0.07, z, z + 0.05)
     _hb_tube('black', [(0.08, R(5.2) + 0.03, 5.32), (0.07, R(4) + 0.03, 4.0), (0.06, R(2.4) + 0.03, 2.4)], 0.018, 5)   # drop cable
-    for z in (2.6, 3.4, 4.2): torus('steel_dark', R(z) + 0.022, 0.008, (0, 0, z), seg=12, rseg=3)
+    for z in (2.6, 3.4, 4.2): cyl('steel_dark', R(z) + 0.006, 0.02, (0, 0, z), 12, cap=False)
     for i, z in enumerate(frange(2.5, 8.6, 0.42)):  # step bolts
         s = 1 if i % 2 else -1
-        rod('st_galv', (s * R(z), 0, z), (s * (R(z) + 0.2), 0, z + 0.02), 0.014, 4)
-        rod('st_galv', (s * (R(z) + 0.18), 0, z), (s * (R(z) + 0.2), 0, z + 0.07), 0.012, 4)
+        rod('st_galv', (s * R(z), 0, z), (s * (R(z) + 0.2), 0, z + 0.04), 0.016, 4)
     rod('alu', (0, R(0.1) + 0.02, 0.1), (0, R(6.5) + 0.02, 6.5), 0.016, 6)  # earth wire conduit
     y = -R(2.3) - 0.012  # wrap-around advert: clinic
     box2('white', -0.15, 0.15, y, y + 0.03, 1.6, 2.9); box2('sign_green', -0.15, 0.15, y - 0.003, y + 0.03, 2.78, 2.9); box2('sign_green', -0.15, 0.15, y - 0.003, y + 0.03, 1.6, 1.66)
     text3d('sign_green', '内科', 0.19, (0, y - 0.004, 2.3), depth=0.006, vertical=True)
-    text3d('ink', 'クリニック', 0.045, (0, y - 0.004, 1.76), depth=0.004)
+    box2('ink', -0.1, 0.1, y - 0.004, y, 1.74, 1.78)
     for z in (1.63, 2.87): box2('steel_dark', -0.17, 0.17, y + 0.005, y + 0.04, z - 0.012, z + 0.012)   # straps
     y = -R(3.4) - 0.01  # address plate
     box2('sign_blue', -0.1, 0.1, y, y + 0.025, 3.1, 3.62)
     text3d('ink_white', '一丁目', 0.12, (0, y - 0.003, 3.36), depth=0.005, vertical=True)
     box2('white', -0.08, 0.08, -R(1.55) - 0.01, -R(1.55) + 0.02, 1.44, 1.56)                     # pole number plate
-    text3d('ink', '海凪 12', 0.04, (0, -R(1.55) - 0.013, 1.5), depth=0.004)
+    box2('ink', -0.05, 0.05, -R(1.55) - 0.014, -R(1.55) - 0.01, 1.48, 1.52)
 
 @model('street_light', '街灯', '道の小物')
 def street_light():
@@ -4623,11 +4616,11 @@ def shiba():
 
 
 # ================================================================= 江ノ島 (Enoshima) atmosphere
-PALETTE.update({'enz_teak': P((0.5, 0.32, 0.17), 0.7), 'enz_sail': P((0.95, 0.94, 0.9), 0.85), 'enz_tb_brown': P((0.26, 0.15, 0.07), 0.85),
-                'enz_tb_dark': P((0.09, 0.06, 0.04), 0.85), 'enz_tb_light': P((0.5, 0.36, 0.2), 0.85), 'enz_board_blue': P((0.1, 0.45, 0.8), 0.35),
+PALETTE.update({'enz_teak': P((0.5, 0.32, 0.17), 0.7), 'enz_sail': P((0.95, 0.94, 0.9), 0.85), 'enz_tb_brown': P((0.12, 0.07, 0.035), 0.85),
+                'enz_tb_dark': P((0.035, 0.025, 0.018), 0.85), 'enz_tb_light': P((0.36, 0.25, 0.14), 0.85), 'enz_board_blue': P((0.1, 0.45, 0.8), 0.35),
                 'enz_board_white': P((0.93, 0.93, 0.9), 0.35), 'enz_canvas_blue': P((0.05, 0.25, 0.6), 0.9)})
 PALETTE.update({
-    'en_tb_head': P((0.42, 0.31, 0.19), 0.85), 'en_tb_band': P((0.46, 0.32, 0.17), 0.85), 'en_tb_remex': P((0.19, 0.16, 0.13), 0.85),
+    'en_tb_head': P((0.24, 0.17, 0.1), 0.85), 'en_tb_band': P((0.27, 0.18, 0.09), 0.85), 'en_tb_remex': P((0.08, 0.065, 0.05), 0.85),
     'en_para_red': P((0.82, 0.1, 0.08), 0.85), 'en_para_white': P((0.92, 0.91, 0.86), 0.85), 'en_towel': P((0.04, 0.45, 0.52), 0.95),
     'en_cool_blue': P((0.08, 0.32, 0.72), 0.45), 'en_sandal': P((0.95, 0.42, 0.12), 0.6),
     'en_board_coral': P((0.95, 0.35, 0.25), 0.35), 'en_board_mint': P((0.4, 0.82, 0.7), 0.35), 'en_stringer': P((0.42, 0.26, 0.12), 0.5),
@@ -4963,7 +4956,7 @@ def _enz_yacht(sails):
     # ensign at the stern
     rod('wood_dark', (0.8, 4.4, deck_z(4.3) + 0.5), (0.95, 4.75, deck_z(4.3) + 1.25), 0.012, 3)
     box('red', (0.02, 0.36, 0.22), (0.96, 4.95, deck_z(4.3) + 1.05), rot=(0, 0, 0.35))
-    _en_text('cloth_en_navy', 'NAGI', 0.16, (0, L / 2 + 0.005, 0.85), rz=math.pi)
+    _en_text('cloth_en_navy', 'NAGI', 0.16, (0, L / 2 - 0.28 * (sh_at(1) - 0.85) / (sh_at(1) - dk_at(1)) + 0.012, 0.85), rz=math.pi)
 
 @model('yacht', 'ヨット(係留)', '船')
 def yacht(): _enz_yacht(False)
@@ -5065,18 +5058,18 @@ def surfboards():
     for sx in (-1, 1):
         box('enz_teak', (0.07, 0.5, 0.07), (sx * 0.64, 0.17, 0.0))
         box('enz_teak', (0.07, 0.07, 1.42), (sx * 0.64, 0.33, 0.07))
-        o = box('enz_teak', (0.06, 0.06, 0.62), (sx * 0.64, 0.38, 0.62)); o.rotation_euler = (-0.35, 0, 0)
+        rod('enz_teak', (sx * 0.64, -0.02, 0.07), (sx * 0.64, 0.31, 0.62), 0.028, 4)
     box('enz_teak', (1.36, 0.08, 0.08), (0, 0.33, 1.3)); _pv_rbox('en_pad', (1.24, 0.1, 0.1), (0, 0.27, 1.29), 0.03)
     box('enz_teak', (1.36, 0.08, 0.06), (0, 0.02, 0.12))
     for x in (-0.6, -0.2, 0.2, 0.6): cyl('enz_teak', 0.02, 0.3, (x, 0.02, 0.12), 6)
     box('enz_teak', (1.36, 0.06, 0.06), (0, 0.3, 0.07))
     # leash: cuff plus a loose coil lying on the ground
-    pts = []
-    for i in range(16):
-        a = i / 15 * math.tau * 1.5; r = 0.16 - 0.03 * i / 15
-        pts.append((0.52 + math.cos(a) * r, -0.32 + math.sin(a) * r * 0.8, 0.012 + 0.004 * math.sin(a * 2)))
-    pts.insert(0, (0.4, -0.06, 0.08)); _pv_tube('en_leash', pts, 0.008, 4, cap=False)
-    torus('en_leash', 0.06, 0.018, (0.52, -0.32, 0.02), seg=10, rseg=4)
+    pts = [(0.4, -0.05, 0.08), (0.42, -0.03, 0.02)]
+    for i in range(15):
+        a = math.pi + i / 14 * math.tau * 1.4; r = 0.12 - 0.025 * i / 14
+        pts.append((0.42 + math.cos(a) * r * 0.9 + 0.12, 0.16 + math.sin(a) * r, 0.012 + 0.004 * math.sin(a * 2)))
+    _pv_tube('en_leash', pts, 0.008, 4, cap=False)
+    torus('en_leash', 0.055, 0.018, (0.5, 0.17, 0.02), seg=10, rseg=4)
 
 
 # ----------------------------------------------------------------- standing signboards
@@ -5090,13 +5083,16 @@ def _enz_kanban(text, dish):
         for sy in (-1, 1): rod('wood_dark', (sx * Wp, sy * 0.2, 0.07), (sx * Wp, sy * 0.03, 0.3), 0.018, 4)
     box('wood_dark', (0.62, 0.08, 0.06), (0, 0, 2.2)); box('wood_dark', (0.52, 0.05, 0.05), (0, 0, 0.38))
     with xf((0, 0, 2.26)):                                                       # little gable roof
-        for sy in (-1, 1): box('roof_tile', (0.66, 0.2, 0.03), (0, sy * 0.085, 0.04), rot=(sy * 0.55, 0, 0))
-        rod('ridge_tile', (-0.34, 0, 0.14), (0.34, 0, 0.14), 0.025, 6)
+        for sy in (-1, 1): box('roof_tile', (0.62, 0.22, 0.03), (0, sy * 0.09, 0.04), rot=(sy * 0.6, 0, 0))
+        rod('ridge_tile', (-0.32, 0, 0.15), (0.32, 0, 0.15), 0.025, 6)
         prism('wood_dark', [(-0.17, 0.0), (0.17, 0.0), (0.0, 0.11)], 0.56, loc=(0, 0, 0), axis='X')
     box('en_kanban', (0.46, 0.04, 1.76), (0, 0, 0.42))
     box('ink_red', (0.46, 0.045, 0.2), (0, 0, 1.98))
     _en_text('cloth_en_white', '名物', 0.12, (0, -0.026, 2.08))
     _en_text('cloth_en_red', text, 0.17, (0, -0.024, 1.47), vertical=True, spacing=1.08)
+    _en_text('cloth_en_white', '名物', 0.12, (0, 0.026, 2.08), rz=math.pi)
+    _en_text('cloth_en_red', text, 0.17, (0, 0.024, 1.4), rz=math.pi, vertical=True, spacing=1.08)
+    _en_text('cloth_en_ink', '一皿 六百円' if dish == 'don' else '一枚 四百円', 0.05, (0, 0.024, 0.62), rz=math.pi)
     with xf((0, -0.025, 0.72)):
         if dish == 'don':
             prism('en_lacquer', [(math.cos(a) * 0.17, -math.sin(a) * 0.1) for a in (math.pi * k / 8 for k in range(9))] + [(-0.19, 0.012), (0.19, 0.012)], 0.02, axis='Y')
@@ -5165,7 +5161,7 @@ def tonbi():
 
 
 # ----------------------------------------------------------------- Enoden-style tram and station
-PALETTE.update({'eno_green': P((0.04, 0.28, 0.12), 0.45), 'eno_cream': P((0.86, 0.8, 0.62), 0.45), 'eno_roof': P((0.45, 0.47, 0.48), 0.6, 0.3),
+PALETTE.update({'eno_green': P((0.04, 0.28, 0.12), 0.45), 'eno_cream': P((0.86, 0.8, 0.62), 0.45), 'eno_roof': P((0.27, 0.28, 0.29), 0.6, 0.3),
                 'eno_skirt': P((0.08, 0.08, 0.08), 0.6), 'eno_dest': P((0.95, 0.95, 0.9), 0.5, e=(1.0, 0.98, 0.9), es=0.6)})
 
 @model('enoden', '江ノ電風の電車(1両)', '乗り物')
@@ -5231,8 +5227,6 @@ def enoden():
             fr(a + 0.02, a + 0.06, zw0 + 0.12, zw0 + 0.62, 'pv_chrome')
         fr(yc, yr, zbelt - 0.015, zbelt + 0.015, 'pv_chrome')
         bar('eno_cream', min(sx * hw, sx * (hw + 0.05)), max(sx * hw, sx * (hw + 0.05)), yc - 0.1, yr + 0.1, ze - 0.02, ze + 0.03)
-        for y in (-2.1, 2.1, -0.02):
-            fr(y - 0.008, y + 0.008, zb + 0.05, zbelt - 0.02, 'eno_skirt')
     # cab front: gasketed windscreen, wipers, destination board, headlights, tail and marker lights, number
     for z in (zw0 - 0.02, zw1 + 0.02):
         _pv_tube('eno_skirt', [tuple(nose(x, z, -1) + Vector((0, -0.012, 0))) for x in (-0.98, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 0.98)], 0.022, 4, cap=True)
@@ -5242,14 +5236,14 @@ def enoden():
         a = nose(sx * 0.62, zw0 + 0.04, -1) + Vector((0, -0.035, 0)); b = nose(sx * 0.32, zw0 + 0.62, -1) + Vector((0, -0.03, 0))
         rod('steel_dark', tuple(a), tuple(b), 0.012, 4); ico('steel_dark', 0.025, tuple(a), sub=1)
         rod('rubber', tuple(a.lerp(b, 0.3) + Vector((0, -0.012, 0))), tuple(b + Vector((0, -0.012, 0.04))), 0.01, 3)
-    dest = [[tuple(nose(x, z, -1) + Vector((0, -0.02, 0))) for x in (-0.52, -0.26, 0.0, 0.26, 0.52)] for z in (zw1 + 0.06, zw1 + 0.24)]
+    dest = [[tuple(nose(x, z, -1) + Vector((0, -0.02, 0))) for x in (-0.6, -0.3, 0.0, 0.3, 0.6)] for z in (zw1 + 0.05, zw1 + 0.29)]
     _en_sheet(dest, 'eno_dest', 0.03)
-    tz = zw1 + 0.15; _en_text('cloth_en_ink', '江ノ島', 0.15, (0, nose(0, tz, -1).y - 0.038, tz))
+    tz = zw1 + 0.17; _en_text('cloth_en_ink', '江ノ島', 0.19, (0, nose(0, tz, -1).y - 0.038, tz))
     for sx in (-1, 1):
-        for x, z, r, m in ((0.72, F + 0.5, 0.11, 'lamp'), (1.0, F + 0.5, 0.055, 'pv_tail_light')):
+        for x, z, r, m in ((0.68, F + 0.55, 0.14, 'lamp'), (1.0, F + 0.55, 0.06, 'pv_tail_light')):
             p = nose(sx * x, z, -1); ang = math.atan2(sx * x / hw * 0.9, 1.0) * 0.6
-            cyl('pv_chrome', r + 0.025, 0.05, tuple(p + Vector((0, 0.01, 0))), 12, rot=(math.pi / 2, 0, -ang * 1))
-            cyl(m, r, 0.06, tuple(p + Vector((0, -0.01, 0))), 12, rot=(math.pi / 2, 0, -ang))
+            cyl('pv_chrome', r + 0.025, 0.05, tuple(p + Vector((0, 0.01, 0))), 10, rot=(math.pi / 2, 0, -ang * 1))
+            cyl(m, r, 0.06, tuple(p + Vector((0, -0.01, 0))), 10, rot=(math.pi / 2, 0, -ang))
         p = nose(sx * 0.55, ze - 0.05, -1); cyl('pv_amber', 0.035, 0.04, tuple(p), 8, rot=(math.pi / 2, 0, 0))
         p = nose(sx * 0.3, zbelt + 0.02, -1); rod('pv_chrome', tuple(p + Vector((0, -0.04, -0.02))), tuple(p + Vector((0, -0.04, -0.35))), 0.012, 4)   # grab rails
     _en_text('cloth_en_white', '305', 0.12, (0, nose(0, F + 0.45, -1).y - 0.005, F + 0.45))
@@ -5279,7 +5273,7 @@ def enoden():
                 with xf((sx * 0.72, yb + dy, 0.56), ry=math.pi / 2):
                     cyl('steel_dark', 0.33, 0.1, (0, 0, -0.05), 14)
                     cyl('steel_dark', 0.37, 0.025, (0, 0, -sx * 0.075 - 0.0125), 14)
-                    cyl('metal', 0.17, 0.11, (0, 0, -0.055), 8)
+                    cyl('metal', 0.17, 0.11, (0, 0, -0.055), 6)
                     if sx > 0: rod('steel_dark', (0, 0, 0), (0, 0, -1.44), 0.05, 6)
                 box('rubber', (0.08, 0.1, 0.18), (sx * 0.72, yb + dy - sx * 0.0 + (0.36 if dy < 0 else -0.36), 0.42))   # brake shoes
     # underfloor equipment between the bogies
@@ -5288,7 +5282,7 @@ def enoden():
     for sx in (-1, 1): cyl('metal', 0.14, 1.6, (sx * 0.55, 0.0, zb - 0.18), 10, rot=(math.pi / 2, 0, 0))
     # roof: walkway, vents, conduits, resistor/air-con box, pantograph (diamond) with insulators and horns
     rt = ze + 0.45
-    for k, y in enumerate((-4.6, -1.2, 0.6, 1.8, 4.6)):
+    for k, y in enumerate((-4.6, -1.2, 0.6, 4.6)):
         cyl('eno_roof', 0.12, 0.1, (0, y, rt - 0.03), 8); cyl('eno_roof', 0.18, 0.06, (0, y, rt + 0.07), 8, r2=0.05)
     _pv_rbox('eno_roof', (1.3, 2.0, 0.32), (0, 2.85, rt - 0.04), 0.1, segs=2)
     for sx in (-1, 1):
@@ -5326,28 +5320,29 @@ def eno_station():
     box('yellow', (12.2, 0.3, 0.018), (0, -1.28, 0))
     for x in (-5.5, 0, 5.5):
         for y in (-0.9, 0.9):
-            cyl(G, 0.085, zt, (x, y, 0), 10); cyl(G, 0.13, 0.14, (x, y, 0), 10); cyl(G, 0.11, 0.08, (x, y, zt - 0.08), 10)
+            cyl(G, 0.085, zt, (x, y, 0), 8); cyl(G, 0.13, 0.14, (x, y, 0), 8, cap=False); cyl(G, 0.11, 0.08, (x, y, zt - 0.08), 8, cap=False)
             for sx in (-1, 1):
                 if abs(x + sx * 0.6) < 6.1: rod(G, (x, y, zt - 0.6), (x + sx * 0.6, y, zt), 0.035, 4)
             rod(G, (x, y, zt - 0.5), (x, y * 0.45, zt), 0.035, 4)
         box(G, (0.14, 2.15, 0.22), (x, 0, zt))
     for y in (-0.9, 0.9): box(G, (12.3, 0.14, 0.22), (0, y, zt))
     # roof: ridge along X, eaves at +-1.5; trusses at the columns, tiled slabs over a boarded ceiling
-    zr, ze, hw = 3.12, 2.52, 6.2
+    zr, ze, hw, he = 3.12, 2.56, 6.12, 1.4
     for sg in (-1, 1):
-        slab('roof_tile', (-hw, sg * 1.5, ze), (hw, sg * 1.5, ze), (-hw, 0, zr), (hw, 0, zr), 0.07)
-        slab('wood', (-hw + 0.05, sg * 1.45, ze - 0.075), (hw - 0.05, sg * 1.45, ze - 0.075), (-hw + 0.05, 0, zr - 0.075), (hw - 0.05, 0, zr - 0.075), 0.02)
-        box(C, (2 * hw + 0.06, 0.05, 0.16), (0, sg * 1.53, ze - 0.14))
-        bar('alu', -hw, hw, sg * 1.56, sg * 1.62, ze - 0.12, ze - 0.04)
+        slab('roof_tile', (-hw, sg * he, ze), (hw, sg * he, ze), (-hw, 0, zr), (hw, 0, zr), 0.07)
+        slab('wood', (-hw + 0.05, sg * (he - 0.05), ze - 0.075), (hw - 0.05, sg * (he - 0.05), ze - 0.075), (-hw + 0.05, 0, zr - 0.075), (hw - 0.05, 0, zr - 0.075), 0.02)
+        box(C, (2 * hw + 0.06, 0.05, 0.16), (0, sg * (he + 0.03), ze - 0.14))
+        rod('ridge_tile', (-hw, sg * (he + 0.01), ze + 0.03), (hw, sg * (he + 0.01), ze + 0.03), 0.045, 5)
+        bar('alu', -hw, hw, sg * (he + 0.06), sg * (he + 0.11), ze - 0.12, ze - 0.04)
         for sx in (-1, 1):
-            a = Vector((sx * (hw + 0.02), sg * 1.53, ze - 0.06)); b = Vector((sx * (hw + 0.02), 0, zr - 0.02)); d_ = b - a
+            a = Vector((sx * (hw + 0.02), sg * (he + 0.03), ze - 0.06)); b = Vector((sx * (hw + 0.02), 0, zr - 0.02)); d_ = b - a
             o = box(C, (0.05, d_.length + 0.08, 0.17), (a + b) / 2 - Vector((0, 0, 0.1)))
             o.rotation_euler = (math.atan2(d_.z, d_.y) + (0 if sg < 0 else math.pi), 0, 0)
     box('ridge_tile', (2 * hw + 0.1, 0.24, 0.1), (0, 0, zr - 0.04)); rod('ridge_tile', (-hw - 0.05, 0, zr + 0.06), (hw + 0.05, 0, zr + 0.06), 0.07, 6)
     for x in (-5.5, 0, 5.5):
         rod(G, (x, 0, zt + 0.22), (x, 0, zr - 0.1), 0.04, 4)
         for sg in (-1, 1): rod(G, (x, sg * 0.9, zt + 0.22), (x, sg * 0.08, zr - 0.1), 0.03, 4)
-    for sx in (-1, 1): rod('alu', (sx * 6.05, 1.58, ze - 0.08), (sx * 6.05, 1.58, 0.05), 0.03, 6)
+    for sx in (-1, 1): rod('alu', (sx * 6.0, he + 0.08, ze - 0.08), (sx * 6.0, he + 0.08, 0.05), 0.03, 6)
     # station name board hanging from the front beam
     with xf((-2.75, -0.9, 0)):
         for sx in (-1, 1): rod('steel_dark', (sx * 0.9, 0, zt), (sx * 0.9, 0, 2.42), 0.012, 4)
@@ -5360,7 +5355,7 @@ def eno_station():
         _en_text('cloth_en_navy', 'えのしま', 0.2, (0, 0.043, 2.2), rz=math.pi)
         _en_text('cloth_en_ink', 'Enoshima', 0.08, (0, 0.043, 2.04), rz=math.pi)
     # benches
-    for x in (-2.75, 2.75):
+    for x in (-2.75, 1.9):
         with xf((x, 0.55, 0)):
             for k in range(3): box('wood', (1.7, 0.1, 0.035), (0, -0.14 + k * 0.12, 0.42))
             for k in range(2): box('wood', (1.7, 0.03, 0.1), (0, 0.24 + 0.03 * k, 0.56 + k * 0.17), rot=(0.18, 0, 0))
@@ -5368,6 +5363,13 @@ def eno_station():
                 bar('steel_dark', sx * 0.7 - 0.02, sx * 0.7 + 0.02, -0.17, 0.2, 0.38, 0.42)
                 bar('steel_dark', sx * 0.7 - 0.02, sx * 0.7 + 0.02, -0.15, -0.11, 0.0, 0.38)
                 bar('steel_dark', sx * 0.7 - 0.02, sx * 0.7 + 0.02, 0.18, 0.22, 0.0, 0.85)
+    # freestanding station name board (駅名標) on two legs
+    with xf((3.65, 1.05, 0)):
+        for sx in (-1, 1): box(G, (0.07, 0.07, 1.6), (sx * 0.75, 0, 0))
+        box('white', (1.7, 0.05, 0.5), (0, 0, 1.55)); box(G, (1.7, 0.06, 0.1), (0, 0, 1.55)); box(G, (1.76, 0.07, 0.04), (0, 0, 2.05))
+        _en_text('cloth_en_navy', 'えのしま', 0.17, (0, -0.028, 1.86))
+        _en_text('cloth_en_ink', 'Enoshima', 0.07, (0, -0.028, 1.71))
+        _en_text('cloth_en_white', 'EN06', 0.05, (0, -0.033, 1.6))
     # ticket kiosk
     with xf((-4.1, 0.8, 0)):
         box(G, (1.3, 0.85, 1.0), (0, 0, 0))
@@ -5396,7 +5398,7 @@ def eno_station():
     with xf((0, 0, 0)):
         rod('steel_dark', (0, 0, zt), (0, 0, zt - 0.12), 0.015, 4)
         cyl('white', 0.2, 0.07, (0, 0.035, zt - 0.33), 16, rot=(math.pi / 2, 0, 0))
-        torus(G, 0.2, 0.025, (0, 0, zt - 0.33), rot=(math.pi / 2, 0, 0), seg=16, rseg=4)
+        torus(G, 0.2, 0.025, (0, 0, zt - 0.33), rot=(math.pi / 2, 0, 0), seg=16, rseg=3)
         for sy in (-1, 1):
             box('ink', (0.02, 0.01, 0.13), (0, sy * 0.04, zt - 0.33), rot=(0, 0.6, 0)); box('ink', (0.02, 0.01, 0.09), (0, sy * 0.04, zt - 0.33), rot=(0, -2.2, 0))
     for x in (-4.1, -1.4, 1.4, 4.1):
@@ -5406,7 +5408,7 @@ def eno_station():
     for k in range(9):
         x = -6.1 + k * 12.2 / 8; box('wood_dark', (0.08, 0.08, 1.05), (x, 1.42, 0)); box('wood_dark', (0.11, 0.11, 0.03), (x, 1.42, 1.05))
     for z in (0.3, 0.6, 0.9): box('wood', (12.2, 0.04, 0.08), (0, 1.38, z))
-    for k, (x, m) in enumerate(((-1.25, 'hydrangea'), (1.25, 'hydrangea_pink'), (5.0, 'hydrangea'), (-6.0, 'hydrangea_pink'))):
+    for k, (x, m) in enumerate(((-1.25, 'hydrangea'), (1.25, 'hydrangea_pink'), (5.0, 'hydrangea'))):
         cyl('terracotta', 0.2, 0.34, (x, 1.12, 0), 10, r2=0.24)
         ico('leaf', 0.3, (x, 1.12, 0.48), (1, 0.85, 0.65), 2, jitter=0.15, seed=k)
         for j in range(3):
