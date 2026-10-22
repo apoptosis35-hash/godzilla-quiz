@@ -24,7 +24,8 @@ export const MODELS = {
   props: ['dock_straight', 'dock_end', 'bollard', 'tire_fender', 'quay_ladder', 'tetrapod', 'crates_blue', 'styro_boxes', 'pallet', 'handcart', 'forklift',
     'keitora', 'net_pile', 'floats', 'crab_traps', 'rope_coil', 'market_tent', 'utility_pole', 'street_light', 'vending_machine', 'bicycle', 'ac_outdoor',
     'a_frame_sign', 'bench', 'postbox', 'nobori', 'street_lantern', 'direction_sign', 'laundry_pole', 'fence_wood', 'fence_rail', 'fence_log', 'plant_pots',
-    'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging', 'parasol', 'surfboards', 'kanban_shirasu', 'kanban_tako'],
+    'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging', 'parasol', 'surfboards', 'kanban_shirasu', 'kanban_tako',
+    'car_kei', 'car_kei_b', 'car_sedan', 'block_wall', 'guardrail', 'sign_stop', 'sign_speed', 'sign_noparking', 'curve_mirror', 'bus_stop', 'traffic_light'],
   nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c', 'rock_cliff'],
   // animated (cloned)
   dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
@@ -637,13 +638,13 @@ export class Town {
   }
   // ------------------------------------------------------------------ road markings and gutters (real-world street look)
   roads(r) {
-    const B = [], line = 0.15, th = 0.02, ss = Math.atan((streetY(-6) - streetY(-96)) / 90);
+    const B = [], line = 0.15, th = 0.02, ss = -Math.atan((streetY(-6) - streetY(-96)) / 90);
     const rY = (x) => ROAD.y0 + (ROAD.y1 - ROAD.y0) * (x - ROAD.x0) / (ROAD.x1 - ROAD.x0), rs = Math.atan((ROAD.y1 - ROAD.y0) / (ROAD.x1 - ROAD.x0));
     // shopping street: solid edge lines, concrete gutter lids along both sides, two zebra crossings
     for (let z = -8; z > -95; z -= 2) {
       const zc = z - 1;
       for (const x of [37.25, 42.75]) B.push(['road_paint', x, streetY(zc) + 0.03, zc, line, th, 2.0, 0, ss]);
-      for (const x of [36.8, 43.2]) B.push(['gutter', x, streetY(zc) + 0.006, zc, 0.38, 0.03, 0.96, 0, ss], ['gutter', x, streetY(zc) + 0.006, zc - 0.98, 0.38, 0.03, 0.96, 0, ss]);
+      for (const x of [36.8, 43.2]) B.push(['gutter', x, streetY(zc) + 0.05, zc, 0.38, 0.03, 0.96, 0, ss], ['gutter', x, streetY(zc - 0.98) + 0.05, zc - 0.98, 0.38, 0.03, 0.96, 0, ss]);
     }
     for (const zc of [-20, -62]) for (let x = 37.7; x < 42.6; x += 0.9) B.push(['road_paint', x, streetY(zc) + 0.032, zc, 0.45, th, 3.0, 0, ss]);
     // residential lanes: white edge lines on both sides

@@ -3139,6 +3139,506 @@
   ],
   "emit_strength": 0.6
  },
+ "rd_paint_white": {
+  "color": [
+   0.85,
+   0.86,
+   0.86
+  ],
+  "rough": 0.28,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_paint_beige": {
+  "color": [
+   0.64,
+   0.5,
+   0.33
+  ],
+  "rough": 0.3,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_paint_silver": {
+  "color": [
+   0.55,
+   0.56,
+   0.57
+  ],
+  "rough": 0.3,
+  "metal": 0.75,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_glass": {
+  "color": [
+   0.012,
+   0.015,
+   0.018
+  ],
+  "rough": 0.06,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_glass_ws": {
+  "color": [
+   0.03,
+   0.04,
+   0.045
+  ],
+  "rough": 0.04,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_trim": {
+  "color": [
+   0.018,
+   0.018,
+   0.02
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_wheelwell": {
+  "color": [
+   0.008,
+   0.008,
+   0.008
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_hubcap": {
+  "color": [
+   0.62,
+   0.64,
+   0.66
+  ],
+  "rough": 0.3,
+  "metal": 0.7,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_hub_dark": {
+  "color": [
+   0.06,
+   0.065,
+   0.07
+  ],
+  "rough": 0.5,
+  "metal": 0.3,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_headlamp": {
+  "color": [
+   0.75,
+   0.78,
+   0.82
+  ],
+  "rough": 0.08,
+  "metal": 0.6,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_lamp_inner": {
+  "color": [
+   0.2,
+   0.21,
+   0.23
+  ],
+  "rough": 0.15,
+  "metal": 0.8,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_tail": {
+  "color": [
+   0.45,
+   0.015,
+   0.012
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_plate_white": {
+  "color": [
+   0.88,
+   0.89,
+   0.87
+  ],
+  "rough": 0.45,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_plate_green": {
+  "color": [
+   0.03,
+   0.2,
+   0.08
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_chrome": {
+  "color": [
+   0.8,
+   0.82,
+   0.84
+  ],
+  "rough": 0.15,
+  "metal": 1.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_block": {
+  "color": [
+   1.12,
+   1.11,
+   1.06
+  ],
+  "rough": 0.93,
+  "metal": 0.0,
+  "tex": "concrete",
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_block_b": {
+  "color": [
+   1.02,
+   1.01,
+   0.97
+  ],
+  "rough": 0.93,
+  "metal": 0.0,
+  "tex": "concrete",
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_mortar": {
+  "color": [
+   0.78,
+   0.77,
+   0.73
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": "concrete",
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_block_cap": {
+  "color": [
+   0.95,
+   0.94,
+   0.9
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": "concrete",
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_grime": {
+  "color": [
+   0.2,
+   0.2,
+   0.18
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_grime_lt": {
+  "color": [
+   0.27,
+   0.27,
+   0.24
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_streak": {
+  "color": [
+   0.8,
+   0.8,
+   0.74
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": "concrete",
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_streak_lt": {
+  "color": [
+   0.92,
+   0.92,
+   0.86
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": "concrete",
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_rail_white": {
+  "color": [
+   0.8,
+   0.8,
+   0.77
+  ],
+  "rough": 0.4,
+  "metal": 0.15,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_pole": {
+  "color": [
+   0.42,
+   0.44,
+   0.45
+  ],
+  "rough": 0.4,
+  "metal": 0.6,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_pole_dark": {
+  "color": [
+   0.22,
+   0.23,
+   0.24
+  ],
+  "rough": 0.5,
+  "metal": 0.5,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sign_red": {
+  "color": [
+   0.6,
+   0.03,
+   0.02
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sign_white": {
+  "color": [
+   0.88,
+   0.88,
+   0.86
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sign_blue": {
+  "color": [
+   0.02,
+   0.12,
+   0.45
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sign_back": {
+  "color": [
+   0.5,
+   0.52,
+   0.53
+  ],
+  "rough": 0.45,
+  "metal": 0.55,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_orange": {
+  "color": [
+   0.9,
+   0.24,
+   0.02
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_mirror": {
+  "color": [
+   0.9,
+   0.92,
+   0.95
+  ],
+  "rough": 0.03,
+  "metal": 1.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sig_housing": {
+  "color": [
+   0.36,
+   0.38,
+   0.39
+  ],
+  "rough": 0.45,
+  "metal": 0.4,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sig_red": {
+  "color": [
+   1.0,
+   0.04,
+   0.02
+  ],
+  "rough": 0.25,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.06,
+   0.02
+  ],
+  "emit_strength": 5.0
+ },
+ "rd_sig_green": {
+  "color": [
+   0.1,
+   0.95,
+   0.75
+  ],
+  "rough": 0.25,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   0.1,
+   1.0,
+   0.75
+  ],
+  "emit_strength": 4.0
+ },
+ "rd_sig_off": {
+  "color": [
+   0.025,
+   0.03,
+   0.03
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sig_off_y": {
+  "color": [
+   0.07,
+   0.05,
+   0.015
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sig_off_g": {
+  "color": [
+   0.015,
+   0.05,
+   0.04
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_sig_off_r": {
+  "color": [
+   0.08,
+   0.015,
+   0.012
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_bus_green": {
+  "color": [
+   0.02,
+   0.3,
+   0.12
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "rd_seat": {
+  "color": [
+   0.05,
+   0.25,
+   0.45
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
  "pv_skin_tan": {
   "color": [
    0.6,

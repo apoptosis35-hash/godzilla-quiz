@@ -5579,6 +5579,520 @@ def eno_station():
             a = j * 2.1 + k; ico(m, 0.12, (x + math.cos(a) * 0.15, 1.12 + math.sin(a) * 0.1, 0.62 + 0.04 * j), sub=1, jitter=0.1, seed=j)
 
 
+# --- rd begin (road & street furniture: cars, block wall, guardrail, road signs, curve mirror, bus stop, signal)
+PALETTE.update({
+    'rd_paint_white': P((0.85, 0.86, 0.86), 0.28), 'rd_paint_beige': P((0.64, 0.5, 0.33), 0.3), 'rd_paint_silver': P((0.55, 0.56, 0.57), 0.3, 0.75),
+    'rd_glass': P((0.012, 0.015, 0.018), 0.06), 'rd_glass_ws': P((0.03, 0.04, 0.045), 0.04), 'rd_trim': P((0.018, 0.018, 0.02), 0.5),
+    'rd_wheelwell': P((0.008, 0.008, 0.008), 0.95), 'rd_hubcap': P((0.62, 0.64, 0.66), 0.3, 0.7), 'rd_hub_dark': P((0.06, 0.065, 0.07), 0.5, 0.3),
+    'rd_headlamp': P((0.75, 0.78, 0.82), 0.08, 0.6), 'rd_lamp_inner': P((0.2, 0.21, 0.23), 0.15, 0.8), 'rd_tail': P((0.45, 0.015, 0.012), 0.2),
+    'rd_plate_white': P((0.88, 0.89, 0.87), 0.45), 'rd_plate_green': P((0.03, 0.2, 0.08), 0.5), 'rd_chrome': P((0.8, 0.82, 0.84), 0.15, 1.0),
+    'rd_block': P((1.12, 1.11, 1.06), 0.93, tex='concrete'), 'rd_block_b': P((1.02, 1.01, 0.97), 0.93, tex='concrete'),
+    'rd_mortar': P((0.78, 0.77, 0.73), 0.95, tex='concrete'), 'rd_block_cap': P((0.95, 0.94, 0.9), 0.9, tex='concrete'),
+    'rd_grime': P((0.2, 0.2, 0.18), 0.95), 'rd_grime_lt': P((0.27, 0.27, 0.24), 0.95), 'rd_streak': P((0.8, 0.8, 0.74), 0.95, tex='concrete'), 'rd_streak_lt': P((0.92, 0.92, 0.86), 0.95, tex='concrete'),
+    'rd_rail_white': P((0.8, 0.8, 0.77), 0.4, 0.15), 'rd_pole': P((0.42, 0.44, 0.45), 0.4, 0.6), 'rd_pole_dark': P((0.22, 0.23, 0.24), 0.5, 0.5),
+    'rd_sign_red': P((0.6, 0.03, 0.02), 0.4), 'rd_sign_white': P((0.88, 0.88, 0.86), 0.4), 'rd_sign_blue': P((0.02, 0.12, 0.45), 0.4),
+    'rd_sign_back': P((0.5, 0.52, 0.53), 0.45, 0.55), 'rd_orange': P((0.9, 0.24, 0.02), 0.4), 'rd_mirror': P((0.9, 0.92, 0.95), 0.03, 1.0),
+    'rd_sig_housing': P((0.36, 0.38, 0.39), 0.45, 0.4), 'rd_sig_red': P((1.0, 0.04, 0.02), 0.25, e=(1.0, 0.06, 0.02), es=5.0),
+    'rd_sig_green': P((0.1, 0.95, 0.75), 0.25, e=(0.1, 1.0, 0.75), es=4.0), 'rd_sig_off': P((0.025, 0.03, 0.03), 0.2),
+    'rd_sig_off_y': P((0.07, 0.05, 0.015), 0.2), 'rd_sig_off_g': P((0.015, 0.05, 0.04), 0.2), 'rd_sig_off_r': P((0.08, 0.015, 0.012), 0.2),
+    'rd_bus_green': P((0.02, 0.3, 0.12), 0.4), 'rd_seat': P((0.05, 0.25, 0.45), 0.5),
+})
+
+def rd_flat(mat, pts):
+    """Single flat polygon (front side = counter-clockwise as seen from the viewer)."""
+    return mesh(mat, pts, [tuple(range(len(pts)))])
+
+def rd_plate(outline, y, t, front, back, rim=None):
+    """Flat sign plate in the XZ plane: outline [(x, z)] counter-clockwise seen from the front (-Y); front face at y,
+    back face at y + t. Front and back get their own materials (rim = back by default)."""
+    n = len(outline)
+    F = [(x, y, z) for x, z in outline]; B = [(x, y + t, z) for x, z in outline]
+    mesh(front, F, [tuple(range(n))])
+    mesh(back, B, [tuple(reversed(range(n)))])
+    mesh(rim or back, F + B, [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)])
+
+def rd_circle(r, n, cx=0.0, cz=0.0, a0=0.0):
+    return [(cx + r * math.cos(a0 + k / n * math.tau), cz + r * math.sin(a0 + k / n * math.tau)) for k in range(n)]
+
+def rd_ring(mat, r0, r1, y, n=24, cx=0.0, cz=0.0):
+    """Flat annulus facing -Y at depth y."""
+    a, b = rd_circle(r0, n, cx, cz), rd_circle(r1, n, cx, cz)
+    v = [(x, y, z) for x, z in a] + [(x, y, z) for x, z in b]
+    return mesh(mat, v, [(n + (k + 1) % n, (k + 1) % n, k, n + k) for k in range(n)])
+
+def rd_disc(mat, r, y, n=24, cx=0.0, cz=0.0):
+    return rd_flat(mat, [(x, y, z) for x, z in rd_circle(r, n, cx, cz)])
+
+# ---- cars
+def rd_car_body(st, WL, zb, body, roof=None, roof_z=9.0, a_pillar=None, bulge=0.012):
+    """Car upper body skinned through stations front->back:
+    (y, z_top, z_belt, plan_inset, tumblehome, roof_round, crown, segment) where segment names the materials of the span
+    to the next station: 'paint', 'ws' (windscreen + side glass), 'win' (side glass), 'pillar' (black B pillar),
+    'hatch' (sloping rear glass)."""
+    roof = roof or body; a_pillar = a_pillar or body
+    rings = []
+    for (y, zt, zbl, ins, wti, rr, cr, seg) in st:
+        wl = WL - ins; wt = wl - wti; zbl = max(zb + 0.02, min(zbl, zt - rr - 0.01))
+        R = [(wl, zb), (wl + bulge, (zb + zbl) / 2), (wl, zbl), (wt, zt - rr), (wt - rr * 0.32, zt - rr * 0.32), (wt - rr, zt)]
+        rings.append([(x, y, z) for x, z in R] + [(0.0, y, zt + cr)] + [(-x, y, z) for x, z in reversed(R)])
+    def mf(i, j, c):
+        seg = st[i][7]; k = j if j <= 5 else 11 - j
+        if j == 12: return 'rd_wheelwell'
+        if seg in ('ws', 'hatch') and k >= 4: return 'rd_glass_ws' if seg == 'ws' else 'rd_glass'
+        if seg == 'ws' and k == 3: return a_pillar
+        if seg in ('ws', 'win') and k == 2: return 'rd_glass'
+        if seg == 'pillar' and k == 2: return 'rd_trim'
+        return roof if (k >= 3 and c.z > roof_z) else body
+    _en_skin(rings, mf, wrap=True, caps=(body, body))
+    return rings
+
+def rd_side_panels(WL, t, y0, y1, zlo, ztop, arches, body):
+    """Lower body sides (sill to beltline base) with real wheel-arch cut-outs; the arch lips and inner faces are dark."""
+    prof = [(y0, zlo)]
+    for (yc, zc, R) in arches:
+        phi = math.asin(max(-1.0, min(1.0, (zc - zlo) / R)))
+        n = 11
+        for k in range(n + 1):
+            th = math.pi + phi - (math.pi + 2 * phi) * k / n
+            prof.append((yc + R * math.cos(th), zc + R * math.sin(th)))
+    prof += [(y1, zlo), (y1, ztop), (y0, ztop)]
+    n = len(prof); arch_edges = set(range(1, n - 3)) - {k for k in range(n) if prof[k][1] <= zlo + 1e-6 and prof[(k + 1) % n][1] <= zlo + 1e-6}
+    for s in (-1, 1):
+        xo, xi = s * WL, s * (WL - t)
+        O = [(xo, y, z) for y, z in prof]; I = [(xi, y, z) for y, z in prof]
+        mesh(body, O, [tuple(range(n)) if s > 0 else tuple(reversed(range(n)))])
+        mesh('rd_wheelwell', I, [tuple(reversed(range(n))) if s > 0 else tuple(range(n))])
+        for k in range(n):
+            k2 = (k + 1) % n
+            q = (k, k2, n + k2, n + k) if s > 0 else (n + k, n + k2, k2, k)
+            mesh('rd_wheelwell' if k in arch_edges else body, O + I, [q])
+
+def rd_wheel(loc, R, W, side, cap='rd_hubcap', seg=12, tyre='rubber'):
+    """Car wheel turning about X: tyre with rounded shoulders, dished hub cap with dark slots facing outwards (side)."""
+    tr = R * 0.68; s = side
+    with xf(loc, ry=math.pi / 2):
+        _pv_lathe(tyre, [(tr, -W / 2), (R - 0.03, -W / 2), (R, -W * 0.22), (R, W * 0.22), (R - 0.03, W / 2), (tr, W / 2)], seg=seg, cap=False)
+        rings = []
+        for (r, z) in ((tr, 0.5), (tr * 0.9, 0.4), (tr * 0.45, 0.47), (tr * 0.18, 0.53), (0.0, 0.54)):
+            rings.append([(r * math.cos(k / seg * math.tau), r * math.sin(k / seg * math.tau), s * z * W) for k in range(seg)])
+        if s < 0: rings = [list(reversed(rg)) for rg in rings]
+        _en_skin(rings, lambda i, j, c: ('rd_hub_dark' if i == 0 or (i == 1 and j % 2 == 0) else cap), wrap=True)
+        cyl('rd_wheelwell', tr, 0.01, (0, 0, -s * W * 0.45 - 0.005), seg)
+
+def rd_number_plate(y, z, front, kei, ink):
+    """Japanese number plate (kei: yellow, black letters; private: white, green letters). front: facing -Y.
+    Flat lettering (single-sided, facing out): the big serial number, the small top line as a bar."""
+    rz = 0.0 if front else math.pi
+    with xf((0, y, z), rz=rz):
+        _pv_rbox('pv_plate' if kei else 'rd_plate_white', (0.33, 0.012, 0.165), (0, 0.006, -0.0825), 0.008)
+        _en_text(ink, '12-34', 0.078, (0.02, -0.0015, -0.035))
+        box2(ink, -0.07, 0.07, -0.0035, 0.0, 0.032, 0.05)
+        box2(ink, -0.14, -0.105, -0.0035, 0.0, -0.05, -0.015)
+
+def rd_door_line(WL, pts, bulge=0.012):
+    """Thin dark shut line along the car side (pts = [(y, z)]) on both sides."""
+    for s in (-1, 1):
+        _pv_tube('rd_trim', [(s * (WL + 0.004), y, z) for y, z in pts], 0.0045, 3, cap=False)
+
+def rd_car_mirror(WL, y, z, body, tilt=0.0):
+    """Door mirrors folded back against the window (as on a parked car): black base, body-coloured housing."""
+    for s in (-1, 1):
+        box2('rd_trim', s * WL - 0.03, s * WL + 0.03, y - 0.05, y + 0.05, z - 0.06, z + 0.0)
+        with xf((s * (WL + 0.02), y + 0.1, z - 0.06), rz=-s * 0.06, rx=tilt):
+            _pv_rbox(body, (0.06, 0.2, 0.12), (0, 0, 0), 0.025)
+
+def rd_kei(body, roof, b=False):
+    WL, zb = 0.74, 0.66
+    if not b:   # tall, blunt (N-BOX-like)
+        st = [(-1.71, 0.92, 0.8, 0.13, 0.03, 0.06, 0.01, 'paint'), (-1.685, 0.975, 0.86, 0.05, 0.03, 0.07, 0.015, 'paint'),
+              (-1.62, 1.005, 0.9, 0.012, 0.03, 0.07, 0.02, 'paint'), (-1.45, 1.04, 0.94, 0.0, 0.04, 0.07, 0.025, 'paint'),
+              (-1.22, 1.075, 0.98, 0.0, 0.05, 0.07, 0.025, 'ws'), (-0.98, 1.29, 1.0, 0.0, 0.08, 0.08, 0.03, 'ws'),
+              (-0.74, 1.5, 1.01, 0.0, 0.1, 0.09, 0.03, 'ws'), (-0.52, 1.655, 1.02, 0.0, 0.12, 0.1, 0.025, 'win'),
+              (-0.4, 1.71, 1.02, 0.0, 0.13, 0.1, 0.02, 'win'), (0.1, 1.725, 1.02, 0.0, 0.13, 0.1, 0.02, 'pillar'),
+              (0.2, 1.725, 1.02, 0.0, 0.13, 0.1, 0.02, 'win'), (0.95, 1.725, 1.02, 0.0, 0.13, 0.1, 0.02, 'paint'),
+              (1.07, 1.725, 1.02, 0.0, 0.13, 0.1, 0.02, 'win'), (1.42, 1.72, 1.02, 0.0, 0.13, 0.1, 0.02, 'paint'),
+              (1.62, 1.71, 1.02, 0.006, 0.13, 0.1, 0.02, 'paint'), (1.69, 1.69, 1.0, 0.03, 0.14, 0.09, 0.015, 'paint'),
+              (1.715, 1.655, 0.98, 0.07, 0.14, 0.07, 0.01, None)]
+    else:       # rounder, slightly lower, two-tone (Move Canbus-like)
+        st = [(-1.71, 0.86, 0.78, 0.16, 0.05, 0.08, 0.01, 'paint'), (-1.68, 0.93, 0.82, 0.07, 0.05, 0.09, 0.02, 'paint'),
+              (-1.6, 0.98, 0.86, 0.02, 0.05, 0.1, 0.025, 'paint'), (-1.42, 1.03, 0.92, 0.0, 0.06, 0.1, 0.03, 'paint'),
+              (-1.2, 1.07, 0.97, 0.0, 0.07, 0.1, 0.03, 'ws'), (-0.98, 1.27, 0.99, 0.0, 0.1, 0.11, 0.03, 'ws'),
+              (-0.76, 1.45, 1.0, 0.0, 0.12, 0.13, 0.03, 'ws'), (-0.55, 1.59, 1.0, 0.0, 0.14, 0.15, 0.03, 'win'),
+              (-0.38, 1.655, 1.0, 0.0, 0.15, 0.16, 0.025, 'win'), (0.08, 1.68, 1.0, 0.0, 0.15, 0.16, 0.025, 'pillar'),
+              (0.18, 1.68, 1.0, 0.0, 0.15, 0.16, 0.025, 'win'), (0.98, 1.675, 1.0, 0.0, 0.15, 0.16, 0.025, 'paint'),
+              (1.1, 1.67, 1.0, 0.0, 0.15, 0.16, 0.025, 'win'), (1.4, 1.66, 1.0, 0.0, 0.15, 0.16, 0.025, 'paint'),
+              (1.6, 1.64, 1.0, 0.01, 0.15, 0.15, 0.02, 'paint'), (1.68, 1.6, 0.98, 0.04, 0.16, 0.13, 0.015, 'paint'),
+              (1.712, 1.55, 0.96, 0.09, 0.16, 0.1, 0.01, None)]
+    rd_car_body(st, WL, zb, body, roof, roof_z=1.45 if b else 9.0)
+    yf, yr, R = -1.08, 1.3, 0.275
+    rd_side_panels(WL, 0.17, -1.6, 1.6, 0.21, 0.7, [(yf, 0.27, 0.335), (yr, 0.27, 0.335)], body)
+    box2('rd_wheelwell', -0.56, 0.56, -1.5, 1.5, 0.16, 0.7)
+    for s in (-1, 1):
+        for y in (yf, yr): rd_wheel((s * 0.635, y, R), R, 0.155, s)
+    # front: bumper, grille, lamps, plate
+    _pv_rbox(body, (1.46, 0.24, 0.48), (0, -1.6, 0.2), 0.09, segs=2)
+    _pv_rbox('rd_trim', (0.62, 0.03, 0.1), (0, -1.725, 0.26), 0.03)
+    if not b:
+        for s in (-1, 1):
+            with xf((s * 0.47, -1.7, 0.75), rz=s * 0.16):
+                _pv_rbox('rd_headlamp', (0.34, 0.05, 0.17), (0, 0, 0), 0.035)
+                _pv_rbox('rd_lamp_inner', (0.12, 0.02, 0.08), (-s * 0.05, -0.022, 0.045), 0.02)
+                _pv_rbox('pv_amber', (0.07, 0.02, 0.05), (s * 0.11, -0.018, 0.06), 0.01)
+            _pv_rbox('rd_trim', (0.12, 0.03, 0.05), (s * 0.52, -1.725, 0.3), 0.015)
+        _pv_rbox('rd_trim', (0.56, 0.03, 0.14), (0, -1.715, 0.73), 0.03)
+        _pv_rbox('rd_chrome', (0.62, 0.02, 0.035), (0, -1.73, 0.86), 0.012)
+        _pv_rbox('rd_chrome', (0.06, 0.02, 0.05), (0, -1.735, 0.78), 0.01)
+    else:
+        for s in (-1, 1):
+            with xf((s * 0.46, -1.7, 0.8), rz=s * 0.22, rx=math.pi / 2):
+                cyl('rd_chrome', 0.1, 0.03, (0, 0, -0.01), 14, r2=0.095)
+                cyl('rd_headlamp', 0.085, 0.02, (0, 0, 0.015), 14)
+                cyl('rd_lamp_inner', 0.04, 0.01, (0, 0, 0.03), 10)
+            _pv_rbox('pv_amber', (0.09, 0.03, 0.04), (s * 0.52, -1.725, 0.36), 0.012)
+        _pv_rbox('rd_chrome', (0.5, 0.03, 0.05), (0, -1.73, 0.76), 0.02)
+        _pv_rbox('rd_chrome', (0.07, 0.02, 0.07), (0, -1.75, 0.73), 0.02)
+    rd_number_plate(-1.735, 0.6, True, True, 'ink')
+    # windscreen wipers, door shut lines, handles, mirrors
+    for s in (-1, 1):
+        rod('rd_trim', (s * 0.05, -1.2, 1.1), (s * 0.5, -1.17, 1.11), 0.01, 4)
+    yd = (-0.7, 0.13, 0.97)
+    rd_door_line(WL, [(yd[0], 1.01), (yd[0] - 0.02, 0.6), (yd[0] + 0.02, 0.28), (yd[1], 0.26), (yd[2], 0.26), (yd[2], 0.6), (yd[2], 1.01)])
+    rd_door_line(WL, [(yd[1], 0.27), (yd[1], 0.6), (yd[1], 1.01)])
+    for s in (-1, 1):
+        for y in (-0.08, 0.3): box2('rd_trim' if not b else 'rd_chrome', s * WL - 0.012, s * WL + 0.012, y - 0.065, y + 0.065, 0.915, 0.945)
+        box2('rd_trim', s * (WL + 0.003) - 0.006, s * (WL + 0.003) + 0.006, 0.97, 1.5, 0.95, 0.975)   # slide rail
+    rd_car_mirror(WL, -0.88, 1.12, body)
+    # rear: glass, tail lamps, bumper, plate
+    zt = 1.62 if not b else 1.5
+    _pv_rbox('rd_glass', (1.04, 0.03, zt - 1.13), (0, 1.705, 1.12), 0.04)
+    rod('rd_trim', (0.0, 1.73, 1.2), (0.3, 1.73, 1.37), 0.008, 4)
+    _pv_rbox('rd_tail', (0.3, 0.02, 0.025), (0, 1.72, zt + 0.015), 0.008)
+    for s in (-1, 1):
+        if not b:
+            _pv_rbox('rd_tail', (0.11, 0.06, 0.42), (s * 0.63, 1.69, 0.78), 0.03)
+            _pv_rbox('pv_amber', (0.085, 0.02, 0.07), (s * 0.635, 1.72, 0.92), 0.01)
+            _pv_rbox('rd_headlamp', (0.085, 0.02, 0.06), (s * 0.635, 1.72, 0.84), 0.01)
+        else:
+            _pv_rbox('rd_tail', (0.2, 0.06, 0.16), (s * 0.58, 1.69, 0.84), 0.05, segs=2)
+            _pv_rbox('pv_amber', (0.07, 0.02, 0.05), (s * 0.6, 1.735, 0.86), 0.012)
+    _pv_rbox(body, (1.46, 0.2, 0.46), (0, 1.62, 0.2), 0.08, segs=2)
+    _pv_rbox('rd_trim', (1.2, 0.03, 0.09), (0, 1.715, 0.24), 0.03)
+    for s in (-1, 1): _pv_tube('rd_trim', [(s * 0.6, 1.712, 0.67), (s * 0.6, 1.712, zt + 0.04)], 0.004, 3, cap=False)
+    rd_number_plate(1.725, 0.79, False, True, 'ink')
+
+@model('car_kei', '軽自動車(白・トールワゴン)', '乗り物')
+def car_kei(): rd_kei('rd_paint_white', None)
+
+@model('car_kei_b', '軽自動車(ベージュ・ツートン)', '乗り物')
+def car_kei_b(): rd_kei('rd_paint_beige', 'rd_paint_white', b=True)
+
+@model('car_sedan', '乗用車(シルバー・ハッチバック)', '乗り物')
+def car_sedan():
+    WL, zb, body = 0.85, 0.62, 'rd_paint_silver'
+    st = [(-2.16, 0.72, 0.66, 0.2, 0.04, 0.05, 0.01, 'paint'), (-2.12, 0.78, 0.7, 0.09, 0.04, 0.06, 0.02, 'paint'),
+          (-2.02, 0.81, 0.74, 0.03, 0.05, 0.07, 0.03, 'paint'), (-1.75, 0.86, 0.78, 0.005, 0.06, 0.08, 0.04, 'paint'),
+          (-1.35, 0.92, 0.84, 0.0, 0.07, 0.08, 0.045, 'paint'), (-1.0, 0.97, 0.9, 0.0, 0.08, 0.08, 0.045, 'ws'),
+          (-0.7, 1.17, 0.92, 0.0, 0.13, 0.09, 0.04, 'ws'), (-0.4, 1.33, 0.94, 0.0, 0.17, 0.1, 0.035, 'ws'),
+          (-0.16, 1.41, 0.95, 0.0, 0.2, 0.11, 0.03, 'win'), (0.1, 1.425, 0.96, 0.0, 0.2, 0.11, 0.03, 'pillar'),
+          (0.2, 1.425, 0.965, 0.0, 0.2, 0.11, 0.03, 'win'), (0.75, 1.4, 0.98, 0.0, 0.2, 0.11, 0.03, 'win'),
+          (1.0, 1.36, 0.99, 0.0, 0.21, 0.1, 0.03, 'paint'), (1.2, 1.31, 1.0, 0.0, 0.21, 0.1, 0.03, 'hatch'),
+          (1.5, 1.22, 1.0, 0.0, 0.2, 0.09, 0.03, 'hatch'), (1.82, 1.11, 1.0, 0.01, 0.17, 0.07, 0.025, 'paint'),
+          (1.98, 1.06, 0.98, 0.02, 0.15, 0.05, 0.02, 'paint'), (2.1, 1.02, 0.96, 0.05, 0.12, 0.05, 0.015, 'paint'),
+          (2.16, 0.97, 0.92, 0.12, 0.1, 0.05, 0.01, None)]
+    rd_car_body(st, WL, zb, body)
+    yf, yr, R = -1.33, 1.37, 0.31
+    rd_side_panels(WL, 0.2, -2.0, 2.0, 0.22, 0.66, [(yf, 0.3, 0.37), (yr, 0.3, 0.37)], body)
+    box2('rd_wheelwell', -0.64, 0.64, -1.95, 1.95, 0.17, 0.66)
+    for s in (-1, 1):
+        for y in (yf, yr): rd_wheel((s * 0.73, y, R), R, 0.19, s)
+    # front: bumper with a big lower grille, slim swept headlamps, upper grille
+    _pv_rbox(body, (1.7, 0.3, 0.42), (0, -2.03, 0.2), 0.1, segs=2)
+    _pv_rbox('rd_trim', (0.9, 0.03, 0.17), (0, -2.175, 0.27), 0.04)
+    _pv_rbox('rd_trim', (0.5, 0.05, 0.07), (0, -2.15, 0.63), 0.02)
+    for s in (-1, 1):
+        with xf((s * 0.5, -2.13, 0.635), rz=s * 0.3):
+            _pv_rbox('rd_trim', (0.38, 0.07, 0.11), (0, 0, 0), 0.03)
+            _pv_rbox('rd_headlamp', (0.3, 0.02, 0.07), (s * 0.02, -0.03, 0.02), 0.015)
+            _pv_rbox('rd_lamp_inner', (0.1, 0.02, 0.045), (-s * 0.05, -0.036, 0.032), 0.01)
+            box2('pv_amber', s * 0.12 - 0.035, s * 0.12 + 0.035, -0.042, -0.038, 0.035, 0.06)
+        _pv_rbox('rd_trim', (0.1, 0.03, 0.05), (s * 0.62, -2.12, 0.32), 0.015)
+    rd_number_plate(-2.185, 0.43, True, False, 'rd_plate_green')
+    for s in (-1, 1): rod('rd_trim', (s * 0.05, -0.99, 1.0), (s * 0.6, -0.95, 1.0), 0.01, 4)
+    # doors, handles, mirrors, roof fin
+    rd_door_line(WL, [(-0.95, 0.94), (-0.97, 0.6), (-0.94, 0.27), (1.0, 0.27), (1.0, 0.6), (0.96, 0.99)])
+    rd_door_line(WL, [(0.14, 0.28), (0.14, 0.6), (0.13, 0.96)])
+    for s in (-1, 1):
+        for y in (-0.22, 0.62): box2('rd_trim', s * WL - 0.012, s * WL + 0.012, y - 0.07, y + 0.07, 0.86, 0.885)
+    rd_car_mirror(WL - 0.03, -0.62, 1.03, body)
+    _pv_rbox('rd_trim', (0.06, 0.16, 0.06), (0, 1.05, 1.38), 0.025)
+    # rear: wrap-round tail lamps, bumper, plate, spoiler line
+    for s in (-1, 1):
+        with xf((s * 0.6, 2.085, 0.9), rz=-s * 0.3):
+            _pv_rbox('rd_tail', (0.46, 0.07, 0.13), (0, 0, 0), 0.035)
+            _pv_rbox('rd_lamp_inner', (0.14, 0.02, 0.04), (-s * 0.1, 0.03, 0.045), 0.008)
+    _pv_rbox('rd_trim', (1.1, 0.04, 0.03), (0, 2.13, 0.84), 0.01)
+    _pv_rbox(body, (1.7, 0.26, 0.46), (0, 2.03, 0.2), 0.1, segs=2)
+    _pv_rbox('rd_trim', (1.3, 0.03, 0.1), (0, 2.17, 0.24), 0.03)
+    rd_number_plate(2.18, 0.5, False, False, 'rd_plate_green')
+    for s in (-1, 1): box2('rd_trim', s * (WL + 0.004) - 0.01, s * (WL + 0.004) + 0.01, -0.95, 1.0, 0.22, 0.3)   # rocker moulding
+    _pv_rbox('rd_trim', (1.1, 0.12, 0.02), (0, 1.86, 1.1), 0.01)
+
+# ---- block wall, guardrail
+def rd_bar_xz(mat, p0, p1, w, y0, y1):
+    """Flat bar between two points in the XZ plane, spanning y0..y1 (four long faces, no end caps)."""
+    a, b = Vector((p0[0], 0, p0[1])), Vector((p1[0], 0, p1[1]))
+    d = (b - a).normalized(); n = Vector((-d.z, 0, d.x)) * w / 2
+    q = [a - n, b - n, b + n, a + n]
+    v = [(p.x, y0, p.z) for p in q] + [(p.x, y1, p.z) for p in q]
+    return mesh(mat, v, [(0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)])
+
+@model('block_wall', 'ブロック塀(2m)', '住宅の小物')
+def block_wall():
+    # Stack-bonded (芋目地) 390x190 hollow blocks on a low concrete footing: block faces stand 5 mm proud of the mortar core so
+    # the joints read as real recessed lines; one course of perforated blocks (透かしブロック) and a precast cap (笠木).
+    L, T, z0, ch, cw = 2.0, 0.12, 0.07, 0.2, 0.4
+    deco_course, deco_cols = 3, (1, 3)
+    rnd = random.Random(7)
+    box2('rd_block_cap', -L / 2, L / 2, -0.075, 0.075, 0.0, z0)
+    zc0 = z0 + deco_course * ch
+    box2('rd_mortar', -L / 2, L / 2, -0.055, 0.055, z0, zc0)
+    box2('rd_mortar', -L / 2, L / 2, -0.055, 0.055, zc0 + ch, z0 + 5 * ch)
+    xs = [-L / 2] + [x for c in deco_cols for x in (-L / 2 + c * cw + 0.05, -L / 2 + (c + 1) * cw - 0.05)] + [L / 2]
+    for k in range(0, len(xs), 2): box2('rd_mortar', xs[k], xs[k + 1], -0.055, 0.055, zc0, zc0 + ch)
+    for r in range(5):
+        for c in range(5):
+            x0, x1, za, zb = -L / 2 + c * cw + 0.005, -L / 2 + (c + 1) * cw - 0.005, z0 + r * ch + 0.005, z0 + (r + 1) * ch - 0.005
+            mat = 'rd_block' if rnd.random() < 0.6 else 'rd_block_b'
+            if r == deco_course and c in deco_cols:
+                xi0, xi1, zi0, zi1 = x0 + 0.045, x1 - 0.045, za + 0.035, zb - 0.035
+                for y, s in ((-T / 2, 1), (T / 2, -1)):
+                    O = [(x0, y, za), (x1, y, za), (x1, y, zb), (x0, y, zb)]; I = [(xi0, y, zi0), (xi1, y, zi0), (xi1, y, zi1), (xi0, y, zi1)]
+                    f = [(k, (k + 1) % 4, 4 + (k + 1) % 4, 4 + k) for k in range(4)]
+                    mesh('rd_block', O + I, f if s > 0 else [tuple(reversed(q)) for q in f])
+                I0 = [(xi0, -T / 2, zi0), (xi1, -T / 2, zi0), (xi1, -T / 2, zi1), (xi0, -T / 2, zi1)]
+                I1 = [(x, T / 2, z) for x, _, z in I0]
+                mesh('rd_block_b', I0 + I1, [(4 + (k + 1) % 4, 4 + k, k, (k + 1) % 4) for k in range(4)])
+                mx, mz = (xi0 + xi1) / 2, (zi0 + zi1) / 2   # lattice pattern: three uprights and a centre rail
+                for x in (mx - 0.075, mx, mx + 0.075): rd_bar_xz('rd_block', (x, zi0), (x, zi1), 0.026, -T / 2 + 0.012, T / 2 - 0.012)
+                rd_bar_xz('rd_block', (xi0, mz), (xi1, mz), 0.024, -T / 2 + 0.012, T / 2 - 0.012)
+                continue
+            rd_flat(mat, [(x0, -T / 2, za), (x1, -T / 2, za), (x1, -T / 2, zb), (x0, -T / 2, zb)])
+            rd_flat(mat, [(x1, T / 2, za), (x0, T / 2, za), (x0, T / 2, zb), (x1, T / 2, zb)])
+    for s in (-1, 1):   # end faces (hidden where segments abut)
+        q = [(s * L / 2, -T / 2, z0), (s * L / 2, T / 2, z0), (s * L / 2, T / 2, z0 + 5 * ch), (s * L / 2, -T / 2, z0 + 5 * ch)]
+        rd_flat('rd_block_b', q if s > 0 else list(reversed(q)))
+    zt = z0 + 5 * ch
+    prism('rd_block_cap', [(-0.075, 0.0), (0.075, 0.0), (0.075, 0.035), (0.035, 0.07), (-0.035, 0.07), (-0.075, 0.035)], L, loc=(0, 0, zt), axis='X')
+    # rain streaks under the cap and splash dirt at the foot
+    for y, s in ((-T / 2 - 0.0015, 1), (T / 2 + 0.0015, -1)):
+        for k in range(4):
+            x = rnd.uniform(-0.9, 0.9); w = rnd.uniform(0.04, 0.12); h = rnd.uniform(0.3, 0.8)
+            q = [(x - w * 0.3, y, zt - h), (x + w * 0.25, y, zt - h), (x + w / 2, y, zt), (x - w / 2, y, zt)]
+            rd_flat('rd_streak' if k % 2 else 'rd_streak_lt', q if s > 0 else list(reversed(q)))
+        q = [(-L / 2, y, z0), (L / 2, y, z0), (L / 2, y, z0 + 0.05), (-L / 2, y, z0 + 0.05)]
+        rd_flat('rd_streak', q if s > 0 else list(reversed(q)))
+
+@model('guardrail', 'ガードレール(4m)', '道の小物')
+def guardrail():
+    # Japanese W-beam guardrail: round white posts every 2 m, spacer brackets, a 4 m W-beam on the road side (-Y),
+    # post and splice bolts and an orange reflector (視線誘導標) on each post.
+    zc = 0.7
+    prof = [(-0.155, -0.092), (-0.15, -0.11), (-0.128, -0.152), (-0.095, -0.172), (-0.06, -0.162), (-0.028, -0.13), (0.0, -0.118),
+            (0.028, -0.13), (0.06, -0.162), (0.095, -0.172), (0.128, -0.152), (0.15, -0.11), (0.155, -0.092)]
+    outer = [(y, zc + u) for u, y in prof]; inner = [(y + 0.005, zc + u) for u, y in reversed(prof)]
+    prism('rd_rail_white', outer + inner, 4.0, loc=(0, 0, 0), axis='X')
+    for x in (-1.0, 1.0):
+        cyl('rd_rail_white', 0.07, 0.86, (x, 0, 0), 12)
+        cyl('rd_rail_white', 0.072, 0.03, (x, 0, 0.86), 12, r2=0.05)
+        cyl('rd_grime', 0.074, 0.05, (x, 0, 0), 12, cap=False)
+        box2('rd_rail_white', x - 0.05, x + 0.05, -0.095, -0.05, zc - 0.11, zc + 0.11)
+        cyl('metal', 0.02, 0.012, (x, -0.118, zc), 6, rot=(math.pi / 2, 0, 0))
+        # delineator: stem and a round orange reflector facing the traffic (-X), turned a little toward the road
+        box2('rd_rail_white', x - 0.01, x + 0.01, -0.12, -0.08, zc + 0.14, zc + 0.24)
+        with xf((x, -0.1, zc + 0.27), rz=-0.3):
+            cyl('rd_rail_white', 0.055, 0.012, (0, 0, 0), 12, rot=(0, -math.pi / 2, 0))
+            cyl('st_reflector', 0.045, 0.006, (-0.012, 0, 0), 12, rot=(0, -math.pi / 2, 0))
+    for x in (1.86, 1.94):
+        for u in (-0.135, 0.0, 0.135):
+            cyl('metal', 0.012, 0.012, (x, -0.118 if u == 0 else -0.096, zc + u), 6, rot=(math.pi / 2, 0, 0))
+
+# ---- road signs
+def rd_sign_pole(h, y=0.035, r=0.0305):
+    cyl('rd_pole', r, h, (0, y, 0), 10)
+    cyl('rd_pole', r + 0.003, 0.02, (0, y, h), 10, r2=0.012)
+    cyl('rd_grime', r + 0.004, 0.06, (0, y, 0), 10, cap=False)
+
+def rd_clamp(z, w, y=0.035):
+    """Sign bracket: a channel across the back of the plate and a band round the pole."""
+    box2('rd_sign_back', -w / 2, w / 2, 0.003, 0.018, z - 0.02, z + 0.02)
+    box2('rd_pole_dark', -0.045, 0.045, y - 0.02, y + 0.045, z - 0.025, z + 0.025)
+
+def rd_rtri(cx, cz, ri, rc, n=3):
+    """Inverted equilateral triangle (point down) with rounded corners, inradius ri, centred on its centroid."""
+    out = []
+    for av in (-90, 30, 150):
+        a = math.radians(av); c = (cx + 2 * (ri - rc) * math.cos(a), cz + 2 * (ri - rc) * math.sin(a))
+        for k in range(n + 1):
+            t = a - math.radians(60) + math.radians(120) * k / n
+            out.append((c[0] + rc * math.cos(t), c[1] + rc * math.sin(t)))
+    return out
+
+def rd_rrect(w, h, r, cx=0.0, cz=0.0, n=2):
+    out = []
+    for (sx, sz, a0) in ((1, -1, -90), (1, 1, 0), (-1, 1, 90), (-1, -1, 180)):
+        c = (cx + sx * (w / 2 - r), cz + sz * (h / 2 - r))
+        for k in range(n + 1):
+            t = math.radians(a0 + 90 * k / n); out.append((c[0] + r * math.cos(t), c[1] + r * math.sin(t)))
+    return out
+
+def rd_sub_plate(z, text, w=0.4, h=0.2, size=0.085):
+    """補助標識: white plate with black text, centred at height z."""
+    rd_plate(rd_rrect(w, h, 0.015, 0, z), -0.004, 0.004, 'rd_sign_white', 'rd_sign_back')
+    _en_text('ink', text, size, (0, -0.0065, z))
+    rd_clamp(z, w * 0.8)
+
+@model('sign_stop', '止まれの標識', '道の小物')
+def sign_stop():
+    ri, zt = 0.8 / (2 * math.sqrt(3)), 2.4
+    zc = zt - ri
+    rd_sign_pole(zt - 0.06)
+    rd_plate(rd_rtri(0, zc, ri, 0.035), -0.004, 0.004, 'rd_sign_white', 'rd_sign_back')
+    rd_flat('rd_sign_red', [(x, -0.0055, z) for x, z in rd_rtri(0, zc, ri - 0.04, 0.02)])
+    _en_text('cloth_en_white', '止まれ', 0.125, (0, -0.0075, zc + 0.04))
+    for z in (zc + 0.13, zc - 0.13): rd_clamp(z, 0.5 if z > zc else 0.2)
+
+@model('sign_speed', '最高速度30の標識', '道の小物')
+def sign_speed():
+    zc = 2.3
+    rd_sign_pole(2.55)
+    rd_plate(rd_circle(0.3, 24, 0, zc), -0.004, 0.004, 'rd_sign_white', 'rd_sign_back')
+    rd_ring('rd_sign_red', 0.225, 0.285, -0.0055, 24, 0, zc)
+    _en_text('rd_sign_blue', '30', 0.27, (0, -0.007, zc - 0.005))
+    for z in (zc + 0.15, zc - 0.15): rd_clamp(z, 0.4)
+    rd_sub_plate(1.82, 'ここから')
+
+@model('sign_noparking', '駐車禁止の標識', '道の小物')
+def sign_noparking():
+    zc = 2.1
+    rd_sign_pole(2.35)
+    rd_plate(rd_circle(0.3, 24, 0, zc), -0.004, 0.004, 'rd_sign_white', 'rd_sign_back')
+    rd_ring('rd_sign_red', 0.225, 0.285, -0.0055, 24, 0, zc)
+    rd_disc('rd_sign_blue', 0.225, -0.0055, 24, 0, zc)
+    a = math.radians(-45); d = (math.cos(a + math.pi / 2), math.sin(a + math.pi / 2)); u = (math.cos(math.radians(135)), math.sin(math.radians(135)))
+    L, w = 0.235, 0.032
+    rd_flat('rd_sign_red', [(sx * u[0] * L + sw * d[0] * w, -0.007, zc + sx * u[1] * L + sw * d[1] * w) for sx, sw in ((1, 1), (-1, 1), (-1, -1), (1, -1))])
+    for z in (zc + 0.15, zc - 0.15): rd_clamp(z, 0.4)
+    rd_sub_plate(1.63, '8-20', size=0.11)
+
+@model('curve_mirror', 'カーブミラー', '道の小物')
+def curve_mirror():
+    # Orange pole with white reflective bands, a 0.8 m convex mirror in an orange housing with a sun hood, tilted
+    # slightly down, on a bracket from the pole top; a small notice plate on the pole.
+    pr = 0.038
+    for z0, z1, m in ((0.0, 0.6, 'rd_orange'), (0.6, 0.75, 'rd_sign_white'), (0.75, 0.9, 'rd_orange'), (0.9, 1.05, 'rd_sign_white'), (1.05, 2.95, 'rd_orange')):
+        cyl(m, pr, z1 - z0, (0, 0.05, z0), 10, cap=(z0 == 0.0 or z1 == 2.95))
+    cyl('rd_orange', pr + 0.004, 0.03, (0, 0.05, 2.95), 10, r2=0.015)
+    cyl('rd_grime', pr + 0.004, 0.07, (0, 0.05, 0), 10, cap=False)
+    zc, yc = 2.68, -0.11
+    box2('rd_pole_dark', -0.05, 0.05, 0.0, 0.1, zc - 0.04, zc + 0.04)
+    box2('rd_orange', -0.03, 0.03, yc + 0.06, 0.02, zc - 0.03, zc + 0.03)
+    with xf((0, yc, zc), rx=math.pi / 2 + 0.12):
+        prof = [(0.0, -0.075), (0.25, -0.065), (0.39, -0.035), (0.425, 0.0), (0.425, 0.035), (0.395, 0.042), (0.385, 0.03),
+                (0.28, 0.06), (0.15, 0.078), (0.0, 0.084)]
+        n = 16
+        rows = [[(r * math.cos(k / n * math.tau), r * math.sin(k / n * math.tau), z) for k in range(n)] for r, z in prof]
+        _en_skin(rows, lambda i, j, c: 'rd_mirror' if i >= 6 else 'rd_orange', wrap=True)
+        _pv_shell('rd_orange', [(0.43, 0.0, 1.35), (0.44, 0.15, 1.2)], seg=8, t=0.008, a_mid=math.pi / 2)
+    rd_plate(rd_rrect(0.34, 0.2, 0.015, 0, 2.05), -0.004 + 0.012, 0.004, 'rd_sign_white', 'rd_sign_back')
+    _en_text('rd_sign_red', '注意', 0.11, (0, -0.0035 + 0.012, 2.05))
+    box2('rd_pole_dark', -0.045, 0.045, 0.016, 0.09, 2.03, 2.07)
+
+@model('bus_stop', 'バス停(海凪駅前・ベンチ付き)', '道の小物')
+def bus_stop():
+    # Classic Japanese bus stop pole: round double-sided sign with the stop name, timetable box, weighted concrete base;
+    # a plain steel-and-slat bench beside it.
+    px = -0.85
+    with xf((px, 0, 0)):
+        _pv_lathe('concrete', [(0.0, 0.0), (0.27, 0.0), (0.27, 0.06), (0.22, 0.13), (0.06, 0.15), (0.0, 0.15)], seg=14)
+        cyl('rd_sign_white', 0.032, 2.0, (0, 0, 0.14), 10)
+        cyl('rd_bus_green', 0.034, 0.25, (0, 0, 2.0), 10, cap=False)
+        zc = 2.24
+        rd_plate(rd_circle(0.27, 24, 0, zc), -0.008, 0.016, 'rd_sign_white', 'rd_sign_white', 'rd_bus_green')
+        for y, rz in ((-0.0095, 0.0), (0.0095, math.pi)):
+            with xf((0, y, 0), rz=rz):
+                rd_ring('rd_bus_green', 0.215, 0.265, 0.0, 24, 0, zc)
+                # bus pictogram
+                rd_flat('rd_bus_green', [(x, -0.001, z + zc) for x, z in rd_rrect(0.2, 0.1, 0.02, 0, 0.09)])
+                for k in range(4): rd_flat('rd_sign_white', [(x, -0.002, z + zc) for x, z in rd_rrect(0.03, 0.03, 0.004, -0.06 + k * 0.04, 0.1, 1)])
+                for x in (-0.06, 0.06): rd_disc('ink', 0.018, -0.002, 8, x, zc + 0.04)
+                _en_text('ink', '海凪駅前', 0.075, (0, -0.002, zc - 0.075))
+        # timetable box
+        _pv_rbox('rd_sign_white', (0.38, 0.05, 0.55), (0, -0.055, 1.15), 0.012)
+        box2('rd_bus_green', -0.17, 0.17, -0.0815, -0.08, 1.6, 1.67)
+        box2('paper', -0.17, 0.17, -0.0815, -0.08, 1.18, 1.58)
+        for k in range(7): box2('rd_grime_lt', -0.15, 0.15, -0.083, -0.081, 1.22 + k * 0.05, 1.226 + k * 0.05)
+        box2('rd_grime_lt', -0.07, -0.065, -0.083, -0.081, 1.2, 1.56)
+    # bench
+    bx0, bx1 = -0.45, 0.95
+    for x in (bx0 + 0.12, bx1 - 0.12):
+        box2('rd_pole_dark', x - 0.02, x + 0.02, -0.18, -0.14, 0.0, 0.42)
+        box2('rd_pole_dark', x - 0.02, x + 0.02, 0.14, 0.18, 0.0, 0.8)
+        box2('rd_pole_dark', x - 0.02, x + 0.02, -0.2, 0.18, 0.38, 0.41)
+    for k in range(3): _pv_rbox('rd_seat', (bx1 - bx0, 0.11, 0.03), ((bx0 + bx1) / 2, -0.15 + k * 0.125, 0.41), 0.01)
+    for z in (0.55, 0.68): box2('rd_seat', bx0, bx1, 0.18, 0.21, z, z + 0.09)
+
+# ---- traffic signal
+@model('traffic_light', '信号機(横型・押しボタン付き)', '道の小物')
+def traffic_light():
+    # Grey tapered pole with a horizontal arm over the road (-Y). The flat LED head (green, yellow, red from the pole outwards)
+    # faces -X, i.e. drivers coming from -X driving on the left; red is lit. A pedestrian signal (green walker lit) on
+    # the pole faces -Y, with a push-button box; an intersection name plate hangs on the arm.
+    cyl('rd_pole', 0.11, 5.0, (0, 0, 0), 12, r2=0.075)
+    cyl('rd_pole', 0.078, 0.06, (0, 0, 5.0), 12, r2=0.03)
+    cyl('rd_grime', 0.115, 0.12, (0, 0, 0), 12, cap=False)
+    za = 4.75
+    rod('rd_pole', (0, 0.0, za), (0, -2.55, za + 0.08), 0.06, 10, r2=0.045)
+    rod('rd_pole', (0, -0.05, za - 0.6), (0, -0.9, za + 0.03), 0.025, 6)
+    box2('rd_pole_dark', -0.09, 0.09, -0.09, 0.09, za - 0.12, za + 0.12)
+    # signal head
+    yc, zh = -1.9, za - 0.32
+    _pv_rbox('rd_sig_housing', (0.16, 1.24, 0.42), (0.02, yc, zh - 0.21), 0.04)
+    for y in (yc - 0.3, yc + 0.3): box2('rd_pole_dark', -0.02, 0.06, y - 0.03, y + 0.03, zh + 0.18, za)
+    for k, m in enumerate(('rd_sig_off_g', 'rd_sig_off_y', 'rd_sig_red')):
+        y = yc + 0.4 - k * 0.4
+        with xf((-0.06, y, zh), ry=-math.pi / 2):
+            cyl('rd_pole_dark', 0.155, 0.01, (0, 0, -0.01), 16)
+            cyl(m, 0.14, 0.012, (0, 0, 0), 16)
+            _pv_shell('rd_sig_housing', [(0.165, 0.0, 1.5), (0.165, 0.2, 1.25)], seg=7, t=0.008, a_mid=0.0)
+    # intersection name plate
+    rd_name = '海凪駅前'
+    with xf((0.0, -0.7, za - 0.27), rz=-math.pi / 2):
+        rd_plate(rd_rrect(0.9, 0.26, 0.02, 0, 0), -0.01, 0.01, 'rd_sign_blue', 'rd_sign_back')
+        _en_text('cloth_en_white', rd_name, 0.15, (0, -0.0115, 0.025))
+        box2('cloth_en_white', -0.3, 0.3, -0.0118, -0.01, -0.09, -0.07)
+    for y in (-0.45, -0.95): box2('rd_pole_dark', -0.015, 0.015, y - 0.015, y + 0.015, za - 0.15, za)
+    # pedestrian signal facing -Y, mounted on the pole
+    with xf((0, -0.2, 2.75)):
+        box2('rd_pole_dark', -0.05, 0.05, 0.0, 0.12, 0.1, 0.2)
+        _pv_rbox('rd_sig_housing', (0.32, 0.2, 0.66), (0, -0.04, 0.0), 0.03)
+        for z, lens, fig in ((0.49, 'rd_sig_off', 'rd_sig_off_r'), (0.17, 'rd_sig_off', 'rd_sig_green')):
+            rd_flat(lens, [(x, -0.141, z + q) for x, q in rd_rrect(0.25, 0.27, 0.02, 0, 0, 1)])
+            box2('rd_sig_housing', -0.14, 0.14, -0.26, -0.14, z + 0.14, z + 0.155)
+            rd_disc(fig, 0.025, -0.143, 8, 0, z + 0.085)
+            walk = fig == 'rd_sig_green'
+            rd_flat(fig, [(-0.035, -0.143, z - 0.03), (0.035, -0.143, z - 0.03), (0.03, -0.143, z + 0.055), (-0.03, -0.143, z + 0.055)])
+            for sx in (-1, 1):
+                fx = sx * (0.045 if walk else 0.018)
+                rd_flat(fig, [(sx * 0.01 - 0.012, -0.143, z - 0.03), (sx * 0.01 + 0.012, -0.143, z - 0.03), (fx + 0.012, -0.143, z - 0.11), (fx - 0.012, -0.143, z - 0.11)])
+                ax = sx * (0.06 if walk else 0.04)
+                rd_flat(fig, [(sx * 0.03, -0.143, z + 0.05), (sx * 0.03, -0.143, z + 0.025), (ax, -0.143, z - 0.03 if walk else z - 0.02), (ax + sx * 0.0, -0.143, z + 0.0)] if sx < 0 else
+                        [(sx * 0.03, -0.143, z + 0.025), (sx * 0.03, -0.143, z + 0.05), (ax, -0.143, z + 0.0), (ax, -0.143, z - 0.03 if walk else z - 0.02)])
+    # push-button box
+    _pv_rbox('yellow', (0.16, 0.08, 0.24), (0, -0.14, 1.1), 0.02)
+    cyl('white', 0.03, 0.01, (0, -0.18, 1.24), 8, rot=(math.pi / 2, 0, 0))
+    _en_text('ink', 'おして', 0.035, (0, -0.1815, 1.17))
+# --- rd end
+
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
 def fisherman():
     # weathered fisherman: navy work shirt with rolled sleeves, orange rubber apron (前掛け) on a neck strap, white rubber boots,

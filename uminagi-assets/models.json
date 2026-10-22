@@ -3034,6 +3034,313 @@
   "kb": 433.9
  },
  {
+  "name": "car_kei",
+  "jp": "軽自動車(白・トールワゴン)",
+  "category": "乗り物",
+  "size_m": [
+   1.59,
+   1.75,
+   3.49
+  ],
+  "tris": 3246,
+  "lod1_tris": 958,
+  "materials": [
+   "ink",
+   "pv_amber",
+   "pv_plate",
+   "rd_chrome",
+   "rd_glass",
+   "rd_glass_ws",
+   "rd_headlamp",
+   "rd_hub_dark",
+   "rd_hubcap",
+   "rd_lamp_inner",
+   "rd_paint_white",
+   "rd_tail",
+   "rd_trim",
+   "rd_wheelwell",
+   "rubber"
+  ],
+  "parts": [
+   "car_kei_body"
+  ],
+  "kb": 296.8
+ },
+ {
+  "name": "car_kei_b",
+  "jp": "軽自動車(ベージュ・ツートン)",
+  "category": "乗り物",
+  "size_m": [
+   1.59,
+   1.71,
+   3.51
+  ],
+  "tris": 3370,
+  "lod1_tris": 996,
+  "materials": [
+   "ink",
+   "pv_amber",
+   "pv_plate",
+   "rd_chrome",
+   "rd_glass",
+   "rd_glass_ws",
+   "rd_headlamp",
+   "rd_hub_dark",
+   "rd_hubcap",
+   "rd_lamp_inner",
+   "rd_paint_beige",
+   "rd_paint_white",
+   "rd_tail",
+   "rd_trim",
+   "rd_wheelwell",
+   "rubber"
+  ],
+  "parts": [
+   "car_kei_b_body"
+  ],
+  "kb": 301.8
+ },
+ {
+  "name": "car_sedan",
+  "jp": "乗用車(シルバー・ハッチバック)",
+  "category": "乗り物",
+  "size_m": [
+   1.75,
+   1.46,
+   4.4
+  ],
+  "tris": 3234,
+  "lod1_tris": 958,
+  "materials": [
+   "pv_amber",
+   "rd_glass",
+   "rd_glass_ws",
+   "rd_headlamp",
+   "rd_hub_dark",
+   "rd_hubcap",
+   "rd_lamp_inner",
+   "rd_paint_silver",
+   "rd_plate_green",
+   "rd_plate_white",
+   "rd_tail",
+   "rd_trim",
+   "rd_wheelwell",
+   "rubber"
+  ],
+  "parts": [
+   "car_sedan_body"
+  ],
+  "kb": 294.6
+ },
+ {
+  "name": "block_wall",
+  "jp": "ブロック塀(2m)",
+  "category": "住宅の小物",
+  "size_m": [
+   2.0,
+   1.14,
+   0.15
+  ],
+  "tris": 320,
+  "lod1_tris": 93,
+  "materials": [
+   "rd_block",
+   "rd_block_b",
+   "rd_block_cap",
+   "rd_mortar",
+   "rd_streak",
+   "rd_streak_lt"
+  ],
+  "parts": [
+   "block_wall_body"
+  ],
+  "kb": 35.7
+ },
+ {
+  "name": "guardrail",
+  "jp": "ガードレール(4m)",
+  "category": "道の小物",
+  "size_m": [
+   4.0,
+   1.02,
+   0.25
+  ],
+  "tris": 708,
+  "lod1_tris": 204,
+  "materials": [
+   "metal",
+   "rd_grime",
+   "rd_rail_white",
+   "st_reflector"
+  ],
+  "parts": [
+   "guardrail_body"
+  ],
+  "kb": 63.8
+ },
+ {
+  "name": "sign_stop",
+  "jp": "止まれの標識",
+  "category": "道の小物",
+  "size_m": [
+   0.75,
+   2.4,
+   0.09
+  ],
+  "tris": 353,
+  "lod1_tris": 101,
+  "materials": [
+   "cloth_en_white",
+   "rd_grime",
+   "rd_pole",
+   "rd_pole_dark",
+   "rd_sign_back",
+   "rd_sign_red",
+   "rd_sign_white"
+  ],
+  "parts": [
+   "sign_stop_body"
+  ],
+  "kb": 35.7
+ },
+ {
+  "name": "sign_speed",
+  "jp": "最高速度30の標識",
+  "category": "道の小物",
+  "size_m": [
+   0.6,
+   2.6,
+   0.09
+  ],
+  "tris": 537,
+  "lod1_tris": 157,
+  "materials": [
+   "ink",
+   "rd_grime",
+   "rd_pole",
+   "rd_pole_dark",
+   "rd_sign_back",
+   "rd_sign_blue",
+   "rd_sign_red",
+   "rd_sign_white"
+  ],
+  "parts": [
+   "sign_speed_body"
+  ],
+  "kb": 48.4
+ },
+ {
+  "name": "sign_noparking",
+  "jp": "駐車禁止の標識",
+  "category": "道の小物",
+  "size_m": [
+   0.6,
+   2.4,
+   0.09
+  ],
+  "tris": 482,
+  "lod1_tris": 143,
+  "materials": [
+   "ink",
+   "rd_grime",
+   "rd_pole",
+   "rd_pole_dark",
+   "rd_sign_back",
+   "rd_sign_blue",
+   "rd_sign_red",
+   "rd_sign_white"
+  ],
+  "parts": [
+   "sign_noparking_body"
+  ],
+  "kb": 46.7
+ },
+ {
+  "name": "curve_mirror",
+  "jp": "カーブミラー",
+  "category": "道の小物",
+  "size_m": [
+   0.85,
+   3.11,
+   0.41
+  ],
+  "tris": 695,
+  "lod1_tris": 205,
+  "materials": [
+   "rd_grime",
+   "rd_mirror",
+   "rd_orange",
+   "rd_pole_dark",
+   "rd_sign_back",
+   "rd_sign_red",
+   "rd_sign_white"
+  ],
+  "parts": [
+   "curve_mirror_body"
+  ],
+  "kb": 70.9
+ },
+ {
+  "name": "bus_stop",
+  "jp": "バス停(海凪駅前・ベンチ付き)",
+  "category": "道の小物",
+  "size_m": [
+   2.07,
+   2.51,
+   0.54
+  ],
+  "tris": 1419,
+  "lod1_tris": 417,
+  "materials": [
+   "concrete",
+   "ink",
+   "paper",
+   "rd_bus_green",
+   "rd_grime_lt",
+   "rd_pole_dark",
+   "rd_seat",
+   "rd_sign_white"
+  ],
+  "parts": [
+   "bus_stop_body"
+  ],
+  "kb": 108.9
+ },
+ {
+  "name": "traffic_light",
+  "jp": "信号機(横型・押しボタン付き)",
+  "category": "道の小物",
+  "size_m": [
+   0.42,
+   5.06,
+   2.67
+  ],
+  "tris": 1442,
+  "lod1_tris": 428,
+  "materials": [
+   "cloth_en_white",
+   "ink",
+   "rd_grime",
+   "rd_pole",
+   "rd_pole_dark",
+   "rd_sig_green",
+   "rd_sig_housing",
+   "rd_sig_off",
+   "rd_sig_off_g",
+   "rd_sig_off_r",
+   "rd_sig_off_y",
+   "rd_sig_red",
+   "rd_sign_back",
+   "rd_sign_blue",
+   "white",
+   "yellow"
+  ],
+  "parts": [
+   "traffic_light_body"
+  ],
+  "kb": 129.0
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",
