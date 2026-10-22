@@ -1132,11 +1132,11 @@
   "category": "神社",
   "size_m": [
    0.87,
-   1.92,
+   1.94,
    1.06
   ],
-  "tris": 3046,
-  "lod1_tris": 906,
+  "tris": 2986,
+  "lod1_tris": 884,
   "materials": [
    "cloth_red",
    "granite",
@@ -1144,13 +1144,15 @@
    "moss",
    "pv_mouth",
    "rock",
-   "st_lichen",
+   "st_carved",
+   "st_carved_dk",
+   "st_moss_dk",
    "white"
   ],
   "parts": [
    "komainu_body"
   ],
-  "kb": 340.7
+  "kb": 339.4
  },
  {
   "name": "azumaya",
@@ -1213,12 +1215,14 @@
    1.77,
    0.44
   ],
-  "tris": 1796,
-  "lod1_tris": 522,
+  "tris": 1976,
+  "lod1_tris": 567,
   "materials": [
+   "cloth_grey",
    "concrete",
    "ink",
    "ink_white",
+   "paper",
    "red",
    "ridge_tile",
    "roof_tile",
@@ -1226,14 +1230,16 @@
    "st_map_hill",
    "st_map_land",
    "st_map_sea",
+   "st_stain",
    "vermilion",
    "white",
+   "wood_dark",
    "wood_frame"
   ],
   "parts": [
    "info_board_body"
   ],
-  "kb": 191.3
+  "kb": 213.3
  },
  {
   "name": "fishing_boat",
@@ -1244,7 +1250,7 @@
    9.56,
    14.26
   ],
-  "tris": 13480,
+  "tris": 13540,
   "lod1_tris": 0,
   "materials": [
    "antifoul",
@@ -1267,6 +1273,7 @@
    "net",
    "pv_chrome",
    "pv_paint_white",
+   "pv_rust_run",
    "red",
    "rope",
    "rubber",
@@ -1280,7 +1287,7 @@
    "fishing_boat_radar",
    "fishing_boat_prop"
   ],
-  "kb": 951.1
+  "kb": 956.1
  },
  {
   "name": "fishing_boat_b",
@@ -1291,7 +1298,7 @@
    8.62,
    12.22
   ],
-  "tris": 9738,
+  "tris": 9798,
   "lod1_tris": 0,
   "materials": [
    "antifoul",
@@ -1312,6 +1319,7 @@
    "net_green",
    "pv_chrome",
    "pv_paint_white",
+   "pv_rust_run",
    "rope",
    "rubber",
    "rust",
@@ -1324,7 +1332,7 @@
    "fishing_boat_b_radar",
    "fishing_boat_b_prop"
   ],
-  "kb": 681.1
+  "kb": 686.2
  },
  {
   "name": "skiff",
@@ -1335,19 +1343,22 @@
    1.5,
    6.53
   ],
-  "tris": 3610,
-  "lod1_tris": 1074,
+  "tris": 5368,
+  "lod1_tris": 1602,
   "materials": [
    "antifoul",
    "black",
    "boat_blue",
    "cloth_red",
+   "cloth_yellow",
    "crate_blue",
    "deck_green",
    "float_orange",
+   "ink",
    "metal",
    "pv_chrome",
    "pv_cowl",
+   "pv_scum",
    "pv_teak",
    "red",
    "rope",
@@ -1359,7 +1370,7 @@
   "parts": [
    "skiff_body"
   ],
-  "kb": 342.3
+  "kb": 520.6
  },
  {
   "name": "dock_straight",
@@ -1495,18 +1506,19 @@
    2.37,
    2.75
   ],
-  "tris": 1128,
-  "lod1_tris": 334,
+  "tris": 1368,
+  "lod1_tris": 405,
   "materials": [
    "concrete",
    "hb_concrete_dark",
    "hb_concrete_stain",
-   "hb_iron_rust"
+   "hb_iron_rust",
+   "hb_slime"
   ],
   "parts": [
    "tetrapod_body"
   ],
-  "kb": 113.7
+  "kb": 137.8
  },
  {
   "name": "crates_blue",
@@ -1678,25 +1690,26 @@
   "jp": "漁網の山",
   "category": "港の小物",
   "size_m": [
-   2.02,
-   0.65,
-   1.75
+   2.01,
+   0.64,
+   1.73
   ],
-  "tris": 2716,
-  "lod1_tris": 814,
+  "tris": 2872,
+  "lod1_tris": 856,
   "materials": [
    "float_orange",
    "float_yellow",
    "hb_net_dark",
    "hb_net_heap",
    "hb_net_heap2",
+   "hb_net_twine",
    "rope",
    "steel_dark"
   ],
   "parts": [
    "net_pile_body"
   ],
-  "kb": 265.0
+  "kb": 271.7
  },
  {
   "name": "floats",
@@ -1707,22 +1720,25 @@
    1.13,
    1.07
   ],
-  "tris": 2334,
-  "lod1_tris": 694,
+  "tris": 2594,
+  "lod1_tris": 772,
   "materials": [
    "float_orange",
    "float_white",
    "float_yellow",
+   "hb_buoy_grime",
    "hb_glass_green",
    "hb_iron_rust",
    "hb_rope_blue",
+   "ink",
    "rope",
+   "st_moss_dk",
    "steel_dark"
   ],
   "parts": [
    "floats_body"
   ],
-  "kb": 223.3
+  "kb": 250.4
  },
  {
   "name": "crab_traps",
@@ -1757,8 +1773,8 @@
    0.36,
    0.92
   ],
-  "tris": 1640,
-  "lod1_tris": 492,
+  "tris": 2372,
+  "lod1_tris": 710,
   "materials": [
    "hb_rope_blue",
    "hb_rope_manila",
@@ -1767,7 +1783,7 @@
   "parts": [
    "rope_coil_body"
   ],
-  "kb": 142.5
+  "kb": 211.7
  },
  {
   "name": "market_tent",
@@ -1875,11 +1891,11 @@
   "category": "道の小物",
   "size_m": [
    1.08,
-   2.07,
+   2.03,
    0.84
   ],
-  "tris": 2198,
-  "lod1_tris": 584,
+  "tris": 2490,
+  "lod1_tris": 661,
   "materials": [
    "alu",
    "black",
@@ -1895,7 +1911,10 @@
    "paper",
    "red",
    "rubber",
+   "st_ic_reader",
    "st_pet",
+   "st_reflector",
+   "st_stain",
    "st_tele",
    "steel_dark",
    "vend_panel",
@@ -1905,7 +1924,7 @@
   "parts": [
    "vending_machine_body"
   ],
-  "kb": 219.0
+  "kb": 250.9
  },
  {
   "name": "bicycle",
@@ -1971,8 +1990,8 @@
    0.95,
    0.39
   ],
-  "tris": 1572,
-  "lod1_tris": 452,
+  "tris": 2140,
+  "lod1_tris": 625,
   "materials": [
    "metal",
    "st_chalk_pink",
@@ -1984,7 +2003,7 @@
   "parts": [
    "a_frame_sign_body"
   ],
-  "kb": 158.4
+  "kb": 216.5
  },
  {
   "name": "bench",
@@ -1995,16 +2014,21 @@
    0.85,
    0.52
   ],
-  "tris": 288,
-  "lod1_tris": 77,
+  "tris": 744,
+  "lod1_tris": 213,
   "materials": [
+   "gold",
+   "ink",
+   "metal",
+   "rust",
    "steel_dark",
-   "wood"
+   "wood",
+   "wood_red"
   ],
   "parts": [
    "bench_body"
   ],
-  "kb": 29.1
+  "kb": 77.3
  },
  {
   "name": "postbox",
@@ -2012,24 +2036,27 @@
   "category": "道の小物",
   "size_m": [
    0.46,
-   1.26,
+   1.28,
    0.44
   ],
-  "tris": 928,
-  "lod1_tris": 271,
+  "tris": 1220,
+  "lod1_tris": 354,
   "materials": [
    "black",
+   "concrete",
    "ink",
    "ink_white",
    "metal",
+   "st_post_grime",
    "st_post_red",
+   "st_post_seam",
    "steel_dark",
    "white"
   ],
   "parts": [
    "postbox_body"
   ],
-  "kb": 87.0
+  "kb": 116.3
  },
  {
   "name": "nobori",
@@ -2061,21 +2088,24 @@
   "jp": "提灯(吊り下げ)",
   "category": "道の小物",
   "size_m": [
-   0.43,
-   0.93,
+   0.45,
+   1.03,
    0.45
   ],
-  "tris": 1488,
-  "lod1_tris": 444,
+  "tris": 2142,
+  "lod1_tris": 634,
   "materials": [
    "black",
+   "cloth_red",
    "ink",
-   "lantern_red"
+   "lantern_red",
+   "rope",
+   "st_chochin_rib"
   ],
   "parts": [
    "chochin_hanging_body"
   ],
-  "kb": 127.4
+  "kb": 192.6
  },
  {
   "name": "street_lantern",
@@ -2165,17 +2195,20 @@
    1.35,
    0.12
   ],
-  "tris": 264,
-  "lod1_tris": 73,
+  "tris": 888,
+  "lod1_tris": 223,
   "materials": [
    "concrete",
-   "st_cedar",
-   "wood_frame"
+   "iron",
+   "st_damp",
+   "wood_dark",
+   "wood_frame",
+   "wood_grey"
   ],
   "parts": [
    "fence_wood_body"
   ],
-  "kb": 29.3
+  "kb": 89.4
  },
  {
   "name": "fence_rail",
@@ -2186,15 +2219,16 @@
    1.12,
    0.1
   ],
-  "tris": 704,
-  "lod1_tris": 195,
+  "tris": 848,
+  "lod1_tris": 239,
   "materials": [
+   "hb_iron_rust",
    "white"
   ],
   "parts": [
    "fence_rail_body"
   ],
-  "kb": 81.2
+  "kb": 95.8
  },
  {
   "name": "fence_log",

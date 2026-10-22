@@ -95,7 +95,8 @@ PALETTE.update({   # second pass (poles, lights)
     'st_stain': P((0.3, 0.29, 0.27), 0.95), 'st_rust': P((0.42, 0.22, 0.1), 0.85, 0.2), 'st_porcelain': P((0.55, 0.38, 0.25), 0.25),
     'st_closure': P((0.12, 0.12, 0.13), 0.6), 'st_lamp_body': P((0.46, 0.48, 0.5), 0.45, 0.5), 'st_reflector': P((0.95, 0.5, 0.05), 0.2, e=(1.0, 0.45, 0.05), es=0.2),
 })
-PALETTE.update({'st_lichen': P((0.62, 0.66, 0.5), 0.95)})
+PALETTE.update({'st_ic_reader': P((0.08, 0.09, 0.1), 0.3), 'st_post_seam': P((0.32, 0.02, 0.015), 0.5), 'st_post_grime': P((0.36, 0.05, 0.035), 0.7), 'st_damp': P((0.1, 0.1, 0.06), 0.95), 'st_chochin_rib': P((0.45, 0.06, 0.03), 0.7), 'hb_buoy_grime': P((0.5, 0.22, 0.06), 0.6)})
+PALETTE.update({'st_lichen': P((0.62, 0.66, 0.5), 0.95), 'st_carved': P((0.25, 0.24, 0.22), 0.85), 'st_carved_dk': P((0.11, 0.11, 0.1), 0.9), 'st_moss_dk': P((0.1, 0.16, 0.05), 1.0)})
 # --- st palette end
 MATS, IMAGES = {}, {}
 
@@ -719,7 +720,7 @@ def uv_project(o):
             uvl[li].uv = (p.dot(t), p.dot(b))
 
 SMOOTH = {'自然': 75, '人物': 55, '動物': 55}
-SMOOTH_MODEL = {'komainu': 70}   # per-model override (organic carvings)
+SMOOTH_MODEL = {'komainu': 70, 'rope_coil': 70}   # per-model override (organic carvings)
 
 def _join(objs, name, angle=35):
     for o in objs:
@@ -2370,9 +2371,12 @@ def komainu():
     el((0, 0.06, 1.18), 0.2, (0.9, 1.0, 1.35), (0.3, 0, 0))                        # torso
     el((0, -0.12, 1.3), 0.16, (1.0, 0.9, 1.2))                                     # chest
     el((0, -0.03, 1.56), 0.2, (1.25, 0.8, 1.15))                                   # mane mass
-    for k in range(11):                                                            # curls ringing the face
+    for k in range(11):                                                            # tight curls ringing the face
         a = math.radians(-60 + k * 24)
-        el((0.24 * math.cos(a), -0.12, 1.61 + 0.24 * math.sin(a)), 0.065)
+        el((0.265 * math.cos(a), -0.13, 1.61 + 0.265 * math.sin(a)), 0.062)
+    for k in range(8):                                                             # second row behind
+        a = math.radians(-50 + k * 28)
+        el((0.25 * math.cos(a), 0.0, 1.56 + 0.25 * math.sin(a)), 0.06)
     for k in range(6):                                                             # curls down the back of the mane
         el(((k % 2 - 0.5) * 0.18, 0.1, 1.38 + k * 0.05), 0.06)
     el((0, -0.2, 1.62), 0.18, (1.15, 1.0, 0.95))                                   # head
@@ -2382,17 +2386,18 @@ def komainu():
     for k, (y, z, r) in enumerate(((0.3, 1.0, 0.11), (0.38, 1.16, 0.095), (0.38, 1.32, 0.08), (0.32, 1.44, 0.065))):
         el((0, y, z), r, (1.25, 0.7, 1.1))                                        # flame tail
         for sx in (-1, 1): el((sx * 0.09, y - 0.02, z + 0.02), r * 0.55)
-    _st_blob('granite', E, 0.026, 1750, seed=3, rough=0.003)
+    _st_blob('st_carved', E, 0.022, 1630, seed=3, rough=0.0)
     for sx in (-1, 1):
-        ico('ink', 0.018, (sx * 0.08, -0.383, 1.68), (1.0, 0.6, 1.0), 1)               # pupils
+        ico('st_carved_dk', 0.03, (sx * 0.082, -0.388, 1.68), (1.0, 0.5, 0.9), 1)         # eye sockets
+        ico('ink', 0.016, (sx * 0.08, -0.4, 1.682), (1.0, 0.5, 1.0), 1)                # pupils
+        ico('st_carved_dk', 0.012, (sx * 0.02, -0.468, 1.62), (1.0, 0.6, 0.8), 1)       # nostrils
     ico('pv_mouth', 0.05, (0, -0.375, 1.515), (1.35, 0.55, 0.45), 1)                    # open mouth (a-gyo)
     for sx in (-1, 1): cyl('white', 0.012, 0.03, (sx * 0.04, -0.39, 1.5), 4, r2=0.0, rot=(math.pi, 0, 0))  # fangs
     # red votive bib tied at the neck
     _pv_shell('cloth_red', [(0.18, 1.26, 0.75), (0.19, 1.38, 0.95), (0.17, 1.45, 1.1)], seg=8, t=0.012, c=(0, -0.05, 0.0), sy=1.05)
     _pv_tube('cloth_red', [(0.17 * math.cos(a), -0.05 + 0.18 * math.sin(a), 1.455) for a in (-math.pi / 2 + k * 0.35 for k in range(-6, 7))], 0.012, 4)
-    ico('moss', 0.1, (0.3, -0.42, 0.74), (1.4, 1, 0.25), 2, 0.3, 4)
+    ico('st_moss_dk', 0.1, (0.3, -0.44, 0.72), (1.4, 0.5, 0.45), 2, 0.3, 4)
     ico('moss', 0.08, (-0.32, 0.45, 0.115), (1.6, 1, 0.3), 1, 0.3, 7)
-    ico('st_lichen', 0.06, (0.33, -0.44, 0.45), (0.5, 0.2, 1.4), 1, 0.3, 9)
 
 @model('azumaya', '展望台の東屋(四阿)', '灯台・展望台')
 def azumaya():
@@ -2445,8 +2450,9 @@ def telescope():
 @model('info_board', '案内板(港町マップ)', '灯台・展望台')
 def info_board():
     for sx in (-1, 1):
-        box2('wood_frame', sx * 0.88 - 0.06, sx * 0.88 + 0.06, -0.06, 0.06, 0, 1.66)
+        box2('wood_dark', sx * 0.88 - 0.06, sx * 0.88 + 0.06, -0.06, 0.06, 0, 1.66)
         box2('concrete', sx * 0.88 - 0.1, sx * 0.88 + 0.1, -0.1, 0.1, 0, 0.08)
+        box2('st_stain', sx * 0.88 - 0.062, sx * 0.88 + 0.062, -0.062, 0.062, 0.08, 0.2)               # splash rot at the foot
         prism('wood_frame', [(-0.14, 1.62), (0.24, 1.62), (0.05, 1.73)], 0.04, loc=(sx * 0.98, 0, 0), axis='X')
     box2('wood_frame', -0.95, 0.95, -0.05, 0.05, 1.56, 1.63)
     slab('roof_tile', (-1.02, -0.17, 1.62), (1.02, -0.17, 1.62), (-1.02, 0.05, 1.74), (1.02, 0.05, 1.74), t=0.03)
@@ -2454,6 +2460,11 @@ def info_board():
     rod('ridge_tile', (-1.04, 0.05, 1.745), (1.04, 0.05, 1.745), 0.03, 6)
     with xf((0, 0, 0.56), rx=-0.18):
         box2('wood_frame', -0.82, 0.82, -0.03, 0.04, 0, 0.97)
+        box2('wood_dark', -0.8, 0.8, 0.04, 0.055, 0.02, 0.95)                                           # planked back
+        for z in (0.15, 0.8): box2('wood_frame', -0.86, 0.86, 0.055, 0.1, z, z + 0.08)                  # back battens
+        for x, z, w, h in ((-0.45, 0.4, 0.2, 0.28), (0.35, 0.5, 0.26, 0.18)):                           # weathered notices
+            box2('paper', x - w / 2, x + w / 2, 0.055, 0.058, z, z + h); box2('ink', x - w / 2 + 0.03, x + w / 2 - 0.03, 0.058, 0.06, z + h - 0.06, z + h - 0.04)
+            for k in range(3): box2('cloth_grey', x - w / 2 + 0.03, x + w / 2 - 0.05 - k * 0.02, 0.058, 0.06, z + 0.04 + k * 0.04, z + 0.05 + k * 0.04)
         box2('st_map_sea', -0.77, 0.77, -0.045, -0.03, 0.05, 0.79)
         box2('sign_blue', -0.77, 0.77, -0.045, -0.03, 0.8, 0.94)
         text3d('ink_white', '海凪の港町', 0.1, (0, -0.05, 0.87), depth=0.008)
@@ -2722,6 +2733,17 @@ def skiff():
     with xf((-0.25, -1.6, zb(0.77) + 0.32)):
         rod('steel_dark', (0, 0, 0.0), (0, 0, 0.3), 0.012, 6)
         for k in range(4): a = k / 4 * math.tau; _pv_tube('steel_dark', [(0, 0, 0.02), (0.08 * math.cos(a), 0.08 * math.sin(a), 0.04), (0.1 * math.cos(a), 0.1 * math.sin(a), 0.1)], 0.008, 4)
+    # registration number on the bow, a scum line along the waterline, a bucket and a bailer
+    for sx in (-1, 1):
+        t = 0.8; a = math.atan2(half(t + 0.02) - half(t - 0.02), 0.04 * L)
+        text3d('ink', 'KN3-1286', 0.11, (sx * (half(t) * 1.03 + 0.012), Y(t), zt(t) - 0.2), rz=sx * (math.pi / 2 - a), depth=0.008)
+        v = []
+        for i in range(0, 16):
+            t = i / 24; h, b = half(t), zb(t)
+            for z in (0.0, 0.07): v.append((sx * (h * (1 + 0.03 * (z - b - 0.28) / (zt(t) - 0.13 - b - 0.28)) + 0.006), Y(t), z))
+        mesh('pv_scum', v, [(2 * i, 2 * i + 2, 2 * i + 3, 2 * i + 1) if sx > 0 else (2 * i, 2 * i + 1, 2 * i + 3, 2 * i + 2) for i in range(15)])
+    _pv_lathe('cloth_yellow', [(0.0, -0.13), (0.1, -0.13), (0.13, 0.12), (0.135, 0.13), (0.125, 0.13)], (-0.4, 0.45, 0.0), seg=12, cap=True)   # bucket
+    _pv_tube('metal', [(-0.53, 0.45, 0.12), (-0.4, 0.45, 0.25), (-0.27, 0.45, 0.12)], 0.005, 4)
     for k, y in enumerate((-0.75, -0.95)):   # fenders stowed on the floorboards
         cyl('white', 0.06, 0.34, (-0.42 + k * 0.13, y, -0.05), 10, rot=(math.pi / 2, 0, 0.15)); rod('rope', (-0.42 + k * 0.13, y - 0.34, -0.05), (-0.3, y - 0.45, -0.1), 0.008, 3)
 
@@ -2735,6 +2757,7 @@ PALETTE.update({
     'hb_ice': P((0.72, 0.86, 0.95), 0.12), 'hb_fish': P((0.42, 0.48, 0.55), 0.3, 0.55), 'hb_fish_back': P((0.08, 0.14, 0.22), 0.35, 0.4),
     'hb_fish_red': P((0.78, 0.2, 0.12), 0.35, 0.2), 'hb_shadow': P((0.01, 0.02, 0.04), 0.9),
     'hb_tape': P((0.62, 0.42, 0.16), 0.3), 'hb_tape_blue': P((0.1, 0.3, 0.7), 0.35), 'hb_styro_dirty': P((0.8, 0.8, 0.74), 0.85),
+    'hb_net_twine': P((0.02, 0.05, 0.05), 0.9),
     'hb_net_heap': P((0.03, 0.11, 0.12), 0.95), 'hb_net_heap2': P((0.09, 0.2, 0.06), 0.95), 'hb_net_trap': P((0.14, 0.32, 0.3), 0.9),
     'hb_net_dark': P((0.04, 0.08, 0.08), 0.95), 'hb_glass_green': P((0.12, 0.42, 0.3), 0.08, 0.1),
     'hb_rope_dark': P((0.32, 0.26, 0.17), 0.95), 'hb_rope_blue': P((0.08, 0.22, 0.5), 0.9), 'hb_rope_white': P((0.85, 0.83, 0.76), 0.9),
@@ -2976,6 +2999,13 @@ def tetrapod():
         _hb_tube('concrete', [c + d * t + d.orthogonal().normalized() * (r + 0.004) for r, t in ((0.58, 0.5), (0.49, 1.0), (0.41, 1.32))], 0.012, 3)
     ico('concrete', 0.66, c, sub=2)
     for sx in (-1, 1): torus('hb_iron_rust', 0.07, 0.013, (sx * 0.12, 0, 2.46), rot=(math.pi / 2, 0, 0), seg=10, rseg=4)
+    for sx in (-1, 1):   # rust weeping from the lifting loops down the top leg
+        for dy in (-0.25, 0.25):
+            pts = [c + Vector((sx * 0.12 * (1 - t), 0, 0)) + Vector((0, 0, 1.44 - 0.75 * t)) + Vector((0, dy, 0)).normalized() * ((0.33 + 0.24 * t) + 0.006)
+                   for t in (0.0, 0.5, 1.0)]
+            _hb_tube('hb_iron_rust', pts, 0.0, 3, cap=False, radii=[0.02, 0.014, 0.003])
+    for k, d in enumerate(dirs[1:]):   # green slime where the lower legs sat in the splash zone
+        _hb_lathe('hb_slime', [(0.478, 1.1), (0.454, 1.2), (0.426, 1.3)], 16, c, d.to_track_quat('Z', 'Y').to_euler(), caps=False)
 
 def _hb_rrect(w, d, c, z):
     hw, hd = w / 2, d / 2
@@ -3282,16 +3312,16 @@ def net_pile_m():
     """Gill net heaped on the quay: folded draped mass, a green net layered over it, float line and lead line."""
     a, b, H = 0.93, 0.78, 0.36
     zf, R = _hb_heap_fn(a, b, H, 12)
-    _hb_heap_sheet('hb_net_heap', zf, R, a, b, 0, 0, 9, 30)
+    _hb_heap_sheet('hb_net_heap', zf, R, a, b, 0, 0, 8, 26)
     # further folds of net slumped over the heap, each ending in a rolled hem
     layers = [lambda x, y: max(zf(x, y)[0], 0)]
     for cx, cy, a2, b2, sd, m, h in ((0.22, 0.15, 0.6, 0.46, 5, 'hb_net_heap2', 0.12), (-0.45, -0.18, 0.46, 0.4, 7, 'hb_net_heap', 0.1),
                                      (0.35, -0.3, 0.42, 0.32, 9, 'hb_net_heap2', 0.08)):
         zf2, R2 = _hb_heap_fn(a2, b2, h, sd, cx, cy)
         def z_top(x, y, zf2=zf2, below=tuple(layers)): return (max(L(x, y) for L in below) + zf2(x, y)[0] + 0.015, 0)
-        o, v = _hb_heap_sheet(m, z_top, R2, a2, b2, cx, cy, 6, 22, skirt=False)
-        hem = [Vector(p) + Vector((0, 0, 0.01)) for p in v[1 + 5 * 22: 1 + 6 * 22]]
-        _hb_tube(m, hem + [hem[0]], 0.026, 4, cap=False)
+        o, v = _hb_heap_sheet(m, z_top, R2, a2, b2, cx, cy, 6, 18, skirt=False)
+        hem = [Vector(p) + Vector((0, 0, 0.01)) for p in v[1 + 5 * 18: 1 + 6 * 18]]
+        _hb_tube(m, hem + [hem[0]], 0.026, 3, cap=False)
         layers.append(lambda x, y, zf2=zf2, z_top=z_top: z_top(x, y)[0] if zf2(x, y)[1] < 1 else 0.0)
     def z_all(x, y): return max(L(x, y) for L in layers)
     # float line (head rope) snaking over the heap, floats threaded on it
@@ -3302,14 +3332,27 @@ def net_pile_m():
     _hb_tube('rope', pts, 0.012, 4)
     for k in range(3, 33, 3):
         p, q = pts[k - 1], pts[k + 1]; d = (q - p).normalized()
-        rod('float_orange' if k % 2 else 'float_yellow', pts[k] - d * 0.06 + Vector((0, 0, 0.02)), pts[k] + d * 0.06 + Vector((0, 0, 0.02)), 0.042, 8)
+        rod('float_orange' if k % 2 else 'float_yellow', pts[k] - d * 0.06 + Vector((0, 0, 0.02)), pts[k] + d * 0.06 + Vector((0, 0, 0.02)), 0.042, 7)
     # lead line along the front edge, with a loose tail of net on the ground
     lead = []
     for i in range(16):
         th = -math.pi * 0.95 + i / 15 * math.pi * 0.9; k = R(th) * 0.96
         x, y = a * k * math.cos(th), b * k * math.sin(th); lead.append((x, y, max(zf(x, y)[0], 0) + 0.018))
     _hb_tube('hb_net_dark', lead, 0.016, 4)
-    for p in lead[2:15:3]: _hb_rbox('steel_dark', (0.05, 0.03, 0.03), (p[0], p[1], p[2] - 0.012), b=0.006)
+    for p in lead[2:15:3]: box('steel_dark', (0.05, 0.03, 0.03), (p[0], p[1], p[2] - 0.012))
+    # mesh twine: two diagonal sets of thin ribbons draped over every layer so the heap reads as netting
+    v, f = [], []
+    for dx, dy in ((0.8, 0.6), (0.6, -0.8)):
+        nx, ny = -dy, dx
+        for li in range(-6, 7):
+            off = li * 0.15; prev = None
+            for k in range(-16, 17):
+                t = k * 0.07; x, y = nx * off + dx * t, ny * off + dy * t; z = z_all(x, y)
+                if z < 0.01: prev = None; continue
+                i0 = len(v); v += [(x - nx * 0.007, y - ny * 0.007, z + 0.012), (x + nx * 0.007, y + ny * 0.007, z + 0.012)]
+                if prev is not None: f.append((prev, prev + 1, i0 + 1, i0))
+                prev = i0
+    mesh('hb_net_twine', v, f)
 
 def _hb_sphere(mat, r, loc, seg=10, rings=6, sq=1.0):
     return _hb_lathe(mat, [(r * math.sin(i / rings * math.pi), -r * sq * math.cos(i / rings * math.pi)) for i in range(rings + 1)], seg, loc)
@@ -3329,6 +3372,12 @@ def floats():
         cyl('float_white', 0.14, 0.03, (0, 0, 0.74), 10)
         cyl('steel_dark', 0.025, 0.3, (0, 0, 0.75), 6); torus('steel_dark', 0.04, 0.01, (0, 0, 1.07), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)
         box('hb_iron_rust', (0.06, 0.06, 0.03), (0, 0, 0.0))
+        _st_lathe('st_moss_dk', [(0.25, 0.035), (0.33, 0.12), (0.372, 0.22)], 14, cap=False)          # weed line from the water
+        _st_lathe('hb_buoy_grime', [(0.3735, 0.24), (0.3815, 0.34)], 14, cap=False)                      # tide grime band
+        for a in (0.4, 2.6, 4.4):   # rust runs from the top fitting
+            _hb_tube('hb_iron_rust', [(0.14 * math.cos(a), 0.14 * math.sin(a), 0.74), (0.3 * math.cos(a), 0.3 * math.sin(a), 0.64), (0.37 * math.cos(a), 0.37 * math.sin(a), 0.48)],
+                     0.0, 3, cap=False, radii=[0.012, 0.016, 0.004])
+        text3d('ink', '12', 0.14, (0, -0.395, 0.46), depth=0.01)
     eff = [((-0.5, -0.18, 0.15), 0.15, 'float_yellow', 0.3), ((-0.2, 0.22, 0.14), 0.14, 'float_orange', 1.2), ((-0.6, 0.28, 0.16), 0.16, 'float_yellow', 2.0),
            ((-0.42, 0.1, 0.42), 0.14, 'float_orange', 0.8), ((-0.15, -0.36, 0.13), 0.13, 'float_white', 2.6)]
     for loc, r, m, rz in eff: _hb_ear_float(loc, r, m, rz)
@@ -3394,7 +3443,11 @@ def rope_coil():
     e = Vector(pts[-1]); a = 3.1 * math.tau
     pts += [(0.2 * math.cos(a + 0.4), 0.2 * math.sin(a + 0.4), e.z + 0.02), (0.0, -0.08, e.z), (-0.12, -0.3, e.z - 0.02), (-0.18, -0.4, 0.2),
             (-0.2, -0.44, 0.08), (-0.12, -0.45, r), (0.05, -0.42, r)]
-    _hb_tube('hb_rope_manila', pts, r, 6)
+    o = _hb_tube('hb_rope_manila', pts, r, 9)
+    for i, c in enumerate(pts):   # three-strand lay: helical ridges twisting along the rope
+        for j in range(9):
+            vt = o.data.vertices[i * 9 + j]; d = vt.co - Vector(c)
+            vt.co = Vector(c) + d * (1.0 + 0.16 * math.cos(3 * (j / 9 * math.tau) + i * 1.1))
     rod('hb_rope_white', (0.05, -0.42, r), (0.1, -0.41, r), r * 1.02, 6)
     for a in (0.9, 3.9):  # ties holding the coil together
         c, rad = Vector((0.37 * math.cos(a), 0.37 * math.sin(a), 0)), Vector((math.cos(a), math.sin(a), 0))
@@ -3643,8 +3696,9 @@ def street_light():
 def vending_machine():
     H = 1.86
     box2('steel_dark', -0.48, 0.48, -0.35, 0.35, 0, 0.06)
-    box2('white', -0.5, 0.5, -0.31, 0.37, 0.06, H)
-    box2('red', -0.51, 0.51, -0.425, 0.38, H, 2.03); box2('red', -0.49, 0.49, -0.41, 0.37, 2.03, 2.07)
+    _pv_rbox('white', (1.0, 0.68, H - 0.06), (0, 0.03, 0.06), 0.02)
+    _pv_rbox('red', (1.02, 0.805, 0.17), (0, -0.0225, H - 0.0), 0.025)
+    box2('vend_panel', -0.47, 0.47, -0.428, -0.42, H + 0.005, H + 0.02)   # lit strip under the header; box2('red', -0.49, 0.49, -0.41, 0.37, 2.03, 2.07)
     text3d('ink_white', 'ドリンク', 0.13, (0, -0.428, 1.945), depth=0.008)
     for sx in (-1, 1): box2('red', sx * 0.5 - 0.07, sx * 0.5, -0.41, -0.31, 0.06, H)  # door frame
     box2('red', -0.43, 0.43, -0.41, -0.31, 1.8, H); box2('red', -0.43, 0.43, -0.4, -0.31, 0.06, 0.98)
@@ -3672,7 +3726,12 @@ def vending_machine():
     box2('steel_dark', -0.38, 0.38, -0.415, -0.4, 0.14, 0.44); box2('black', -0.34, 0.34, -0.42, -0.415, 0.18, 0.4)
     box2('metal', -0.32, 0.32, -0.43, -0.42, 0.37, 0.39); box2('steel_dark', -0.5, 0.5, -0.42, -0.31, 0.06, 0.12)
     cyl('metal', 0.016, 0.01, (0.465, -0.41, 1.1), 8, rot=(math.pi / 2, 0, 0))
+    box2('st_stain', -0.5, 0.5, -0.426, -0.31, 0.06, 0.125)                          # scuffed kick plate
+    for x in (-0.44, 0.27): box2('alu', x, x + 0.1, -0.428, -0.425, 0.1, 0.112)          # paint chipped to metal
+    box2('st_ic_reader', 0.17, 0.3, -0.425, -0.418, 0.96, 1.0); box2('green', 0.19, 0.24, -0.427, -0.424, 0.97, 0.99)   # IC-card reader
+    for k in range(12): box2('st_reflector', -0.42 + k * 0.07, -0.4 + k * 0.07, -0.427, -0.422, 0.5, 0.512)          # selection LEDs
     for sx in (-1, 1):  # side advert panels
+        box2('st_stain', sx * 0.505 - 0.009, sx * 0.505 + 0.009, -0.3, 0.36, 0.06, 0.2)
         box2('red', sx * 0.505 - 0.006, sx * 0.505 + 0.006, -0.27, 0.33, 0.3, 1.75)
         box2('white', sx * 0.505 - 0.008, sx * 0.505 + 0.008, -0.27, 0.33, 1.2, 1.26)
         box2('blue', sx * 0.505 - 0.008, sx * 0.505 + 0.008, -0.27, 0.33, 1.3, 1.34)
@@ -3803,6 +3862,8 @@ def a_frame_sign():
                 text3d('st_chalk_white', '本日のランチ', 0.062, (0, -0.013, 0.79), depth=0.004)
                 box2('st_chalk_yellow', -0.2, 0.2, -0.0125, -0.01, 0.735, 0.742)
                 text3d('st_chalk_yellow', 'うに丼', 0.12, (0, -0.013, 0.6), depth=0.004)
+                text3d('st_chalk_pink', '¥980', 0.07, (0.08, -0.013, 0.47), depth=0.004)
+                box2('st_chalk_white', -0.22, -0.02, -0.0118, -0.0105, 0.22, 0.226)                        # smudged chalk wipe
             else:
                 text3d('st_chalk_yellow', 'ランチ', 0.1, (0, 0.013, 0.7), rz=rz, depth=0.004)
                 box2('st_chalk_white', -0.18, 0.18, 0.01, 0.0125, 0.6, 0.607)
@@ -3820,10 +3881,16 @@ def bench():
             prism('steel_dark', prof, 0.05, loc=(sx, 0, 0), axis='X')
         box2('wood', sx - 0.045, sx + 0.045, -0.25, 0.2, 0.6, 0.635)
     box2('steel_dark', -0.72, 0.72, -0.02, 0.02, 0.32, 0.355)
-    for yc in (-0.19, -0.09, 0.01, 0.11): box2('wood', -0.8, 0.8, yc - 0.042, yc + 0.042, 0.395, 0.43)
-    for t in (0.22, 0.52, 0.82):
+    for i, yc in enumerate((-0.19, -0.09, 0.01, 0.11)):   # rounded seat slats, each a slightly different weathered tone
+        _pv_rbox('wood' if i % 2 else 'wood_red', (1.6, 0.084, 0.035), (0, yc, 0.395), 0.01)
+        for sx in (-0.72, 0.72): cyl('metal', 0.008, 0.004, (sx, yc, 0.43), 6)                     # carriage bolts
+    for i, t in enumerate((0.22, 0.52, 0.82)):
         yc, zc = 0.165 + 0.085 * t, 0.45 + 0.36 * t
-        box('wood', (1.6, 0.03, 0.09), (0, yc - 0.03, zc - 0.045), (-0.235, 0, 0))
+        _pv_rbox('wood_red' if i == 1 else 'wood', (1.6, 0.03, 0.09), (0, yc - 0.03, zc - 0.045), 0.008, rot=(-0.235, 0, 0))
+    with xf((0, 0.165 + 0.085 * 0.52 - 0.052, 0.45 + 0.36 * 0.52 - 0.005), rx=-0.235):            # donor plaque
+        box2('gold', -0.1, 0.1, -0.004, 0.0, -0.025, 0.025); box2('ink', -0.07, 0.07, -0.005, -0.004, -0.006, 0.006)
+    for sx in (-0.72, 0.72):
+        for y in (-0.19, 0.16): box2('rust', sx - 0.027, sx + 0.027, y - 0.035, y + 0.035, 0.0, 0.03)    # rusty feet
 
 @model('postbox', '郵便ポスト', '道の小物')
 def postbox():
@@ -3843,6 +3910,16 @@ def postbox():
     cyl('metal', 0.014, 0.008, (0.13, -0.197, 0.52), 8, rot=(math.pi / 2, 0, 0))
     text3d('ink_white', '〒', 0.13, (-0.212, 0, 0.8), rz=-math.pi / 2, depth=0.006)
     text3d('ink_white', '〒', 0.13, (0.212, 0, 0.8), rz=math.pi / 2, depth=0.006)
+    # back: collection door seams, hinges and lock, a schedule plate; paint wear and grime at the foot
+    yb = 0.191
+    for x0, x1, z0, z1 in ((-0.16, 0.16, 0.44, 0.452), (-0.16, 0.16, 1.03, 1.042), (-0.16, -0.148, 0.44, 1.042), (0.148, 0.16, 0.44, 1.042)):
+        box2('st_post_seam', x0, x1, yb, yb + 0.004, z0, z1)
+    for z in (0.55, 0.92): box2('steel_dark', -0.175, -0.155, yb - 0.004, yb + 0.012, z, z + 0.06)
+    cyl('metal', 0.02, 0.012, (0.11, yb + 0.004, 0.74), 10, rot=(-math.pi / 2, 0, 0)); box2('ink', 0.106, 0.114, yb + 0.014, yb + 0.017, 0.73, 0.75)
+    box2('white', -0.09, 0.07, yb, yb + 0.008, 0.82, 0.97)
+    for k in range(4): box2('ink', -0.075, 0.03 - (k % 2) * 0.03, yb + 0.008, yb + 0.01, 0.84 + k * 0.03, 0.85 + k * 0.03)
+    _st_rbox('st_post_grime', 0.43, 0.39, [(-0.013, 0.055, 0.38), (-0.013, 0.055, 0.47)], k=2)
+    _st_rbox('concrete', 0.38, 0.34, [(0.0, 0.03, -0.02), (0.0, 0.03, 0.02), (0.015, 0.02, 0.035)], 2)
 
 @model('nobori', 'のぼり旗', '道の小物')
 def nobori():
@@ -3865,6 +3942,10 @@ def chochin_hanging():
     _st_lathe('black', [(0.128, h - 0.03), (0.142, h + 0.005), (0.14, h + 0.035), (0.11, h + 0.045)], 14, rot=math.pi / 2)
     rod('black', (0, 0, h + 0.04), (0, 0, h + 0.25), 0.01, 4); torus('black', 0.025, 0.006, (0, 0, h + 0.275), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)
     cyl('black', 0.03, 0.03, (0, 0, -0.075), 8)
+    for i in range(2, N - 1, 2):   # bamboo ribs showing through the paper
+        torus('st_chochin_rib', r * (0.55 + 0.45 * math.sin(i / N * math.pi)) * 1.012, 0.0045, (0, 0, i / N * h), seg=14, rseg=3)
+    _hb_tube('rope', [(0, 0, -0.075), (0.005, -0.005, -0.09), (0.0, 0.0, -0.105)], 0.008, 4)            # tassel cord
+    _st_lathe('cloth_red', [(0.01, -0.105), (0.026, -0.14), (0.03, -0.165), (0.0, -0.17)], 8)          # tassel
     text3d('ink', '祭', 0.19, (0, -0.214, h / 2), depth=0.014)
     text3d('ink', '祭', 0.19, (0, 0.214, h / 2), rz=math.pi, depth=0.014)
 
@@ -3984,13 +4065,15 @@ def laundry_pole():
 def fence_wood():
     box2('concrete', -1.045, 1.045, -0.06, 0.06, 0, 0.07)
     for x in (-1.0, 1.0):
-        box2('wood_frame', x - 0.045, x + 0.045, -0.045, 0.045, 0.07, 1.26)
+        box2('wood_dark', x - 0.045, x + 0.045, -0.045, 0.045, 0.07, 1.26)
         cyl('wood_frame', 0.075, 0.05, (x, 0, 1.3), 4, r2=0.02, rot=(0, 0, math.pi / 4))
-    box2('wood_frame', -1.04, 1.04, -0.055, 0.055, 1.24, 1.3)
+    box2('wood_dark', -1.04, 1.04, -0.055, 0.055, 1.24, 1.3)
     for z in (0.3, 0.72, 1.1): box2('wood_frame', -0.96, 0.96, -0.012, 0.012, z, z + 0.06)
-    for k in range(13):
-        x = -0.9 + k * 0.15; y = -0.025 if k % 2 == 0 else 0.025
-        box2('st_cedar' if k % 2 == 0 else 'wood_frame', x - 0.08, x + 0.08, y - 0.011, y + 0.011, 0.08, 1.24)
+    for k in range(13):   # board-on-board cedar, alternate boards weathered silver; nail heads, green damp line at the foot
+        x = -0.9 + k * 0.15; y = -0.025 if k % 2 == 0 else 0.025; s = -1 if k % 2 == 0 else 1
+        box2('wood_dark' if k % 3 else 'wood_grey', x - 0.08, x + 0.08, y - 0.011, y + 0.011, 0.08, 1.24)
+        box2('st_damp', x - 0.081, x + 0.081, y - 0.012, y + 0.012, 0.08, 0.13 + 0.03 * ((k * 7) % 3))
+        for z in (0.33, 0.75, 1.13): box2('iron', x - 0.006, x + 0.006, y + s * 0.011, y + s * 0.0125, z - 0.006, z + 0.006)
 
 @model('fence_rail', '白い鉄柵(2m)', '灯台・展望台')
 def fence_rail():
@@ -4000,6 +4083,10 @@ def fence_rail():
     box2('white', -1.0, 1.0, -0.03, 0.03, 1.0, 1.03)
     for z in (0.12, 0.88): box2('white', -0.98, 0.98, -0.012, 0.012, z, z + 0.03)
     for x in frange(-0.88, 0.89, 0.125): rod('white', (x, 0, 0.15), (x, 0, 0.88), 0.01, 4)
+    for k, x in enumerate(frange(-0.88, 0.89, 0.25)):   # rust weeping from the welds of the bottom rail, salt-air wear
+        box2('hb_iron_rust', x - 0.011, x + 0.011, -0.0125, 0.0125, 0.105 - 0.01 * (k % 2), 0.15 + 0.02 * (k % 3))
+    for x in (-1.0, 1.0):
+        box2('hb_iron_rust', x - 0.026, x + 0.026, -0.026, 0.026, 0.015, 0.06); box2('hb_iron_rust', x - 0.072, x + 0.072, -0.052, 0.052, 0.0, 0.006)
     for x in frange(-0.8125, 0.82, 0.125): ico('white', 0.016, (x, 0, 0.92), sub=1)
 
 @model('fence_log', '丸太の柵(2m)', '灯台・展望台')
@@ -5649,7 +5736,7 @@ PALETTE.update({
     'pv_bag': P((0.85, 0.78, 0.6), 0.9), 'pv_paint_white': P((0.88, 0.89, 0.88), 0.35), 'pv_chrome': P((0.85, 0.86, 0.88), 0.18, 1.0),
     'pv_plate': P((0.95, 0.8, 0.1), 0.5), 'pv_tail_light': P((0.8, 0.05, 0.03), 0.3, e=(1.0, 0.1, 0.05), es=0.6),
     'pv_amber': P((1.0, 0.5, 0.05), 0.3, e=(1.0, 0.5, 0.05), es=0.4), 'pv_frame_red': P((0.6, 0.06, 0.06), 0.35, 0.3),
-    'pv_seat': P((0.08, 0.07, 0.07), 0.55), 'pv_jacket': P((0.06, 0.3, 0.14), 0.85), 'pv_jacket_dk': P((0.03, 0.15, 0.07), 0.9),
+    'pv_seat': P((0.08, 0.07, 0.07), 0.55), 'pv_rust_run': P((0.45, 0.2, 0.08), 0.8), 'pv_scum': P((0.32, 0.33, 0.22), 0.9), 'pv_jacket': P((0.06, 0.3, 0.14), 0.85), 'pv_jacket_dk': P((0.03, 0.15, 0.07), 0.9),
     'pv_blouse': P((0.9, 0.38, 0.45), 0.9), 'pv_cat_eye': P((0.55, 0.75, 0.15), 0.2), 'pv_teak': P((0.55, 0.36, 0.2), 0.7), 'pv_cowl': P((0.08, 0.09, 0.1), 0.35),
 })
 
@@ -5937,6 +6024,16 @@ def _pv_hull_trim(L, hb, zd, yy, bw, N=30):
             for dy in (-0.15, 0.15): cyl('white', 0.07, 0.35, (0, dy, 0), 10); cyl('white', 0.09, 0.03, (0, dy, 0.35), 10)
             rod('white', (0, -0.15, 0.25), (0, 0.15, 0.25), 0.03, 6)
     _pv_rbox('pv_chrome', (0.22, 0.25, 0.14), (0, yy(0.995), zd(1.0) + bw - 0.05), 0.04)               # bow fairlead
+    # weathering: rust runs weeping from the freeing ports and the hawse, following the flare of the topside
+    for sx in (-1, 1):
+        for t, w, ln in ((0.14, 0.05, 1.0), (0.3, 0.035, 0.7), (0.46, 0.05, 0.9), (0.62, 0.03, 0.6), (0.9, 0.06, 1.0)):
+            h, d_ = hb(t), zd(t); y0 = yy(t)
+            prof = [(h * 1.012 + 0.012, d_ + 0.06), (h + 0.012, d_ - 0.02), (h * 0.985 + 0.012, d_ - 0.25 * ln), (h * 0.97 + 0.012, d_ - 0.42 * ln)]
+            v = []
+            for k, (x_, z_) in enumerate(prof):
+                ww = w * (1.0 - 0.7 * k / 3)
+                v += [(sx * x_, y0 - ww, z_), (sx * x_, y0 + ww, z_)]
+            mesh('pv_rust_run', v, [(2 * k, 2 * k + 1, 2 * k + 3, 2 * k + 2) if sx > 0 else (2 * k, 2 * k + 2, 2 * k + 3, 2 * k + 1) for k in range(3)])
 
 def _pv_wheelhouse(w, d, h, nfront=3, nside=2, roof_mat='boat_blue', door=1, visor=True, ring=True, ladder=True):
     """Wheelhouse at the current transform (bottom centre on the deck, front -Y): rounded box, framed windows with
