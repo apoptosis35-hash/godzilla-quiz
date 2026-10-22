@@ -91,6 +91,10 @@ PALETTE.update({
     'st_chalk_yellow': P((0.95, 0.78, 0.25), 0.95), 'st_chalk_pink': P((0.95, 0.45, 0.5), 0.95),
     'st_map_sea': P((0.12, 0.38, 0.72), 0.7), 'st_map_land': P((0.8, 0.7, 0.4), 0.8), 'st_map_hill': P((0.35, 0.55, 0.3), 0.8),
 })
+PALETTE.update({   # second pass (poles, lights)
+    'st_stain': P((0.3, 0.29, 0.27), 0.95), 'st_rust': P((0.42, 0.22, 0.1), 0.85, 0.2), 'st_porcelain': P((0.55, 0.38, 0.25), 0.25),
+    'st_closure': P((0.12, 0.12, 0.13), 0.6), 'st_lamp_body': P((0.46, 0.48, 0.5), 0.45, 0.5), 'st_reflector': P((0.95, 0.5, 0.05), 0.2, e=(1.0, 0.45, 0.05), es=0.2),
+})
 # --- st palette end
 MATS, IMAGES = {}, {}
 
@@ -771,24 +775,55 @@ def build(name):
     return top, meshes, lod_obj
 
 # ================================================================= houses (住宅)
+def bay_window(a, b, c, e, mat='mortar_white', frame='white', roof='tin_blue', depth=0.5):
+    """出窓: glazed box projecting from a wall (wall-local opening a..b, c..e)."""
+    box2(mat, a - 0.12, b + 0.12, -depth - 0.05, 0.0, c - 0.35, c)
+    box2(frame, a - 0.14, b + 0.14, -depth - 0.08, 0.0, c - 0.04, c + 0.02)
+    slab(roof, (a - 0.2, -depth - 0.15, e + 0.12), (b + 0.2, -depth - 0.15, e + 0.12), (a - 0.2, 0.0, e + 0.3), (b + 0.2, 0.0, e + 0.3), 0.04)
+    box2(frame, a - 0.12, b + 0.12, -depth - 0.05, 0.0, e, e + 0.12)
+    box2('glass', a - 0.08, b + 0.08, -depth - 0.01, -depth + 0.01, c, e)
+    for x in (a - 0.12, a + (b - a) / 3, a + 2 * (b - a) / 3, b + 0.12): box2(frame, x - 0.03, x + 0.03, -depth - 0.04, -depth + 0.02, c, e)
+    for x in (a - 0.12, b + 0.08):
+        box2('glass', x, x + 0.04, -depth, 0.0, c, e); box2(frame, x - 0.005, x + 0.045, -0.06, 0.0, c, e)
+    box2('curtain', a, b, 0.25, 0.27, c, e)
+
+def bonsai_shelf(x, y, n=4, seed=0):
+    """盆栽棚: a plank on two concrete blocks with little pots, by the front wall."""
+    rnd = random.Random(seed); L = n * 0.42
+    for sx in (-1, 1): box('concrete', (0.2, 0.36, 0.38), (x + sx * (L / 2 - 0.15), y, 0))
+    box('wood_light', (L, 0.38, 0.04), (x, y, 0.38))
+    for k in range(n):
+        px = x - L / 2 + 0.21 + k * 0.42
+        cyl(rnd.choice(['terracotta', 'st_glaze_blue' if 'st_glaze_blue' in PALETTE else 'blue', 'terracotta']), 0.1, 0.12, (px, y, 0.42), 8, r2=0.13)
+        ico(rnd.choice(['pine', 'leaf_dark', 'leaf']), 0.14, (px, y, 0.62), (1.4, 1.0, 0.7), 1, 0.25, k + seed)
+
 def house(w=7.0, d=6.5, floors=2, lower='wood_dark', upper='plaster', roof='gable', roof_mat='roof_tile', rise=None,
           door_x=None, balcony=True, pent=True, lattice=True, extension=None, base=0.45, seed=0, laundry=True, side_win=True,
-          tobukuro=True, solar=False, antenna=True, hood='tin_blue', planters=False, himono=False, gegyo=False, posts=None, bike_shed=False):
+          tobukuro=True, solar=False, antenna=True, hood='tin_blue', planters=False, himono=False, gegyo=False, posts=None, bike_shed=False,
+          entry='hood', bay=False, engawa=False, bonsai=False, moss=False, wrap_pent=False, ext_mat=None, ext_roof=None, patches=False,
+          h1=2.75, h2=2.6, setback=0.0, pitch=0.55, entry_mat=None, upper_lattice=False, futon_rail=None):
     """Generic Japanese wooden house. Ground floor walls `lower`, upper floor `upper`.
-    Board walls get battens (押縁), plaster walls exposed posts (真壁), windows casings/hoods/storm-shutter boxes."""
+    Board walls get battens (押縁), plaster walls exposed posts (真壁), windows casings/hoods/storm-shutter boxes.
+    roof: 'gable' (ridge along X), 'gable_y' (妻入り, gable to the street), 'hip' (寄棟) or 'irimoya' (入母屋).
+    setback moves the upper floor back (町家: the front of the ground floor gets a deep tiled 下屋 instead).
+    entry: 'hood' (small pent), 'gable' (gabled porch on posts) or 'flat' (flat canopy on white columns)."""
     rnd = random.Random(seed)
-    T = 0.15; h1, h2 = 2.75, 2.6
+    T = 0.15
+    tiled = roof_mat in RIDGE
     box('concrete', (w + 0.1, d + 0.1, base), (0, 0, 0))
     box('wood_frame', (w + 0.14, d + 0.14, 0.06), (0, 0, base - 0.02))  # 土台 / 水切り
     for (vx, vy, rz) in ((-w / 4, -d / 2, 0), (w / 4, -d / 2, 0), (w / 2, 0, math.pi / 2), (-w / 2, 0, math.pi / 2), (0, d / 2, 0)):  # 床下換気口
         box('steel_dark', (0.42, 0.13, 0.14), (vx, vy, base * 0.35), (0, 0, rz))
     z1 = base; door_x = (-w / 2 + 1.4) if door_x is None else door_x
-    is_board = lambda m: m.startswith('wood')
+    is_board = lambda m: m.startswith('wood') or m == 'yakisugi'
     # ---- ground floor
     fo = [(door_x - 0.85 + w / 2, door_x + 0.85 + w / 2, 0.0, 2.05)]
     wins = []
     for x in frange(-w / 2 + 1.0, w / 2 - 1.0, 2.2):
-        if abs(x - door_x) > 1.6: wins.append((x - 0.75 + w / 2, x + 0.75 + w / 2, 0.85, 1.95))
+        if abs(x - door_x) > 1.6:
+            wins.append((x - 0.85 + w / 2, x + 0.85 + w / 2, 0.08, 2.0) if engawa else (x - 0.75 + w / 2, x + 0.75 + w / 2, 0.85, 1.95))
+    if engawa:  # one wide 掃き出し opening onto the veranda, right of the door
+        wins = [(fo[0][1] + 0.5, w - 0.5, 0.08, 2.0)]
     fo += wins
     so = [((d - 2 * T) / 2 - 0.6, (d - 2 * T) / 2 + 0.6, 0.9, 1.9)] if side_win else []
     bo = [(w / 2 - 0.7, w / 2 + 0.7, 0.9, 1.9), (0.6, 1.4, 1.3, 1.9)]
@@ -797,94 +832,175 @@ def house(w=7.0, d=6.5, floors=2, lower='wood_dark', upper='plaster', roof='gabl
         for side, op in (('front', fo), ('right', so), ('left', so), ('back', bo)):
             with xf(*frames[side][:2]): battens(frames[side][2], h1, op)
     hood_m = hood if hood else None
+    low_pent = (pent and floors == 1) or wrap_pent or setback > 0
     with xf(*frames['front'][:2]):
         door(fo[0][0], fo[0][1], 0, 2.05, T)
         box2('stone_wall', fo[0][0] - 0.2, fo[0][1] + 0.2, -0.75, 0.0, -0.3, -0.05)  # step stone
         box2('granite', fo[0][0] - 0.05, fo[0][1] + 0.05, -0.45, 0.0, -0.05, 0.0)
-        for (a, b, c, e) in wins:
-            window(a, b, c, e, T, 'wood_frame', lattice='wood_frame' if lattice else None, behind='shoji', bars=not lattice,
-                   hood=None if (pent and floors == 1) else hood_m, planter='terracotta' if planters else None)
+        for i, (a, b, c, e) in enumerate(wins):
+            if engawa:
+                window(a, b, c, e, T, 'wood_frame', behind='shoji', panes=4, sill=False, casing=True)
+            elif bay and i == len(wins) - 1:
+                window(a, b, c, e, T, 'white', behind=None, sill=False, casing=False); bay_window(a, b, c, e, mat=lower if not is_board(lower) else 'mortar_white')
+            else:
+                window(a, b, c, e, T, 'wood_frame', lattice='wood_frame' if lattice else None, behind='shoji', bars=not lattice,
+                       hood=None if low_pent else hood_m, planter='terracotta' if planters else None)
         box2('wood_light', fo[0][0] - 0.42, fo[0][0] - 0.12, -0.03, 0, 1.3, 1.62)  # 表札 name plate
         box2('ink', fo[0][0] - 0.3, fo[0][0] - 0.24, -0.035, -0.03, 1.36, 1.56)
         box2('white', fo[0][1] + 0.15, fo[0][1] + 0.27, -0.04, 0, 1.25, 1.42)  # intercom
         mailbox((fo[0][1] + 0.45, -0.07, 0.95), 0, rnd.choice(['red', 'steel_dark', 'cloth_green']))
-    if not (pent and floors == 1):
-        with xf((door_x, -d / 2, 0)): entry_hood(0, 2.3, z1 + 2.55, 0.75, roof_mat if roof_mat in RIDGE else 'tin_blue')
+        if patches:  # tin sheets nailed over rotten boards
+            for (a, c) in ((0.15, 0.1), (w - 1.1, 0.25)): box2('tin_rust', a, a + 0.9, -0.05, -0.03, c, c + 0.75)
+    if engawa:  # 縁側: wooden veranda along the glass doors
+        a, b = wins[0][0] - w / 2 - 0.1, wins[0][1] - w / 2 + 0.1
+        box2('wood_light', a, b, -d / 2 - 0.9, -d / 2, z1 - 0.05, z1 + 0.03)
+        for x in frange(a + 0.1, b, (b - a - 0.2) / 3): box2('wood_frame', x - 0.05, x + 0.05, -d / 2 - 0.85, -d / 2 - 0.75, 0, z1 - 0.05)
+        box2('stone_wall', (a + b) / 2 - 0.5, (a + b) / 2 + 0.5, -d / 2 - 1.5, -d / 2 - 0.9, 0, 0.22)  # 沓脱石
+        box2('wood_frame', a, b, -d / 2 - 0.92, -d / 2 - 0.86, z1 - 0.15, z1 + 0.03)
+    if not low_pent:
+        if entry == 'gable':
+            with xf((door_x, -d / 2 - 0.5, 0)):
+                em = entry_mat or (roof_mat if tiled else 'tin_red')
+                gable_y(2.0, 1.05, 0.55, z1 + 2.4, em, over_e=0.25, over_g=0.2, rafters=False, eave_tiles=False, wave=0.03 if em in RIDGE else 0.0)
+                prism('wood_frame', [(-1.0, z1 + 2.4), (1.0, z1 + 2.4), (0, z1 + 2.92)], 0.06, loc=(0, -0.48, 0), axis='Y')
+                for sx in (-1, 1):
+                    cyl('wood_frame', 0.07, z1 + 2.35, (sx * 0.9, -0.42, 0), 8); cyl('granite', 0.13, 0.12, (sx * 0.9, -0.42, 0), 8)
+                box('lamp', (0.12, 0.12, 0.08), (0, -0.2, z1 + 2.3))
+        elif entry == 'flat':
+            with xf((door_x, -d / 2, 0)):
+                box2(entry_mat or 'mortar_white', -1.15, 1.15, -1.0, 0.0, z1 + 2.35, z1 + 2.55)
+                box2('white', -1.2, 1.2, -1.05, -0.95, z1 + 2.5, z1 + 2.6)
+                for sx in (-1, 1): cyl('white', 0.1, z1 + 2.35 - 0.12, (sx * 0.98, -0.82, 0.12), 12); box('white', (0.3, 0.3, 0.12), (sx * 0.98, -0.82, 0))
+                box('lamp', (0.2, 0.2, 0.04), (0, -0.5, z1 + 2.31))
+                box2('granite', -1.1, 1.1, -1.0, 0.0, 0.0, 0.15)
+        else:
+            with xf((door_x, -d / 2, 0)): entry_hood(0, 2.3, z1 + 2.55, 0.75, entry_mat or (roof_mat if tiled else 'tin_blue'))
     for side in ('right', 'left'):
         with xf(*frames[side][:2]):
-            for (a, b, c, e) in so: window(a, b, c, e, T, 'alu', behind='curtain', hood=hood_m)
+            for (a, b, c, e) in so: window(a, b, c, e, T, 'alu', behind='curtain', hood=None if wrap_pent else hood_m)
             vent_hood((1.0, 0.0, 2.2))
+            if patches and side == 'left': box2('tin_rust', 2.6, 3.6, -0.05, -0.03, 0.2, 1.4)
     with xf(*frames['back'][:2]):
-        window(*bo[0], T, 'alu', behind='dark', hood=hood_m); window(*bo[1], T, 'alu', behind='lit', bars=True)
+        window(*bo[0], T, 'alu', behind='dark', hood=None if wrap_pent else hood_m); window(*bo[1], T, 'alu', behind='lit', bars=True)
         vent_hood((2.0, 0.0, 1.95))
     ztop = z1 + h1
+    d2, oy = d - setback, setback / 2  # upper floor depth and its centre offset
     if floors == 2:
         box('wood_frame', (w + 0.06, d + 0.06, 0.2), (0, 0, ztop - 0.1))  # floor band (胴差し)
         uo = []
         for x in frange(-w / 2 + 1.2, w / 2 - 1.0, 2.4): uo.append((x - 0.8 + w / 2, x + 0.8 + w / 2, 0.6 if balcony else 0.8, 2.0))
-        so2 = [((d - 2 * T) / 2 - 0.5, (d - 2 * T) / 2 + 0.5, 0.9, 1.8)] if side_win else []
+        so2 = [((d2 - 2 * T) / 2 - 0.5, (d2 - 2 * T) / 2 + 0.5, 0.9, 1.8)] if side_win else []
         bo2 = [(w / 2 - 0.8, w / 2 + 0.8, 0.9, 1.9)]
-        frames2 = side_walls(w, d, ztop, h2, T, upper, {'front': uo, 'right': so2, 'left': so2, 'back': bo2})
-        for side, op in (('front', uo), ('right', so2), ('left', so2), ('back', bo2)):
-            with xf(*frames2[side][:2]):
-                if is_board(upper): battens(frames2[side][2], h2, op)
-                elif posts is not False: battens(frames2[side][2], h2, op, step=posts or 1.82, mat='wood_frame', w=0.11, out=0.02)
-        with xf(*frames2['front'][:2]):
-            for i, (a, b, c, e) in enumerate(uo):
-                window(a, b, c, e, T, 'alu', behind=rnd.choice(['shoji', 'curtain', 'curtain']), sill=not balcony,
-                       tobukuro=0 if balcony or not tobukuro else (-1 if a > 0.6 else (1 if b < w - 0.6 else 0)),
-                       tob_mat='wood_dark' if upper != 'wood_dark' else 'tin_blue', planter='terracotta' if planters and not balcony else None)
-        for side in ('right', 'left'):
-            with xf(*frames2[side][:2]):
-                for (a, b, c, e) in so2: window(a, b, c, e, T, 'alu', behind='curtain', hood=hood_m)
-        with xf(*frames2['back'][:2]): window(*bo2[0], T, 'alu', behind='dark', tobukuro=1 if tobukuro else 0)
-        for x in (-w / 2, w / 2):  # corner posts
-            for y in (-d / 2, d / 2): box('wood_frame', (0.15, 0.15, h1 + h2), (x, y, z1))
-        if pent:
-            with xf((0, -d / 2, 0)): pent_roof(w + 0.3, 0.75, ztop + 0.05)
+        with xf((0, oy, 0)):
+            frames2 = side_walls(w, d2, ztop, h2, T, upper, {'front': uo, 'right': so2, 'left': so2, 'back': bo2})
+            for side, op in (('front', uo), ('right', so2), ('left', so2), ('back', bo2)):
+                with xf(*frames2[side][:2]):
+                    if is_board(upper): battens(frames2[side][2], h2, op)
+                    elif posts is not False: battens(frames2[side][2], h2, op, step=posts or 1.82, mat='wood_frame', w=0.11, out=0.02)
+            with xf(*frames2['front'][:2]):
+                for i, (a, b, c, e) in enumerate(uo):
+                    window(a, b, c, e, T, 'wood_frame' if upper_lattice else 'alu', behind=rnd.choice(['shoji', 'curtain', 'curtain']), sill=not balcony,
+                           lattice='wood_frame' if upper_lattice else None,
+                           tobukuro=0 if balcony or not tobukuro or upper_lattice else (-1 if a > 0.6 else (1 if b < w - 0.6 else 0)),
+                           tob_mat='wood_dark' if upper != 'wood_dark' else 'tin_blue', planter='terracotta' if planters and not balcony else None)
+            for side in ('right', 'left'):
+                with xf(*frames2[side][:2]):
+                    for (a, b, c, e) in so2: window(a, b, c, e, T, 'alu', behind='curtain', hood=hood_m)
+            with xf(*frames2['back'][:2]): window(*bo2[0], T, 'alu', behind='dark', tobukuro=1 if tobukuro else 0)
+            for x in (-w / 2, w / 2):  # corner posts
+                for y in (-d2 / 2, d2 / 2): box('wood_frame', (0.15, 0.15, h2 + 0.1), (x, y, ztop - 0.1))
+        for x in (-w / 2, w / 2):
+            for y in (-d / 2, d / 2): box('wood_frame', (0.15, 0.15, h1), (x, y, z1))
+        if setback > 0:  # deep tiled 下屋 over the front of the ground floor, from the set-back upper wall
+            with xf((0, -d / 2 + setback, 0)): pent_roof(w + 0.4, setback + 0.75, ztop + 0.6, roof_mat, drop=(setback + 0.75) * 0.42)
+        elif pent:
+            with xf((0, -d / 2, 0)): pent_roof(w + (1.5 if wrap_pent else 0.3), 0.75, ztop + 0.05, roof_mat if wrap_pent else 'roof_tile')
+        if wrap_pent:  # 下屋 all the way round the ground floor
+            for loc, rz, L in (((0, d / 2, 0), math.pi, w + 1.5), ((w / 2, 0, 0), math.pi / 2, d + 1.5), ((-w / 2, 0, 0), -math.pi / 2, d + 1.5)):
+                with xf(loc, rz): pent_roof(L, 0.75, ztop + 0.05, roof_mat, tiles=False)
         if balcony:
-            bz = ztop + 0.05
-            box2('wood_frame', -w / 2 + 0.3, w / 2 - 0.3, -d / 2 - 1.0, -d / 2, bz + 0.12 if pent else bz, bz + 0.22 if pent else bz + 0.1)
-            for x in (-w / 2 + 0.35, w / 2 - 0.35): box2('wood_frame', x - 0.05, x + 0.05, -d / 2 - 0.95, -d / 2 - 0.85, bz - 0.4, bz + 1.1)
-            railing(-w / 2 + 0.3, w / 2 - 0.3, -d / 2 - 0.95, bz + 0.2, 0.95, 'alu', 0.15)
-            for x in (-w / 2 + 0.3, w / 2 - 0.3): box2('alu', x - 0.015, x + 0.015, -d / 2 - 0.95, -d / 2, bz + 1.11, bz + 1.15)
+            bz = ztop + 0.05; yb = -d / 2 + setback
+            box2('wood_frame', -w / 2 + 0.3, w / 2 - 0.3, yb - 1.0, yb, bz + 0.12 if pent else bz, bz + 0.22 if pent else bz + 0.1)
+            for x in (-w / 2 + 0.35, w / 2 - 0.35): box2('wood_frame', x - 0.05, x + 0.05, yb - 0.95, yb - 0.85, bz - 0.4, bz + 1.1)
+            railing(-w / 2 + 0.3, w / 2 - 0.3, yb - 0.95, bz + 0.2, 0.95, 'alu', 0.15)
+            for x in (-w / 2 + 0.3, w / 2 - 0.3): box2('alu', x - 0.015, x + 0.015, yb - 0.95, yb, bz + 1.11, bz + 1.15)
             if laundry:  # 物干し竿 with washing, and sometimes a futon airing over the balcony rail
-                rod('alu', (-w / 2 + 0.4, -d / 2 - 0.7, bz + 1.85), (w / 2 - 0.4, -d / 2 - 0.7, bz + 1.85), 0.018, 6)
-                for x in (-w / 2 + 0.4, w / 2 - 0.4): rod('alu', (x, -d / 2 - 0.92, bz + 0.2), (x, -d / 2 - 0.7, bz + 1.95), 0.02, 6)
-                laundry_line(-w / 2 + 0.7, w / 2 - 0.7, -d / 2 - 0.7, bz + 1.85, laundry if laundry is not True else seed)
-                if seed % 2: futon(-w / 2 + 0.6, -w / 2 + 2.0, -d / 2 - 0.95, bz + 1.17, seed)
-            ac_unit((w / 2 - 0.85, -d / 2 - 0.35, bz + 0.25))  # AC outdoor unit on the balcony
-            flowerpot((-w / 2 + 0.7, -d / 2 - 0.4, bz + 0.22), 0.8, 'flower_red', seed + 9)
+                rod('alu', (-w / 2 + 0.4, yb - 0.7, bz + 1.85), (w / 2 - 0.4, yb - 0.7, bz + 1.85), 0.018, 6)
+                for x in (-w / 2 + 0.4, w / 2 - 0.4): rod('alu', (x, yb - 0.92, bz + 0.2), (x, yb - 0.7, bz + 1.95), 0.02, 6)
+                laundry_line(-w / 2 + 0.7, w / 2 - 0.7, yb - 0.7, bz + 1.85, laundry if laundry is not True else seed)
+                if seed % 2: futon(-w / 2 + 0.6, -w / 2 + 2.0, yb - 0.95, bz + 1.17, seed)
+            ac_unit((w / 2 - 0.85, yb - 0.35, bz + 0.25))  # AC outdoor unit on the balcony
+            flowerpot((-w / 2 + 0.7, yb - 0.4, bz + 0.22), 0.8, 'flower_red', seed + 9)
+        elif futon_rail:  # 手摺 in front of the upper windows with a futon airing
+            yb = -d / 2 + setback; zr_ = ztop + 0.85
+            for (a, b, c, e) in uo[:1]:
+                box2('wood_frame', a - w / 2 - 0.1, b - w / 2 + 0.1, yb - 0.3, yb - 0.25, zr_, zr_ + 0.05)
+                for x in (a - w / 2 - 0.05, b - w / 2 + 0.05): box2('wood_frame', x - 0.025, x + 0.025, yb - 0.3, yb, zr_ - 0.3, zr_ + 0.05)
+                futon(a - w / 2 + 0.05, b - w / 2 - 0.05, yb - 0.28, zr_ + 0.05, seed)
         ztop += h2
     elif pent:
-        with xf((0, -d / 2, 0)): pent_roof(w + 0.3, 0.7, ztop - 0.25)
-    # ---- roof
-    rise = rise or (d / 2) * 0.55
-    if roof == 'gable':
-        gable_fill(upper if floors == 2 else lower, w - 0.02, d, rise, ztop)
-        if is_board(upper if floors == 2 else lower):  # gable boards with battens
-            for sx in (-1, 1):
-                for y in frange(-d / 2 + 0.45, d / 2 - 0.4, 0.45):
-                    hz = rise * (1 - abs(y) / (d / 2))
-                    if hz > 0.2: box2('wood_frame', sx * (w / 2) - 0.015, sx * (w / 2) + 0.015, y - 0.022, y + 0.022, ztop, ztop + hz - 0.1)
+        with xf((0, -d / 2, 0)): pent_roof(w + 0.3, 0.9 if engawa else 0.7, ztop - 0.25, roof_mat if tiled else 'roof_tile', drop=0.3)
+    # ---- roof (over the upper floor, d2 deep and shifted by oy)
+    fm = upper if floors == 2 else lower
+    with xf((0, oy, 0)):
+        if roof == 'gable':
+            rise = rise or (d2 / 2) * pitch
+            gable_fill(fm, w - 0.02, d2, rise, ztop)
+            if is_board(fm):  # gable boards with battens
+                for sx in (-1, 1):
+                    for y in frange(-d2 / 2 + 0.45, d2 / 2 - 0.4, 0.45):
+                        hz = rise * (1 - abs(y) / (d2 / 2))
+                        if hz > 0.2: box2('wood_frame', sx * (w / 2) - 0.015, sx * (w / 2) + 0.015, y - 0.022, y + 0.022, ztop, ztop + hz - 0.1)
+            else:
+                for sx in (-1, 1): box2('wood_frame', sx * w / 2 - 0.02, sx * w / 2 + 0.02, -d2 / 2, d2 / 2, ztop - 0.1, ztop + 0.04)
+            for sx in (-1, 1):  # gable vent (換気口)
+                box2('steel_dark', sx * w / 2 - 0.03, sx * w / 2 + 0.03, -0.3, 0.3, ztop + rise * 0.45, ztop + rise * 0.45 + 0.35)
+            gable_roof(w, d2, rise, ztop, roof_mat, gegyo=gegyo, wave=0.032 if tiled else 0.0, rafters=tiled)
+            s_ = rise / (d2 / 2); zg = ztop - 0.6 * s_ - 0.2
+            for sg in (-1, 1):
+                gutter(-w / 2 - 0.3, w / 2 + 0.3, sg * (d2 / 2 + 0.62), zg)
+                rod('alu', (w / 2 + 0.2, sg * (d2 / 2 + 0.6), zg - 0.05), (w / 2 + 0.2, sg * (d2 / 2 + 0.25), zg - 0.45), 0.045, 6)
+                downpipe(w / 2 + 0.2, sg * (d2 / 2 + 0.25), zg - 0.35, wall_dy=None)
+            sol = ((-w / 4, d2 / 4 + 0.2, ztop + rise * 0.5 + 0.25), math.pi, math.atan(s_))
+        elif roof == 'gable_y':
+            rise = rise or (w / 2) * pitch
+            gable_y(w, d2, rise, ztop, roof_mat, fill=fm, gegyo=gegyo, over_e=0.5, over_g=0.55, wave=0.032 if tiled else 0.0, rafters=tiled,
+                    fascia='wood_frame' if tiled else 'steel_dark', barge='wood_frame' if tiled else 'white')
+            for sy in (-1, 1):
+                yy = sy * d2 / 2
+                if is_board(fm):
+                    for x in frange(-w / 2 + 0.45, w / 2 - 0.4, 0.45):
+                        hz = rise * (1 - abs(x) / (w / 2))
+                        if hz > 0.2: box2('wood_frame', x - 0.022, x + 0.022, yy - 0.015, yy + 0.015, ztop, ztop + hz - 0.1)
+                else: box2('wood_frame', -w / 2, w / 2, yy - 0.02, yy + 0.02, ztop - 0.1, ztop + 0.04)
+                box2('steel_dark', -0.3, 0.3, yy - 0.03, yy + 0.03, ztop + rise * 0.42, ztop + rise * 0.42 + 0.35)
+            s_ = rise / (w / 2); zg = ztop - 0.5 * s_ - 0.2
+            gutters_y(w, d2, zg, 0.5)
+            sol = ((w / 4 + 0.15, -0.3, ztop + rise * 0.5 + 0.25), math.pi / 2, math.atan(s_))
+        elif roof == 'irimoya':
+            rise = rise or 2.2
+            irimoya_roof(w, d2, ztop, over=0.75, H=rise, ug=0.45, mat=roof_mat, t=0.14, lift=0.16, Nx=10, Nu=6, seams=None,
+                         rm=RIDGE.get(roof_mat, roof_mat), gmat='wood_frame', gable_mat=fm if not is_board(fm) else 'plaster_white')
+            for sx in (-1, 1): box2('wood_frame', sx * w / 2 - 0.02, sx * w / 2 + 0.02, -d2 / 2, d2 / 2, ztop - 0.1, ztop + 0.04)
+            s_ = rise / (d2 / 2); sol = None
         else:
-            for sx in (-1, 1): box2('wood_frame', sx * w / 2 - 0.02, sx * w / 2 + 0.02, -d / 2, d / 2, ztop - 0.1, ztop + 0.04)
-        for sx in (-1, 1):  # gable vent (換気口)
-            box2('steel_dark', sx * w / 2 - 0.03, sx * w / 2 + 0.03, -0.3, 0.3, ztop + rise * 0.45, ztop + rise * 0.45 + 0.35)
-        gable_roof(w, d, rise, ztop, roof_mat, gegyo=gegyo)
-    else:
-        hip_roof(w, d, rise, ztop, roof_mat)
-    zg = ztop - 0.6 * rise / (d / 2) - 0.2
-    for sg in (-1, 1):
-        gutter(-w / 2 - 0.3, w / 2 + 0.3, sg * (d / 2 + 0.62), zg)
-        rod('alu', (sg * 0 + w / 2 + 0.2, sg * (d / 2 + 0.6), zg - 0.05), (w / 2 + 0.2, sg * (d / 2 + 0.25), zg - 0.45), 0.045, 6)
-        downpipe(w / 2 + 0.2, sg * (d / 2 + 0.25), zg - 0.35, wall_dy=None)
-        for zz in frange(1.2, zg - 0.8, 1.5): box('steel_dark', (0.03, 0.1, 0.03), (w / 2 + 0.12, sg * (d / 2 + 0.25), zz), (0, 0, math.pi / 2))
-    if antenna and floors == 2:
-        tv_antenna((w / 4, d / 4, ztop + rise * 0.5), 1.25, 0.4 + seed)
-    if solar:
-        s_ = rise / (d / 2)
-        solar_heater((-w / 4, d / 4 + 0.2, ztop + rise * 0.5 + 0.25), 0, math.atan(s_))
+            rot = d2 > w + 0.01
+            rise = rise or (min(w, d2) / 2) * pitch
+            with xf((0, 0, 0), math.pi / 2 if rot else 0.0): hip_roof(d2 if rot else w, w if rot else d2, rise, ztop, roof_mat, wave=0.032 if tiled else 0.0, eave_tiles=tiled)
+            s_ = rise / (min(w, d2) / 2); zg = ztop - 0.6 * s_ - 0.2
+            for sg in (-1, 1):
+                gutter(-w / 2 - 0.3, w / 2 + 0.3, sg * (d2 / 2 + 0.62), zg)
+                downpipe(w / 2 + 0.2, sg * (d2 / 2 + 0.3), zg - 0.05)
+            sol = ((-w / 4, d2 / 4 + 0.2, ztop + rise * 0.5 + 0.25), math.pi, math.atan(s_))
+        if antenna and floors == 2:
+            tv_antenna((w / 4, d2 / 4, ztop + rise * 0.5), 1.25, 0.4 + seed)
+        if solar and sol:
+            solar_heater(*sol)
+        if moss:  # moss and a weed or two on the old tiles
+            for k in range(7):
+                x = rnd.uniform(-w / 2 + 0.5, w / 2 - 0.5); y = rnd.choice((-1, 1)) * rnd.uniform(0.6, d2 / 2 - 0.3)
+                z = ztop + 0.2 + rise * (1 - abs(y) / (d2 / 2)) + 0.03
+                ico('moss', 0.3, (x, y, z), (1.6, 1.0, 0.15), 1, 0.3, k)
     # ---- extras around the house
     ac_unit((w / 2 + 0.25, d / 4, base + 0.1), math.pi / 2)
     box2('white', w / 2 + 0.02, w / 2 + 0.1, d / 4 - 0.05, d / 4 + 0.05, base + 0.4, base + 2.2)  # AC pipe cover
@@ -896,17 +1012,17 @@ def house(w=7.0, d=6.5, floors=2, lower='wood_dark', upper='plaster', roof='gabl
     rod('steel_dark', (-w / 2 - 0.3, d / 3 - 0.2, 0.85), (-w / 2 - 0.3, d / 3 + 0.65, 0.85), 0.01, 3)  # chain
     if extension:  # lean-to annex (物置) with tin roof on the right side
         ew, ed = extension
-        em = 'tin_rust' if seed % 2 else 'wood'
+        em = ext_mat or ('tin_rust' if seed % 2 else 'wood')
         with xf((w / 2 + ew / 2, d / 2 - ed / 2, 0)):
             box('concrete', (ew, ed, base), (0, 0, 0))
             eo = {'front': [(ew / 2 - 0.5, ew / 2 + 0.5, 0.0, 1.9)], 'right': [(ed / 2 - 0.4, ed / 2 + 0.4, 1.0, 1.7)]}
             fr = side_walls(ew, ed, base, 2.3, 0.1, em, eo, skip=('left',))
             with xf(*fr['front'][:2]): door(ew / 2 - 0.5, ew / 2 + 0.5, 0, 1.9, 0.1, 'wood')
             with xf(*fr['right'][:2]): window(ed / 2 - 0.4, ed / 2 + 0.4, 1.0, 1.7, 0.1, 'alu', behind='dark', bars=True)
-            if em == 'wood':
+            if is_board(em):
                 for side in ('front', 'right', 'back'):
                     with xf(*fr[side][:2]): battens(fr[side][2], 2.3, eo.get(side, ()))
-            rm = 'tin_rust' if seed % 3 else 'tin_blue'
+            rm = ext_roof or ('tin_rust' if seed % 3 else 'tin_blue')
             slab(rm, (ew / 2 + 0.3, -ed / 2 - 0.3, base + 2.3), (ew / 2 + 0.3, ed / 2 + 0.3, base + 2.3),
                  (-ew / 2, -ed / 2 - 0.3, base + 2.9), (-ew / 2, ed / 2 + 0.3, base + 2.9), 0.04, 0.12, 0.012)
             for sy in (-1, 1): box2('wood_frame', -ew / 2, ew / 2 + 0.3, sy * (ed / 2 + 0.3) - 0.03, sy * (ed / 2 + 0.3) + 0.03, base + 2.2, base + 2.36)
@@ -920,35 +1036,68 @@ def house(w=7.0, d=6.5, floors=2, lower='wood_dark', upper='plaster', roof='gabl
         with xf((door_x - 1.8, -d / 2 - 0.55, 0)):
             for x in (-0.6, 0.6): rod('alu', (x, -0.4, 0), (x, -0.4, 2.0), 0.03, 6)
             slab('glass', (-0.75, -0.6, 1.95), (0.75, -0.6, 1.95), (-0.75, 0.55, 2.15), (0.75, 0.55, 2.15), 0.02)
-    for k in range(rnd.randint(2, 4)):
-        flowerpot((door_x + 1.1 + k * 0.45, -d / 2 - 0.35, 0), 0.9 + rnd.random() * 0.4, rnd.choice([None, 'flower_red', 'flower_yellow', 'hydrangea']), seed + k)
+    if bonsai:
+        bonsai_shelf(door_x + (1.9 if door_x < 0 else -1.9), -d / 2 - 0.35, 4, seed)
+    else:
+        for k in range(rnd.randint(2, 4)):
+            flowerpot((door_x + 1.1 + k * 0.45, -d / 2 - 0.35, 0), 0.9 + rnd.random() * 0.4, rnd.choice([None, 'flower_red', 'flower_yellow', 'hydrangea']), seed + k)
     flowerpot((door_x - 1.15, -d / 2 - 0.3, 0), 1.15, 'hydrangea', seed + 11)
 
 @model('house_narrow', '細長い家(R1)', '住宅')
-def house_narrow(): house(5.2, 7.5, 2, 'wood_dark', 'wood_dark', door_x=-1.2, balcony=True, seed=1, laundry=5, hood='tin_rust', antenna=True)
+def house_narrow():
+    """妻入り fisherman's house: charred-cedar (焼杉) boards, red corrugated-tin gable to the street, laundry balcony."""
+    house(5.2, 7.5, 2, 'yakisugi', 'yakisugi', roof='gable_y', roof_mat='tin_red', pitch=0.85, door_x=-1.2, balcony=True, pent=False, seed=1, laundry=5,
+          hood='tin_rust', antenna=True, entry='hood', entry_mat='tin_red', bonsai=True)
 
 @model('house_standard', '標準的な家(R2)', '住宅')
-def house_standard(): house(8.0, 6.5, 2, 'wood_dark', 'plaster', door_x=-2.4, seed=2, extension=(2.4, 3.0), laundry=14, solar=True)
+def house_standard():
+    """Two storeys under a tiled gable: dark boards below, plaster with exposed posts above, solar heater, tin annex."""
+    house(8.0, 6.5, 2, 'wood_dark', 'plaster', door_x=-2.4, seed=2, extension=(2.4, 3.0), solar=True, entry='gable', ext_mat='tin_teal', ext_roof='tin_red',
+          balcony=False, pent=False, futon_rail=True)
 
 @model('house_twostory', '二階建ての家(R3)', '住宅')
-def house_twostory(): house(9.0, 7.0, 2, 'wood', 'plaster_cream', roof='hip', door_x=2.6, seed=3, lattice=False, laundry=30, bike_shed=True)
+def house_twostory():
+    """Big 入母屋 house: tiled hip-and-gable roof over cream plaster, a 下屋 roof wrapping the ground floor, storm shutters."""
+    house(9.0, 7.0, 2, 'wood', 'plaster_cream', roof='irimoya', rise=2.15, door_x=2.6, seed=3, lattice=False, balcony=False, wrap_pent=True,
+          laundry=False, bike_shed=True, entry='hood', antenna=False, futon_rail=True, bonsai=True)
 
 @model('house_hira', '平屋(R5)', '住宅')
-def house_hira(): house(8.5, 6.5, 1, 'wood_dark', 'wood_dark', door_x=-2.2, balcony=False, seed=4, roof='gable', extension=(2.0, 3.2), himono=True, gegyo=True, solar=True)
+def house_hira():
+    """平屋 under a hipped roof of red-brown tiles, with a 縁側 veranda and glass doors, a dried-fish rack and a tin annex."""
+    house(8.5, 6.5, 1, 'wood_bleached', 'wood_bleached', door_x=-2.2, balcony=False, seed=4, roof='hip', roof_mat='roof_tile_red', pitch=0.6,
+          extension=(2.0, 3.2), himono=True, solar=True, engawa=True, ext_mat='wood', ext_roof='tin_rust')
 
 @model('house_old', '古い木造の家(R6)', '住宅')
-def house_old(): house(6.5, 6.0, 2, 'wood_grey', 'wood_grey', roof_mat='roof_tile_brown', door_x=1.4, seed=5, balcony=False, laundry=False, gegyo=True, himono=True, hood='roof_tile_brown', antenna=True)
+def house_old():
+    """Weathered 町家: the upper floor set back behind a deep brown-tiled 下屋, lattice front, mossy tiles, tin patches."""
+    house(6.5, 6.0, 2, 'wood_grey', 'plaster', roof_mat='roof_tile_brown', door_x=1.4, seed=5, balcony=False, laundry=False, gegyo=True,
+          himono=True, hood='roof_tile_brown', antenna=True, setback=1.1, pitch=0.68, upper_lattice=True, moss=True, patches=True, bonsai=True, h2=2.5)
 
 @model('house_hipped', '寄棟の家(R7)', '住宅')
-def house_hipped(): house(7.5, 7.5, 2, 'plaster_white', 'plaster_white', roof='hip', roof_mat='roof_tile_blue', door_x=-2.0, seed=6, lattice=False, laundry=19, planters=True, posts=False, hood='alu')
+def house_hipped():
+    """洋風 house: white mortar, blue-glazed hipped roof, a bay window, a flat porch canopy on white columns, flower boxes."""
+    house(7.5, 7.5, 2, 'mortar_white', 'mortar_white', roof='hip', roof_mat='roof_tile_blue', door_x=-2.0, seed=6, lattice=False, laundry=19,
+          planters=True, posts=False, hood='alu', entry='flat', bay=True, pent=False)
 
 @model('house_hillside', '高台の家(R4・石垣付き)', '住宅')
 def house_hillside():
-    with xf((0, 1.5, 2.4)): house(7.0, 6.0, 2, 'wood_dark', 'plaster', door_x=-1.8, seed=7, laundry=9, solar=True)
+    """House on a stone base: teal tin upper floor under a tiled 妻入り gable, a deck terrace with laundry and pots."""
+    with xf((0, 1.5, 2.4)):
+        house(7.0, 6.0, 2, 'wood_dark', 'tin_teal', roof='gable_y', pitch=0.62, door_x=-1.8, seed=7, laundry=9, solar=True, balcony=True, pent=False,
+              entry='hood', posts=False)
+        with xf((0, -3.0, 0)):  # wooden deck in front of the house
+            box2('wood_light', -3.9, 3.9, -1.45, 0.0, 0.0, 0.12)
+            for x in frange(-3.85, 3.9, 0.15): box2('wood_frame', x - 0.005, x + 0.005, -1.45, 0.0, 0.12, 0.125)
+            railing(-4.4, 4.4, -1.42, 0.12, 0.9, 'wood_frame', 0.5)
+            with xf((4.4, 0, 0), math.pi / 2): railing(-1.42, 0.0, 0, 0.12, 0.9, 'wood_frame', 0.5)
+            for k, x in enumerate((-3.2, 2.0, 3.0)): flowerpot((x, -0.6, 0.12), 1.0 + 0.2 * k, ['hydrangea', 'flower_red', None][k], 70 + k)
+            box('wood_light', (1.4, 0.4, 0.05), (2.6, -1.0, 0.55)); box('wood_frame', (1.3, 0.35, 0.43), (2.6, -1.0, 0.12))
     box('stone_wall', (9.0, 9.0, 2.4), (0, 1.5, 0)); box('stone_wall', (9.2, 0.4, 0.15), (0, -2.8, 2.4))
     for i in range(12):  # side stairs up to the door
         box('granite', (1.3, 0.3, 0.2 * (i + 1)), (-5.15, -2.6 + i * 0.3 + 0.15, 0))
     railing(-5.8, -5.8, 0, 2.4, 0.9)
+    for x in (-3.0, -0.5, 2.5): ico('moss', 0.35, (x, -3.02, 0.6 + abs(x) * 0.25), (1.5, 0.2, 1.0), 1, 0.3, int(x * 3) % 7)
+    for x in (-2.0, 1.3): cards('shrub_card', (x, -3.15, 2.2), 0.4, 8, 0.4, int(x * 5) % 11, scale=(1.4, 0.5, 0.8), up=-0.2)  # weeds trailing over the wall
 
 # ================================================================= shops (商店街)
 PALETTE.update({  # --- building facades (shops & houses)
@@ -1952,7 +2101,8 @@ def torii():
         cyl('granite', 0.34, 0.12, (sx * 1.75, 0, 0), 12)          # 亀腹 stone footing
     box('black', (0.36, 0.26, 0.06), (0, 0, H - 0.47))
 
-def irimoya_roof(w, d, z, over=1.2, H=2.45, ug=0.5, mat='copper', t=0.16, lift=0.3, edge='wood_frame', Nx=12, Nu=8, seams=(10, 5)):
+def irimoya_roof(w, d, z, over=1.2, H=2.45, ug=0.5, mat='copper', t=0.16, lift=0.3, edge='wood_frame', Nx=12, Nu=8, seams=(10, 5),
+                 rm=None, gmat='gold', gable_mat='plaster_white'):
     """入母屋 roof with a concave (照り) profile and upturned corners: hipped lower part, gable on top.
     z = eave height. Returns (ridge z, gable x, profile function)."""
     hw, hd = w / 2 + over, d / 2 + over
@@ -1999,22 +2149,22 @@ def irimoya_roof(w, d, z, over=1.2, H=2.45, ug=0.5, mat='copper', t=0.16, lift=0
         a2 = Vector((sg * hw, hd, prof(0) + lift))
         for p in (a, a2):
             q = Vector((b.x, math.copysign(b.y, p.y), b.z)); m = (p + q) / 2 + Vector((0, 0, -0.06))
-            rod(mat, p + Vector((0, 0, 0.06)), m + Vector((0, 0, 0.08)), 0.08, 6); rod(mat, m + Vector((0, 0, 0.08)), q + Vector((0, 0, 0.08)), 0.08, 6)
-            ico(mat, 0.12, (p.x, p.y, p.z + 0.1), (1, 1, 1.3), 1)
+            rod(rm or mat, p + Vector((0, 0, 0.06)), m + Vector((0, 0, 0.08)), 0.08, 6); rod(rm or mat, m + Vector((0, 0, 0.08)), q + Vector((0, 0, 0.08)), 0.08, 6)
+            ico(rm or mat, 0.12, (p.x, p.y, p.z + 0.1), (1, 1, 1.3), 1)
     zr = prof(1)
     # gable walls (妻壁) with a grid of timbers, bargeboards (破風) and hanging fish (懸魚)
     for sx in (-1, 1):
         us = [ug + (1 - ug) * k / 6 for k in range(7)]
         poly = [(-hd * (1 - u), prof(u) - t) for u in us] + [(hd * (1 - u), prof(u) - t) for u in reversed(us[:-1])]
-        prism('plaster_white', poly, 0.08, loc=(sx * gx, 0, 0))
+        prism(gable_mat, poly, 0.08, loc=(sx * gx, 0, 0))
         for y in (-0.6, 0, 0.6): box('wood_frame', (0.1, 0.08, max(0.1, prof(1 - abs(y) / hd) - prof(ug) - 0.2)), (sx * (gx + 0.03), y, prof(ug) - t))
         xb = sx * (gx + 0.32)
         for sg in (-1, 1):
             pts = [(xb, sg * hd * (1 - u), prof(u) + 0.04) for u in us]
             loft(edge, [[(p[0] - 0.04, p[1], p[2]), (p[0] + 0.04, p[1], p[2]), (p[0] + 0.04, p[1], p[2] - 0.32), (p[0] - 0.04, p[1], p[2] - 0.32)] for p in pts])
-        prism('gold', [(-0.22, zr - 0.25), (0.22, zr - 0.25), (0.14, zr - 0.6), (0, zr - 0.72), (-0.14, zr - 0.6)], 0.05, loc=(xb + sx * 0.03, 0, 0))
-    ridge_cap(-gx - 0.4, gx + 0.4, zr, mat, noshi=False)
-    for sx in (-1, 1): onigawara((sx * (gx + 0.45), 0, zr - 0.05), sx, mat, 0.6)
+        prism(gmat, [(-0.22, zr - 0.25), (0.22, zr - 0.25), (0.14, zr - 0.6), (0, zr - 0.72), (-0.14, zr - 0.6)], 0.05, loc=(xb + sx * 0.03, 0, 0))
+    ridge_cap(-gx - 0.4, gx + 0.4, zr, rm or mat, noshi=rm is not None)
+    for sx in (-1, 1): onigawara((sx * (gx + 0.45), 0, zr - 0.05), sx, rm or mat, 0.6)
     return zr, gx, prof
 
 @model('shrine_hall', '社殿(小さな拝殿)', '神社')
@@ -3284,65 +3434,140 @@ def _st_pot(mat, loc, r=0.16, h=0.28, n=10, rot=0.0):
 # ================================================================= street props
 @model('utility_pole', '電柱(変圧器付き)', '道の小物')
 def utility_pole():
+    # Japanese concrete distribution pole: high-voltage crossarms (wires the game draws hang at 9.7 m +-0.8 and 9.0 m),
+    # a pair of pole-mounted transformers on a platform, a low-voltage rack, cut-out switches, a telecom cable with a
+    # closure and a slack loop, step bolts, adverts and the yellow/black guard sleeve; weathering streaks on the concrete
     R = lambda z: 0.19 - 0.06 * z / 10.5
-    cyl('concrete', 0.19, 10.5, (0, 0, 0), 14, r2=0.13); cyl('concrete', 0.13, 0.06, (0, 0, 10.5), 10, r2=0.07)
+    cyl('concrete', 0.19, 10.5, (0, 0, 0), 14, r2=0.13)
+    _st_lathe('concrete', [(0.13, 10.5), (0.135, 10.52), (0.1, 10.6), (0.03, 10.66)], 10)          # cap
+    rod('steel_dark', (0, 0, 10.6), (0, 0, 10.95), 0.012, 4)                                          # overhead earth spike
+    for k, (a, z0, z1) in enumerate(((0.4, 3.2, 9.6), (2.3, 1.1, 6.4), (4.0, 4.0, 8.9))):          # rain streaks
+        for z in (z0, z1): pass
+        o = _hb_tube('st_stain', [(R(z) * 1.003 * math.cos(a), R(z) * 1.003 * math.sin(a), z) for z in (z1, (z0 + z1) / 2, z0)], 0.0, 3, cap=False,
+                     radii=[0.012, 0.022, 0.006])
+    cyl('st_stain', R(0.02) + 0.004, 0.22, (0, 0, 0.0), 14, r2=R(0.22) + 0.004, cap=False)               # splash dirt at the foot
     for i in range(8):  # yellow/black guard sleeve
         z = 0.25 + i * 0.15; cyl('yellow' if i % 2 == 0 else 'black', R(z) + 0.008, 0.15, (0, 0, z), 14, cap=False)
-    def insulator(x, y, z, s=1.0):
-        _st_lathe('white', [(0.02 * s, 0), (0.06 * s, 0.03 * s), (0.06 * s, 0.05 * s), (0.035 * s, 0.07 * s), (0.05 * s, 0.1 * s), (0.05 * s, 0.12 * s), (0.02 * s, 0.15 * s)], 8, (x, y, z))
-    for z, w, xs in ((9.7, 1.8, (-0.8, -0.4, 0.8)), (9.05, 1.5, (-0.65, 0.65))):  # cross-arms with pin insulators and braces
-        box2('steel_dark', -w / 2, w / 2, -0.05, 0.05, z - 0.09, z)
-        for sx in (-1, 1): rod('steel_dark', (sx * w * 0.32, 0, z - 0.09), (0, 0, z - 0.6), 0.015, 4)
-        torus('steel_dark', R(z) + 0.01, 0.014, (0, 0, z - 0.05), seg=12, rseg=3)
-        for x in xs: insulator(x, 0, z)
-    with xf((0, 0.42, 6.85)):  # pole transformer
-        cyl('st_trafo', 0.24, 0.8, (0, 0, 0), 14); cyl('st_trafo', 0.255, 0.04, (0, 0, -0.03), 14)
-        cyl('st_trafo', 0.26, 0.05, (0, 0, 0.8), 14); cyl('st_trafo', 0.24, 0.06, (0, 0, 0.85), 14, r2=0.1)
-        for k in range(7):
-            a = math.pi * (0.12 + 0.76 * k / 6)
-            box('st_trafo', (0.014, 0.05, 0.6), (0.26 * math.cos(a), 0.26 * math.sin(a), 0.1), (0, 0, a - math.pi / 2))
-        box2('yellow', -0.08, 0.08, 0.235, 0.25, 0.45, 0.6); box2('white', -0.06, 0.06, 0.236, 0.252, 0.3, 0.38)
-        for x in (-0.11, 0.11): insulator(x, 0, 0.9, 0.7)
+    def insulator(x, y, z, s=1.0, mat='white'):
+        _st_lathe(mat, [(0.02 * s, 0), (0.065 * s, 0.03 * s), (0.065 * s, 0.05 * s), (0.035 * s, 0.07 * s), (0.055 * s, 0.1 * s),
+                        (0.055 * s, 0.12 * s), (0.03 * s, 0.15 * s), (0.035 * s, 0.17 * s), (0.0, 0.18 * s)], 8, (x, y, z))
+    def arm(z, w, xs, s=1.3):   # galvanised channel crossarm: web, flanges, end caps, braces, band clamp, insulators
+        box2('st_galv', -w / 2, w / 2, -0.06, 0.06, z - 0.11, z)
+        box2('steel_dark', -w / 2 + 0.01, w / 2 - 0.01, -0.062, 0.062, z - 0.085, z - 0.025)
+        for sx in (-1, 1):
+            rod('st_galv', (sx * w * 0.36, 0.0, z - 0.11), (sx * 0.12, 0, z - 0.72), 0.022, 4)
+            box2('steel_dark', sx * w / 2 - 0.012, sx * w / 2 + 0.012 * 0, -0.065, 0.065, z - 0.115, z + 0.005) if sx < 0 else \
+                box2('steel_dark', sx * w / 2, sx * w / 2 + 0.012, -0.065, 0.065, z - 0.115, z + 0.005)
+        torus('st_galv', R(z) + 0.012, 0.02, (0, 0, z - 0.06), seg=12, rseg=4)
+        torus('st_galv', R(z - 0.72) + 0.012, 0.018, (0, 0, z - 0.72), seg=12, rseg=3)
+        for x in xs:
+            cyl('steel_dark', 0.016, 0.06, (x, 0, z), 6)
+            insulator(x, 0, z + 0.05, s)
+            rod('black', (x - 0.04, 0, z + 0.05 + 0.13 * s), (x + 0.04, 0, z + 0.05 + 0.13 * s), 0.01, 4)   # tie wire
+    arm(9.7, 2.0, (-0.8, 0.8, -0.3))
+    arm(9.0, 1.6, (-0.62, 0.0, 0.62))
+    # lightning arrester and jumpers between the arms
+    for sx in (-1, 1):
+        rod('black', (sx * 0.8, 0, 9.85 + 0.13), (sx * 0.62, 0, 9.05 + 0.2), 0.009, 3)
+    # transformers: two cans hung on a platform bracket off the street side (+Y)
+    with xf((0, 0.0, 6.6)):
+        box2('st_galv', -0.62, 0.62, 0.14, 0.58, -0.08, 0.0)                                           # platform
+        for x in (-0.55, 0.55): box2('st_galv', x - 0.03, x + 0.03, 0.12, 0.6, -0.12, 0.0)
+        for sx in (-1, 1): rod('st_galv', (sx * 0.5, 0.5, -0.08), (sx * 0.05, R(6.0) + 0.02, -0.7), 0.02, 4)   # braces
+        torus('st_galv', R(6.6) + 0.012, 0.022, (0, 0, -0.05), seg=12, rseg=4); torus('st_galv', R(5.9) + 0.012, 0.02, (0, 0, -0.7), seg=12, rseg=3)
+        for k, x in enumerate((-0.31, 0.31)):
+            with xf((x, 0.38, 0.0)):
+                _st_lathe('st_trafo', [(0.0, 0.0), (0.21, 0.0), (0.22, 0.03), (0.22, 0.66), (0.235, 0.67), (0.235, 0.71), (0.2, 0.74), (0.12, 0.78), (0.0, 0.79)], 14)
+                for j in range(6):   # cooling fins on the outward half
+                    a = math.pi * (-0.15 + 0.26 * j)
+                    box('st_trafo', (0.016, 0.06, 0.52), (0.235 * math.cos(a), 0.235 * math.sin(a), 0.08), (0, 0, a - math.pi / 2))
+                _st_lathe('st_rust', [(0.222, 0.02), (0.224, 0.08), (0.222, 0.14)], 14)                    # rust run at the base
+                box2('yellow', -0.06, 0.06, 0.205, 0.235, 0.42, 0.52); box2('ink', -0.04, 0.04, 0.21, 0.237, 0.445, 0.455)  # rating plate
+                box2('white', -0.05, 0.05, 0.205, 0.234, 0.3, 0.37); text3d('ink_red', '%d' % (k + 1), 0.05, (0, 0.236, 0.335), rz=math.pi, depth=0.004)
+                for bx in (-0.08, 0.08): insulator(bx, -0.04, 0.78, 0.65, 'st_porcelain')
+                insulator(0.0, 0.1, 0.78, 0.5, 'st_porcelain')
+                rod('black', (-0.08, -0.04, 0.9), (-0.25 * (1 if x < 0 else -1) + 0.0, -0.3, 1.7), 0.008, 3)
+    # cut-out switches on a small bracket with jumpers up to the 9 m arm
+    box2('st_galv', -0.42, 0.42, -0.05, 0.05, 8.12, 8.2); torus('st_galv', R(8.15) + 0.012, 0.018, (0, 0, 8.16), seg=12, rseg=3)
+    for sx in (-1, 1):
+        box('white', (0.07, 0.07, 0.26), (sx * 0.36, 0.0, 8.2)); box2('steel_dark', sx * 0.36 - 0.012, sx * 0.36 + 0.012, -0.0, 0.1, 8.32, 8.35)
+        rod('black', (sx * 0.36, 0.0, 8.46), (sx * 0.62, 0.0, 9.17), 0.009, 3)
+        rod('black', (sx * 0.36, 0.0, 8.2), (sx * 0.31, 0.38, 7.39), 0.009, 3)
+    # low-voltage rack: three spool insulators stacked on a vertical bracket
+    box2('st_galv', -0.03, 0.03, -R(7.9) - 0.16, -R(7.9) + 0.02, 7.5, 8.0)
+    for z in (7.58, 7.74, 7.9):
+        _st_lathe('st_porcelain', [(0.0, -0.04), (0.04, -0.04), (0.045, -0.03), (0.03, -0.015), (0.03, 0.015), (0.045, 0.03), (0.04, 0.04), (0.0, 0.04)], 8,
+                  (0, -R(z) - 0.12, z))
+        rod('black', (0, -R(z) - 0.16, z), (0, -R(z) - 0.95, z - 0.25), 0.012, 4)                 # service drops leaving the pole
     for z in (7.05, 7.5):
-        box2('steel_dark', -0.04, 0.04, R(z) - 0.02, 0.2, z, z + 0.06); torus('steel_dark', R(z) + 0.01, 0.014, (0, 0, z + 0.03), seg=12, rseg=3)
-    for sx in (-1, 1):  # cut-out switches and jumper wires up to the lower arm
-        box('white', (0.06, 0.06, 0.24), (sx * 0.3, 0.12, 8.2)); box2('steel_dark', sx * 0.3 - 0.01, sx * 0.3 + 0.01, 0.0, 0.12, 8.3, 8.33)
-        rod('black', (sx * 0.11, 0.42, 7.85), (sx * 0.3, 0.12, 8.2), 0.008, 3)
-        rod('black', (sx * 0.3, 0.12, 8.44), (sx * 0.65, 0.0, 9.17), 0.008, 3)
-    box2('steel_dark', -0.03, 0.03, R(5.5) - 0.02, 0.24, 5.45, 5.55)  # telecom closure
-    rod('black', (-0.35, 0.26, 5.5), (0.35, 0.26, 5.5), 0.065, 8)
+        torus('steel_dark', R(z) + 0.01, 0.014, (0, 0, z + 0.03), seg=12, rseg=3)
+    # telecom: thick black cable with a closure, a coiled slack loop and a drop down the pole
+    yb = R(5.5) + 0.12
+    box2('st_galv', -0.03, 0.03, R(5.5) - 0.02, yb + 0.02, 5.45, 5.55); torus('st_galv', R(5.5) + 0.012, 0.018, (0, 0, 5.5), seg=12, rseg=3)
+    _hb_tube('black', [(-1.6, yb, 5.32), (-0.9, yb, 5.44), (-0.3, yb, 5.5), (0.3, yb, 5.5), (0.9, yb, 5.44), (1.6, yb, 5.32)], 0.035, 6)
+    with xf((0.0, yb + 0.02, 5.4)):
+        _st_lathe('black', [(0.0, -0.32), (0.07, -0.31), (0.1, -0.26), (0.1, 0.26), (0.07, 0.31), (0.0, 0.32)], 10, rot=0.0) if False else None
+        o = cyl('st_closure', 0.1, 0.6, (-0.3, 0.0, -0.06), 10, rot=(0, math.pi / 2, 0))
+        for x in (-0.24, 0.24): torus('steel_dark', 0.105, 0.012, (x, 0.0, -0.06), rot=(0, math.pi / 2, 0), seg=10, rseg=3)
+    with xf((0.0, yb + 0.04, 4.55), rx=math.pi / 2):
+        torus('black', 0.34, 0.03, (0, 0, 0), seg=16, rseg=4); torus('black', 0.31, 0.026, (0.02, 0.01, 0.03), seg=16, rseg=4)
+    for z in (4.2, 4.9): box2('steel_dark', -0.05, 0.05, R(z) - 0.01, yb + 0.07, z, z + 0.05)
+    _hb_tube('black', [(0.08, R(5.2) + 0.03, 5.32), (0.07, R(4) + 0.03, 4.0), (0.06, R(2.4) + 0.03, 2.4)], 0.018, 5)   # drop cable
+    for z in (2.6, 3.4, 4.2): torus('steel_dark', R(z) + 0.022, 0.008, (0, 0, z), seg=12, rseg=3)
     for i, z in enumerate(frange(2.5, 8.6, 0.42)):  # step bolts
         s = 1 if i % 2 else -1
-        rod('steel_dark', (s * R(z), 0, z), (s * (R(z) + 0.2), 0, z + 0.02), 0.012, 4)
-    rod('alu', (0, R(0.1) + 0.02, 0.1), (0, R(6.8) + 0.02, 6.8), 0.016, 6)  # earth wire conduit
+        rod('st_galv', (s * R(z), 0, z), (s * (R(z) + 0.2), 0, z + 0.02), 0.014, 4)
+        rod('st_galv', (s * (R(z) + 0.18), 0, z), (s * (R(z) + 0.2), 0, z + 0.07), 0.012, 4)
+    rod('alu', (0, R(0.1) + 0.02, 0.1), (0, R(6.5) + 0.02, 6.5), 0.016, 6)  # earth wire conduit
     y = -R(2.3) - 0.012  # wrap-around advert: clinic
     box2('white', -0.15, 0.15, y, y + 0.03, 1.6, 2.9); box2('sign_green', -0.15, 0.15, y - 0.003, y + 0.03, 2.78, 2.9); box2('sign_green', -0.15, 0.15, y - 0.003, y + 0.03, 1.6, 1.66)
     text3d('sign_green', '内科', 0.19, (0, y - 0.004, 2.3), depth=0.006, vertical=True)
     text3d('ink', 'クリニック', 0.045, (0, y - 0.004, 1.76), depth=0.004)
+    for z in (1.63, 2.87): box2('steel_dark', -0.17, 0.17, y + 0.005, y + 0.04, z - 0.012, z + 0.012)   # straps
     y = -R(3.4) - 0.01  # address plate
     box2('sign_blue', -0.1, 0.1, y, y + 0.025, 3.1, 3.62)
     text3d('ink_white', '一丁目', 0.12, (0, y - 0.003, 3.36), depth=0.005, vertical=True)
-    box2('white', -0.07, 0.07, -R(1.55) - 0.01, -R(1.55) + 0.02, 1.47, 1.53)
+    box2('white', -0.08, 0.08, -R(1.55) - 0.01, -R(1.55) + 0.02, 1.44, 1.56)                     # pole number plate
+    text3d('ink', '海凪 12', 0.04, (0, -R(1.55) - 0.013, 1.5), depth=0.004)
 
 @model('street_light', '街灯', '道の小物')
 def street_light():
-    cyl('concrete', 0.16, 0.06, (0, 0, 0), 10)
-    _st_lathe('st_galv', [(0.13, 0.06), (0.13, 0.1), (0.11, 0.14), (0.1, 0.55), (0.085, 0.6)], 10)
-    box2('st_galv', -0.045, 0.045, -0.112, -0.09, 0.2, 0.42); box2('steel_dark', -0.01, 0.01, -0.116, -0.11, 0.38, 0.4)
-    cyl('st_galv', 0.085, 4.4, (0, 0, 0.6), 10, r2=0.06)
-    cyl('st_galv', 0.078, 0.05, (0, 0, 2.6), 10)
-    box2('white', -0.045, 0.045, -0.085, -0.07, 2.2, 2.36); box2('ink', -0.03, 0.03, -0.088, -0.084, 2.26, 2.3)
-    pts = [(0, -0.4 * (1 - math.cos(t / 8 * math.pi / 2)), 4.95 + 0.4 * math.sin(t / 8 * math.pi / 2)) for t in range(9)] + [(0, -0.42, 5.35)]
-    for a, b in zip(pts, pts[1:]): rod('st_galv', a, b, 0.045, 8)
-    rod('st_galv', (0, 0, 4.55), (0, -0.28, 5.28), 0.018, 6)
-    zc = 5.33
+    # galvanised street light: footing with anchor nuts, base cover with an access door, tapered pole with a
+    # neighbourhood plate, a swan-neck arm with a scroll brace and a flat LED head (lit lens about 5 m up, 0.65 m out)
+    _st_rbox('concrete', 0.42, 0.42, [(0.0, 0.04, 0.0), (0.0, 0.04, 0.05), (0.02, 0.03, 0.08)], 2)
+    for a in range(4):
+        x, y = 0.12 * math.cos(a * math.pi / 2 + math.pi / 4), 0.12 * math.sin(a * math.pi / 2 + math.pi / 4)
+        cyl('steel_dark', 0.016, 0.04, (x, y, 0.08), 6); cyl('st_galv', 0.007, 0.06, (x, y, 0.08), 4)
+    cyl('st_galv', 0.15, 0.02, (0, 0, 0.08), 12)
+    _st_lathe('st_galv', [(0.135, 0.1), (0.135, 0.14), (0.12, 0.17), (0.115, 0.6), (0.122, 0.62), (0.122, 0.65), (0.09, 0.7)], 12)
+    box2('st_galv', -0.05, 0.05, -0.128, -0.11, 0.22, 0.48); box2('steel_dark', -0.012, 0.012, -0.131, -0.126, 0.42, 0.44)
+    cyl('st_galv', 0.09, 4.3, (0, 0, 0.68), 12, r2=0.062)
+    cyl('st_stain', 0.0905, 0.6, (0, 0, 0.68), 12, r2=0.087, cap=False)                              # grime at the foot
+    for z in (2.6, 4.2): cyl('st_galv', 0.082 - (z - 0.7) * 0.0065, 0.04, (0, 0, z), 12)            # weld bands
+    y = -0.088  # neighbourhood plate and a small reflector
+    box2('sign_blue', -0.06, 0.06, y - 0.012, y + 0.01, 2.1, 2.42); text3d('ink_white', '海凪', 0.075, (0, y - 0.015, 2.27), depth=0.004, vertical=True)
+    box2('st_reflector', -0.03, 0.03, -0.085, -0.075, 1.2, 1.28)
+    # swan-neck arm
+    zc = 5.12
+    pts = [(0, 0, 4.86)] + [(0, -0.36 * (1 - math.cos(t / 8 * math.pi / 2)), 4.95 + 0.33 * math.sin(t / 8 * math.pi / 2)) for t in range(9)] + [(0, -0.46, 5.3)]
+    _hb_tube('st_galv', pts, 0.05, 10, radii=[0.06] + [0.058 - 0.012 * k / 9 for k in range(9)] + [0.045])
+    sc = [(0, -0.02, 4.55), (0, -0.12, 4.68), (0, -0.2, 4.86), (0, -0.24, 5.02), (0, -0.2, 5.1), (0, -0.15, 5.06), (0, -0.16, 4.98)]
+    _hb_tube('st_galv', sc, 0.016, 6)                                                                   # scroll brace
+    cyl('st_galv', 0.068, 0.06, (0, 0, 4.52), 12)
+    # flat LED head: housing tapering to the tip, dark heat-sink ribs on top, lit lens underneath
     rings = []
-    for y, a, b, c in ((-0.38, 0.05, 0.04, 0.035), (-0.44, 0.11, 0.07, 0.045), (-0.56, 0.16, 0.09, 0.05), (-0.72, 0.175, 0.085, 0.05),
-                       (-0.86, 0.15, 0.065, 0.045), (-0.95, 0.09, 0.035, 0.035), (-0.975, 0.03, 0.015, 0.02)):
-        rings.append([(a * math.cos(i / 8 * math.pi), y, zc + b * math.sin(i / 8 * math.pi)) for i in range(9)] + [(-a * 0.9, y, zc - c), (a * 0.9, y, zc - c)])
-    loft('st_galv', rings)
-    o = cyl('lamp', 0.11, 0.02, (0, -0.67, zc - 0.068), 14); o.scale = (1.0, 1.5, 1.0)
-    cyl('white', 0.025, 0.03, (0, -0.78, zc + 0.07), 8)
+    for y, a, b, c in ((-0.4, 0.07, 0.05, 0.04), (-0.46, 0.15, 0.08, 0.05), (-0.6, 0.18, 0.1, 0.055), (-0.78, 0.18, 0.095, 0.055),
+                       (-0.92, 0.155, 0.075, 0.05), (-1.0, 0.1, 0.045, 0.04), (-1.025, 0.04, 0.02, 0.025)):
+        rings.append([(a * math.cos(i / 8 * math.pi), y, zc + b * math.sin(i / 8 * math.pi)) for i in range(9)] + [(-a * 0.92, y, zc - c), (a * 0.92, y, zc - c)])
+    loft('st_lamp_body', rings)
+    for k in range(5):
+        x = -0.1 + k * 0.05
+        box2('steel_dark', x - 0.008, x + 0.008, -0.86, -0.5, zc + 0.06, zc + 0.115 - abs(x) * 0.25)
+    _hb_tube('st_galv', [(0.18, -0.45, zc - 0.045), (0.185, -0.7, zc - 0.05), (0.16, -0.9, zc - 0.045), (0.0, -1.0, zc - 0.035), (-0.16, -0.9, zc - 0.045),
+                         (-0.185, -0.7, zc - 0.05), (-0.18, -0.45, zc - 0.045)], 0.012, 4, cap=False)                # lens bezel
+    o = cyl('lamp', 0.14, 0.02, (0, -0.68, zc - 0.07), 16); o.scale = (1.0, 1.45, 1.0)
+    cyl('white', 0.028, 0.035, (0, -0.47, zc + 0.08), 8); ico('st_pet', 0.026, (0, -0.47, zc + 0.115), (1, 1, 0.6), 1)   # photocell
+    box2('steel_dark', -0.04, 0.04, -0.4, -0.36, zc - 0.03, zc + 0.04)
 
 @model('vending_machine', '自動販売機', '道の小物')
 def vending_machine():
@@ -4409,6 +4634,9 @@ PALETTE.update({
     'en_pad': P((0.08, 0.22, 0.16), 0.95), 'en_leash': P((0.03, 0.03, 0.035), 0.45),
     'en_lacquer': P((0.32, 0.03, 0.02), 0.3), 'en_shirasu': P((0.97, 0.94, 0.84), 0.75), 'en_senbei': P((0.82, 0.5, 0.2), 0.8),
     'en_tako': P((0.72, 0.1, 0.12), 0.6), 'en_kanban': P((0.95, 0.94, 0.9), 0.75),
+    # single-faced lettering: the 'cloth' prefix makes the game render these double-sided
+    'cloth_en_ink': P((0.02, 0.02, 0.02), 0.7), 'cloth_en_navy': P((0.04, 0.08, 0.25), 0.7), 'cloth_en_red': P((0.7, 0.05, 0.03), 0.7),
+    'cloth_en_white': P((0.95, 0.94, 0.9), 0.7),
 })
 
 
@@ -4462,6 +4690,24 @@ def _en_plate(mat, pts, t=0.01, c=None):
     f += [(i, k + i, k + (i + 1) % k, (i + 1) % k) for i in range(k)]
     return mesh(mat, v, f)
 
+def _en_text(mat, s, size, loc=(0, 0, 0), rz=0.0, vertical=False, spacing=1.05):
+    """Like text3d but flat (front faces only, about a quarter of the triangles); use a double-sided cloth_en_* ink."""
+    global FONT
+    if FONT is None: FONT = bpy.data.fonts.load(FONT_PATH) if FONT_PATH else bpy.data.fonts['Bfont Regular']
+    chars = [(c, (0, 0, -i * size * spacing)) for i, c in enumerate(s)] if vertical else [(s, (0, 0, 0))]
+    if vertical: loc = (loc[0], loc[1], loc[2] + (len(s) - 1) * size * spacing / 2)
+    for body, off in chars:
+        if body == ' ': continue
+        cu = bpy.data.curves.new('txt', 'FONT'); cu.body = body; cu.font = FONT; cu.size = size
+        cu.extrude = 0.0; cu.fill_mode = 'FRONT'; cu.align_x = 'CENTER'; cu.align_y = 'CENTER'; cu.resolution_u = 2
+        ob = bpy.data.objects.new('txt', cu); bpy.context.scene.collection.objects.link(ob)
+        me = bpy.data.meshes.new_from_object(ob.evaluated_get(bpy.context.evaluated_depsgraph_get()))
+        bpy.data.objects.remove(ob); bpy.data.curves.remove(cu)
+        me.transform(Matrix.Rotation(math.pi / 2, 4, 'X'))
+        o = bpy.data.objects.new('txt', me); bpy.context.scene.collection.objects.link(o)
+        o.location = Vector(loc) + Matrix.Rotation(rz, 3, 'Z') @ Vector(off); o.rotation_euler = (0, 0, rz)
+        _take(o, mat)
+
 def _en_lerp_table(tab, x, col):
     """Linear interpolation in a table of rows sorted by row[0]."""
     for a, b in zip(tab, tab[1:]):
@@ -4482,12 +4728,12 @@ def sea_candle():
     cyl('plaster_white', 4.5, 2.9, (0, 0, 0.35), 24)
     for k in range(24):
         a = (k + 0.5) / 24 * math.tau
-        with xf((math.cos(a) * 4.63, math.sin(a) * 4.63, 0.35), rz=a): box('white', (0.08, 0.12, 2.9), (0, 0, 0))
+        with xf((math.cos(a) * 4.63, math.sin(a) * 4.63, 0.35), rz=a): bar('white', -0.06, 0.06, -0.04, 0.04, 0, 2.9)
     cyl('white', 4.8, 0.55, (0, 0, 3.25), 32)
     cyl('concrete', 4.65, 0.06, (0, 0, 3.8), 32)
-    torus('alu', 4.62, 0.035, (0, 0, 4.85), seg=32, rseg=4)
+    torus('alu', 4.62, 0.035, (0, 0, 4.85), seg=32, rseg=3)
     for k in range(24):
-        a = k / 24 * math.tau; rod('alu', (math.cos(a) * 4.62, math.sin(a) * 4.62, 3.86), (math.cos(a) * 4.62, math.sin(a) * 4.62, 4.85), 0.025, 4)
+        a = k / 24 * math.tau; rod('alu', (math.cos(a) * 4.62, math.sin(a) * 4.62, 3.86), (math.cos(a) * 4.62, math.sin(a) * 4.62, 4.85), 0.025, 3)
     with xf((0, -4.6, 0)):                                                       # entrance canopy and doors (front = -Y)
         box('white', (3.2, 1.1, 0.16), (0, -0.35, 2.75))
         for sx in (-1, 1): cyl('white', 0.07, 2.4, (sx * 1.45, -0.8, 0.35), 8)
@@ -4506,13 +4752,13 @@ def sea_candle():
         rail.append((c * 2.02, s * 2.02, z + 0.95))
     loft('metal', flight, closed=True, cap=True)
     _pv_tube('alu', rail, 0.035, 3, cap=False)
-    for i in range(0, ns + 1, 3):
+    for i in range(0, ns + 1, 6):
         a = i / n_per * math.tau; z = z0 + (z1 - z0) * i / ns
         rod('alu', (math.cos(a) * 2.02, math.sin(a) * 2.02, z), (math.cos(a) * 2.02, math.sin(a) * 2.02, z + 0.95), 0.018, 3)
     # twisting lattice: two families of helical members crossing each other, with ring beams
     H0, H1 = 3.85, 29.0
     R = lambda t: 2.4 + 0.85 * (1 - t) ** 2.4 + 1.6 * t ** 7
-    N, TW, NP = 14, 1.9, 12
+    N, TW, NP = 14, 1.9, 10
     for fam in (1, -1):
         for k in range(N):
             pts = []
@@ -4520,9 +4766,9 @@ def sea_candle():
                 t = j / NP; a = k / N * math.tau + fam * t * TW
                 pts.append((math.cos(a) * R(t), math.sin(a) * R(t), H0 + (H1 - H0) * t))
             _pv_tube('white', pts, 0.085, 4, cap=False)
-    for j in range(1, 9):
-        t = j / 9; torus('white', R(t), 0.07, (0, 0, H0 + (H1 - H0) * t), seg=28, rseg=3)
-    torus('white', R(0) + 0.05, 0.12, (0, 0, H0 + 0.05), seg=32, rseg=4)
+    for j in range(1, 7):
+        t = j / 7; torus('white', R(t), 0.07, (0, 0, H0 + (H1 - H0) * t), seg=28, rseg=3)
+    torus('white', R(0) + 0.05, 0.12, (0, 0, H0 + 0.05), seg=24, rseg=3)
     # glazed observation deck: soffit cone, floor, glass drum with mullions, roof
     cyl('white', 2.7, 0.8, (0, 0, 28.6), 24, r2=4.45)
     cyl('white', 4.45, 0.3, (0, 0, 29.4), 32)
@@ -4530,13 +4776,13 @@ def sea_candle():
     cyl('plaster_white', 4.0, 2.6, (0, 0, 29.7), 16, cap=False)
     for k in range(20):
         a = k / 20 * math.tau
-        with xf((math.cos(a) * 4.17, math.sin(a) * 4.17, 29.7), rz=a): box('white', (0.06, 0.1, 2.6), (0, 0, 0))
+        with xf((math.cos(a) * 4.17, math.sin(a) * 4.17, 29.7), rz=a): bar('white', -0.05, 0.05, -0.03, 0.03, 0, 2.6)
     cyl('white', 4.6, 0.32, (0, 0, 32.3), 32)
     cyl('white', 4.62, 0.08, (0, 0, 29.75 + 1.25), 32, cap=False)               # transom band
     # open-air deck: railing (posts, two rails), central drum
-    for zz in (33.0, 33.55): torus('alu', 4.45, 0.03 if zz < 33.4 else 0.04, (0, 0, zz), seg=32, rseg=4)
+    for zz in (33.0, 33.55): torus('alu', 4.45, 0.03 if zz < 33.4 else 0.04, (0, 0, zz), seg=32, rseg=3)
     for k in range(24):
-        a = k / 24 * math.tau; rod('alu', (math.cos(a) * 4.45, math.sin(a) * 4.45, 32.62), (math.cos(a) * 4.45, math.sin(a) * 4.45, 33.55), 0.025, 4)
+        a = k / 24 * math.tau; rod('alu', (math.cos(a) * 4.45, math.sin(a) * 4.45, 32.62), (math.cos(a) * 4.45, math.sin(a) * 4.45, 33.55), 0.025, 3)
     cyl('plaster_white', 1.55, 1.85, (0, 0, 32.62), 16)
     cyl('white', 1.7, 0.12, (0, 0, 34.45), 16)
     # lattice crown rising from the deck edge around the lantern
@@ -4603,7 +4849,7 @@ def _enz_yacht(sails):
         _pv_rbox('glass', (0.02, 1.35, 0.17), (sx * 0.965, -0.85, zc + 0.2), 0.03, rot=(0, -sx * ang, 0))
         _pv_rbox('glass', (0.02, 0.35, 0.14), (sx * 0.955, 0.45, zc + 0.21), 0.03, rot=(0, -sx * ang, 0))
         for y in (-1.6, 1.0, 1.6):                                                # hull portholes
-            hb = hb_at(T(y)); cyl('glass', 0.06, 0.03, (sx * (hb + 0.0), y, sh_at(T(y)) - 0.32), 10, rot=(0, sx * math.pi / 2, 0))
+            hb = hb_at(T(y)); cyl('glass', 0.06, 0.03, (sx * (hb + 0.0), y, sh_at(T(y)) - 0.32), 8, rot=(0, sx * math.pi / 2, 0))
     _pv_rbox('white', (0.62, 0.62, 0.08), (0, -2.0, zc + 0.5), 0.03); box('glass', (0.5, 0.5, 0.02), (0, -2.0, zc + 0.58))
     _pv_rbox('white', (0.45, 0.45, 0.07), (0, -0.35, zc + 0.5), 0.03); box('glass', (0.36, 0.36, 0.02), (0, -0.35, zc + 0.57))
     _pv_rbox('white', (0.75, 0.8, 0.1), (0, 0.45, zc + 0.5), 0.03)                # companionway slide + washboards
@@ -4620,7 +4866,7 @@ def _enz_yacht(sails):
         box('enz_teak', (0.42, 2.7, 0.06), (sx * 0.73, 2.5, zk + 0.12))
         box('white', (0.4, 2.7, 0.18), (sx * 0.73, 2.5, zk - 0.06))
         for y, z in ((1.25, zk + 0.33), (0.6, zc + 0.5)):
-            _pv_lathe('pv_chrome', [(0.07, 0), (0.075, 0.05), (0.06, 0.12), (0.075, 0.14), (0.04, 0.17), (0, 0.18)], (sx * (0.98 if y > 1 else 0.6), y, z), seg=10)
+            _pv_lathe('pv_chrome', [(0.07, 0), (0.06, 0.12), (0.075, 0.14), (0, 0.18)], (sx * (0.98 if y > 1 else 0.6), y, z), seg=8)
     box('black', (1.1, 2.6, 0.03), (0, 2.5, zk - 0.01))
     box('enz_teak', (1.1, 2.6, 0.02), (0, 2.5, zk + 0.01))
     box('white', (1.96, 0.08, 0.3), (0, 1.0, zk - 0.05))
@@ -4678,7 +4924,7 @@ def _enz_yacht(sails):
         a, b = Vector((0, -L / 2 + 0.25, deck_z(-4.4) + 0.3)), Vector((0, -1.3, top_z - 1.0))
         cyl('alu', 0.09, 0.14, tuple(a - Vector((0, 0, 0.16))), 10)
         _pv_tube('enz_canvas_blue', [tuple(a.lerp(b, k)) for k in (0, 0.06, 0.25, 0.5, 0.75, 0.95, 1.0)], [0.03, 0.085, 0.09, 0.075, 0.05, 0.03, 0.015], 7)
-        for k, y in enumerate((-2.6, 0.2, 3.0)):                                  # fenders hanging over the side
+        for k, y in enumerate((-2.4, 1.6)):                                  # fenders hanging over the side
             for sx in (-1, 1):
                 x = sx * (hb_at(T(y)) + 0.13); cyl('white', 0.11, 0.42, (x, y, 0.42), 10); rod('rope', (x, y, 0.84), (x * 0.92, y, deck_z(y) + 0.3), 0.008, 3)
                 for zz in (0.42, 0.84): ico('white', 0.11, (x, y, zz), (1, 1, 0.45), 1)
@@ -4717,7 +4963,7 @@ def _enz_yacht(sails):
     # ensign at the stern
     rod('wood_dark', (0.8, 4.4, deck_z(4.3) + 0.5), (0.95, 4.75, deck_z(4.3) + 1.25), 0.012, 3)
     box('red', (0.02, 0.36, 0.22), (0.96, 4.95, deck_z(4.3) + 1.05), rot=(0, 0, 0.35))
-    text3d('white', 'NAGI', 0.16, (0, L / 2 - 0.04, 0.85), rz=math.pi, depth=0.01)
+    _en_text('cloth_en_navy', 'NAGI', 0.16, (0, L / 2 + 0.005, 0.85), rz=math.pi)
 
 @model('yacht', 'ヨット(係留)', '船')
 def yacht(): _enz_yacht(False)
@@ -4779,7 +5025,7 @@ def parasol():
 def _en_board(L, Wd, T, mats, nose=1.0, fins=3, stripe=None):
     """Surfboard standing on its tail at the origin, deck facing -Y, nose up +Z. nose: 1 = pointed shortboard, 0 = round longboard."""
     deck, rail, bottom = mats
-    n = 2.0 + 1.6 * (1 - nose); NS = 13; rows = []
+    n = 2.0 + 1.6 * (1 - nose); NS = 12; rows = []
     for i in range(NS + 1):
         t = i / NS
         if t < 0.42: w = Wd / 2 * (0.62 + 0.38 * (1 - ((0.42 - t) / 0.42) ** 2))
@@ -4787,13 +5033,13 @@ def _en_board(L, Wd, T, mats, nose=1.0, fins=3, stripe=None):
         th = T * (0.4 + 0.6 * math.sin(math.pi * (0.12 + 0.76 * t)))
         rk = -0.11 * ((t - 0.45) / 0.55) ** 2 if t > 0.45 else -0.03 * ((0.25 - t) / 0.25) ** 2 if t < 0.25 else 0.0
         z = L * t
-        sec = [(0.006, -0.5), (0.5, -0.45), (0.85, -0.25), (1.0, 0.02), (0.88, 0.32), (0.45, 0.5)]
+        sec = [(0.006, -0.5), (0.6, -0.42), (0.96, -0.1), (0.9, 0.28), (0.45, 0.5)]
         ring = [(w * x, rk + th * yv, z) for x, yv in sec] + [(0.0, rk + th * 0.5, z)] + [(-w * x, rk + th * yv, z) for x, yv in reversed(sec)]
         rows.append(ring)
     def mf(i, j, c):
-        if j in (12,): return 'en_stringer'
-        if j in (2, 3, 9, 10): return rail
-        if j in (4, 5, 6, 7): return bottom
+        if j == 10: return 'en_stringer'
+        if j in (2, 7): return rail
+        if j in (3, 4, 5, 6): return bottom
         if stripe and stripe[0] <= i < stripe[1]: return stripe[2]
         return deck
     _en_skin(rows, mf, wrap=True, caps=(rail, rail))
@@ -4826,8 +5072,8 @@ def surfboards():
     box('enz_teak', (1.36, 0.06, 0.06), (0, 0.3, 0.07))
     # leash: cuff plus a loose coil lying on the ground
     pts = []
-    for i in range(22):
-        a = i / 21 * math.tau * 1.6; r = 0.16 - 0.03 * i / 21
+    for i in range(16):
+        a = i / 15 * math.tau * 1.5; r = 0.16 - 0.03 * i / 15
         pts.append((0.52 + math.cos(a) * r, -0.32 + math.sin(a) * r * 0.8, 0.012 + 0.004 * math.sin(a * 2)))
     pts.insert(0, (0.4, -0.06, 0.08)); _pv_tube('en_leash', pts, 0.008, 4, cap=False)
     torus('en_leash', 0.06, 0.018, (0.52, -0.32, 0.02), seg=10, rseg=4)
@@ -4849,8 +5095,8 @@ def _enz_kanban(text, dish):
         prism('wood_dark', [(-0.17, 0.0), (0.17, 0.0), (0.0, 0.11)], 0.56, loc=(0, 0, 0), axis='X')
     box('en_kanban', (0.46, 0.04, 1.76), (0, 0, 0.42))
     box('ink_red', (0.46, 0.045, 0.2), (0, 0, 1.98))
-    text3d('ink_white', '名物', 0.12, (0, -0.03, 2.08), depth=0.008)
-    text3d('ink_red', text, 0.17, (0, -0.03, 1.47), vertical=True, depth=0.012, spacing=1.08)
+    _en_text('cloth_en_white', '名物', 0.12, (0, -0.026, 2.08))
+    _en_text('cloth_en_red', text, 0.17, (0, -0.024, 1.47), vertical=True, spacing=1.08)
     with xf((0, -0.025, 0.72)):
         if dish == 'don':
             prism('en_lacquer', [(math.cos(a) * 0.17, -math.sin(a) * 0.1) for a in (math.pi * k / 8 for k in range(9))] + [(-0.19, 0.012), (0.19, 0.012)], 0.02, axis='Y')
@@ -4998,7 +5244,7 @@ def enoden():
         rod('rubber', tuple(a.lerp(b, 0.3) + Vector((0, -0.012, 0))), tuple(b + Vector((0, -0.012, 0.04))), 0.01, 3)
     dest = [[tuple(nose(x, z, -1) + Vector((0, -0.02, 0))) for x in (-0.52, -0.26, 0.0, 0.26, 0.52)] for z in (zw1 + 0.06, zw1 + 0.24)]
     _en_sheet(dest, 'eno_dest', 0.03)
-    tz = zw1 + 0.15; text3d('ink', '江ノ島', 0.15, (0, nose(0, tz, -1).y - 0.045, tz), depth=0.01)
+    tz = zw1 + 0.15; _en_text('cloth_en_ink', '江ノ島', 0.15, (0, nose(0, tz, -1).y - 0.038, tz))
     for sx in (-1, 1):
         for x, z, r, m in ((0.72, F + 0.5, 0.11, 'lamp'), (1.0, F + 0.5, 0.055, 'pv_tail_light')):
             p = nose(sx * x, z, -1); ang = math.atan2(sx * x / hw * 0.9, 1.0) * 0.6
@@ -5006,7 +5252,7 @@ def enoden():
             cyl(m, r, 0.06, tuple(p + Vector((0, -0.01, 0))), 12, rot=(math.pi / 2, 0, -ang))
         p = nose(sx * 0.55, ze - 0.05, -1); cyl('pv_amber', 0.035, 0.04, tuple(p), 8, rot=(math.pi / 2, 0, 0))
         p = nose(sx * 0.3, zbelt + 0.02, -1); rod('pv_chrome', tuple(p + Vector((0, -0.04, -0.02))), tuple(p + Vector((0, -0.04, -0.35))), 0.012, 4)   # grab rails
-    text3d('ink_white', '305', 0.12, (0, nose(0, F + 0.45, -1).y - 0.01, F + 0.45), depth=0.008)
+    _en_text('cloth_en_white', '305', 0.12, (0, nose(0, F + 0.45, -1).y - 0.005, F + 0.45))
     # rear (coupled) end: tail lights, gangway diaphragm frame
     for sx in (-1, 1):
         p = nose(sx * 0.75, F + 0.5, 1); cyl('pv_tail_light', 0.06, 0.05, tuple(p + Vector((0, 0.02, 0))), 10, rot=(math.pi / 2, 0, 0))
@@ -5029,12 +5275,12 @@ def enoden():
             prism('steel_dark', [(-0.55, 0.38), (0.55, 0.38), (0.45, 0.5), (-0.45, 0.5)], 0.06, loc=(sx * 0.92, yb, 0), axis='X')
             for dy in (-0.8, 0.8):
                 box('steel_dark', (0.14, 0.24, 0.24), (sx * 0.92, yb + dy, 0.46))
-                cyl('metal', 0.05, 0.14, (sx * 0.92, yb + dy * 0.62, 0.5), 8)
+                cyl('metal', 0.05, 0.14, (sx * 0.92, yb + dy * 0.62, 0.5), 6)
                 with xf((sx * 0.72, yb + dy, 0.56), ry=math.pi / 2):
-                    cyl('steel_dark', 0.33, 0.1, (0, 0, -0.05), 16)
-                    cyl('steel_dark', 0.37, 0.025, (0, 0, -sx * 0.075 - 0.0125), 16)
-                    cyl('metal', 0.18, 0.11, (0, 0, -0.055), 10)
-                    rod('steel_dark', (0, 0, -sx * 0.0), (0, 0, -sx * 0.72), 0.05, 6)
+                    cyl('steel_dark', 0.33, 0.1, (0, 0, -0.05), 14)
+                    cyl('steel_dark', 0.37, 0.025, (0, 0, -sx * 0.075 - 0.0125), 14)
+                    cyl('metal', 0.17, 0.11, (0, 0, -0.055), 8)
+                    if sx > 0: rod('steel_dark', (0, 0, 0), (0, 0, -1.44), 0.05, 6)
                 box('rubber', (0.08, 0.1, 0.18), (sx * 0.72, yb + dy - sx * 0.0 + (0.36 if dy < 0 else -0.36), 0.42))   # brake shoes
     # underfloor equipment between the bogies
     for y, w, h, m in ((-1.9, 1.3, 0.38, 'eno_skirt'), (-0.6, 1.6, 0.42, 'steel_dark'), (0.8, 1.1, 0.34, 'eno_skirt'), (1.95, 1.4, 0.4, 'steel_dark')):
@@ -5051,7 +5297,7 @@ def enoden():
     with xf((0, -3.0, rt)):
         for sx in (-1, 1):
             for sy in (-1, 1):
-                cyl('white', 0.06, 0.16, (sx * 0.42, sy * 0.45, -0.02), 8); cyl('white', 0.085, 0.03, (sx * 0.42, sy * 0.45, 0.07), 8)
+                cyl('white', 0.06, 0.16, (sx * 0.42, sy * 0.45, -0.02), 6); cyl('white', 0.085, 0.03, (sx * 0.42, sy * 0.45, 0.07), 6)
         for sx in (-1, 1): box('steel_dark', (0.07, 1.06, 0.07), (sx * 0.42, 0, 0.14))
         for sy in (-1, 1): box('steel_dark', (0.9, 0.07, 0.07), (0, sy * 0.5, 0.14))
         zl, zk, zt = 0.24, 0.92, 1.66
@@ -5107,11 +5353,12 @@ def eno_station():
         for sx in (-1, 1): rod('steel_dark', (sx * 0.9, 0, zt), (sx * 0.9, 0, 2.42), 0.012, 4)
         box(G, (2.16, 0.07, 0.56), (0, 0, 1.86)); box('white', (2.08, 0.08, 0.48), (0, 0, 1.9))
         box(G, (2.08, 0.09, 0.1), (0, 0, 1.9))
-        text3d('navy', 'えのしま', 0.2, (0, -0.045, 2.22), depth=0.01)
-        text3d('ink', 'Enoshima', 0.08, (0, -0.045, 2.06), depth=0.006)
-        text3d('ink_white', '← こしごえ', 0.055, (-0.62, -0.05, 1.95), depth=0.004)
-        text3d('ink_white', 'しょうなんかいがんこうえん →', 0.05, (0.42, -0.05, 1.95), depth=0.004)
-        text3d('navy', 'えのしま', 0.2, (0, 0.045, 2.18), rz=math.pi, depth=0.01)
+        _en_text('cloth_en_navy', 'えのしま', 0.2, (0, -0.043, 2.22))
+        _en_text('cloth_en_ink', 'Enoshima', 0.08, (0, -0.043, 2.06))
+        _en_text('cloth_en_white', '← こしごえ', 0.055, (-0.62, -0.048, 1.95))
+        _en_text('cloth_en_white', '湘南海岸公園 →', 0.055, (0.55, -0.048, 1.95))
+        _en_text('cloth_en_navy', 'えのしま', 0.2, (0, 0.043, 2.2), rz=math.pi)
+        _en_text('cloth_en_ink', 'Enoshima', 0.08, (0, 0.043, 2.04), rz=math.pi)
     # benches
     for x in (-2.75, 2.75):
         with xf((x, 0.55, 0)):
@@ -5130,7 +5377,7 @@ def eno_station():
         box(C, (1.36, 0.9, 0.35), (0, 0, 1.8)); box(G, (1.42, 0.96, 0.06), (0, 0, 2.15))
         box(C, (0.6, 0.18, 0.04), (0, -0.5, 1.0))
         box(C, (1.24, 0.04, 0.05), (0, -0.4, 1.4))
-        text3d('ink', 'きっぷ', 0.16, (0, -0.46, 1.98), depth=0.008)
+        _en_text('cloth_en_ink', 'きっぷ', 0.16, (0, -0.453, 1.98))
         box('window_lit', (1.1, 0.02, 0.5), (0, 0.3, 1.1))
     # IC card readers (simple gates)
     for x in (4.15, 4.95):
@@ -5142,7 +5389,7 @@ def eno_station():
     # timetable on the rear centre column
     with xf((0, 0.78, 0)):
         box(G, (0.66, 0.04, 0.86), (0, 0, 1.08)); box('white', (0.6, 0.05, 0.72), (0, 0, 1.1))
-        text3d('ink_white', '時刻表', 0.06, (0, -0.03, 1.87), depth=0.004)
+        _en_text('cloth_en_white', '時刻表', 0.06, (0, -0.023, 1.87))
         for k in range(6): box('ink', (0.5, 0.055, 0.008), (0, 0, 1.2 + k * 0.1))
         box('ink', (0.006, 0.055, 0.6), (0, 0, 1.15))
     # clock hanging from the centre cross beam, pendant lamps along the ridge
@@ -5216,7 +5463,7 @@ def shopkeeper():
         for k in range(9):   # a ring of tight curls along the hairline and over the crown, two greys
             a = (k - 4) * 0.62; el = 0.62 if abs(k - 4) < 2 else 0.35
             px, py, pz = math.sin(a) * math.cos(el), -math.cos(a) * math.cos(el), math.sin(el)
-            ico('pv_hair_grey_dk' if k % 2 else 'hair_grey', 0.036, (x0 + 0.158 * px, y0 + 0.006 + 0.16 * py, z0 + 0.172 * pz), (1, 1, 0.85), 1, jitter=0.1, seed=k)
+            ico('pv_hair_grey_dk' if k % 2 else 'hair_grey', 0.034, (x0 + 0.146 * px, y0 + 0.006 + 0.15 * py, z0 + 0.163 * pz), (1, 1, 0.8), 1, jitter=0.06, seed=k)
         torus('cloth_red', 0.045, 0.01, (x0, y0 + 0.1, z0 + 0.09), rot=(1.2, 0, 0), seg=8, rseg=3)
     _pv_person('shopkeeper', 0.95, 'pv_blouse', 'cloth_khaki', skin='pv_skin', hair='hair_grey', hairstyle='perm', sleeves='cover', shoes='shoe',
                skirt=True, blush=True, body=body, collar='cloth_white')

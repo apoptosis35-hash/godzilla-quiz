@@ -1801,20 +1801,26 @@
   "jp": "電柱(変圧器付き)",
   "category": "道の小物",
   "size_m": [
-   1.8,
-   10.56,
-   0.9
+   3.21,
+   10.95,
+   1.73
   ],
-  "tris": 2952,
-  "lod1_tris": 850,
+  "tris": 7254,
+  "lod1_tris": 2094,
   "materials": [
    "alu",
    "black",
    "concrete",
    "ink",
+   "ink_red",
    "ink_white",
    "sign_blue",
    "sign_green",
+   "st_closure",
+   "st_galv",
+   "st_porcelain",
+   "st_rust",
+   "st_stain",
    "st_trafo",
    "steel_dark",
    "white",
@@ -1823,31 +1829,36 @@
   "parts": [
    "utility_pole_body"
   ],
-  "kb": 273.1
+  "kb": 662.9
  },
  {
   "name": "street_light",
   "jp": "街灯",
   "category": "道の小物",
   "size_m": [
-   0.35,
-   5.43,
-   1.13
+   0.42,
+   5.34,
+   1.24
   ],
-  "tris": 746,
-  "lod1_tris": 217,
+  "tris": 1938,
+  "lod1_tris": 571,
   "materials": [
    "concrete",
-   "ink",
+   "ink_white",
    "lamp",
+   "sign_blue",
    "st_galv",
+   "st_lamp_body",
+   "st_pet",
+   "st_reflector",
+   "st_stain",
    "steel_dark",
    "white"
   ],
   "parts": [
    "street_light_body"
   ],
-  "kb": 72.2
+  "kb": 177.8
  },
  {
   "name": "vending_machine",
@@ -2671,7 +2682,7 @@
    39.82,
    10.9
   ],
-  "tris": 10256,
+  "tris": 8672,
   "lod1_tris": 0,
   "materials": [
    "alu",
@@ -2690,25 +2701,26 @@
    "sea_candle_body",
    "sea_candle_lamp"
   ],
-  "kb": 684.3
+  "kb": 578.0
  },
  {
   "name": "yacht",
   "jp": "ヨット(係留)",
   "category": "船",
   "size_m": [
-   3.45,
+   3.44,
    15.05,
    9.75
   ],
-  "tris": 4328,
-  "lod1_tris": 1243,
+  "tris": 3730,
+  "lod1_tris": 1061,
   "materials": [
    "alu",
    "antifoul",
    "beacon_red",
    "black",
    "boat_blue",
+   "cloth_en_navy",
    "enz_canvas_blue",
    "enz_teak",
    "glass",
@@ -2723,7 +2735,7 @@
   "parts": [
    "yacht_body"
   ],
-  "kb": 393.6
+  "kb": 344.9
  },
  {
   "name": "yacht_sail",
@@ -2734,14 +2746,15 @@
    15.05,
    9.75
   ],
-  "tris": 4274,
-  "lod1_tris": 1234,
+  "tris": 3844,
+  "lod1_tris": 1103,
   "materials": [
    "alu",
    "antifoul",
    "beacon_red",
    "black",
    "boat_blue",
+   "cloth_en_navy",
    "enz_canvas_blue",
    "enz_sail",
    "enz_teak",
@@ -2756,7 +2769,7 @@
   "parts": [
    "yacht_sail_body"
   ],
-  "kb": 394.4
+  "kb": 361.0
  },
  {
   "name": "parasol",
@@ -2792,10 +2805,10 @@
   "size_m": [
    1.36,
    2.14,
-   1.07
+   1.06
   ],
-  "tris": 1764,
-  "lod1_tris": 519,
+  "tris": 1482,
+  "lod1_tris": 435,
   "materials": [
    "cloth_yellow",
    "en_board_coral",
@@ -2810,7 +2823,7 @@
   "parts": [
    "surfboards_body"
   ],
-  "kb": 166.7
+  "kb": 142.2
  },
  {
   "name": "kanban_shirasu",
@@ -2821,14 +2834,15 @@
    2.42,
    0.5
   ],
-  "tris": 1380,
-  "lod1_tris": 407,
+  "tris": 619,
+  "lod1_tris": 175,
   "materials": [
+   "cloth_en_red",
+   "cloth_en_white",
    "en_kanban",
    "en_lacquer",
    "en_shirasu",
    "ink_red",
-   "ink_white",
    "leaf_light",
    "ridge_tile",
    "roof_tile",
@@ -2839,7 +2853,7 @@
   "parts": [
    "kanban_shirasu_body"
   ],
-  "kb": 131.5
+  "kb": 68.8
  },
  {
   "name": "kanban_tako",
@@ -2850,14 +2864,15 @@
    2.42,
    0.5
   ],
-  "tris": 1368,
-  "lod1_tris": 409,
+  "tris": 625,
+  "lod1_tris": 179,
   "materials": [
+   "cloth_en_red",
+   "cloth_en_white",
    "en_kanban",
    "en_senbei",
    "en_tako",
    "ink_red",
-   "ink_white",
    "ridge_tile",
    "roof_tile",
    "wood_dark"
@@ -2865,7 +2880,7 @@
   "parts": [
    "kanban_tako_body"
   ],
-  "kb": 125.8
+  "kb": 66.4
  },
  {
   "name": "tonbi",
@@ -2905,18 +2920,18 @@
    5.03,
    12.5
   ],
-  "tris": 8058,
-  "lod1_tris": 2376,
+  "tris": 7135,
+  "lod1_tris": 2096,
   "materials": [
    "alu",
+   "cloth_en_ink",
+   "cloth_en_white",
    "eno_cream",
    "eno_dest",
    "eno_green",
    "eno_roof",
    "eno_skirt",
    "glass",
-   "ink",
-   "ink_white",
    "lamp",
    "metal",
    "pv_amber",
@@ -2930,7 +2945,7 @@
   "parts": [
    "enoden_body"
   ],
-  "kb": 658.7
+  "kb": 587.3
  },
  {
   "name": "eno_station",
@@ -2941,10 +2956,13 @@
    3.24,
    3.27
   ],
-  "tris": 9026,
-  "lod1_tris": 2658,
+  "tris": 4872,
+  "lod1_tris": 1412,
   "materials": [
    "alu",
+   "cloth_en_ink",
+   "cloth_en_navy",
+   "cloth_en_white",
    "eno_cream",
    "eno_green",
    "eno_skirt",
@@ -2952,10 +2970,8 @@
    "hydrangea",
    "hydrangea_pink",
    "ink",
-   "ink_white",
    "lamp",
    "leaf",
-   "navy",
    "ridge_tile",
    "roof_tile",
    "steel_dark",
@@ -2970,7 +2986,7 @@
   "parts": [
    "eno_station_body"
   ],
-  "kb": 771.3
+  "kb": 444.7
  },
  {
   "name": "fisherman",
