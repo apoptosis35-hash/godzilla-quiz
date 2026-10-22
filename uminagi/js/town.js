@@ -422,7 +422,7 @@ export class Town {
       ['a_frame_sign', 35.6, -21, H], ['a_frame_sign', 44.6, -56, -H], ['nobori', 35.8, -44, H], ['nobori', 44.2, -46.5, -H], ['nobori', 35.8, -88, H],
       ['plant_pots', 34.8, -36.8, 0], ['plant_pots', 45.2, -61, 0], ['postbox', 45.3, -24, -H], ['bench', 45.0, -71.5, -H], ['keitora', 41.8, -64, PI + 0.02],
       ['hydrangea', 33.3, -17.6, 0], ['hydrangea', 33.3, -43.2, 0], ['bush', 33.3, -56.1, 0], ['direction_sign', 45.6, -97, -H], ['bench', 30, -110, 0], ['bench', 48, -110, 0],
-      ['street_lantern', 26, -99, 0], ['street_lantern', 54, -99, 0], ['tree_sakura', 52, -114, 0], ['tree_broadleaf', 28, -116, 0], ['vending_machine', 55.2, -104, -H], ['plant_pots', 33, -100, 0]])
+      ['street_lantern', 26, -99, 0], ['street_lantern', 54, -99, 0], ['tree_sakura', 52, -114, 0], ['tree_broadleaf', 28, -116, 0], ['vending_machine', 25.2, -104, H], ['plant_pots', 33, -100, 0]])
       P(n, x, null, z, ry);
     // the big torii at the foot of the street: the approach (参道) up to the shrine, as on Enoshima
     P('torii', 40, null, -8.5, 0, { s: 2.1 });
@@ -653,6 +653,18 @@ export class Town {
       if (Math.floor((x - ROAD.x0) / 2.5) % 3 === 0) B.push(['road_paint', xc, rY(xc) + 0.012, (ROAD.z0 + ROAD.z1) / 2, 2.5, th, line, rs]);
     }
     for (const xc of [80, 97]) for (let z = ROAD.z0 + 0.9; z < ROAD.z1 - 0.6; z += 0.9) B.push(['road_paint', xc, rY(xc) + 0.014, z, 4.0, th, 0.45, rs]);
+    // plaza road edge lines
+    for (let x = 43.5; x < 55.5; x += 2) for (const z of [-100.8, -107.2]) B.push(['road_paint', x + 1, streetY(-100) + 0.03, z, 2.0, th, 0.15]);
+    // harbour roads across the apron (from the coast road north to the hill road, and west to the shopping street)
+    for (let z = 12; z > -2; z -= 2) {
+      for (const x of [55.3, 61.7]) B.push(['road_paint', x, QY + 0.012, z - 1, 0.15, th, 2.0]);
+      if (Math.round(z / 2) % 3 === 0) B.push(['road_paint', 58.5, QY + 0.012, z - 1, 0.15, th, 2.0]);
+    }
+    for (let x = 44; x < 54; x += 2) {
+      for (const z of [-1.4, -7.6]) B.push(['road_paint', x + 1, QY + 0.012, z, 2.0, th, 0.15]);
+      if (Math.round(x / 2) % 3 === 0) B.push(['road_paint', x + 1, QY + 0.012, -4.5, 2.0, th, 0.15]);
+    }
+    B.push(['road_paint', 44.2, QY + 0.012, -6.05, 0.4, th, 3.1]);   // stop line before the shopping street
     // hill road and lanes: edge lines
     const HR = HILL_ROAD, hs = -Math.atan((HR.y0 - HR.y1) / (HR.z1 - HR.z0));
     for (let z = HR.z1 - 1; z > HR.z0 + 1; z -= 2) for (const x of [HR.x0 + 0.3, HR.x1 - 0.3]) {
@@ -728,29 +740,41 @@ export class Town {
     }
     bays.push(['road_paint', 36.5 + 6 * 2.6 - 1.3, QY + 0.012, 1.5, 0.12, 0.02, 5]);
     this.boxMeshes(bays, 'parking');
-    // traffic: cars follow there-and-back routes keeping left. Both come out of the tunnel at the east end of the coast
-    // road; route A crosses the harbour apron, climbs the shopping street and turns round the plaza; route B turns off
-    // at the apron up the hill road and into the middle lane, turning round at its end. Cars turn round out of sight
-    // deep in the tunnel. Junctions are yield zones: a car waits while another car is inside.
-    const mk = (out, turnC, turnR) => {
-      const turn = []; for (let k = 1; k < 10; k++) { const a = Math.PI / 2 - k / 10 * Math.PI * 2; turn.push([turnC[0] + Math.cos(a) * turnR, turnC[1] + Math.sin(a) * turnR]); }
-      const ring = [...out, ...turn, ...out.slice().reverse()], pts = ring.map(([x, z]) => new THREE.Vector2(x, z)), cum = [0];
+    // traffic: one loop through the town, driven both ways (keeping left): out of the tunnel at the east end of the
+    // coast road, along the coast, north up the harbour road, west along the apron road, up the shopping street, across
+    // the plaza onto the hill road, down it back to the harbour and into the tunnel. Corners are rounded; the turnaround
+    // is out of sight deep in the tunnel. Junctions are yield zones.
+    const loop = [[172, 19], [127, 19], [64, 19], [58.5, 13], [58.5, -4.5], [40, -4.5], [40, -104], [58, -104], [58, -14], [58.5, -4.5], [58.5, 13], [64, 19], [127, 19], [172, 19]];
+    const smoothPath = (raw) => {   // round every corner with a quadratic curve
+      const out = [raw[0]];
+      for (let k = 1; k < raw.length - 1; k++) {
+        const [ax, az] = raw[k - 1], [bx, bz] = raw[k], [cx, cz] = raw[k + 1];
+        const l1 = Math.hypot(bx - ax, bz - az), l2 = Math.hypot(cx - bx, cz - bz);
+        const turn = Math.abs(Math.atan2((bx - ax) * (cz - bz) - (bz - az) * (cx - bx), (bx - ax) * (cx - bx) + (bz - az) * (cz - bz)));
+        if (turn < 0.05 || turn > 3) { out.push(raw[k]); continue; }   // straight on, or the hidden turnaround
+        const rc = Math.min(7, l1 * 0.45, l2 * 0.45), p0 = [bx - (bx - ax) / l1 * rc, bz - (bz - az) / l1 * rc], p2 = [bx + (cx - bx) / l2 * rc, bz + (cz - bz) / l2 * rc];
+        for (let t = 0; t <= 1.001; t += 0.125) out.push([(1 - t) ** 2 * p0[0] + 2 * (1 - t) * t * bx + t * t * p2[0], (1 - t) ** 2 * p0[1] + 2 * (1 - t) * t * bz + t * t * p2[1]]);
+      }
+      out.push(raw[raw.length - 1]);
+      const pts = out.map(([x, z]) => new THREE.Vector2(x, z)), cum = [0];
       for (let k = 1; k < pts.length; k++) cum.push(cum[k - 1] + pts[k].distanceTo(pts[k - 1]));
       return { pts, cum, len: cum[cum.length - 1] };
     };
-    const coast = [[172, 19], [127, 19], [64, 19], [58, 14.5], [55.5, 5]];
-    const HR = HILL_ROAD, lz = HILL_LANES[1], LL = PLATFORMS.find((p) => p.name === 'hill_lane2');
-    this.routes = [
-      mk([...coast, [52.5, -3.5], [42.5, -4.5], [40, -7.5], [40, -94], [40, -99]], [40, -103.2], 3.2),
-      mk([...coast, [57, -6], [58, -15], [58, lz + 6], [61, lz], [LL.x1 - 6, lz]], [LL.x1 - 3.2, lz], 1.9),
-    ];
-    this.zones = [{ x: 56, z: -1, r: 7 }, { x: 40, z: -103.2, r: 5.5 }, { x: 59, z: lz + 1, r: 4.5 }, { x: LL.x1 - 3.2, z: lz, r: 3.5 }];
+    this.routes = [smoothPath(loop), smoothPath(loop.slice().reverse())];
+    this.zones = [{ x: 58.5, z: -4.5, r: 6 }, { x: 40, z: -4.5, r: 5.5 }, { x: 40, z: -104, r: 5.5 }, { x: 58, z: -104, r: 4.5 }];
+    // turn signals: four amber lamps per car, shown on the side it is turning to
+    const blinkMat = new THREE.MeshStandardMaterial({ color: 0xffa020, emissive: 0xff8a00, emissiveIntensity: 2.2 });
+    const blinkGeo = new THREE.SphereGeometry(0.07, 6, 4);
     this.traffic = [];
-    const n = Math.round(8 * Math.min(1, this.q.lod / 0.85)) || 3;
+    const n = Math.round(9 * Math.min(1, this.q.lod / 0.85)) || 4;
     for (let k = 0; k < n; k++) {
-      const route = k % 3 === 2 ? 1 : 0, R = this.routes[route], o = this.clone(cars[k % 3], 0, 0, 0, 0, 'tex');
+      const route = k % 2, R = this.routes[route], name = cars[k % 3], o = this.clone(name, 0, 0, 0, 0, 'tex');
+      const b = this.protos[name].box, hl = (b.max.z - b.min.z) / 2 - 0.05, hw = (b.max.x - b.min.x) / 2 - 0.1, blink = { l: [], r: [] };
+      for (const [side, sx] of [['l', 1], ['r', -1]]) for (const [zz, yy] of [[hl, 0.75], [-hl, 0.9]]) {
+        const m = new THREE.Mesh(blinkGeo, blinkMat); m.position.set(sx * hw, yy, zz); m.visible = false; o.add(m); blink[side].push(m);
+      }
       const col = { type: 'b', x: 0, z: 0, hw: 0.85, hd: 2.15, c: 1, s: 0, y0: -9, y1: -9 }; this.colliders.push(col);
-      this.traffic.push({ o, col, route, s: R.len * ((k * 0.37) % 1), v: 0, cruise: 0.9 + r() * 0.25, ry: 0, x: 0, z: 0, ux: 0, uz: 1 });
+      this.traffic.push({ o, col, route, blink, s: R.len * ((k * 0.43) % 1), v: 0, cruise: 0.9 + r() * 0.25, ry: 0, x: 0, z: 0, ux: 0, uz: 1, wait: 0 });
     }
     this.trafficY = rY;
   }
@@ -791,12 +815,14 @@ export class Town {
         const rx = o.x - p.x, rz = o.z - p.z, along = rx * p.ux + rz * p.uz, side = Math.abs(rx * p.uz - rz * p.ux);
         if (along > 0 && along < 30 && side < 1.5 && o.ux * p.ux + o.uz * p.uz > 0.2) free = Math.min(free, along - 6);
       }
-      // junctions: wait outside while another car is inside the zone
+      // junctions: wait outside while another car is inside the zone (give up waiting after a few seconds)
+      let waiting = false;
       for (const zn of this.zones) {
         const dx = zn.x - p.x, dz = zn.z - p.z, d = Math.hypot(dx, dz);
-        if (d < zn.r || d > zn.r + 14 || dx * p.ux + dz * p.uz <= 0) continue;
-        if (T.some((o) => o !== c && Math.hypot(o.x - zn.x, o.z - zn.z) < zn.r)) free = Math.min(free, d - zn.r - 1.5);
+        if (d < zn.r || d > zn.r + 14 || dx * p.ux + dz * p.uz <= 0 || c.wait > 4) continue;
+        if (T.some((o) => o !== c && Math.hypot(o.x - zn.x, o.z - zn.z) < zn.r)) { free = Math.min(free, d - zn.r - 1.5); waiting = true; }
       }
+      c.wait = waiting && c.v < 0.5 ? c.wait + dt : waiting ? c.wait : 0;
       // the crossing signal
       if (S && S.state !== 'green' && Math.abs(p.z - 19) < 4 && Math.abs(p.x - S.x) < 40 && Math.abs(p.ux) > 0.8) {
         const d = (S.x - 3.4 * Math.sign(p.ux) - p.x) * Math.sign(p.ux);
@@ -804,7 +830,11 @@ export class Town {
       }
       // slow for bends: compare the heading 8 m ahead
       const q8 = this.routeAt(c.s + 8, R), bend = Math.acos(Math.max(-1, Math.min(1, q8.ux * p.ux + q8.uz * p.uz)));
-      const limit = (p.x > 62 ? 11 : p.x > 55 && p.z < -10 ? 5 : 6.5) * c.cruise * Math.max(0.35, 1 - bend * 0.8);
+      const limit = (p.x > 63 && p.z > 12 ? 11 : p.x > 55 && p.z < -10 ? 5.5 : 6.5) * c.cruise * Math.max(0.35, 1 - bend * 0.8);
+      // turn signal: a turn of more than ~35 degrees within the next 25 m
+      const q25 = this.routeAt(c.s + 25, R), turn = Math.asin(Math.max(-1, Math.min(1, p.ux * q25.uz - p.uz * q25.ux)));
+      const on = Math.abs(turn) > 0.6 && Math.abs(p.x) < 150 && (this.world.time * 1.5) % 1 < 0.5;
+      for (const m of c.blink.r) m.visible = on && turn > 0; for (const m of c.blink.l) m.visible = on && turn < 0;
       const want = free <= 0 ? 0 : Math.min(limit, Math.sqrt(2 * 3.5 * free));
       c.v += Math.max(-9 * dt, Math.min(2.5 * dt, want - c.v));
       c.s = (c.s + c.v * dt) % R.len;

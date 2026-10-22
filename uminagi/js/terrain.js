@@ -20,7 +20,7 @@ export const BRIDGE = { x0: 95, x1: 99, z0: 92, z1: 182, y: 3.2 };
 export const TRAM = { x0: 64, x1: 126, z0: 6, z1: 12, y0: 1.6, y1: 3.8 };
 // the coastal road (two lanes, like the road along the beach at Enoshima)
 export const ROAD = { x0: 64, x1: 126, z0: 15.5, z1: 22.5, y0: 1.6, y1: 3.0 };
-export const HILL_ROAD = { x0: 56, x1: 60, z0: -110, z1: -14, y0: 16.6, y1: 1.6 };   // y0 at the top (z0), y1 at the harbour
+export const HILL_ROAD = { x0: 56, x1: 60, z0: -110, z1: -14, y0: 13.8, y1: 1.6 };   // y0 at the top (z0, level with the plaza it joins), y1 at the harbour
 export const HILL_LANES = [-34, -58, -82];
 export const hillRoadY = (z) => HILL_ROAD.y1 + (HILL_ROAD.y0 - HILL_ROAD.y1) * (HILL_ROAD.z1 - z) / (HILL_ROAD.z1 - HILL_ROAD.z0);
 
@@ -111,6 +111,9 @@ export function platformY(p, x, z) {
 export const OVERLAYS = [];
 function overlays() {
   OVERLAYS.push({ x0: 37, x1: 43, z0: -96, z1: -6, mat: 'asphalt', on: 'street' });
+  // the road across the top of the plaza, joining the shopping street to the hill road
+  OVERLAYS.push({ x0: 37, x1: 43, z0: -108, z1: -96, mat: 'asphalt', on: 'plaza' });
+  OVERLAYS.push({ x0: 43, x1: 56, z0: -107.5, z1: -100.5, mat: 'asphalt', on: 'plaza' });
   TIERS.forEach((t, i) => OVERLAYS.push({ x0: t.x0, x1: TIER_X1, z0: t.zf - 3, z1: t.zf, mat: 'asphalt', on: `tier${i + 1}` }));
   OVERLAYS.push({ x0: -11, x1: -7, z0: -132, z1: -116, mat: 'paving', on: 'shrine' });
   OVERLAYS.push({ x0: -11, x1: -7, z0: -104, z1: -94, mat: 'paving', on: 'tier7' });
