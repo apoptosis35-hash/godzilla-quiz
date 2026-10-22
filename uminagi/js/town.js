@@ -25,7 +25,7 @@ export const MODELS = {
     'keitora', 'net_pile', 'floats', 'crab_traps', 'rope_coil', 'market_tent', 'utility_pole', 'street_light', 'vending_machine', 'bicycle', 'ac_outdoor',
     'a_frame_sign', 'bench', 'postbox', 'nobori', 'street_lantern', 'direction_sign', 'laundry_pole', 'fence_wood', 'fence_rail', 'fence_log', 'plant_pots',
     'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging', 'parasol', 'surfboards', 'kanban_shirasu', 'kanban_tako'],
-  nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c'],
+  nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c', 'rock_cliff'],
   // animated (cloned)
   dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
 };
@@ -718,6 +718,18 @@ export class Town {
       n++;
     }
     this.treeCount = n;
+    // rock faces: cliff pieces facing downhill on the steepest ground, about 7 m apart so they join into a crag
+    const cliffs = [];
+    for (let i = 0; i < 20000 && cliffs.length < Math.round(70 * Math.min(1, this.q.lod / 0.85)); i++) {
+      const x = G.x0 + r() * (G.x1 - G.x0), z = G.z0 + r() * (G.z1 - G.z0), h = g.natAt(x, z);
+      if (h < 0.5 || g.platformAt(x, z)) continue;
+      const gx = (g.natAt(x + 2, z) - g.natAt(x - 2, z)) / 4, gz = (g.natAt(x, z + 2) - g.natAt(x, z - 2)) / 4;
+      if (Math.hypot(gx, gz) < 1.25 || nearPlat(x, z, 6)) continue;
+      if (cliffs.some(([cx, cz]) => Math.hypot(cx - x, cz - z) < 7)) continue;
+      const sc = 0.8 + r() * 0.6;
+      this.put('rock_cliff', x, h - (0.5 + r() * 0.5) * sc, z, Math.atan2(-gx, -gz) + (r() - 0.5) * 0.6, { s: sc, rx: (r() - 0.5) * 0.2, col: false, pool: { lod: 60, cull: 700 } });
+      cliffs.push([x, z]);
+    }
     // shrubs clinging to the steep slopes and cliffs, boulders on the steepest faces
     for (let i = 0, placed = 0; i < 16000 && placed < this.q.trees * 0.6; i++) {
       const x = G.x0 + r() * (G.x1 - G.x0), z = G.z0 + r() * (G.z1 - G.z0), h = g.natAt(x, z);

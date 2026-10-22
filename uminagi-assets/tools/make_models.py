@@ -951,6 +951,180 @@ def house_hillside():
     railing(-5.8, -5.8, 0, 2.4, 0.9)
 
 # ================================================================= shops (商店街)
+PALETTE.update({  # --- building facades (shops & houses)
+    'copper_sheet': P((0.48, 0.86, 0.74), 0.6, 0.25, tex='plaster'), 'copper_seam': P((0.12, 0.3, 0.25), 0.55, 0.4),
+    'mortar_grey': P((1.0, 0.99, 0.96), 0.92, tex='concrete'), 'mortar_cream': P((1.45, 1.24, 0.88), 0.9, tex='concrete'),
+    'mortar_white': P((1.18, 1.17, 1.15), 0.88, tex='plaster'), 'plaster_dark': P((0.3, 0.29, 0.29), 0.85, tex='plaster'),
+    'yakisugi': P((0.3, 0.27, 0.26), 0.92, tex='wood'), 'wood_bleached': P((1.25, 1.18, 1.08), 0.9, tex='wood'),
+    'tin_teal': P((0.45, 1.35, 0.85), 0.55, 0.3, tex='tin_blue'), 'tin_red': P((0.95, 0.42, 0.36), 0.6, 0.25, tex='tin_rust'),
+    'tin_green': P((0.5, 1.05, 0.5), 0.55, 0.3, tex='tin_blue'), 'roof_tile_red': P((2.0, 0.9, 0.62), 0.55, tex='roof_tile'),
+    'tile_white': P((0.88, 0.9, 0.9), 0.25), 'tile_blue': P((0.1, 0.32, 0.55), 0.3), 'tile_green': P((0.08, 0.3, 0.2), 0.3), 'brick': P((0.5, 0.2, 0.11), 0.9),
+    'cloth_teal': P((0.03, 0.34, 0.36), 0.9), 'cloth_maroon': P((0.36, 0.05, 0.06), 0.9), 'ice': P((0.85, 0.92, 0.95), 0.15),
+    'rust_streak': P((0.32, 0.13, 0.05), 0.9, 0.2), 'grime': P((0.12, 0.11, 0.09), 0.95),
+})
+RIDGE.update({'roof_tile_red': 'ridge_brown'})
+
+def awning(x0, x1, y, z, depth=1.4, drop=0.6, mats=('cloth_red', 'cloth_white'), stripe=0.45, valance=0.25, scallop=True, text=None,
+           tmat='ink_white', cheeks=False, arms=True):
+    """Canvas awning on a wall plane y (sticking out towards -Y), top edge at z: stripes, valance (scalloped or with text), side cheeks."""
+    n = max(1, round((x1 - x0) / stripe)); ye, ze = y - depth, z - drop
+    for i in range(n):
+        a, b = x0 + (x1 - x0) * i / n, x0 + (x1 - x0) * (i + 1) / n; m = mats[i % len(mats)]
+        slab(m, (a, ye, ze), (b, ye, ze), (a, y, z), (b, y, z), 0.015)
+        if valance:
+            box2(m, a, b, ye - 0.01, ye + 0.005, ze - valance, ze)
+            if scallop: prism(m, [((b - a) / 2, 0), (-(b - a) / 2, 0), (0, -0.13)], 0.015, loc=((a + b) / 2, ye, ze - valance), axis='Y')
+    if cheeks:
+        for x in (x0, x1): prism(mats[0], [(y, z), (ye, ze), (ye, ze - valance), (y, ze - valance + 0.15)], 0.015, loc=(x, 0, 0))
+    if text:
+        size = min(valance * 0.62, (x1 - x0) / (len(text) + 1.5))
+        text3d(tmat, text, size, ((x0 + x1) / 2, ye - 0.02, ze - valance / 2), depth=0.008)
+    if arms:
+        for x in (x0 + 0.05, x1 - 0.05): rod('metal', (x, y, z - drop - 0.25), (x, ye + 0.03, ze - 0.03), 0.018, 4)
+        rod('metal', (x0, ye + 0.03, ze - 0.03), (x1, ye + 0.03, ze - 0.03), 0.022, 6)
+
+def hseams(L, z0, z1, step, openings, mat, y=-0.012):
+    """一文字葺き / board seams: horizontal strips over a wall face (wall-local), cut around the openings."""
+    for z in frange(z0 + step, z1 - 0.05, step):
+        cuts = sorted((o[0], o[1]) for o in openings if o[2] - 0.03 <= z <= o[3] + 0.03); xx = 0.0
+        for a, b in cuts + [(L, L)]:
+            if a - xx > 0.1: box2(mat, xx, a, y, 0.0, z - 0.012, z + 0.012)
+            xx = max(xx, b)
+
+def streaks(L, z_top, xs, mat='rust_streak', y=-0.006, seed=0):
+    """Rust/grime streaks running down a wall face from xs (wall-local), tapering."""
+    rnd = random.Random(seed)
+    for x in xs:
+        h = rnd.uniform(0.6, 1.6); wd = rnd.uniform(0.05, 0.12)
+        prism(mat, [(-wd, z_top), (wd, z_top), (wd * 0.3, z_top - h), (-wd * 0.2, z_top - h * 0.8)], 0.008, loc=(x, y, 0), axis='Y')
+
+def gable_y(w, d, rise, z, mat, fill=None, **kw):
+    """妻入り: gable roof over w (X) x d (Y) with the ridge along Y, so the gable faces the street."""
+    with xf((0, 0, 0), math.pi / 2):
+        if fill: gable_fill(fill, d - 0.02, w, rise, z)
+        return gable_roof(d, w, rise, z, mat, **kw)
+
+def gutters_y(w, d, z, over=0.3):
+    with xf((0, 0, 0), math.pi / 2):
+        for sg in (-1, 1): gutter(-d / 2 - over, d / 2 + over, sg * (w / 2 + over + 0.02), z)
+    for sx in (-1, 1): downpipe(sx * (w / 2 + over - 0.05), d / 2 - 0.4, z + 0.05)
+
+def mansard_roof(w, d, z, h1=1.9, inset=0.75, h2=0.55, mat='roof_tile_red', top='tin_red', over=0.3, dormers=(), dmat='mortar_white'):
+    """Mansard-like roof: steep lower slopes (with dormers on the front) and a shallow hipped top. Returns the top z."""
+    hw, hd = w / 2 + over, d / 2 + over; iw, id_ = w / 2 - inset, d / 2 - inset; z0 = z + 0.05; z1 = z0 + h1
+    for sg in (-1, 1):
+        slab(mat, (-hw, sg * hd, z0), (hw, sg * hd, z0), (-iw, sg * id_, z1), (iw, sg * id_, z1), 0.1)
+        slab(mat, (sg * hw, -hd, z0), (sg * hw, hd, z0), (sg * iw, -id_, z1), (sg * iw, id_, z1), 0.1)
+        box('wood_frame' if mat.startswith('roof') else 'steel_dark', (2 * hw, 0.08, 0.16), (0, sg * (hd - 0.03), z0 - 0.16))
+        box('wood_frame' if mat.startswith('roof') else 'steel_dark', (0.08, 2 * hd, 0.16), (sg * (hw - 0.03), 0, z0 - 0.16))
+    rm = RIDGE.get(mat, 'steel_dark')
+    for sx in (-1, 1):
+        for sy in (-1, 1): rod(rm, (sx * hw, sy * hd, z0 + 0.05), (sx * iw, sy * id_, z1 + 0.05), 0.07, 6)
+    box('white', (2 * iw + 0.16, 2 * id_ + 0.16, 0.18), (0, 0, z1 - 0.02))  # cornice band between the slopes
+    zt = hip_roof(2 * iw, 2 * id_, h2, z1 + 0.06, top, over=0.12, t=0.06, wave=0.0, fascia=None, eave_tiles=False, rafters=False)
+    s = h1 / (hd - id_)
+    for x in dormers:  # 屋根窓: little gabled dormers on the front slope
+        yf = -hd + 0.55; zb = z0 + (0.55 - 0.05) * s
+        box2(dmat, x - 0.5, x + 0.5, yf, -id_, zb - 0.1, zb + 1.05)
+        with xf((x, yf - 0.1, zb)):
+            window(-0.33, 0.33, 0.1, 0.85, 0.12, 'white', behind=None, panes=2, casing=False, sill=True)
+        with xf((x, (yf - id_) / 2, 0), math.pi / 2): gable_roof(-id_ - yf + 0.1, 1.0, 0.38, zb + 1.05, mat, over_e=0.15, over_g=0.12, t=0.06, wave=0.0, rafters=False, barge='white', fascia='white', eave_tiles=False)
+        prism(dmat, [(-0.5, zb + 1.05), (0.5, zb + 1.05), (0, zb + 1.43)], 0.08, loc=(x, yf + 0.04, 0), axis='Y')
+    return zt
+
+def _shop_ground(w, d, front, fo, side=None, back=None, so=None, h1=3.0, ro=True):
+    """Ground floor shell of a shop: plinth, four walls (front openings fo, wall-local), side/back windows and the back door."""
+    T = 0.15; z1 = 0.25
+    box('concrete', (w + 0.1, d + 0.1, z1), (0, 0, 0))
+    box('wood_frame', (w + 0.12, d + 0.12, 0.06), (0, 0, z1 - 0.02))
+    L = d - 2 * T; sm = side or front
+    so = [(L - 2.0, L - 1.0, 0.9, 1.9)] if so is None else so
+    ro_ = [(L - 3.2, L - 2.0, 1.0, 1.9)] if ro else []
+    bo = [(w - 1.8, w - 0.9, 0.0, 2.1), (1.0, 2.0, 1.2, 2.0)]
+    mats = {'front': front, 'back': back or sm, 'left': sm, 'right': sm}
+    frames = side_walls(w, d, z1, h1, T, mats, {'front': fo, 'left': so, 'right': ro_, 'back': bo})
+    for s_, op in (('left', so), ('right', ro_), ('back', bo)):
+        if mats[s_].startswith('wood') or mats[s_] == 'yakisugi':
+            with xf(*frames[s_][:2]): battens(frames[s_][2], h1, op, step=0.6)
+    if ro:
+        with xf(*frames['right'][:2]): window(*ro_[0], T, 'alu', behind='lit', bars=True, hood='tin_blue')
+    with xf(*frames['back'][:2]):
+        door(*bo[0], T, 'wood'); window(*bo[1], T, 'alu', behind='dark', bars=True); vent_hood((3.0, 0, 2.4))
+    with xf(*frames['left'][:2]):
+        for o in so:
+            if o[2] > 0.1: window(*o, T, 'alu', behind='curtain', hood='tin_blue')
+    return frames, z1
+
+def _shop_interior(w, d, z1, h1, rnd, goods=True, depth=3.4, lamps=True):
+    """What is seen through an open shop front: floor, ceiling, a partition with shelves of goods, ceiling lights."""
+    T = 0.15
+    box2('concrete', -w / 2 + T, w / 2 - T, -d / 2 + T, d / 2 - T, z1 - 0.02, z1 + 0.01)
+    box2('wood_dark', -w / 2 + T, w / 2 - T, -d / 2 + T, -d / 2 + depth + 0.1, z1 + h1 - 0.12, z1 + h1 - 0.1)
+    box2('plaster', -w / 2 + T, w / 2 - T, -d / 2 + depth, -d / 2 + depth + 0.1, z1, z1 + h1)
+    if goods:
+        for zz in (0.5, 1.1, 1.7):
+            box2('wood_light', -w / 2 + 0.4, w / 2 - 0.4, -d / 2 + depth - 0.4, -d / 2 + depth, z1 + zz, z1 + zz + 0.04)
+            x = -w / 2 + 0.5
+            while x < w / 2 - 0.6:
+                c = rnd.choice(['cloth_red', 'cloth_yellow', 'cloth_blue', 'white', 'cloth_green', 'orange', 'paper'])
+                bw = rnd.uniform(0.12, 0.3); box2(c, x, x + bw, -d / 2 + depth - 0.3, -d / 2 + depth - 0.05, z1 + zz + 0.04, z1 + zz + 0.04 + rnd.uniform(0.15, 0.35)); x += bw + 0.03
+    if lamps:
+        for x in (-w / 4, w / 4): box2('lamp', x - 0.5, x + 0.5, -d / 2 + 1.2, -d / 2 + 1.3, z1 + h1 - 0.18, z1 + h1 - 0.12)
+
+def _shop_opening(x0, x1, h, T=0.15, shutter=True, post='wood_frame'):
+    """Posts and lintel around an open shop front (wall-local), with the rolling-shutter box and its guide rails."""
+    for xx in (x0, x1): box2(post, xx - 0.1, xx + 0.1, -0.08, T + 0.05, 0, h + 0.07)
+    box2(post, x0 - 0.15, x1 + 0.15, -0.08, T, h, h + 0.17)
+    if shutter:
+        box2('steel_dark', x0 + 0.1, x1 - 0.1, -0.3, -0.02, h - 0.19, h)
+        for xx in (x0 + 0.12, x1 - 0.12): box2('steel_dark', xx - 0.03, xx + 0.03, -0.1, -0.02, 0, h - 0.19)
+
+def _shop_upper(w, d, z, h2, mats, ops, skip=(), posts=True, tob=True, hood=None):
+    """Upper floor walls; ops = {'front': [...]} extra openings (side/back windows are added here)."""
+    T = 0.15; L = d - 2 * T
+    so2 = [(L / 2 - 0.5, L / 2 + 0.5, 0.9, 1.8)]; bo2 = [(w / 2 - 0.7, w / 2 + 0.7, 0.9, 1.8)]
+    op = {'front': ops.get('front', []), 'back': bo2, 'left': so2, 'right': so2}
+    mats = mats if isinstance(mats, dict) else {k: mats for k in ('front', 'back', 'left', 'right')}
+    fr = side_walls(w, d, z, h2, T, mats, op, skip=skip)
+    for s_ in ('left', 'right', 'back'):
+        with xf(*fr[s_][:2]):
+            if mats[s_].startswith('wood') or mats[s_] == 'yakisugi': battens(fr[s_][2], h2, op[s_], step=0.6)
+            window(*op[s_][0], T, 'alu', behind='dark' if s_ == 'back' else 'curtain', hood=hood, tobukuro=1 if (tob and s_ != 'back') else 0)
+    if posts:
+        for x in (-w / 2, w / 2):
+            for y in (-d / 2, d / 2): box('wood_frame', (0.15, 0.15, z + h2 - 0.25), (x, y, 0.25))
+    box('wood_frame', (w + 0.06, d + 0.06, 0.2), (0, 0, z - 0.1))
+    return fr
+
+def _shop_services(w, d, z1, ac=True):
+    if ac:
+        ac_unit((w / 2 + 0.25, d / 4, z1 + 2.2), math.pi / 2)
+        box2('white', w / 2 + 0.02, w / 2 + 0.1, d / 4 - 0.05, d / 4 + 0.05, z1 + 2.6, z1 + 3.4)
+    meter_box((w / 2 + 0.08, d / 4 + 1.0, 1.2), math.pi / 2)
+    cyl('metal', 0.18, 1.2, (w / 2 + 0.3, d / 2 - 0.6, 0), 12); cyl('steel_dark', 0.06, 0.12, (w / 2 + 0.3, d / 2 - 0.6, 1.2), 8)  # propane
+    with xf((-w / 2 - 0.35, d / 2 - 1.2, 0)):  # dustbin with a lid by the side
+        cyl('cloth_blue', 0.25, 0.65, (0, 0, 0), 10, r2=0.28); cyl('cloth_blue', 0.3, 0.06, (0, 0, 0.65), 10)
+
+def nobori_flag(x, y, text, mat='cloth_red', tmat='ink_white', h=3.3, side=1):
+    """のぼり旗 on a pole with a concrete foot."""
+    rod('metal', (x, y, 0), (x, y, h), 0.02, 6)
+    rod('metal', (x, y, h - 0.05), (x + side * 0.5, y, h - 0.05), 0.012, 4)
+    a, b = (x, x + 0.5) if side > 0 else (x - 0.5, x)
+    box2(mat, a, b, y - 0.01, y + 0.01, 1.2, h - 0.05)
+    text3d(tmat, text, 0.3 if len(text) < 4 else 0.26, ((a + b) / 2, y - 0.03, (1.2 + h) / 2), depth=0.008, vertical=True)
+    cyl('concrete', 0.18, 0.12, (x, y, 0), 8)
+
+def gooseneck(x, y, z, reach=0.5):
+    rod('steel_dark', (x, y, z), (x, y - reach, z + 0.17), 0.018, 4)
+    cyl('steel_dark', 0.12, 0.1, (x, y - reach - 0.03, z + 0.09), 8, r2=0.04); cyl('lamp', 0.08, 0.02, (x, y - reach - 0.03, z + 0.08), 8)
+
+def vsign(text, x, y, z, h=None, board='sign_wood', ink='ink'):
+    """Projecting vertical sign on a bracket (z = sign centre)."""
+    h = h or 0.36 * len(text) + 0.3
+    rod('steel_dark', (x, y, z + h / 2 - 0.1), (x, y - 0.6, z + h / 2 - 0.1), 0.02, 4)
+    rod('steel_dark', (x, y, z - h / 2 + 0.1), (x, y - 0.6, z - h / 2 + 0.1), 0.02, 4)
+    signboard(text, 0.5, h, (x, y - 0.35, z), board=board, ink=ink, vertical=True, rz=math.pi / 2)
+
 def sugidama(loc, r=0.35):
     """杉玉: cedar ball hung over a sake shop door."""
     rod('steel_dark', (loc[0], loc[1], loc[2] + r), (loc[0], loc[1], loc[2] + r + 0.4), 0.012, 4)
@@ -965,229 +1139,448 @@ def taru(loc, r=0.28, h=0.55, mat='wood_light', label=None):
         cyl(mat, r * 0.92, 0.03, (0, 0, h), 12)
         if label: text3d('ink_red', label, r * 0.7, (0, -r - 0.01, h * 0.5), depth=0.006)
 
-def shop(w, d, sign, sign_mat='sign_wood', ink='ink', awning='cloth_blue', noren_mat='cloth_navy', noren_text=None, goods='fish',
-         upper='wood_dark', lower='wood', lanterns=None, vsign=None, roof_mat='roof_tile', seed=0, banner=None, corner=False, hira=False,
-         side_clad=None, balcony_rail=True, roof_sign=None):
-    """Two-storey (or 平屋) shop house: open ground-floor front under an awning or tiled pent roof, big kanban,
-    lattice upper window with a wooden balcony rail, side walls with battens, windows and services."""
-    rnd = random.Random(seed)
-    T = 0.15; base = 0.25; h1, h2 = 3.0, 2.6
-    box('concrete', (w + 0.1, d + 0.1, base), (0, 0, 0))
-    box('wood_frame', (w + 0.12, d + 0.12, 0.06), (0, 0, base - 0.02))
-    z1 = base
-    open_w = w - 1.2
-    fo = [(0.6, 0.6 + open_w, 0.0, 2.55)]
-    L_side = d - 2 * T
-    so = [(1.0, 1.0 + 2.6, 0.0, 2.55)] if corner else [(L_side - 2.0, L_side - 1.0, 0.9, 1.9)]
-    ro = [(L_side - 3.2, L_side - 2.0, 1.0, 1.9)]
-    bo = [(w - 1.8, w - 0.9, 0.0, 2.1), (1.0, 2.0, 1.2, 2.0)]
-    frames = side_walls(w, d, z1, h1, T, lower, {'front': fo, 'left': so, 'right': ro, 'back': bo})
-    if lower.startswith('wood'):
-        for side, op in (('left', so), ('right', ro), ('back', bo)):
-            with xf(*frames[side][:2]): battens(frames[side][2], h1, op, step=0.6)
-    with xf(*frames['right'][:2]): window(*ro[0], T, 'alu', behind='lit', bars=True, hood='tin_blue')
-    with xf(*frames['back'][:2]):
-        door(*bo[0], T, 'wood'); window(*bo[1], T, 'alu', behind='dark', bars=True); vent_hood((3.0, 0, 2.4))
-    if not corner:
-        with xf(*frames['left'][:2]): window(*so[0], T, 'alu', behind='curtain', hood='tin_blue')
-    # interior behind the open front: floor, back wall with shelves of goods, ceiling
-    box2('concrete', -w / 2 + T, w / 2 - T, -d / 2 + T, d / 2 - T, z1 - 0.02, z1 + 0.01)
-    box2('wood_dark', -w / 2 + T, w / 2 - T, -d / 2 + T, d / 2 - T, z1 + h1 - 0.12, z1 + h1 - 0.1)
-    box2('plaster', -w / 2 + T, w / 2 - T, -d / 2 + 3.4, -d / 2 + 3.5, z1, z1 + h1)
-    for zz in (0.5, 1.1, 1.7):
-        box2('wood_light', -w / 2 + 0.4, w / 2 - 0.4, -d / 2 + 3.0, -d / 2 + 3.4, z1 + zz, z1 + zz + 0.04)
-        x = -w / 2 + 0.5 if goods not in ('food', 'izakaya') else w  # restaurants: shelves hidden behind doors, leave them bare
-        while x < w / 2 - 0.6:
-            c = rnd.choice(['cloth_red', 'cloth_yellow', 'cloth_blue', 'white', 'cloth_green', 'orange', 'paper'])
-            bw = rnd.uniform(0.12, 0.3); box2(c, x, x + bw, -d / 2 + 3.1, -d / 2 + 3.35, z1 + zz + 0.04, z1 + zz + 0.04 + rnd.uniform(0.15, 0.35)); x += bw + 0.03
-    for x in (-w / 4, w / 4):  # ceiling lights
-        box2('lamp', x - 0.5, x + 0.5, -d / 2 + 1.2, -d / 2 + 1.3, z1 + h1 - 0.18, z1 + h1 - 0.12)
-    # counters / display stands at the front
-    if goods == 'fish':
-        for x in (-w / 4, w / 4):
-            box('steel_dark', (w / 2 - 0.4, 0.9, 0.75), (x, -d / 2 + 0.2, z1))
-            box('styro', (w / 2 - 0.5, 0.8, 0.12), (x, -d / 2 + 0.2, z1 + 0.75))
-            box('white', (w / 2 - 0.6, 0.7, 0.03), (x, -d / 2 + 0.2, z1 + 0.86))  # crushed ice
-            for k in range(5): ico(rnd.choice(['metal', 'hull', 'antifoul']), 0.08, (x - 0.8 + k * 0.4, -d / 2 + 0.2 + rnd.uniform(-0.2, 0.2), z1 + 0.93), (2.4, 0.8, 0.45), 1)
-            for k in range(3): box('paper', (0.16, 0.02, 0.1), (x - 0.6 + k * 0.6, -d / 2 - 0.22, z1 + 0.78))  # price cards
-        for k in range(3): box('styro', (0.6, 0.4, 0.3), (w / 2 - 0.5, -d / 2 - 0.5, k * 0.3))
-        box('crate_blue', (0.6, 0.4, 0.3), (w / 2 - 1.2, -d / 2 - 0.5, 0))
-    elif goods == 'veg':
-        for x in (-w / 4, w / 4):
-            prism('wood_light', [(-0.45, 0), (0.45, 0), (0.45, 0.5), (-0.45, 1.0)], w / 2 - 0.4, loc=(x, -d / 2 - 0.1, z1))
-            for k in range(5):
-                cx = x - 0.8 + k * 0.4; cz = z1 + 0.55 + (k % 2) * 0.15
-                box('wood_light', (0.38, 0.3, 0.12), (cx, -d / 2 - 0.1, cz))  # 笊 basket
-                ico(rnd.choice(['orange', 'cloth_green', 'yellow', 'flower_red', 'leaf_light']), 0.13, (cx, -d / 2 - 0.1, cz + 0.13), (1.2, 0.9, 0.6), 1)
-            box('paper', (0.2, 0.02, 0.14), (x, -d / 2 - 0.56, z1 + 0.45))
-    elif goods == 'souvenir':
-        for x in (-w / 4, w / 4):
-            box('wood_light', (w / 2 - 0.5, 0.8, 0.8), (x, -d / 2 + 0.3, z1))
-            box('cloth_red', (w / 2 - 0.45, 0.85, 0.02), (x, -d / 2 + 0.3, z1 + 0.8))  # 毛氈
-            for k in range(6): box(rnd.choice(['cloth_red', 'paper', 'cloth_blue', 'cloth_pink', 'cloth_yellow']), (0.22, 0.25, 0.12 + 0.08 * (k % 2)), (x - 0.7 + k * 0.28, -d / 2 + 0.3, z1 + 0.82))
-    elif goods == 'izakaya':
-        for k, x in enumerate((-w / 2 - 0.05, w / 2 + 0.05)):  # stacked sake barrels at both sides of the entrance
-            with xf((x * 0.8, -d / 2 - 0.45, 0)):
-                taru((-0.3, 0, 0), label='酒' if k else None); taru((0.3, 0, 0)); taru((0, 0, 0.55), label=None if k else '酒')
-    elif goods == 'food':  # 食品サンプル display case beside the door
-        with xf((-w / 2 + 1.25, -d / 2 - 0.35, 0)):
-            box('wood_frame', (1.1, 0.5, 0.9), (0, 0, 0)); box('glass', (1.1, 0.5, 0.6), (0, 0, 0.9)); box('wood_frame', (1.14, 0.54, 0.05), (0, 0, 1.5))
-            box('lamp', (1.0, 0.4, 0.02), (0, 0, 1.47))
-            for k in range(3):
-                cyl('white', 0.13, 0.06, (-0.35 + k * 0.35, 0, 0.92), 10, r2=0.16)
-                ico(['orange', 'flower_red', 'yellow'][k], 0.1, (-0.35 + k * 0.35, 0, 1.0), (1.2, 1.2, 0.6), 1)
-    elif goods == 'cafe':
-        with xf((-w / 2 + 1.0, -d / 2 - 0.6, 0)):  # A-frame menu board
-            for sy in (-1, 1): box('black', (0.5, 0.03, 0.8), (0, sy * 0.12, 0.08), (sy * 0.25, 0, 0))
-            text3d('ink_white', '珈琲', 0.13, (0, -0.15, 0.62), depth=0.006)
-        for x in (-w / 4, w / 4):  # cake/goods table
-            box('wood_light', (w / 2 - 0.8, 0.7, 0.75), (x, -d / 2 + 0.6, z1))
-    with xf(*frames['front'][:2]):
-        for xx in (0.6, 0.6 + open_w):
-            box2('wood_frame', xx - 0.1, xx + 0.1, -0.08, T + 0.05, 0, 2.62)
-        box2('wood_frame', 0.45, 0.75 + open_w, -0.08, T, 2.55, 2.72)
-        box2('steel_dark', 0.7, 0.5 + open_w, -0.32, -0.02, 2.36, 2.55)  # shutter box (シャッターボックス)
-        for xx in (0.72, 0.48 + open_w): box2('steel_dark', xx - 0.03, xx + 0.03, -0.1, -0.02, 0, 2.36)  # shutter guide rails
-        if noren_text and goods in ('food', 'izakaya'):  # restaurants: glass sliding doors and noren in the opening
-            door(0.6 + open_w * 0.3, 0.6 + open_w * 0.7, 0, 2.3, T, casing=False)
-            box2(lower, 0.6, 0.6 + open_w * 0.3, 0, T, 0, 2.36); box2(lower, 0.6 + open_w * 0.7, 0.6 + open_w, 0, T, 0, 2.36)
-            window(0.8, 0.6 + open_w * 0.3 - 0.2, 0.9, 2.0, T, 'wood_frame', lattice='wood_frame', behind='lit', casing=False)
-            window(0.6 + open_w * 0.7 + 0.2, 0.4 + open_w, 0.9, 2.0, T, 'wood_frame', lattice='wood_frame', behind='lit', casing=False)
-            noren(0.6 + open_w * 0.32, 0.6 + open_w * 0.68, -0.12, 2.3, 0.85, noren_mat, noren_text)
-        elif noren_text:
-            noren(0.7, 0.5 + open_w, -0.36, 2.34, 0.5, noren_mat, noren_text)
-        if goods == 'cafe':  # glazed shop front with a wooden door
-            door(0.6 + open_w * 0.1, 0.6 + open_w * 0.32, 0, 2.3, T, 'slide_glass', casing=False)
-            window(0.6 + open_w * 0.36, 0.6 + open_w - 0.1, 0.5, 2.3, T, 'wood_frame', behind='curtain', panes=3, casing=False, sill=True)
-            box2('wood_frame', 0.6 + open_w * 0.32, 0.6 + open_w * 0.36, 0, T, 0, 2.36)
-            box2(lower, 0.6 + open_w * 0.36, 0.6 + open_w, 0, T, 0, 0.5)
-    if corner:
-        with xf(*frames['left'][:2]):
-            for xx in (1.0, 3.6): box2('wood_frame', xx - 0.08, xx + 0.08, -0.05, T + 0.05, 0, 2.6)
-            box2('wood_frame', 0.9, 3.7, -0.06, T, 2.55, 2.7)
-            window(1.0, 3.6, 0.6, 2.4, T, 'wood_frame', behind='curtain', panes=3, casing=False)
-            box2(lower, 1.0, 3.6, 0, T, 0, 0.6)
-            noren(1.2, 3.4, -0.3, 2.5, 0.3, awning or 'cloth_green', None, panels=6)
-    # awning (cloth, sloped, with a scalloped valance) over the shop front
-    zt = z1 + h1 - 0.05
-    if awning:
-        slab(awning, (-w / 2 + 0.2, -d / 2 - 1.5, zt - 0.75), (w / 2 - 0.2, -d / 2 - 1.5, zt - 0.75), (-w / 2 + 0.2, -d / 2, zt), (w / 2 - 0.2, -d / 2, zt), 0.02)
-        n = round((w - 0.4) / 0.5)
-        for i in range(n):
-            x = -w / 2 + 0.2 + (w - 0.4) * (i + 0.5) / n
-            prism(awning, [(-0.25, 0), (0.25, 0), (0, -0.22)], 0.02, loc=(x, -d / 2 - 1.5, zt - 0.75), axis='Y')
-            if awning in ('cloth_red', 'cloth_blue', 'cloth_green') and i % 2 == 0:
-                slab('cloth_white', (x - 0.12, -d / 2 - 1.49, zt - 0.74), (x + 0.12, -d / 2 - 1.49, zt - 0.74), (x - 0.12, -d / 2 + 0.01, zt + 0.01), (x + 0.12, -d / 2 + 0.01, zt + 0.01), 0.005)
-        for x in (-w / 2 + 0.25, w / 2 - 0.25): rod('metal', (x, -d / 2, zt - 0.2), (x, -d / 2 - 1.5, zt - 0.75), 0.02, 6)
-        rod('metal', (-w / 2 + 0.25, -d / 2 - 1.48, zt - 0.78), (w / 2 - 0.25, -d / 2 - 1.48, zt - 0.78), 0.025, 6)  # front bar
-        box2('steel_dark', -w / 2 + 0.2, w / 2 - 0.2, -d / 2 - 0.12, -d / 2, zt - 0.05, zt + 0.12)  # roller box
-    else:
-        with xf((0, -d / 2, 0)): pent_roof(w + 0.2, 0.9, zt + 0.1)
-    # upper floor
-    ztop = z1 + h1
-    box('wood_frame', (w + 0.06, d + 0.06, 0.2), (0, 0, ztop - 0.1))
-    if not hira:
-        uo = [(0.8, w - 0.8, 0.5, 2.0)]
-        so2 = [(L_side / 2 - 0.5, L_side / 2 + 0.5, 0.9, 1.8)]
-        bo2 = [(w / 2 - 0.7, w / 2 + 0.7, 0.9, 1.8)]
-        sm = side_clad or upper
-        frames2 = side_walls(w, d, ztop, h2, T, {'front': upper, 'back': upper, 'left': sm, 'right': sm},
-                             {'front': uo, 'back': bo2, 'right': so2, 'left': so2})
-        for side, op in (('left', so2), ('right', so2), ('back', bo2)):
-            if (side_clad or upper).startswith('wood') or side == 'back' and upper.startswith('wood'):
-                with xf(*frames2[side][:2]): battens(frames2[side][2], h2, op, step=0.6)
-            elif not upper.startswith('tin') and side == 'back':
-                with xf(*frames2[side][:2]): battens(frames2[side][2], h2, op, step=1.82, w=0.11, out=0.02)
-        if not upper.startswith('wood'):  # exposed posts on the plaster front
-            with xf(*frames2['front'][:2]):
-                for xx in (0.35, w - 0.35): box2('wood_frame', xx - 0.06, xx + 0.06, -0.02, 0, 0, h2)
-        with xf(*frames2['front'][:2]):
-            window(0.8, w - 0.8, 0.5, 2.0, T, 'wood_frame', lattice='wood_frame', behind=rnd.choice(['shoji', 'lit', 'curtain']), panes=4)
-            if balcony_rail:  # 手摺: wooden rail with balusters in front of the upper window
-                box2('wood_frame', 0.5, w - 0.5, -0.5, 0.0, 0.3, 0.42)
-                box2('wood_frame', 0.5, w - 0.5, -0.52, -0.42, 1.12, 1.2)
-                for xx in frange(0.55, w - 0.5, 0.3): bar('wood_frame', xx - 0.025, xx + 0.025, -0.49, -0.45, 0.42, 1.12)
-                for k in range(1 if goods in ('food', 'izakaya') else 2): flowerpot((1.2 + k * 1.6, -0.3, 0.42), 0.7, rnd.choice(['flower_red', 'hydrangea']), seed + 20 + k)
-            else:
-                box2('wood_frame', 0.5, w - 0.5, -0.5, 0.0, 0.35, 0.45)
-        for side in ('left', 'right'):
-            with xf(*frames2[side][:2]): window(*so2[0], T, 'alu', behind='curtain', hood='tin_blue' if seed % 2 else None, tobukuro=1)
-        with xf(*frames2['back'][:2]): window(*bo2[0], T, 'alu', behind='dark')
-        for x in (-w / 2, w / 2):
-            for y in (-d / 2, d / 2): box('wood_frame', (0.15, 0.15, h1 + h2), (x, y, z1))
-        ztop += h2
-    # big sign on the fascia between the floors (on the awning top / pent roof)
-    if hira:
-        signboard(sign, w - 0.8, 0.9, (0, -d / 2 - 0.12, ztop + 1.0), board=sign_mat, ink=ink)
-        for x in (-w / 2 + 0.6, w / 2 - 0.6): box2('wood_frame', x - 0.05, x + 0.05, -d / 2 - 0.1, -d / 2 + 0.2, ztop - 0.1, ztop + 1.05)
-        lz, ly, sw = ztop + 1.05, -d / 2 - 0.2, w - 0.8
-    else:
-        sw = min(w - 0.6, max(2.4, len(sign) * 0.95))
-        signboard(sign, sw, 0.95, (0, -d / 2 - 0.25, z1 + h1 + 0.95), board=sign_mat, ink=ink)
-        lz, ly = z1 + h1 + 1.0, -d / 2 - 0.3
-    for x in (-sw / 3, sw / 3):  # gooseneck lamps over the kanban
-        rod('steel_dark', (x, ly + 0.05, lz + 0.05), (x, ly - 0.45, lz + 0.22), 0.018, 4)
-        cyl('steel_dark', 0.12, 0.1, (x, ly - 0.48, lz + 0.14), 8, r2=0.04); cyl('lamp', 0.08, 0.02, (x, ly - 0.48, lz + 0.13), 8)
-    rise = d / 2 * 0.5
-    gable_fill(upper, w - 0.02, d, rise, ztop)
-    gable_roof(w, d, rise, ztop, roof_mat)
-    zg = ztop - 0.6 * rise / (d / 2) - 0.2
-    for sg in (-1, 1): gutter(-w / 2 - 0.3, w / 2 + 0.3, sg * (d / 2 + 0.62), zg)
-    rod('alu', (-w / 2 - 0.15, -d / 2 - 0.6, zg - 0.05), (-w / 2 - 0.15, -d / 2 - 0.3, zg - 0.4), 0.045, 6)
-    downpipe(-w / 2 - 0.15, -d / 2 - 0.3, zg - 0.3)
-    rod('alu', (w / 2 + 0.15, d / 2 + 0.6, zg - 0.05), (w / 2 + 0.15, d / 2 + 0.3, zg - 0.4), 0.045, 6)
-    downpipe(w / 2 + 0.15, d / 2 + 0.3, zg - 0.3)
-    if roof_sign:  # rooftop billboard on a steel frame
-        with xf((0, -d / 4, ztop + rise * 0.5)):
-            for x in (-1.2, 1.2): rod('steel_dark', (x, 0.3, -0.3), (x, 0.3, 1.3), 0.04, 4); rod('steel_dark', (x, 0.3, 0.2), (x, 1.2, -0.3 + rise * 0.0), 0.03, 4)
-            signboard(roof_sign, 3.0, 0.9, (0, 0.25, 1.55), board='white', ink='ink_red', frame='steel_dark')
-    if lanterns:
-        for x in (-w / 2 + 0.45, w / 2 - 0.45): chochin((x, -d / 2 - 0.5, z1 + 1.85), 0.2, 0.55, 'lantern_red', lanterns)
-    if vsign:  # vertical stand sign / projecting sign
-        with xf((w / 2 - 0.1, -d / 2 - 0.35, 0)):
-            rod('steel_dark', (0, 0, z1 + 2.9), (0, -0.6, z1 + 2.9), 0.02, 4)
-            signboard(vsign, 0.5, 0.36 * len(vsign) + 0.3, (0, -0.35, z1 + 4.6 + (0 if hira else 0.5)), board='sign_wood', vertical=True, rz=math.pi / 2)
-    if goods == 'veg' and hira:  # sake shop: cedar ball and beer crates
-        sugidama((-w / 2 + 1.0, -d / 2 - 0.55, z1 + 2.2))
-        for k in range(3): box('crate_blue' if k != 1 else 'cloth_yellow', (0.45, 0.35, 0.3), (-w / 2 + 0.35, -d / 2 - 0.4 - 0.0, k * 0.3))
-    if banner:  # のぼり旗
-        for k, x in enumerate((-w / 2 - 0.4, w / 2 + 0.4)):
-            rod('metal', (x, -d / 2 - 1.2, 0), (x, -d / 2 - 1.2, 3.3), 0.02, 6)
-            rod('metal', (x, -d / 2 - 1.2, 3.25), (x + (0.5 if k == 0 else -0.5), -d / 2 - 1.2, 3.25), 0.012, 4)
-            a, b = (x, x + 0.5) if k == 0 else (x - 0.5, x)
-            box2('cloth_red' if banner[1] == 'r' else 'cloth_blue', a, b, -d / 2 - 1.21, -d / 2 - 1.19, 1.2, 3.25)
-            text3d('ink_white', banner[0], 0.32, ((a + b) / 2, -d / 2 - 1.23, 2.2), depth=0.008, vertical=True)
-            cyl('concrete', 0.18, 0.12, (x, -d / 2 - 1.2, 0), 8)
-    ac_unit((w / 2 + 0.25, d / 4, z1 + 2.2), math.pi / 2)
-    box2('white', w / 2 + 0.02, w / 2 + 0.1, d / 4 - 0.05, d / 4 + 0.05, z1 + 2.6, z1 + 3.4)
-    meter_box((w / 2 + 0.08, d / 4 + 1.0, 1.2), math.pi / 2)
-    cyl('metal', 0.18, 1.2, (w / 2 + 0.3, d / 2 - 0.6, 0), 12); cyl('steel_dark', 0.06, 0.12, (w / 2 + 0.3, d / 2 - 0.6, 1.2), 8)  # propane
-    with xf((-w / 2 - 0.35, d / 2 - 1.2, 0)):  # dustbin with a lid by the side
-        cyl('cloth_blue', 0.25, 0.65, (0, 0, 0), 10, r2=0.28); cyl('cloth_blue', 0.3, 0.06, (0, 0, 0.65), 10)
-    if goods not in ('fish', 'izakaya'): box('crate_blue', (0.55, 0.38, 0.3), (w / 2 - 0.3, -d / 2 - 0.4, 0))
-    for k in range(rnd.randint(1, 3)):
-        flowerpot((-w / 2 + 0.3 + k * 0.42, -d / 2 - 0.25, 0), 1.0, rnd.choice(['flower_red', 'hydrangea', None]), seed + k)
+def crate_stack(x, y, n, mats=('crate_blue',), size=(0.5, 0.36, 0.3), rz=0.0):
+    for k in range(n): box(mats[k % len(mats)], size, (x, y, k * size[2]), (0, 0, rz))
 
 @model('shop_general', '雑貨店 まるはち(S1)', '商店')
-def shop_general(): shop(7.0, 9.0, 'まるはち', awning='cloth_blue', noren_text=None, goods='veg', upper='wood_dark', vsign='日用品', seed=11, banner=('大売出し', 'r'), side_clad='tin_blue')
+def shop_general():
+    """看板建築: a copper-clad false front (一文字葺き seams, pilasters, cornice and a 丸八 crest) hiding a tin gable roof,
+    over an open shop front with a blue canvas tent and goods spilling onto the street."""
+    w, d, T = 7.0, 9.0, 0.15; rnd = random.Random(11)
+    fo = [(0.45, w - 0.45, 0.0, 2.6)]
+    frames, z1 = _shop_ground(w, d, 'mortar_grey', fo, side='tin_blue')
+    h1, h2 = 3.0, 2.6; ztop = z1 + h1; zf = ztop + h2
+    _shop_interior(w, d, z1, h1, rnd)
+    with xf(*frames['front'][:2]): _shop_opening(0.45, w - 0.45, 2.6)
+    _shop_upper(w, d, ztop, h2, 'tin_blue', {}, skip=('front',), posts=False, tob=False, hood='tin_blue')
+    # the false front: one thick copper-clad wall from the shop lintel to above the roof
+    FL, FZ0, FT = w + 0.1, z1 + 2.62, 8.35
+    ops = [(0.85, 2.75, ztop + 0.55 - FZ0, ztop + 2.05 - FZ0), (FL - 2.75, FL - 0.85, ztop + 0.55 - FZ0, ztop + 2.05 - FZ0)]
+    with xf((-FL / 2, -d / 2 - 0.3, FZ0)):
+        H = FT - FZ0
+        wall('copper_sheet', FL, H, 0.45, ops)
+        hseams(FL, 0.0, H - 0.3, 0.42, ops + [(FL / 2 - 2.5, FL / 2 + 2.5, 3.55, 4.5)], 'copper_seam')
+        for i, o in enumerate(ops):
+            window(*o, 0.45, 'wood_frame', behind='curtain' if i else 'shoji', panes=2, bars=True, casing='copper', sill=True)
+            box2('copper', o[0] - 0.12, o[1] + 0.12, -0.12, 0.0, o[3] + 0.07, o[3] + 0.2)  # window cornice
+            prism('copper', [(-(o[1] - o[0]) / 2 - 0.12, o[3] + 0.2), ((o[1] - o[0]) / 2 + 0.12, o[3] + 0.2), (0, o[3] + 0.45)], 0.1, loc=((o[0] + o[1]) / 2, -0.06, 0), axis='Y')
+            railing(o[0] - 0.05, o[1] + 0.05, -0.28, o[2] - 0.08, 0.42, 'iron', 0.11)
+            box2('iron', o[0] - 0.05, o[1] + 0.05, -0.32, 0.0, o[2] - 0.12, o[2] - 0.06)
+        for x in (0.0, FL): box2('copper', x - 0.16, x + 0.16, -0.12, 0.45, 0.0, H)  # pilasters
+        box2('copper', 0.0, FL, -0.1, 0.0, ops[0][2] - 0.35, ops[0][2] - 0.22)       # string courses
+        box2('copper', 0.0, FL, -0.1, 0.0, ops[0][3] + 0.55, ops[0][3] + 0.68)
+        box2('copper', -0.14, FL + 0.14, -0.22, 0.5, H - 0.22, H - 0.08); box2('copper', -0.2, FL + 0.2, -0.3, 0.55, H - 0.08, H + 0.04)  # cornice
+        prism('copper_sheet', [(-1.5, H), (1.5, H), (1.1, H + 0.32), (0.55, H + 0.52), (-0.55, H + 0.52), (-1.1, H + 0.32)], 0.4, loc=(FL / 2, 0.18, 0), axis='Y')  # pediment
+        box2('copper', FL / 2 - 0.62, FL / 2 + 0.62, -0.06, 0.4, H + 0.5, H + 0.6)
+        cyl('ink_white', 0.27, 0.05, (FL / 2, -0.03, H + 0.28), 16, rot=(math.pi / 2, 0, 0)); torus('copper_seam', 0.27, 0.035, (FL / 2, -0.07, H + 0.28), (math.pi / 2, 0, 0), 16, 4)
+        text3d('ink_red', '八', 0.32, (FL / 2, -0.09, H + 0.27), depth=0.02)
+        signboard('まるはち商店', 4.7, 0.78, (FL / 2, -0.06, 3.95), board='copper_seam', ink='ink_white', frame='copper', depth=0.06)
+    # tin gable roof hidden behind the false front
+    rise = w / 2 * 0.42
+    gable_y(w, d, rise, zf, 'tin_red', fill='tin_blue', over_e=0.3, over_g=0.3, wave=0.0, rafters=False, fascia='steel_dark', barge='steel_dark')
+    gutters_y(w, d, zf - 0.25)
+    # canvas tent over the shop front, goods outside
+    awning(-w / 2 + 0.35, w / 2 - 0.35, -d / 2 - 0.3, z1 + 2.9, 1.25, 0.4, ('cloth_blue',), 1.0, valance=0.36, scallop=False, text='日用品・雑貨・金物', cheeks=True)
+    for x in (-w / 4 - 0.2, w / 4 + 0.2):  # tiered stands with baskets
+        prism('wood_light', [(-0.45, 0), (0.45, 0), (0.45, 0.5), (-0.45, 1.0)], 2.4, loc=(x, -d / 2 - 0.15, z1))
+        for k in range(5):
+            cx = x - 0.95 + k * 0.47; cz = z1 + 0.55 + (k % 2) * 0.15
+            box('wood_light', (0.4, 0.3, 0.1), (cx, -d / 2 - 0.15, cz))
+            ico(rnd.choice(['orange', 'cloth_green', 'yellow', 'white', 'cloth_red']), 0.13, (cx, -d / 2 - 0.15, cz + 0.12), (1.2, 0.9, 0.6), 1)
+        box('paper', (0.3, 0.02, 0.2), (x, -d / 2 - 0.62, z1 + 0.42)); text3d('ink_red', '特売', 0.09, (x, -d / 2 - 0.64, z1 + 0.52), depth=0.004)
+    for k in range(5):  # stacked plastic buckets and washbasins
+        cyl(['cloth_red', 'cloth_blue', 'cloth_yellow', 'cloth_green', 'cloth_red'][k], 0.17, 0.28, (-w / 2 + 0.35, -d / 2 - 0.85, k * 0.12), 10, r2=0.22, cap=k == 4)
+    for k in range(4):  # brooms leaning on the post
+        x = w / 2 - 0.35 + k * 0.08
+        rod('bamboo', (x, -d / 2 - 0.55, 0.3), (x + 0.15, -d / 2 - 0.3, 1.6), 0.015, 4); cyl('straw', 0.12, 0.35, (x - 0.02, -d / 2 - 0.58, 0.0), 6, r2=0.03)
+    for k in range(3): box2('white', w / 2 - 1.5, w / 2 - 0.9, -d / 2 - 0.95 + k * 0.0, -d / 2 - 0.55, k * 0.3, k * 0.3 + 0.28)  # toilet-paper packs
+    vsign('日用品', w / 2 + 0.05, -d / 2 - 0.35, z1 + 3.6, board='white', ink='navy')
+    nobori_flag(-w / 2 - 0.45, -d / 2 - 1.2, '大売出し', 'cloth_red', side=1); nobori_flag(w / 2 + 0.45, -d / 2 - 1.2, '大売出し', 'cloth_red', side=-1)
+    _shop_services(w, d, z1)
+    flowerpot((-w / 2 + 0.9, -d / 2 - 0.35, 0), 1.0, 'flower_red', 3)
 
 @model('shop_restaurant', '海鮮食堂(S2)', '商店')
-def shop_restaurant(): shop(7.5, 9.0, '海鮮食堂', awning=None, noren_mat='cloth_navy', noren_text='食事処', goods='food', upper='plaster', lanterns='海', vsign='海鮮丼', seed=12, banner=('定食', 'b'))
+def shop_restaurant():
+    """Seafood restaurant: cream plaster, tiled hip roof, a tiled gable entrance canopy on posts, a lit food-sample case,
+    a big kanban across the first floor and sudare blinds upstairs."""
+    w, d, T = 7.5, 9.0, 0.15; rnd = random.Random(12)
+    fo = [(2.75, 4.75, 0.0, 2.3), (0.5, 2.3, 0.85, 2.25), (5.2, 7.0, 0.85, 2.25)]
+    frames, z1 = _shop_ground(w, d, 'wood', fo, side='plaster_cream', back='plaster_cream')
+    h1, h2 = 3.0, 2.6; ztop = z1 + h1; zf = ztop + h2
+    with xf(*frames['front'][:2]):
+        battens(w, h1, fo, step=0.6)
+        box2('wood_dark', 0.0, w, -0.05, 0.0, 0.0, 0.8)  # 腰板
+        door(2.75, 4.75, 0, 2.3, T)
+        for a, b in ((0.5, 2.3), (5.2, 7.0)): window(a, b, 0.85, 2.25, T, 'wood_frame', lattice='wood_frame', behind='lit', casing=True)
+        noren(2.85, 4.65, -0.12, 2.3, 0.85, 'cloth_navy', '食事処')
+    _shop_upper(w, d, ztop, h2, 'plaster_cream', {'front': [(0.7, 3.2, 1.05, 2.25), (4.3, 6.8, 1.05, 2.25)]}, hood='tin_blue')
+    with xf((-w / 2, -d / 2, ztop)):
+        for x in (0.0, w / 2, w): box2('wood_frame', x - 0.07, x + 0.07, -0.03, 0.0, 0.0, h2)  # 真壁 posts
+        box2('wood_frame', 0.0, w, -0.03, 0.0, 0.95, 1.02)
+        for i, (a, b) in enumerate(((0.7, 3.2), (4.3, 6.8))):
+            window(a, b, 1.05, 2.25, T, 'wood_frame', behind=['shoji', 'lit'][i], panes=4, sill=True)
+            box2('bamboo', a + 0.05, b - 0.05, -0.12, -0.1, 1.5 - 0.3 * i, 2.22)  # sudare (rolled part way down)
+            for k in range(6): box2('wood_light', a + 0.05, b - 0.05, -0.125, -0.12, 2.15 - k * (0.65 - 0.3 * i) / 6, 2.16 - k * (0.65 - 0.3 * i) / 6)
+            rod('bamboo', (a, -0.12, 2.3), (b, -0.12, 2.3), 0.03, 6)
+        for x in (1.2, 5.0): flowerpot((x + 0.8, -0.25, 1.02), 0.6, 'flower_red', int(x))
+        box2('wood_frame', 0.5, 3.4, -0.35, 0.0, 0.95, 1.02); box2('wood_frame', 4.1, 7.0, -0.35, 0.0, 0.95, 1.02)  # sill shelves
+    # big 屋根看板 standing on the front eaves, with lamps over it
+    for x in (-2.4, 0.0, 2.4):
+        rod('steel_dark', (x, -d / 2 - 0.4, zf + 0.1), (x, -d / 2 - 0.4, zf + 1.25), 0.035, 4); rod('steel_dark', (x, -d / 2 - 0.4, zf + 1.0), (x, -d / 2 + 0.6, zf + 0.6), 0.03, 4)
+    signboard('海鮮食堂', 5.8, 1.1, (0, -d / 2 - 0.5, zf + 0.78), board='white', ink='ink_red', frame='wood_frame', depth=0.1)
+    for x in (-2.0, 0.0, 2.0): gooseneck(x, -d / 2 - 0.5, zf + 1.42, 0.4)
+    # hip roof
+    rise = d / 2 * 0.5
+    rise = w / 2 * 0.62
+    with xf((0, 0, 0), math.pi / 2): hip_roof(d, w, rise, zf, 'roof_tile', over=0.65)
+    zg = zf - 0.65 * rise / (w / 2) - 0.2
+    for sg in (-1, 1): gutter(-w / 2 - 0.3, w / 2 + 0.3, sg * (d / 2 + 0.67), zg)
+    downpipe(-w / 2 - 0.2, -d / 2 - 0.4, zg); downpipe(w / 2 + 0.2, d / 2 + 0.4, zg)
+    # tiled gable entrance canopy on two posts, facing the street (lamp of the game sits under it)
+    cw, cd, cz = 3.2, 1.75, z1 + 2.7
+    with xf((0, -d / 2 - cd / 2 + 0.05, 0)):
+        gable_y(cw, cd, 0.75, cz, 'roof_tile', over_e=0.35, over_g=0.25, rafters=False, gegyo=True, eave_tiles=False)
+        prism('wood_light', [(-cw / 2, cz), (cw / 2, cz), (0, cz + 0.72)], 0.08, loc=(0, -cd / 2 + 0.06, 0), axis='Y')  # gable board
+        for sx in (-1, 1):
+            cyl('wood_frame', 0.09, cz - 0.15, (sx * (cw / 2 - 0.1), -cd / 2 + 0.15, 0.15), 10)
+            cyl('granite', 0.17, 0.15, (sx * (cw / 2 - 0.1), -cd / 2 + 0.15, 0), 10)
+            box2('wood_frame', sx * (cw / 2 - 0.1) - 0.07, sx * (cw / 2 - 0.1) + 0.07, -cd / 2 + 0.05, cd / 2, cz - 0.2, cz)
+            chochin((sx * (cw / 2 - 0.5), -cd / 2 + 0.15, cz - 1.0), 0.2, 0.55, 'lantern_red')
+            box2('ink', sx * (cw / 2 - 0.5) - 0.07, sx * (cw / 2 - 0.5) + 0.07, -cd / 2 + 0.15 - 0.2, -cd / 2 + 0.15 - 0.18, cz - 0.82, cz - 0.6)  # painted mark
+        box2('wood_frame', -cw / 2, cw / 2, -cd / 2 + 0.08, -cd / 2 + 0.22, cz - 0.2, cz)
+    box2('granite', -1.8, 1.8, -d / 2 - cd, -d / 2, 0.0, 0.12)
+    # food-sample case (食品サンプル) beside the door, lit from inside
+    with xf((-w / 2 + 1.4, -d / 2 - 0.4, 0)):
+        box('wood_frame', (1.6, 0.55, 0.9), (0, 0, 0)); box('glass', (1.6, 0.55, 0.62), (0, 0, 0.9)); box('wood_frame', (1.64, 0.59, 0.06), (0, 0, 1.52))
+        box('lamp', (1.5, 0.45, 0.02), (0, 0, 1.49)); box('cloth_red', (1.5, 0.45, 0.02), (0, 0, 0.9))
+        for k in range(4):
+            x = -0.55 + k * 0.37
+            cyl('white' if k % 2 else 'black', 0.13, 0.07, (x, 0.05, 0.92), 10, r2=0.16)
+            ico(['orange', 'flower_red', 'yellow', 'cloth_pink'][k], 0.11, (x, 0.05, 1.0), (1.2, 1.2, 0.55), 1)
+            box('paper', (0.16, 0.01, 0.07), (x, -0.27, 0.93))
+    vsign('海鮮丼', w / 2 - 0.1, -d / 2, ztop + 1.2, board='cloth_navy', ink='ink_white')
+    with xf((w / 2 - 1.1, -d / 2 - 0.7, 0)):  # menu stand
+        for sy in (-1, 1): box('wood_frame', (0.5, 0.03, 0.85), (0, sy * 0.12, 0.05), (sy * 0.25, 0, 0))
+        box2('st_chalkboard' if 'st_chalkboard' in PALETTE else 'black', -0.22, 0.22, -0.2, -0.17, 0.35, 0.85)
+        for k in range(4): box2('ink_white', -0.15, 0.1 - 0.05 * (k % 2), -0.215, -0.205, 0.76 - k * 0.1, 0.775 - k * 0.1)  # chalk lines
+    _shop_services(w, d, z1)
+    for k in range(2): flowerpot((w / 2 - 0.4 - k * 0.45, -d / 2 - 0.3, 0), 1.0, ['hydrangea', None][k], 12 + k)
 
 @model('shop_izakaya', '居酒屋 やまもと(S3)', '商店')
-def shop_izakaya(): shop(6.5, 9.0, 'やまもと', awning='cloth_red', noren_mat='cloth_red', noren_text='居酒屋', goods='izakaya', upper='wood_dark', lanterns='酒', seed=13)
+def shop_izakaya():
+    """出桁造り merchant house: dark board ground floor with 出格子 lattices and a navy noren, a big tiled pent roof,
+    a low 厨子二階 in black plaster with white 虫籠窓, 卯建 fire walls, and deep front eaves on cantilevered beams."""
+    w, d, T = 6.5, 9.0, 0.15; rnd = random.Random(13)
+    fo = [(2.45, 4.05, 0.0, 2.2), (0.45, 2.05, 0.7, 2.25), (4.45, 6.05, 0.7, 2.25)]
+    frames, z1 = _shop_ground(w, d, 'wood_dark', fo)
+    h1, h2 = 3.0, 2.4; ztop = z1 + h1; zf = ztop + h2
+    with xf(*frames['front'][:2]):
+        battens(w, h1, fo, step=0.45)
+        door(2.45, 4.05, 0, 2.2, T)
+        for a, b in ((0.45, 2.05), (4.45, 6.05)):  # 出格子: lattice boxes projecting from the wall
+            window(a, b, 0.7, 2.25, T, 'wood_frame', behind='lit', casing=False, sill=False)
+            n = 16
+            for k in range(n + 1): bar('wood_frame', a + (b - a) * k / n - 0.016, a + (b - a) * k / n + 0.016, -0.3, -0.26, 0.6, 2.32)
+            box2('wood_frame', a - 0.06, b + 0.06, -0.34, 0.0, 0.5, 0.6); box2('wood_frame', a - 0.06, b + 0.06, -0.34, 0.0, 2.32, 2.42)
+        noren(2.5, 4.0, -0.12, 2.2, 0.95, 'cloth_navy', '酒処', panels=3)
+        box2('wood_light', 4.15, 4.35, -0.04, 0.0, 1.2, 1.9); text3d('ink', 'やまもと', 0.08, (4.25, -0.05, 1.55), depth=0.004, vertical=True)
+    # big tiled pent roof over the ground floor
+    with xf((0, -d / 2, 0)): pent_roof(w + 0.5, 1.15, ztop + 0.1, 'roof_tile', drop=0.45)
+    # 厨子二階 in black plaster with 虫籠窓 (plastered slit windows)
+    mo = [(0.7, 2.3, 0.78, 1.45), (2.55, 3.95, 0.78, 1.45), (4.2, 5.8, 0.78, 1.45)]
+    _shop_upper(w, d, ztop, h2, {'front': 'plaster_dark', 'back': 'plaster_dark', 'left': 'wood_dark', 'right': 'wood_dark'}, {'front': mo})
+    with xf((-w / 2, -d / 2, ztop)):
+        for a, b, c, e in mo:
+            box2('lantern_white', a, b, 0.14, 0.16, c, e)  # warm light behind the slits
+            for k in range(int((b - a) / 0.16) + 1): bar('plaster_white', a + k * 0.16 - 0.045, a + k * 0.16 + 0.045, -0.02, 0.1, c, e)
+            box2('plaster_white', a - 0.08, b + 0.08, -0.04, 0.0, c - 0.08, c); box2('plaster_white', a - 0.08, b + 0.08, -0.04, 0.0, e, e + 0.08)
+        box2('wood_frame', 0.0, w, -0.05, 0.0, h2 - 0.25, h2)
+    for sx in (-1, 1):  # 卯建: plastered fire walls with a little tiled cap at both sides of the upper floor
+        x0, x1 = (w / 2 - 0.05, w / 2 + 0.22) if sx > 0 else (-w / 2 - 0.22, -w / 2 + 0.05)
+        zu = zf - 0.3
+        box2('plaster_white', x0, x1, -d / 2 - 0.5, -d / 2 + 0.9, ztop - 0.05, zu)
+        slab('roof_tile', (x0 - 0.14, -d / 2 - 0.62, zu), (x0 - 0.14, -d / 2 + 1.0, zu), ((x0 + x1) / 2, -d / 2 - 0.62, zu + 0.18), ((x0 + x1) / 2, -d / 2 + 1.0, zu + 0.18), 0.06)
+        slab('roof_tile', (x1 + 0.14, -d / 2 - 0.62, zu), (x1 + 0.14, -d / 2 + 1.0, zu), ((x0 + x1) / 2, -d / 2 - 0.62, zu + 0.18), ((x0 + x1) / 2, -d / 2 + 1.0, zu + 0.18), 0.06)
+        rod('ridge_tile', ((x0 + x1) / 2, -d / 2 - 0.66, zu + 0.2), ((x0 + x1) / 2, -d / 2 + 1.04, zu + 0.2), 0.06, 6)
+        box2('wood_frame', x0 - 0.02, x1 + 0.02, -d / 2 - 0.52, -d / 2 + 0.9, ztop - 0.15, ztop - 0.05)
+    # steep gable roof with deep front eaves carried on 腕木 and a 出桁 beam
+    rise = d / 2 * 0.55
+    gable_fill('wood_dark', w - 0.02, d, rise, zf)
+    gable_roof(w, d, rise, zf, 'roof_tile', over_e=1.05, over_g=0.35)
+    for x in frange(-w / 2 + 0.3, w / 2 - 0.2, (w - 0.6) / 4):  # 腕木 with light end grain, carrying the 出桁 beam
+        box2('wood_frame', x - 0.07, x + 0.07, -d / 2 - 1.0, -d / 2, zf - 0.82, zf - 0.66)
+        box2('wood_light', x - 0.07, x + 0.07, -d / 2 - 1.02, -d / 2 - 0.98, zf - 0.82, zf - 0.66)
+    box2('wood_frame', -w / 2 - 0.2, w / 2 + 0.2, -d / 2 - 0.96, -d / 2 - 0.78, zf - 0.72, zf - 0.56)
+    zg = zf - 1.05 * rise / (d / 2) - 0.2
+    gutter(-w / 2 - 0.3, w / 2 + 0.3, -d / 2 - 1.07, zg); gutter(-w / 2 - 0.3, w / 2 + 0.3, d / 2 + 1.07, zg)
+    downpipe(w / 2 + 0.25, -d / 2 - 0.95, zg); downpipe(-w / 2 - 0.25, d / 2 + 0.95, zg)
+    signboard('やまもと', 2.8, 0.5, (0, -d / 2 - 0.32, ztop + 0.42), board='sign_wood', ink='ink', depth=0.08)
+    for sx in (-1, 1): box2('wood_frame', sx * 1.0 - 0.03, sx * 1.0 + 0.03, -d / 2 - 0.3, -d / 2, ztop + 0.38, ztop + 0.44)
+    # red lanterns, an andon stand sign, sake barrels and a bench outside
+    for sx in (-1, 1): chochin((sx * 1.0, -d / 2 - 0.65, z1 + 1.65), 0.26, 0.75, 'lantern_red', '酒' if sx < 0 else '肴')
+    rod('black', (-w / 2, -d / 2 - 1.1, z1 + 2.62), (w / 2, -d / 2 - 1.1, z1 + 2.62), 0.008, 3)  # string of little lanterns along the pent eave
+    for k in range(9): cyl('lantern_red', 0.09, 0.2, (-w / 2 + 0.35 + k * (w - 0.7) / 8, -d / 2 - 1.1, z1 + 2.38), 8, r2=0.07)
+    with xf((w / 4, d / 4, 0)):  # kitchen smoke hood poking out of the back slope
+        box('steel_dark', (0.5, 0.5, 2.2), (0, 0, zf + 0.6)); box('steel_dark', (0.8, 0.8, 0.06), (0, 0, zf + 2.95))
+        for k in range(3): box('alu', (0.56, 0.56, 0.05), (0, 0, zf + 2.3 + k * 0.2))
+    with xf((w / 2 - 0.45, -d / 2 - 0.5, 0)):
+        box('wood_frame', (0.36, 0.36, 0.5), (0, 0, 0)); box('lantern_white', (0.32, 0.32, 0.75), (0, 0, 0.5)); box('wood_frame', (0.4, 0.4, 0.06), (0, 0, 1.25))
+        text3d('ink', '居酒屋', 0.16, (0, -0.17, 0.88), depth=0.004, vertical=True)
+    with xf((-w / 2 + 0.55, -d / 2 - 0.5, 0)):
+        taru((-0.3, 0, 0), label='酒'); taru((0.3, 0, 0)); taru((0, 0, 0.55), label='酒')
+    with xf((0, -d / 2 - 1.55, 0)):  # 縁台 bench with a red cloth
+        box('wood_light', (1.5, 0.5, 0.06), (0, 0, 0.42)); box('cloth_red', (1.2, 0.52, 0.015), (0, 0, 0.48))
+        for sx in (-1, 1): box('wood_frame', (0.06, 0.45, 0.42), (sx * 0.65, 0, 0))
+    crate_stack(w / 2 + 0.3, d / 2 - 2.2, 3, ('cloth_yellow', 'cloth_yellow', 'crate_blue'), rz=math.pi / 2)
+    _shop_services(w, d, z1)
+    flowerpot((-w / 2 + 1.3, -d / 2 - 0.3, 0), 0.9, None, 13)
 
 @model('shop_souvenir', 'お土産 海の幸(S4)', '商店')
-def shop_souvenir(): shop(7.0, 9.0, '海の幸', sign_mat='sign_wood', awning='cloth_red', noren_text='お土産', noren_mat='cloth_blue', goods='souvenir', upper='plaster_cream', vsign='みやげ', seed=14, banner=('名物', 'r'))
+def shop_souvenir():
+    """妻入り souvenir shop: brown-tiled gable facing the street with half-timbering, a balcony with a big 海の幸 board,
+    red-and-white striped awning with swim rings, racks of goods, straw hats and a row of colourful nobori."""
+    w, d, T = 7.0, 9.0, 0.15; rnd = random.Random(14)
+    fo = [(0.4, w - 0.4, 0.0, 2.65)]
+    frames, z1 = _shop_ground(w, d, 'wood', fo, side='plaster_cream', back='plaster_cream')
+    h1, h2 = 3.0, 2.6; ztop = z1 + h1; zf = ztop + h2
+    _shop_interior(w, d, z1, h1, rnd, depth=3.0)
+    with xf(*frames['front'][:2]): _shop_opening(0.4, w - 0.4, 2.65)
+    _shop_upper(w, d, ztop, h2, 'plaster_cream', {'front': [(0.9, 2.9, 0.6, 2.1), (4.1, 6.1, 0.6, 2.1)]}, hood=None)
+    with xf((-w / 2, -d / 2, ztop)):
+        for x in (0.0, 3.5, w): box2('wood_frame', x - 0.08, x + 0.08, -0.03, 0.0, 0.0, h2)
+        for a, b in ((0.9, 2.9), (4.1, 6.1)): window(a, b, 0.6, 2.1, T, 'wood_frame', behind='curtain', panes=2, tobukuro=0, sill=False)
+        rod('wood_frame', (0.0, -0.02, 0.0), (1.2, -0.02, h2), 0.05, 4); rod('wood_frame', (w, -0.02, 0.0), (w - 1.2, -0.02, h2), 0.05, 4)  # braces
+    # balcony across the front with the big board, flowers and a few towels
+    bz = ztop + 0.05
+    box2('wood_frame', -w / 2 + 0.2, w / 2 - 0.2, -d / 2 - 0.95, -d / 2, bz, bz + 0.12)
+    for x in (-w / 2 + 0.25, w / 2 - 0.25): box2('wood_frame', x - 0.06, x + 0.06, -d / 2 - 0.92, -d / 2 - 0.8, bz - 0.05, bz + 1.0)
+    box2('wood_frame', -w / 2 + 0.2, w / 2 - 0.2, -d / 2 - 0.95, -d / 2 - 0.85, bz + 0.92, bz + 1.0)
+    for x in frange(-w / 2 + 0.35, w / 2 - 0.3, 0.25): bar('wood_frame', x - 0.02, x + 0.02, -d / 2 - 0.92, -d / 2 - 0.88, bz + 0.12, bz + 0.92)
+    signboard('海の幸', 3.4, 0.9, (0, -d / 2 - 1.02, bz + 0.6), board='sign_wood', ink='ink', depth=0.08)
+    text3d('ink_red', 'おみやげ', 0.16, (0, -d / 2 - 1.1, bz + 0.27), depth=0.005)
+    for k, x in enumerate((-2.6, 2.4)): flowerpot((x, -d / 2 - 0.45, bz + 0.12), 0.75, ['flower_red', 'flower_yellow'][k], 40 + k)
+    # gable to the street: steep brown-tiled roof, half-timbered plaster gable with a vent
+    rise = w / 2 * 0.72
+    gable_y(w, d, rise, zf, 'roof_tile_brown', fill='plaster_cream', over_e=0.55, over_g=0.6, gegyo=True)
+    with xf((0, -d / 2 - 0.01, 0)):
+        box2('wood_frame', -w / 2, w / 2, -0.04, 0.0, zf - 0.08, zf + 0.06)
+        box2('wood_frame', -0.06, 0.06, -0.04, 0.0, zf, zf + rise - 0.2)
+        for sx in (-1, 1):
+            rod('wood_frame', (sx * 0.05, -0.02, zf + 0.05), (sx * 1.9, -0.02, zf + rise * 0.45), 0.05, 4)
+            box2('wood_frame', sx * 1.2 - 0.06, sx * 1.2 + 0.06, -0.04, 0.0, zf, zf + rise * (1 - 1.2 / (w / 2)) - 0.1)
+        box2('steel_dark', -0.35, 0.35, -0.05, 0.0, zf + rise * 0.48, zf + rise * 0.48 + 0.4)
+    gutters_y(w, d, zf - 0.55 * rise / (w / 2) - 0.25, over=0.55)
+    # striped awning with swim rings on the front bar
+    awning(-w / 2 + 0.25, w / 2 - 0.25, -d / 2, z1 + 2.95, 1.45, 0.6, ('cloth_red', 'cloth_white'), 0.42, valance=0.22, scallop=True, cheeks=True)
+    for k, x in enumerate((-2.4, -1.4, 1.5, 2.5)):
+        torus(['cloth_pink', 'cloth_yellow', 'float_orange', 'cloth_blue'][k], 0.22, 0.07, (x, -d / 2 - 1.4, z1 + 1.95), (math.pi / 2, 0, 0), 12, 6)
+    # goods: tiered tables of boxed sweets, a postcard spinner, straw hats on a stand, beach balls in a basket
+    for x in (-w / 4 + 0.1, w / 4 - 0.1):
+        box('wood_light', (2.2, 0.8, 0.7), (x, -d / 2 - 0.55, 0)); box('wood_light', (2.2, 0.4, 0.3), (x, -d / 2 - 0.35, 0.7))
+        box('cloth_red', (2.24, 0.84, 0.02), (x, -d / 2 - 0.55, 0.7))
+        for k in range(6):
+            box(rnd.choice(['cloth_red', 'paper', 'cloth_blue', 'cloth_pink', 'cloth_yellow', 'white']), (0.3, 0.22, 0.1 + 0.05 * (k % 2)), (x - 0.85 + k * 0.34, -d / 2 - 0.75, 0.72))
+            box(rnd.choice(['cloth_red', 'paper', 'cloth_green', 'cloth_yellow', 'white']), (0.3, 0.2, 0.12), (x - 0.85 + k * 0.34, -d / 2 - 0.35, 1.0))
+        box('paper', (0.28, 0.02, 0.16), (x, -d / 2 - 0.97, 0.5)); text3d('ink_red', '名物', 0.09, (x, -d / 2 - 0.99, 0.58), depth=0.004)
+    with xf((-w / 2 - 0.15, -d / 2 - 1.3, 0)):  # postcard spinner
+        cyl('steel_dark', 0.2, 0.04, (0, 0, 0), 8); rod('steel_dark', (0, 0, 0), (0, 0, 1.6), 0.02, 4)
+        for k in range(4):
+            for a in range(4): box(['paper', 'cloth_blue', 'white', 'cloth_teal'][(a + k) % 4], (0.24, 0.02, 0.17), (0.12 * math.cos(a * math.pi / 2), 0.12 * math.sin(a * math.pi / 2), 0.55 + k * 0.25), (0, 0, a * math.pi / 2 + math.pi / 2))
+    with xf((w / 2 + 0.1, -d / 2 - 1.35, 0)):  # straw hats on a stand
+        rod('wood_frame', (0, 0, 0), (0, 0, 1.75), 0.03, 4); cyl('wood_frame', 0.22, 0.05, (0, 0, 0), 8)
+        for k in range(3):
+            for sx in (-1, 1):
+                cyl('straw', 0.2, 0.012, (sx * 0.2, 0, 0.75 + k * 0.4), 12, rot=(1.2, 0, 0)); cyl('straw', 0.1, 0.1, (sx * 0.2, -0.04, 0.78 + k * 0.4), 8, rot=(1.2, 0, 0))
+    box('wood_light', (0.7, 0.5, 0.35), (-w / 2 + 0.6, -d / 2 - 1.6, 0))
+    for k in range(4): ico(['cloth_red', 'cloth_yellow', 'cloth_blue', 'white'][k], 0.15, (-w / 2 + 0.4 + (k % 2) * 0.35, -d / 2 - 1.6 + (k // 2) * 0.1 - 0.05, 0.45 + (k // 2) * 0.1), sub=1)
+    for k, (x, t, m) in enumerate(((-w / 2 - 0.7, 'お土産', 'cloth_red'), (w / 2 + 0.7, '名物', 'cloth_yellow'))):
+        nobori_flag(x, -d / 2 - 0.4, t, m, 'ink' if m == 'cloth_yellow' else 'ink_white', side=1 if k == 0 else -1)
+    vsign('みやげ', w / 2 - 0.12, -d / 2, ztop + 1.5, board='cloth_red', ink='ink_white')
+    _shop_services(w, d, z1)
 
 @model('shop_fish', '鮮魚店(S5)', '商店')
-def shop_fish(): shop(8.0, 9.0, '鮮魚 丸八', awning='cloth_blue', noren_text='鮮魚', noren_mat='cloth_blue', goods='fish', upper='wood_dark', vsign='直売', seed=15, side_clad='tin_rust', roof_sign='マルハチ')
+def shop_fish():
+    """Fishmonger: wide open front with tiled ice counters, styrofoam boxes and hanging bulbs under a blue tarp awning,
+    rust-streaked teal tin upper floor with a laundry balcony, low tin roof and a rooftop billboard マルハチ."""
+    w, d, T = 8.0, 9.0, 0.15; rnd = random.Random(15)
+    fo = [(0.3, w - 0.3, 0.0, 2.75)]
+    frames, z1 = _shop_ground(w, d, 'tin_rust', fo, side='tin_rust', back='mortar_grey')
+    h1, h2 = 3.0, 2.6; ztop = z1 + h1; zf = ztop + h2
+    _shop_interior(w, d, z1, h1, rnd, goods=False)
+    with xf(*frames['front'][:2]):
+        _shop_opening(0.3, w - 0.3, 2.75, post='steel_dark')
+        box2('steel_dark', w / 2 - 0.07, w / 2 + 0.07, -0.05, 0.05, 0.0, 2.75)
+    box2('tile_white', -w / 2 + T, w / 2 - T, -d / 2 + 3.3, -d / 2 + 3.36, z1, z1 + 1.8)  # tiled back of the shop with a fridge
+    box2('white', w / 2 - 1.9, w / 2 - 0.3, -d / 2 + 2.6, -d / 2 + 3.3, z1, z1 + 2.0); box2('glass', w / 2 - 1.85, w / 2 - 0.35, -d / 2 + 2.58, -d / 2 + 2.6, z1 + 0.3, z1 + 1.9)
+    # stepped ice counters (ひな壇) in tiles across the front
+    for x in (-w / 4, w / 4):
+        box('tile_white', (w / 2 - 0.5, 0.9, 0.7), (x, -d / 2 - 0.15, 0)); box('tile_blue', (w / 2 - 0.5, 0.02, 0.15), (x, -d / 2 - 0.61, 0.1))
+        box('steel_dark', (w / 2 - 0.4, 1.0, 0.06), (x, -d / 2 - 0.15, 0.7))
+        box('ice', (w / 2 - 0.6, 0.85, 0.08), (x, -d / 2 - 0.15, 0.76)); box('styro', (w / 2 - 0.5, 0.55, 0.25), (x, -d / 2 + 0.4, 0.76))
+        box('ice', (w / 2 - 0.6, 0.5, 0.05), (x, -d / 2 + 0.4, 1.01))
+        for k in range(7): ico(rnd.choice(['metal', 'hull', 'antifoul', 'metal']), 0.085, (x - 1.4 + k * 0.47, -d / 2 - 0.2 + rnd.uniform(-0.2, 0.2), 0.88), (2.6, 0.8, 0.45), 1)
+        for k in range(5): ico(rnd.choice(['metal', 'flower_red', 'hull']), 0.07, (x - 1.2 + k * 0.6, -d / 2 + 0.4, 1.09), (2.4, 0.9, 0.5), 1)
+        for k in range(4): box('paper', (0.18, 0.02, 0.12), (x - 1.2 + k * 0.8, -d / 2 - 0.62, 0.88)); rod('steel_dark', (x - 1.2 + k * 0.8, -d / 2 - 0.6, 0.78), (x - 1.2 + k * 0.8, -d / 2 - 0.6, 0.88), 0.006, 3)
+    box('metal', (0.4, 0.4, 0.12), (-w / 2 + 0.6, -d / 2 + 0.4, 1.06)); box('white', (0.3, 0.05, 0.2), (-w / 2 + 0.6, -d / 2 + 0.18, 1.06))  # scale
+    for k in range(4): box('styro', (0.6, 0.4, 0.28), (w / 2 + 0.05, -d / 2 - 0.55, k * 0.28))
+    crate_stack(-w / 2 - 0.1, -d / 2 - 0.6, 3, ('crate_blue',), (0.6, 0.42, 0.3))
+    torus('tarp_blue', 0.3, 0.035, (-w / 2 - 0.05, -d / 2 + 1.0, 1.0), (0, math.pi / 2, 0), 12, 4)  # coiled hose on the side
+    # tarp awning on steel pipes with a printed valance and bare bulbs
+    awning(-w / 2 + 0.1, w / 2 - 0.1, -d / 2, z1 + 2.95, 1.6, 0.35, ('tarp_blue',), 2.0, valance=0.4, scallop=False, text='鮮魚 ・ 丸八 ・ 直売', cheeks=False, arms=False)
+    for x in (-w / 2 + 0.15, 0.0, w / 2 - 0.15): rod('alu', (x, -d / 2 - 1.55, 0), (x, -d / 2 - 1.55, z1 + 2.55), 0.035, 6)
+    for x in (-2.4, -0.8, 0.8, 2.4):
+        rod('black', (x, -d / 2 - 0.9, z1 + 2.72), (x, -d / 2 - 0.9, z1 + 2.3), 0.008, 3); ico('lamp', 0.07, (x, -d / 2 - 0.9, z1 + 2.24), (1, 1, 1.3), 1)
+    # rust-streaked teal tin upper floor with a steel laundry balcony
+    uo = [(0.8, 2.6, 0.8, 1.95), (3.2, 4.8, 0.8, 1.95), (5.4, 7.2, 0.8, 1.95)]
+    _shop_upper(w, d, ztop, h2, {'front': 'tin_teal', 'back': 'tin_teal', 'left': 'tin_teal', 'right': 'tin_teal'}, {'front': uo}, posts=False, hood='tin_rust')
+    with xf((-w / 2, -d / 2, ztop)):
+        for i, o in enumerate(uo): window(*o, T, 'alu', behind=['curtain', 'shoji', 'dark'][i], panes=2, casing='alu', hood='tin_rust' if i == 1 else None)
+        streaks(w, h2 - 0.05, [0.6, 1.9, 2.8, 4.1, 5.0, 6.3, 7.5], seed=15)
+        streaks(w, 0.75, [1.2, 3.9, 6.1], 'grime', seed=5)
+        box2('alu', 0, 0.06, -0.06, 0.0, 0.0, h2); box2('alu', w - 0.06, w, -0.06, 0.0, 0.0, h2)
+    bz = ztop + 0.1
+    box2('steel_dark', -w / 2 + 0.6, w / 2 - 0.6, -d / 2 - 0.85, -d / 2, bz, bz + 0.08)
+    railing(-w / 2 + 0.6, w / 2 - 0.6, -d / 2 - 0.82, bz + 0.08, 0.9, 'steel_dark', 0.14)
+    for x in (-w / 2 + 0.7, w / 2 - 0.7): rod('alu', (x, -d / 2 - 0.7, bz + 0.1), (x, -d / 2 - 0.7, bz + 1.85), 0.02, 6)
+    rod('alu', (-w / 2 + 0.7, -d / 2 - 0.7, bz + 1.8), (w / 2 - 0.7, -d / 2 - 0.7, bz + 1.8), 0.018, 6)
+    laundry_line(-w / 2 + 1.0, w / 2 - 2.0, -d / 2 - 0.7, bz + 1.8, 15)
+    box2('rubber', w / 2 - 1.8, w / 2 - 1.2, -d / 2 - 0.75, -d / 2 - 0.65, bz + 0.6, bz + 1.75)  # rubber apron drying
+    ac_unit((w / 2 - 1.1, -d / 2 - 0.4, bz + 0.1))
+    # low tin roof and the rooftop billboard
+    rise = d / 2 * 0.24
+    gable_fill('tin_teal', w - 0.02, d, rise, zf)
+    gable_roof(w, d, rise, zf, 'tin_rust', over_e=0.45, over_g=0.35, wave=0.0, rafters=False, fascia='steel_dark', barge='steel_dark')
+    zg = zf - 0.45 * rise / (d / 2) - 0.15
+    for sg in (-1, 1): gutter(-w / 2 - 0.3, w / 2 + 0.3, sg * (d / 2 + 0.5), zg)
+    downpipe(-w / 2 - 0.2, -d / 2 - 0.4, zg); downpipe(w / 2 + 0.2, d / 2 + 0.4, zg)
+    with xf((0, -d / 4, zf + rise * 0.5)):
+        for x in (-2.1, 0.0, 2.1):
+            rod('steel_dark', (x, 0.25, -0.2), (x, 0.25, 2.55), 0.05, 4); rod('steel_dark', (x, 0.25, 1.2), (x, 1.6, 0.05), 0.035, 4)
+        rod('steel_dark', (-2.2, 0.25, 0.6), (2.2, 0.25, 0.6), 0.03, 4)
+        signboard('マルハチ鮮魚', 4.8, 1.25, (0, 0.18, 1.85), board='white', ink='ink_red', frame='steel_dark', depth=0.1)
+        for x in (-1.6, 1.6): gooseneck(x, 0.1, 2.5, 0.55)
+    vsign('直売', w / 2 - 0.12, -d / 2, ztop + 1.3, board='white', ink='navy')
+    _shop_services(w, d, z1, ac=False)
 
 @model('shop_cafe', '喫茶 しおかぜ(S6・角の店)', '商店')
-def shop_cafe(): shop(7.0, 9.0, '喫茶しおかぜ', sign_mat='sign_wood', awning='cloth_green', noren_text=None, goods='cafe', upper='plaster_white', seed=16, corner=True, lanterns=None)
+def shop_cafe():
+    """Retro corner café: white mortar walls on a brick plinth, a glazed shop front wrapping round the corner under
+    green-and-white striped awnings, arched upper windows with flower boxes and a red mansard roof with dormers."""
+    w, d, T = 7.0, 9.0, 0.15; rnd = random.Random(16)
+    fo = [(0.55, 1.65, 0.0, 2.35), (2.0, 6.5, 0.55, 2.35)]
+    so = [(1.0, 3.6, 0.55, 2.35), (4.3, 6.0, 0.55, 2.35)]
+    frames, z1 = _shop_ground(w, d, 'mortar_white', fo, so=so)
+    h1, h2 = 3.0, 2.6; ztop = z1 + h1; zf = ztop + h2
+    box2('brick', -w / 2 - 0.04, w / 2 + 0.04, -d / 2 - 0.04, d / 2 + 0.04, z1, z1 + 0.5)
+    box2('wood_dark', -w / 2 + T, w / 2 - T, -d / 2 + T, d / 2 - T, z1 - 0.02, z1 + 0.01)
+    box2('wood_dark', -w / 2 + T, w / 2 - T, -d / 2 + T, d / 2 - T, z1 + h1 - 0.12, z1 + h1 - 0.1)
+    for x in (-1.8, 1.0):  # tables and pendant lamps behind the glass
+        box('wood_light', (0.8, 0.8, 0.05), (x, -d / 2 + 1.3, z1 + 0.72)); box('wood_frame', (0.08, 0.08, 0.72), (x, -d / 2 + 1.3, z1))
+        rod('black', (x, -d / 2 + 1.3, z1 + h1 - 0.1), (x, -d / 2 + 1.3, z1 + 1.9), 0.008, 3); cyl('lamp', 0.18, 0.18, (x, -d / 2 + 1.3, z1 + 1.75), 10, r2=0.05)
+    box2('wood_dark', -w / 2 + T, w / 2 - T, -d / 2 + 4.0, -d / 2 + 4.1, z1, z1 + h1)
+    box2('wood_light', -w / 2 + 0.5, w / 2 - 0.5, -d / 2 + 3.3, -d / 2 + 3.9, z1, z1 + 1.05)  # counter
+    with xf(*frames['front'][:2]):
+        door(0.55, 1.65, 0, 2.35, T, 'slide_glass', casing=True)
+        window(2.0, 6.5, 0.55, 2.35, T, 'wood_frame', behind=None, panes=4, casing='wood_frame', sill=True)
+        box2('cloth_check', 2.05, 6.45, T + 0.05, T + 0.07, 0.6, 1.25); rod('alu', (2.0, T + 0.06, 1.27), (6.5, T + 0.06, 1.27), 0.012, 4)  # café curtains
+        box2('wood_frame', 2.0, 6.5, -0.02, 0.06, 1.9, 1.95)  # transom bar
+        text3d('ink_white', 'COFFEE', 0.2, (4.25, -0.0, 1.3), depth=0.004)
+    with xf(*frames['left'][:2]):
+        for o in so: window(*o, T, 'wood_frame', behind='curtain', panes=3, casing='wood_frame', sill=True)
+    awning(-w / 2 + 0.3, w / 2 - 0.3, -d / 2, z1 + 2.95, 1.2, 0.55, ('cloth_green', 'cloth_white'), 0.36, valance=0.2, scallop=True, cheeks=True)
+    with xf((-w / 2, 0, 0), -math.pi / 2):
+        awning(-d / 2 + 0.6, -d / 2 + 4.4, 0, z1 + 2.95, 0.9, 0.45, ('cloth_green', 'cloth_white'), 0.36, valance=0.2, scallop=True, cheeks=True)
+    # arched upper windows in white mortar with flower boxes
+    uo = [(0.9, 2.5, 0.6, 1.85), (2.9, 4.1, 0.6, 1.85), (4.5, 6.1, 0.6, 1.85)]
+    _shop_upper(w, d, ztop, h2, 'mortar_white', {'front': uo}, posts=False, tob=False)
+    with xf((-w / 2, -d / 2, ztop)):
+        for i, o in enumerate(uo):
+            a, b, c, e = o
+            window(a, b, c, e, T, 'wood_frame', behind=['curtain', 'lit', 'curtain'][i], panes=2, casing='white', sill=True, planter='terracotta' if i != 1 else None)
+            r = (b - a) / 2 + 0.07
+            prism('white', [((a + b) / 2 + r * math.cos(t / 6 * math.pi) - (a + b) / 2, e + r * 0.6 * math.sin(t / 6 * math.pi)) for t in range(7)], 0.07, loc=((a + b) / 2, -0.03, 0), axis='Y')
+            prism('copper_seam', [(r * 0.85 * math.cos(t / 6 * math.pi), e + 0.04 + r * 0.5 * math.sin(t / 6 * math.pi)) for t in range(7)], 0.03, loc=((a + b) / 2, -0.07, 0), axis='Y')
+        text3d('cloth_green', '喫茶しおかぜ', 0.3, (w / 2, -0.06, 0.32), depth=0.04)
+    with xf((-w / 2, -d / 2, 0)):  # round projecting sign at the corner
+        rod('iron', (0.0, -0.05, ztop + 1.2), (0.0, -0.9, ztop + 1.2), 0.025, 4)
+        cyl('white', 0.38, 0.07, (-0.035, -0.6, ztop + 0.75), 18, rot=(0, math.pi / 2, 0))
+        torus('cloth_green', 0.38, 0.04, (0.0, -0.6, ztop + 0.75), (0, math.pi / 2, 0), 18, 4)
+        for sx in (-1, 1): text3d('ink', '珈琲', 0.2, (sx * 0.045, -0.6, ztop + 0.75), rz=sx * math.pi / 2, depth=0.006)
+        box('lamp', (0.1, 0.1, 0.1), (0.0, -0.9, ztop + 1.25))
+    zt = mansard_roof(w, d, zf, h1=1.85, inset=0.8, h2=0.5, mat='roof_tile_red', top='tin_red', over=0.3, dormers=(-1.7, 1.7))
+    gutter(-w / 2 - 0.3, w / 2 + 0.3, -d / 2 - 0.36, zf - 0.1); gutter(-w / 2 - 0.3, w / 2 + 0.3, d / 2 + 0.36, zf - 0.1)
+    downpipe(w / 2 + 0.25, -d / 2 - 0.3, zf - 0.05); downpipe(-w / 2 - 0.25, d / 2 + 0.3, zf - 0.05)
+    cyl('brick', 0.3, 1.1, (1.5, 1.5, zt - 0.6), 6)  # stove chimney
+    cyl('steel_dark', 0.33, 0.08, (1.5, 1.5, zt + 0.5), 6)
+    # A-frame menu board, a bench and potted plants
+    with xf((-w / 2 + 1.1, -d / 2 - 0.85, 0)):
+        for sy in (-1, 1): box('wood_frame', (0.5, 0.03, 0.8), (0, sy * 0.12, 0.08), (sy * 0.25, 0, 0))
+        box2('black', -0.2, 0.2, -0.2, -0.17, 0.35, 0.78); text3d('ink_white', '珈琲', 0.11, (0, -0.21, 0.66), depth=0.004)
+    with xf((2.3, -d / 2 - 0.55, 0)):
+        box('wood_light', (1.6, 0.4, 0.05), (0, 0, 0.42)); box('wood_light', (1.6, 0.05, 0.4), (0, 0.2, 0.45))
+        for sx in (-1, 1): box('iron', (0.05, 0.4, 0.42), (sx * 0.7, 0, 0))
+    for k, x in enumerate((-w / 2 + 2.0, w / 2 - 0.4)): flowerpot((x, -d / 2 - 0.35, 0), 1.3, ['hydrangea', 'flower_yellow'][k], 16 + k)
+    flowerpot((-w / 2 - 0.4, -d / 2 + 0.5, 0), 1.1, 'flower_red', 30)
+    _shop_services(w, d, z1)
 
 @model('shop_sake', '酒屋(S7・平屋)', '商店')
-def shop_sake(): shop(6.0, 8.0, '酒・たばこ', awning='cloth_yellow', noren_text='酒', noren_mat='cloth_navy', goods='veg', upper='wood', seed=17, hira=True, vsign='地酒')
+def shop_sake():
+    """Single-storey 看板建築 liquor store: a cream mortar false front with a stepped parapet, raised 酒 lettering and
+    a tobacco window, aluminium sliding doors under a yellow tent, sugidama, beer crates, barrels and a vending machine."""
+    w, d, T = 6.0, 8.0, 0.15; rnd = random.Random(17)
+    fo = [(0.5, 3.9, 0.0, 2.3), (4.4, 5.6, 0.8, 1.9)]
+    frames, z1 = _shop_ground(w, d, 'mortar_cream', fo, side='wood', back='wood')
+    h1 = 3.0; ztop = z1 + h1
+    _shop_interior(w, d, z1, h1, rnd, depth=2.8)
+    with xf(*frames['front'][:2]):
+        for k in range(4):  # aluminium sliding doors
+            a, b = 0.5 + 3.4 * k / 4, 0.5 + 3.4 * (k + 1) / 4; yy = 0.06 + (0.03 if k % 2 else -0.03)
+            box2('alu', a, b, yy - 0.02, yy + 0.02, 0, 0.1); box2('alu', a, b, yy - 0.02, yy + 0.02, 2.24, 2.3)
+            box2('alu', a, a + 0.04, yy - 0.02, yy + 0.02, 0, 2.3); box2('alu', b - 0.04, b, yy - 0.02, yy + 0.02, 0, 2.3)
+            box2('glass', a, b, yy - 0.004, yy + 0.004, 0, 2.3)
+        box2('cloth_red', 0.8, 3.6, 0.03, 0.04, 1.2, 1.4); text3d('ink_white', 'ビール・地酒・焼酎', 0.12, (2.2, 0.02, 1.3), depth=0.003)
+        window(4.4, 5.6, 0.8, 1.9, T, 'alu', behind='lit', panes=2, casing='alu', sill=False)
+        box2('alu', 4.3, 5.7, -0.4, 0.0, 0.75, 0.82)  # tobacco counter shelf
+        box2('cloth_red', 4.35, 5.65, -0.12, -0.04, 1.95, 2.25); text3d('ink_white', 'たばこ', 0.17, (5.0, -0.13, 2.1), depth=0.004)
+    # false front with a stepped parapet hiding the low gable roof
+    FL, FZ0, FT = w + 0.1, z1 + 2.45, 5.45
+    with xf((-FL / 2, -d / 2 - 0.25, FZ0)):
+        H = FT - FZ0
+        wall('mortar_cream', FL, H, 0.4, [])
+        box2('mortar_cream', FL / 2 - 1.3, FL / 2 + 1.3, 0.0, 0.4, H, H + 0.42)  # raised centre
+        box2('mortar_grey', FL / 2 - 1.42, FL / 2 + 1.42, -0.1, 0.5, H + 0.42, H + 0.56)
+        box2('mortar_grey', -0.1, FL + 0.1, -0.1, 0.5, H - 0.04, H + 0.08)
+        for x in (0.0, FL): box2('mortar_grey', x - 0.14, x + 0.14, -0.08, 0.4, 0.0, H + 0.08)
+        box2('mortar_grey', 0.0, FL, -0.06, 0.0, 0.0, 0.12)
+        box2('tile_green', 0.0, FL, -0.05, 0.0, 0.12, 0.3)
+        cyl('mortar_grey', 0.5, 0.06, (FL / 2, 0.0, H - 0.32), 16, rot=(math.pi / 2, 0, 0))
+        torus('cloth_maroon', 0.5, 0.04, (FL / 2, -0.06, H - 0.32), (math.pi / 2, 0, 0), 16, 4)
+        text3d('cloth_maroon', '酒', 0.62, (FL / 2, -0.09, H - 0.33), depth=0.05)
+        text3d('ink', '丸十酒店', 0.36, (FL / 2, -0.04, 1.2), depth=0.05)
+        text3d('ink', '創業明治二十年', 0.12, (FL / 2, -0.03, 0.85), depth=0.01)
+    rise = d / 2 * 0.4
+    gable_fill('wood', w - 0.02, d, rise, ztop)
+    gable_roof(w, d, rise, ztop, 'roof_tile', over_e=0.45, over_g=0.4)
+    zg = ztop - 0.45 * rise / (d / 2) - 0.2
+    gutter(-w / 2 - 0.3, w / 2 + 0.3, d / 2 + 0.52, zg); downpipe(w / 2 + 0.2, d / 2 + 0.4, zg)
+    with xf((0, 0, ztop)):
+        for sx in (-1, 1): box2('wood_frame', sx * w / 2 - 0.02, sx * w / 2 + 0.02, -d / 2, d / 2, -0.1, 0.04)
+    awning(-w / 2 + 0.3, 1.1, -d / 2, z1 + 2.42, 1.05, 0.35, ('cloth_yellow',), 1.0, valance=0.3, scallop=False, text='酒・米・塩', tmat='ink', cheeks=True)
+    sugidama((-w / 2 + 0.75, -d / 2 - 0.55, z1 + 1.65))
+    with xf((w / 2 + 0.55, -d / 2 + 0.55, 0)):  # vending machine
+        box('white', (0.95, 0.7, 1.8), (0, 0, 0)); box('vend_panel', (0.8, 0.02, 0.85), (0, -0.36, 0.85))
+        for k in range(8): cyl(['cloth_red', 'cloth_blue', 'yellow', 'cloth_green'][k % 4], 0.035, 0.12, (-0.3 + (k % 4) * 0.2, -0.38, 1.05 + (k // 4) * 0.35), 6)
+        box('black', (0.3, 0.05, 0.15), (0.0, -0.37, 0.25)); box('cloth_red', (0.97, 0.72, 0.12), (0, 0, 1.8))
+    for k, x in enumerate((-w / 2 - 0.15, -w / 2 + 0.35)):  # beer crates
+        crate_stack(x, -d / 2 - 1.1, 3 + k, ('cloth_yellow', 'cloth_red'), (0.45, 0.35, 0.3))
+    with xf((1.3, -d / 2 - 0.55, 0)): taru((-0.3, 0, 0), label='酒'); taru((0.3, 0, 0), label='祝'); taru((0, 0, 0.55))
+    vsign('地酒', w / 2 + 0.1, -d / 2 - 0.25, z1 + 3.6, board='sign_wood', ink='ink')
+    for k, (y, m) in enumerate(((-1.2, 'blue'), (0.2, 'cloth_yellow'), (1.6, 'red'))):  # ホーロー enamel signs on the left wall
+        box2(m, -w / 2 - 0.03, -w / 2, y - 0.3, y + 0.3, 1.0, 2.2); box2('white', -w / 2 - 0.035, -w / 2 - 0.03, y - 0.2, y + 0.2, 1.9, 2.05)
+    for x in (-1.6, 1.6): gooseneck(x, -d / 2 - 0.25, FT - 0.1, 0.45)
+    _shop_services(w, d, z1, ac=False)
+    ac_unit((w / 2 + 0.25, 0.0, 0.4), math.pi / 2)
+
 
 # ================================================================= harbour buildings (漁港)
 @model('fish_market', '魚市場', '漁港')
@@ -3606,8 +3999,10 @@ def hydrangea():
     for k in range(12):  # mophead flower heads sitting on the leaf mound
         a = k * 2.4 + rnd.uniform(-0.3, 0.3); r = 0.3 + 0.55 * ((k * 0.618) % 1)
         z = 1.02 - r * 0.42 + rnd.uniform(-0.05, 0.05)
-        s = rnd.uniform(0.17, 0.22)
-        ico('hydrangea' if k % 3 else 'hydrangea_pink', s, (math.cos(a) * r, math.sin(a) * r * 0.9, z), (1, 1, 0.85), 2, 0.3, k)
+        s = rnd.uniform(0.17, 0.22); m = 'hydrangea' if k % 3 else 'hydrangea_pink'
+        for j in range(4):   # mophead: a lumpy cluster of floret balls instead of one smooth ball
+            b = j * 2.1 + k; o = Vector((math.cos(b), math.sin(b), 0.55 - 0.45 * (j == 3))) * s * (0.5 if j < 3 else 0.0)
+            ico(m, s * (0.62 if j < 3 else 0.75), (math.cos(a) * r + o.x, math.sin(a) * r * 0.9 + o.y, z + (o.z if j < 3 else s * 0.25)), (1, 1, 0.9), 1, 0.2, k * 4 + j)
 
 @model('grass_tuft', '草むら', '自然', lod=False)
 def grass_tuft():
@@ -3626,45 +4021,219 @@ def grass_tuft():
         m = 'leaf' if h < 0.4 and k % 2 else ('leaf_light' if k % 4 == 0 else 'grass_blade')
         mesh(m, vs, [(0, 1, 3, 2), (2, 3, 5, 4), (4, 5, 6)])
 
-def _hb_strata(layers, dip, az, base=-0.3, cuts=(), sub=3):
-    """Sedimentary rock: stacked chunks cut by parallel tilted bedding planes, plus flat fracture faces.
-    layers: [(mat, r, loc, scale, seed, d0, d1)] with d measured along the bedding normal."""
+# ---------------------------------------------------------------- coastal rocks (_rk_*): Enoshima-style layered tuff
+# Each rock is a few convex blocks (hulls of jittered box corners -> big flat fracture faces) sliced by tilted bedding
+# planes into strata; every layer is nudged in or out so the beds read as ledges and overhangs, vertical joints split
+# the blocks with narrow cracks, and all edges get a narrow chamfer. Edges sharper than ~22 degrees are marked sharp so
+# the facets stay crisp in game (no dough-like smoothing), a dark wet band and a pale barnacle line run round the foot,
+# and grass tufts / moss sit on the up-facing ledges (static materials: no wind sway on tall rocks).
+PALETTE.update({
+    'rk_tuff': P((1.12, 1.03, 0.86), 0.92, tex='rock'), 'rk_tuff_grey': P((0.88, 0.87, 0.84), 0.92, tex='rock'),
+    'rk_tuff_dark': P((0.64, 0.6, 0.55), 0.9, tex='rock'), 'rk_wet': P((0.3, 0.31, 0.27), 0.45, tex='rock'),
+    'rk_barnacle': P((0.13, 0.125, 0.105), 0.95), 'rk_moss': P((0.09, 0.15, 0.04), 1.0),
+    'rk_grass': P((0.15, 0.27, 0.06), 0.9), 'rk_grass_dry': P((0.3, 0.27, 0.12), 0.9), 'rk_shrub': P((0.045, 0.11, 0.04), 0.9),
+})
+
+def _rk_block(c, h, seed, rz=0.0, inset=0.3, extra=6, taper=0.3, sides=4):
+    """Convex hull of jittered box corners plus a few face points: an irregular, angular block. c centre, h half-size;
+    taper limits how much the top and bottom corners of each vertical edge differ (small = steep, wall-like sides)."""
+    rnd = random.Random(seed); pts = []
+    for i in range(sides):   # plan outline: an irregular polygon (sides = 4: a box), corners repeated top and bottom
+        a = (i + 0.5 + rnd.uniform(-0.25, 0.25)) / sides * math.tau; sx, sy = math.cos(a) * 1.4142, math.sin(a) * 1.4142
+        if sides != 4: sx, sy = sx / 1.4142 / math.cos(math.pi / sides), sy / 1.4142 / math.cos(math.pi / sides)
+        sx, sy = max(-1.0, min(1.0, sx)), max(-1.0, min(1.0, sy))
+        kx, ky = rnd.uniform(1 - inset, 1.0), rnd.uniform(1 - inset, 1.0)
+        for sz in (-1, 1):
+            k = [min(1.0, kx + rnd.uniform(-taper, taper)), min(1.0, ky + rnd.uniform(-taper, taper)), rnd.uniform(1 - inset, 1.0)]
+            pts.append(Vector((sx * h[0] * k[0], sy * h[1] * k[1], sz * h[2] * k[2])))
+    for _ in range(extra):
+        ax = rnd.randrange(3) if taper > 0.2 else rnd.randrange(2); p = [rnd.uniform(-0.8, 0.8) for _ in range(3)]; p[ax] = rnd.choice((-1, 1)) * rnd.uniform(0.86, 1.06)
+        pts.append(Vector((p[0] * h[0], p[1] * h[1], p[2] * h[2])))
+    R = Matrix.Rotation(rz, 3, 'Z'); bm = bmesh.new()
+    vs = [bm.verts.new(R @ p + Vector(c)) for p in pts]
+    res = bmesh.ops.convex_hull(bm, input=vs)
+    bmesh.ops.delete(bm, geom=list({v for v in res['geom_interior'] + res['geom_unused'] if isinstance(v, bmesh.types.BMVert)}), context='VERTS')
+    bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(4), verts=bm.verts[:], edges=bm.edges[:])
+    return bm
+
+def _rk_cut(bm, co, no):
+    """Remove everything on the side `no` points to; cap the hole (convex pieces stay convex)."""
+    bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=Vector(co), plane_no=Vector(no).normalized(), clear_outer=True)
+    edges = [e for e in bm.edges if e.is_boundary]
+    if edges: bmesh.ops.holes_fill(bm, edges=edges, sides=0)
+    return bm
+
+RK_WET = Vector((0.06, 0.035, 1.0)).normalized()
+
+def _rk_piece(bm, mat, bevel, wet, polys, min_t=0.0, moss=None):
+    """Chamfer, split off the wet/barnacle bands and mossy tops, mark crisp edges and emit one object per material.
+    Pieces thinner than min_t on average (sliver wedges left by the bedding cuts) are dropped."""
+    if len(bm.faces) < 4: bm.free(); return
+    area = sum(f.calc_area() for f in bm.faces)
+    if min_t and 2 * bm.calc_volume() / max(area, 1e-6) < min_t: bm.free(); return
+    bmesh.ops.dissolve_limit(bm, angle_limit=math.radians(4), verts=bm.verts[:], edges=bm.edges[:])
+    bmesh.ops.bevel(bm, geom=bm.edges[:], offset=bevel, offset_type='OFFSET', segments=1, profile=0.5, affect='EDGES', clamp_overlap=True)
+    mats = [mat, 'rk_wet', 'rk_barnacle', 'rk_moss']
+    if moss:   # moss / turf on some of the up-facing faces high on the rock (the chamfered rim stays bare)
+        zmin, prob, rnd = moss
+        mf = [f for f in bm.faces if f.normal.z > 0.86 and f.calc_center_median().z > zmin and f.calc_area() > bevel * bevel * 30 and rnd.random() < prob]
+        for f in mf:   # turf patch inset from the rim and raised a little
+            r = bmesh.ops.inset_individual(bm, faces=[f], thickness=bevel * rnd.uniform(1.5, 4.0), depth=0.025, use_even_offset=True)
+            f.material_index = 3
+            for g in r['faces']: g.material_index = 0
+    if wet is not None and min(v.co.z for v in bm.verts) < wet[1] + 0.05:
+        for z in wet:
+            bmesh.ops.bisect_plane(bm, geom=bm.verts[:] + bm.edges[:] + bm.faces[:], plane_co=Vector((0, 0, z)), plane_no=RK_WET)
+        for f in bm.faces:
+            d = f.calc_center_median().dot(RK_WET)
+            f.material_index = 1 if d < wet[0] else 2 if d < wet[1] else f.material_index
+    for e in bm.edges:
+        e.smooth = not (len(e.link_faces) == 2 and e.calc_face_angle(0.0) > math.radians(22))
+    bm.verts.index_update()
+    polys.append(([v.co.copy() for v in bm.verts], [[v.index for v in f.verts] for f in bm.faces]))
+    for i, m in enumerate(mats):
+        c = bm.copy()
+        bmesh.ops.delete(c, geom=[f for f in c.faces if f.material_index != i], context='FACES')
+        if c.faces: _hb_bm_obj(m, c, 'rock')
+        else: c.free()
+    bm.free()
+
+def _rk_outcrop(blocks, beds, mats, dip=0.2, az=0.0, bevel=0.05, gap=0.03, joints=(), wet=(0.12, 0.24), base=-0.3,
+                step=0.1, shift=(1.0, 1.0), seed=0, polys=None, chop=0.45, insets=(), inset=0.3, min_t=0.0, moss=None, taper=0.3, extra=6, lean=0.0, sides=4):
+    """blocks: [(centre, half-size, seed, rz)]; beds: bedding offsets along the dip normal (measured from the origin);
+    mats: material per layer (bottom first, cycled); joints: [(point, normal, layers or None)] vertical cracks; wet:
+    (wet line, barnacle line) heights or None; step: how far layers stick out or step back; shift scales it in x/y;
+    insets: per-layer recess in metres (soft beds weather back into notches; None = random); inset: block irregularity;
+    moss: (min height, share of up-facing faces) turned to moss; lean: how far each bed steps back (+Y) per metre of height."""
     n = Vector((math.sin(dip) * math.cos(az), math.sin(dip) * math.sin(az), math.cos(dip)))
-    for mat, r, loc, scale, seed, d0, d1 in layers:
-        planes = [((0, 0, base), (0, 0, -1))]
-        if d0 is not None: planes.append((n * d0, -n))
-        if d1 is not None: planes.append((n * d1, n))
-        _hb_rock_chunk(mat, r, loc, scale, seed, planes + list(cuts), sub=sub, jitter=0.22)  # sub 3 = 320 faces
+    rnd = random.Random(seed); polys = [] if polys is None else polys
+    for bi, (c, h, bs, rz) in enumerate(blocks):
+        src = _rk_block(c, h, bs, rz, inset, extra, taper, sides)
+        _rk_cut(src, (0, 0, base), (0, 0, -1))
+        ds = [-1e3] + list(beds) + [1e3]
+        for li in range(len(ds) - 1):
+            lay = src.copy()
+            if ds[li] > -1e2: _rk_cut(lay, n * (ds[li] + gap / 2), -n)
+            if ds[li + 1] < 1e2: _rk_cut(lay, n * (ds[li + 1] - gap / 2), n)
+            if len(lay.faces) < 4: lay.free(); continue
+            # strata stand out or step back: scale about the block axis and slide a little
+            ins = insets[li] if li < len(insets) and insets[li] is not None else (rnd.uniform(-step * 0.7, step) if li else 0.0)
+            k = 1.0 - ins / max(h[0], h[1])
+            off = Vector((rnd.uniform(-step, step) * shift[0], rnd.uniform(-step, step) * shift[1], 0)) if li else Vector()
+            if lean: off.y += lean * sum(v.co.z for v in lay.verts) / len(lay.verts)   # face recedes as it rises (+Y = back)
+            cv = Vector((c[0], c[1], 0))
+            for v in lay.verts: v.co = cv + Vector(((v.co.x - c[0]) * k, (v.co.y - c[1]) * k, v.co.z)) + off
+            for _ in range(sum(rnd.random() < chop for _ in range(2)) if li else 0):   # broken-off corners: irregular steps
+                a = rnd.uniform(0, math.tau); d = Vector((math.cos(a), math.sin(a), 0))
+                ctr = sum((v.co for v in lay.verts), Vector()) / len(lay.verts)
+                ext = max((v.co - ctr).dot(d) for v in lay.verts)
+                _rk_cut(lay, ctr + d * ext * rnd.uniform(0.5, 0.82), d + Vector((0, 0, rnd.uniform(-0.35, 0.6))))
+            if len(lay.faces) < 4: lay.free(); continue
+            pieces = [lay]
+            for jp, jn, jl in joints:
+                if jl is not None and li not in jl: continue
+                jn = Vector(jn).normalized(); nxt = []
+                for p in pieces:
+                    a = p.copy(); _rk_cut(a, Vector(jp) + jn * gap * 0.8, -jn)
+                    _rk_cut(p, Vector(jp) - jn * gap * 0.8, jn)
+                    for q in (p, a):
+                        if len(q.faces) >= 4: nxt.append(q)
+                        else: q.free()
+                pieces = nxt
+            for p in pieces: _rk_piece(p, mats[li % len(mats)], bevel, wet, polys, min_t, (moss[0], moss[1], rnd) if moss else None)
+        src.free()
+    return polys
+
+def _rk_bvh(polys):
+    from mathutils.bvhtree import BVHTree
+    vs, fs = [], []
+    for item in polys:
+        if not item: continue
+        v, f = item; o = len(vs); vs += v; fs += [[i + o for i in q] for q in f]
+    return BVHTree.FromPolygons(vs, fs)
+
+def _rk_hit(bvh, x, y, nz=0.72):
+    loc, nrm, _, _ = bvh.ray_cast(Vector((x, y, 50.0)), Vector((0, 0, -1)))
+    return loc if loc is not None and nrm.z > nz else None
+
+def _rk_tuft(p, h, seed, n=9, mat='rk_grass', dry=0.3):
+    """Static grass tuft: n tapering three-sided blades fanning out from p (closed, 4 tris each)."""
+    rnd = random.Random(seed)
+    for k in range(n):
+        a = k / n * math.tau + rnd.uniform(-0.4, 0.4); r = rnd.uniform(0.0, 0.08) * h / 0.3
+        b = Vector((p.x + math.cos(a) * r, p.y + math.sin(a) * r, p.z - 0.03))
+        lean = rnd.uniform(0.25, 0.65); hh = h * rnd.uniform(0.6, 1.15)
+        tip = b + Vector((math.cos(a) * hh * lean, math.sin(a) * hh * lean, hh))
+        w = 0.018 + 0.03 * h
+        base = [b + Vector((math.cos(a + q) * w, math.sin(a + q) * w, 0)) * (0.5 if q > 3 else 1) for q in (1.57, -1.57, 3.14)]
+        mesh('rk_grass_dry' if rnd.random() < dry else mat, base + [tip], [(0, 2, 1), (0, 1, 3), (1, 2, 3), (2, 0, 3)])
+
+def _rk_dress(polys, area, tufts, seed, h=0.28, zmin=0.3, shrubs=0):
+    """Scatter grass tufts and small shrubs on the up-facing ledges (ray cast from above)."""
+    bvh = _rk_bvh(polys); rnd = random.Random(seed); x0, x1, y0, y1 = area
+    def spots(k, nz):
+        out = []
+        for _ in range(k * 12):
+            if len(out) >= k: break
+            q = _rk_hit(bvh, rnd.uniform(x0, x1), rnd.uniform(y0, y1), nz)
+            if q is not None and q.z > zmin and all((q - o).length > 0.5 for o in out): out.append(q)
+        return out
+    for i, q in enumerate(spots(tufts, 0.75)): _rk_tuft(q, h * rnd.uniform(0.75, 1.2), seed * 7 + i)
+    for i, q in enumerate(spots(shrubs, 0.8)):
+        s = rnd.uniform(0.3, 0.42)
+        for j in range(2):
+            a = rnd.uniform(0, math.tau)
+            ico('rk_shrub', s * (1 - 0.3 * j), q + Vector((math.cos(a) * s * 0.6 * j, math.sin(a) * s * 0.6 * j, s * (0.3 + 0.25 * (1 - j)))), (1.25, 1.1, 0.8), 1, 0.3, seed + i * 5 + j, flat_bottom=-s * 0.45)
+        for j in range(2): _rk_tuft(q + Vector((math.cos(j * 3 + i) * s, math.sin(j * 3 + i) * s, 0)), h, seed * 11 + i * 3 + j, 6)
 
 @model('rock_a', '岩(A)', '自然')
 def rock_a():
-    cuts = [((1.15, 0.2, 0), (0.95, 0.15, 0.25)), ((-0.6, -0.8, 0), (-0.35, -0.9, 0.2))]
-    _hb_strata([('hb_rock_dark', 1.0, (0, 0, 0.3), (1.38, 1.08, 0.85), 1, None, 0.3),
-                ('rock', 1.0, (-0.08, 0.05, 0.45), (1.25, 1.0, 0.8), 2, 0.3, 0.78),
-                ('hb_rock_warm', 0.8, (-0.22, 0.05, 0.75), (1.1, 0.95, 0.75), 3, 0.78, None)], 0.32, 0.7, cuts=cuts)
-    _hb_rock_chunk('rock', 0.32, (1.05, -0.75, 0.05), (1.2, 1, 0.8), 9, [((0, 0, -0.3), (0, 0, -1))], sub=1, jitter=0.25)
-    ico('moss', 0.25, (-0.45, 0.25, 1.32), (1.6, 1.1, 0.22), 1, 0.3, 4)
+    """Chunky tilted block of bedded tuff: thick hard beds over a weathered-back soft bed, a vertical joint, a fallen slab."""
+    polys = _rk_outcrop([((0.0, 0.05, 0.5), (1.1, 0.92, 0.85), 4, 0.35)], [0.12, 0.3, 0.82, 1.0],
+                        ['rk_tuff_dark', 'rk_tuff_dark', 'rk_tuff', 'rk_tuff_grey', 'rk_tuff'], dip=0.32, az=0.7, bevel=0.04,
+                        joints=[((0.3, 0.0, 0), (1.0, 0.35, 0), (2, 3, 4))], step=0.08, gap=0.02, seed=1,
+                        insets=(0, 0.13, -0.03, 0.1, None), inset=0.36, min_t=0.1, moss=(0.9, 0.5))
+    _rk_outcrop([((1.1, -0.78, 0.0), (0.42, 0.32, 0.28), 9, -0.5)], [0.05], ['rk_tuff_dark', 'rk_tuff'], dip=0.5, az=2.4,
+                bevel=0.03, seed=2, polys=polys)
+    _rk_dress(polys, (-1.3, 1.3, -1.1, 1.1), 5, 3, h=0.24)
 
 @model('rock_b', '岩(B・平たい)', '自然')
 def rock_b():
-    cuts = [((1.55, 0, 0), (1, 0.1, 0.15)), ((-1.3, 0.6, 0), (-0.8, 0.6, 0.1))]
-    _hb_strata([('hb_rock_dark', 1.0, (0, 0, 0.15), (1.7, 1.3, 0.5), 2, None, 0.18),
-                ('rock', 1.0, (-0.12, -0.05, 0.25), (1.5, 1.15, 0.45), 5, 0.18, 0.46),
-                ('hb_rock_warm', 0.8, (-0.35, 0.05, 0.45), (1.25, 1.05, 0.4), 7, 0.46, None)], 0.12, 2.2, cuts=cuts)
-    _hb_rock_chunk('rock', 0.6, (0.95, 0.55, 0.2), (1, 1, 0.8), 4, [((0, 0, -0.3), (0, 0, -1)), ((0.95, 0.55, 0.55), (0.2, 0, 1))], sub=3, jitter=0.25)
-    ico('moss', 0.2, (-0.6, -0.1, 0.76), (1.8, 1.2, 0.18), 1, 0.3, 6)
+    """Low tabular shelf: thin, nearly flat beds stepping down like a wave-cut platform, cut by two joint sets."""
+    polys = _rk_outcrop([((0.0, 0.0, 0.2), (1.62, 1.38, 0.56), 7, 0.15)], [-0.02, 0.2, 0.3],
+                        ['rk_tuff_dark', 'rk_tuff_grey', 'rk_tuff_dark', 'rk_tuff'], dip=0.1, az=2.2, bevel=0.04, gap=0.02,
+                        joints=[((0.45, 0, 0), (1, 0.25, 0), None), ((0, -0.35, 0), (0.15, 1, 0), (2, 3))], step=0.14, seed=5,
+                        insets=(0, None, 0.12, 0.2), min_t=0.06, moss=(0.35, 0.35))
+    _rk_dress(polys, (-1.6, 1.6, -1.4, 1.4), 5, 6, h=0.2)
 
 @model('rock_c', '岩(C・海岸の大岩)', '自然')
 def rock_c():
-    dip, az = 0.55, -0.4
-    cuts = [((2.0, -0.3, 0), (1, -0.25, 0.1)), ((-1.2, -1.6, 0), (-0.4, -1, 0.05))]
-    _hb_strata([('hb_rock_wet', 2.0, (0, 0, 1.0), (1.25, 1.05, 1.0), 3, None, 0.35),
-                ('hb_rock_dark', 2.0, (-0.1, 0.05, 1.3), (1.15, 1.0, 1.0), 13, 0.35, 1.5),
-                ('rock', 1.8, (-0.25, 0.1, 1.6), (1.1, 0.95, 1.0), 23, 1.5, 2.6),
-                ('hb_rock_warm', 1.4, (-0.5, 0.15, 2.3), (1.1, 0.95, 0.9), 33, 2.6, None)], dip, az, base=-0.3, cuts=cuts)
-    _hb_rock_chunk('hb_rock_dark', 1.3, (1.85, 0.7, 0.55), (1, 1, 0.8), 5, [((0, 0, -0.3), (0, 0, -1)), ((1.85, 0.7, 1.15), (0.3, 0.1, 1))], sub=3, jitter=0.25)
-    _hb_rock_chunk('hb_rock_wet', 0.9, (-1.65, -0.85, 0.35), (1, 1, 0.8), 6, [((0, 0, -0.3), (0, 0, -1))], sub=2, jitter=0.25)
-    ico('moss', 0.5, (-0.7, 0.3, 3.75), (1.6, 1.1, 0.2), 1, 0.3, 8)
+    """Big shore outcrop: steeply dipping strata with overhanging upper beds, a split-off buttress and a fallen block."""
+    polys = _rk_outcrop([((-0.25, 0.05, 1.55), (2.35, 1.85, 2.15), 13, -0.25), ((1.85, 0.55, 0.6), (1.15, 1.1, 1.2), 17, 0.4)],
+                        [0.5, 1.45, 1.75, 2.75, 3.0], ['rk_tuff_dark', 'rk_tuff_grey', 'rk_tuff_dark', 'rk_tuff', 'rk_tuff_dark', 'rk_tuff_grey'],
+                        dip=0.42, az=-0.4, bevel=0.06, gap=0.03, wet=(0.3, 0.45), insets=(0, None, 0.12, None, 0.1, -0.06),
+                        joints=[((-0.6, 0, 0), (1, -0.3, 0), (1, 3, 5))], step=0.2, seed=8, inset=0.36, min_t=0.25, moss=(2.0, 0.5))
+    _rk_outcrop([((-1.85, -1.35, 0.15), (0.65, 0.5, 0.48), 21, 0.6)], [0.25], ['rk_tuff_dark', 'rk_tuff_grey'], dip=0.6, az=1.0,
+                bevel=0.05, wet=(0.3, 0.45), seed=9, polys=polys)
+    _rk_dress(polys, (-2.6, 2.8, -2.0, 2.0), 6, 10, h=0.3, zmin=1.2, shrubs=1)
+
+@model('rock_cliff', '崖の岩', '自然')
+def rock_cliff():
+    """Cliff-face section ~8 m wide x 6 m tall x 4 m deep, face towards -Y (game +Z). Four jointed columns of bedded tuff
+    with ragged tops, ledges and overhangs; the ends taper so pieces placed side by side (about 7 m apart, random yaw
+    within +-0.3 rad, scale 0.8-1.4) read as one continuous rock face. Sunk ~0.6 m below z = 0."""
+    beds = [0.3, 0.55, 2.5, 2.75]
+    mats = ['rk_tuff_dark', 'rk_tuff_dark', 'rk_tuff_grey', 'rk_tuff_dark', 'rk_tuff']
+    polys = []
+    kw = dict(bevel=0.06, gap=0.008, wet=None, base=-0.6, step=0.1, shift=(0.4, 1.0), chop=0.35, inset=0.25, taper=0.1, extra=8, sides=6, min_t=0.22,
+              moss=(2.5, 0.5), lean=0.12, polys=polys)
+    # four full-height fault blocks of different width, height and set-back, each with its own slight tilt and a small offset
+    # of the beds; a weathered-back notch near the foot, an overhanging hard bed above the middle and a ragged, broken top
+    for (x, y), hx, hy, top, sd, rz, dip, az, dz in [((-3.05, 0.15), 1.1, 1.55, 4.4, 31, 0.32, 0.16, 0.4, 0.15), ((-1.15, -0.35), 1.2, 1.7, 5.8, 32, -0.18, 0.1, 0.2, 0.0),
+                                                  ((1.1, 0.05), 1.05, 1.75, 5.1, 33, 0.26, 0.14, 2.8, -0.2), ((3.0, -0.15), 1.15, 1.55, 3.9, 34, -0.3, 0.18, 3.4, 0.1)]:
+        _rk_outcrop([((x, y - 0.2, (top - 0.6) / 2), (hx, hy, (top + 0.6) / 2), sd, rz)], [b + dz for b in beds], mats, dip=dip, az=az, seed=sd + 9,
+                    insets=(-0.1, 0.03, None, 0.1, -0.05), **kw)
+    _rk_dress(polys, (-4.0, 4.0, -2.0, 2.0), 10, 41, h=0.34, zmin=2.0, shrubs=3)
 
 # ================================================================= people and animals (limbs are separate nodes)
 def person(cloth_top, cloth_bottom, hat=None, h=1.0, apron=False, boots=False, backpack=False, hair='hair', prefix='p', skirt=False):
@@ -3832,88 +4401,323 @@ def shiba():
 PALETTE.update({'enz_teak': P((0.5, 0.32, 0.17), 0.7), 'enz_sail': P((0.95, 0.94, 0.9), 0.85), 'enz_tb_brown': P((0.26, 0.15, 0.07), 0.85),
                 'enz_tb_dark': P((0.09, 0.06, 0.04), 0.85), 'enz_tb_light': P((0.5, 0.36, 0.2), 0.85), 'enz_board_blue': P((0.1, 0.45, 0.8), 0.35),
                 'enz_board_white': P((0.93, 0.93, 0.9), 0.35), 'enz_canvas_blue': P((0.05, 0.25, 0.6), 0.9)})
+PALETTE.update({
+    'en_tb_head': P((0.42, 0.31, 0.19), 0.85), 'en_tb_band': P((0.46, 0.32, 0.17), 0.85), 'en_tb_remex': P((0.19, 0.16, 0.13), 0.85),
+    'en_para_red': P((0.82, 0.1, 0.08), 0.85), 'en_para_white': P((0.92, 0.91, 0.86), 0.85), 'en_towel': P((0.04, 0.45, 0.52), 0.95),
+    'en_cool_blue': P((0.08, 0.32, 0.72), 0.45), 'en_sandal': P((0.95, 0.42, 0.12), 0.6),
+    'en_board_coral': P((0.95, 0.35, 0.25), 0.35), 'en_board_mint': P((0.4, 0.82, 0.7), 0.35), 'en_stringer': P((0.42, 0.26, 0.12), 0.5),
+    'en_pad': P((0.08, 0.22, 0.16), 0.95), 'en_leash': P((0.03, 0.03, 0.035), 0.45),
+    'en_lacquer': P((0.32, 0.03, 0.02), 0.3), 'en_shirasu': P((0.97, 0.94, 0.84), 0.75), 'en_senbei': P((0.82, 0.5, 0.2), 0.8),
+    'en_tako': P((0.72, 0.1, 0.12), 0.6), 'en_kanban': P((0.95, 0.94, 0.9), 0.75),
+})
 
+
+# --- shared helpers of this block (prefix _en_)
+def _en_skin(rows, matfn, wrap=True, caps=None):
+    """Surface through rows of points (all rows the same length); each quad gets the material matfn(i, j, centre).
+    wrap: the columns close into a ring. caps: (mat_first, mat_last) close the first / last row with an n-gon."""
+    R, C = len(rows), len(rows[0]); groups = {}
+    def add(mat, pts):
+        g = groups.setdefault(mat, ([], [])); i0 = len(g[0]); g[0].extend(pts); g[1].append(tuple(range(i0, i0 + len(pts))))
+    for i in range(R - 1):
+        for j in range(C if wrap else C - 1):
+            j2 = (j + 1) % C
+            q = [Vector(rows[i][j]), Vector(rows[i][j2]), Vector(rows[i + 1][j2]), Vector(rows[i + 1][j])]
+            u = []
+            for p in q:
+                if not any((p - o).length < 1e-6 for o in u): u.append(p)
+            if len(u) >= 3: add(matfn(i, j, sum(q, Vector()) / 4), u)
+    if caps:
+        if caps[0]: add(caps[0], [Vector(p) for p in reversed(rows[0])])
+        if caps[1]: add(caps[1], [Vector(p) for p in rows[-1]])
+    return [mesh(m, v, f) for m, (v, f) in groups.items()]
+
+def _en_sheet(rows, mat, t=0.01, wrap=False, rim=True):
+    """Thin two-sided sheet (sails, canopies, flaps) through a grid of points, t thick. mat: name or fn(i, j, centre)."""
+    R, C = len(rows), len(rows[0]); Pp = [[Vector(p) for p in r] for r in rows]
+    mf = mat if callable(mat) else (lambda i, j, c: mat)
+    def nrm(i, j):
+        a = Pp[min(R - 1, i + 1)][j] - Pp[max(0, i - 1)][j]
+        b = Pp[i][(j + 1) % C if wrap else min(C - 1, j + 1)] - Pp[i][(j - 1) % C if wrap else max(0, j - 1)]
+        n = a.cross(b); return n.normalized() if n.length > 1e-9 else Vector((0, 0, 1))
+    N = [[nrm(i, j) for j in range(C)] for i in range(R)]
+    top = [[Pp[i][j] + N[i][j] * t / 2 for j in range(C)] for i in range(R)]
+    bot = [[Pp[i][j] - N[i][j] * t / 2 for j in range(C)] for i in range(R)]
+    _en_skin(top, mf, wrap)
+    _en_skin([list(reversed(r)) for r in bot], lambda i, j, c: mf(i, (C - 2 - j) % C if wrap else C - 2 - j, c), wrap)
+    if rim:
+        for i in (0, R - 1): _en_skin([top[i], bot[i]], lambda a, b, c, i=i: mf(min(i, R - 2), min(b, C - 2), c), wrap)
+        if not wrap:
+            for j in (0, C - 1): _en_skin([[top[i][j] for i in range(R)], [bot[i][j] for i in range(R)]], lambda a, b, c, j=j: mf(min(b, R - 2), min(j, C - 2), c), False)
+
+def _en_plate(mat, pts, t=0.01, c=None):
+    """Flat-ish plate from an outline (fan around c, default the centroid), t thick along the outline's normal."""
+    Pp = [Vector(p) for p in pts]; k = len(Pp)
+    c = Vector(c) if c is not None else sum(Pp, Vector()) / k
+    n = Vector()
+    for i in range(k): n += (Pp[i] - c).cross(Pp[(i + 1) % k] - c)
+    n = n.normalized() * t / 2
+    v = [p + n for p in Pp] + [p - n for p in Pp] + [c + n, c - n]
+    f = [(i, (i + 1) % k, 2 * k) for i in range(k)] + [(k + (i + 1) % k, k + i, 2 * k + 1) for i in range(k)]
+    f += [(i, k + i, k + (i + 1) % k, (i + 1) % k) for i in range(k)]
+    return mesh(mat, v, f)
+
+def _en_lerp_table(tab, x, col):
+    """Linear interpolation in a table of rows sorted by row[0]."""
+    for a, b in zip(tab, tab[1:]):
+        if x <= b[0]:
+            k = (x - a[0]) / (b[0] - a[0]); return a[col] + (b[col] - a[col]) * k
+    return tab[-1][col]
+
+
+# ----------------------------------------------------------------- Sea Candle
 @model('sea_candle', '展望灯台(シーキャンドル風)', '灯台・展望台')
 def sea_candle():
-    # observation lighthouse in the spirit of Enoshima's Sea Candle: a slim white core wrapped in a twisting lattice,
-    # a glazed observation deck, an open roof deck and the lantern on top. Part: sea_candle_lamp (turns).
-    cyl('concrete', 5.4, 0.4, (0, 0, 0), 24)                                     # podium
-    cyl('plaster_white', 4.6, 3.6, (0, 0, 0.4), 24)                              # entrance pavilion
-    for k in range(8):
-        a = k / 8 * math.tau
-        with xf((math.cos(a) * 4.62, math.sin(a) * 4.62, 0.4), rz=a + math.pi / 2): box('glass', (2.6, 0.06, 2.6), (0, 0, 0.3))
-    cyl('white', 4.9, 0.25, (0, 0, 4.0), 24)
-    cyl('plaster_white', 1.35, 29.0, (0, 0, 4.2), 16, r2=1.2)                    # core
-    # twisting lattice: 10 helical members and rings, wider at the bottom
-    N, H0, H1 = 10, 4.2, 29.5
-    for k in range(N):
-        pts = []
-        for j in range(13):
-            t = j / 12; z = H0 + (H1 - H0) * t; r = 3.4 - 0.9 * t; a = k / N * math.tau + t * 1.6
-            pts.append((math.cos(a) * r, math.sin(a) * r, z))
-        _pv_tube('white', pts, 0.12, 5, cap=False)
-    for j in range(7):
-        t = j / 6; torus('white', 3.4 - 0.9 * t, 0.09, (0, 0, H0 + (H1 - H0) * t), seg=24, rseg=4)
-    # glazed observation deck and open roof deck
-    cyl('white', 4.4, 0.35, (0, 0, 29.4), 24)
-    cyl('glass', 4.1, 2.8, (0, 0, 29.75), 24)
+    # observation lighthouse in the spirit of Enoshima's Sea Candle: a slim white core with a spiral stair, wrapped in
+    # a dense twisting lattice that flares out under a glazed observation deck; an open roof deck with railings,
+    # a lattice crown around the lantern, and a round glazed podium building. Part: sea_candle_lamp (turns).
+    # podium: stepped granite plinth, glazed drum with mullions, cornice, roof terrace with railing, entrance canopy
+    cyl('granite', 5.4, 0.18, (0, 0, 0), 32); cyl('granite', 5.15, 0.17, (0, 0, 0.18), 32)
+    cyl('glass', 4.6, 2.9, (0, 0, 0.35), 24, cap=False)
+    cyl('plaster_white', 4.5, 2.9, (0, 0, 0.35), 24)
+    for k in range(24):
+        a = (k + 0.5) / 24 * math.tau
+        with xf((math.cos(a) * 4.63, math.sin(a) * 4.63, 0.35), rz=a): box('white', (0.08, 0.12, 2.9), (0, 0, 0))
+    cyl('white', 4.8, 0.55, (0, 0, 3.25), 32)
+    cyl('concrete', 4.65, 0.06, (0, 0, 3.8), 32)
+    torus('alu', 4.62, 0.035, (0, 0, 4.85), seg=32, rseg=4)
+    for k in range(24):
+        a = k / 24 * math.tau; rod('alu', (math.cos(a) * 4.62, math.sin(a) * 4.62, 3.86), (math.cos(a) * 4.62, math.sin(a) * 4.62, 4.85), 0.025, 4)
+    with xf((0, -4.6, 0)):                                                       # entrance canopy and doors (front = -Y)
+        box('white', (3.2, 1.1, 0.16), (0, -0.35, 2.75))
+        for sx in (-1, 1): cyl('white', 0.07, 2.4, (sx * 1.45, -0.8, 0.35), 8)
+        box('window_lit', (1.8, 0.06, 2.1), (0, -0.07, 0.35))
+        box('white', (0.08, 0.1, 2.1), (0, -0.1, 0.35))
+    # core (elevator shaft) with a glazed lift strip
+    cyl('plaster_white', 1.3, 25.0, (0, 0, 3.85), 16, r2=1.15)
+    for sy in (-1, 1): box('glass', (0.45, 0.06, 24.0), (0, sy * 1.23, 4.3), rot=(0, 0, 0))
+    # spiral stair around the core: a helical flight with an outer stringer and a handrail
+    z0, z1, pitch, n_per = 4.0, 28.8, 3.1, 12
+    turns = (z1 - z0) / pitch; ns = int(turns * n_per)
+    flight, rail = [], []
+    for i in range(ns + 1):
+        a = i / n_per * math.tau; z = z0 + (z1 - z0) * i / ns; c, s = math.cos(a), math.sin(a)
+        flight.append([(c * 1.32, s * 1.32, z), (c * 2.05, s * 2.05, z), (c * 2.05, s * 2.05, z - 0.22), (c * 1.32, s * 1.32, z - 0.12)])
+        rail.append((c * 2.02, s * 2.02, z + 0.95))
+    loft('metal', flight, closed=True, cap=True)
+    _pv_tube('alu', rail, 0.035, 3, cap=False)
+    for i in range(0, ns + 1, 3):
+        a = i / n_per * math.tau; z = z0 + (z1 - z0) * i / ns
+        rod('alu', (math.cos(a) * 2.02, math.sin(a) * 2.02, z), (math.cos(a) * 2.02, math.sin(a) * 2.02, z + 0.95), 0.018, 3)
+    # twisting lattice: two families of helical members crossing each other, with ring beams
+    H0, H1 = 3.85, 29.0
+    R = lambda t: 2.4 + 0.85 * (1 - t) ** 2.4 + 1.6 * t ** 7
+    N, TW, NP = 14, 1.9, 12
+    for fam in (1, -1):
+        for k in range(N):
+            pts = []
+            for j in range(NP + 1):
+                t = j / NP; a = k / N * math.tau + fam * t * TW
+                pts.append((math.cos(a) * R(t), math.sin(a) * R(t), H0 + (H1 - H0) * t))
+            _pv_tube('white', pts, 0.085, 4, cap=False)
+    for j in range(1, 9):
+        t = j / 9; torus('white', R(t), 0.07, (0, 0, H0 + (H1 - H0) * t), seg=28, rseg=3)
+    torus('white', R(0) + 0.05, 0.12, (0, 0, H0 + 0.05), seg=32, rseg=4)
+    # glazed observation deck: soffit cone, floor, glass drum with mullions, roof
+    cyl('white', 2.7, 0.8, (0, 0, 28.6), 24, r2=4.45)
+    cyl('white', 4.45, 0.3, (0, 0, 29.4), 32)
+    cyl('glass', 4.15, 2.6, (0, 0, 29.7), 32, cap=False)
+    cyl('plaster_white', 4.0, 2.6, (0, 0, 29.7), 16, cap=False)
+    for k in range(20):
+        a = k / 20 * math.tau
+        with xf((math.cos(a) * 4.17, math.sin(a) * 4.17, 29.7), rz=a): box('white', (0.06, 0.1, 2.6), (0, 0, 0))
+    cyl('white', 4.6, 0.32, (0, 0, 32.3), 32)
+    cyl('white', 4.62, 0.08, (0, 0, 29.75 + 1.25), 32, cap=False)               # transom band
+    # open-air deck: railing (posts, two rails), central drum
+    for zz in (33.0, 33.55): torus('alu', 4.45, 0.03 if zz < 33.4 else 0.04, (0, 0, zz), seg=32, rseg=4)
+    for k in range(24):
+        a = k / 24 * math.tau; rod('alu', (math.cos(a) * 4.45, math.sin(a) * 4.45, 32.62), (math.cos(a) * 4.45, math.sin(a) * 4.45, 33.55), 0.025, 4)
+    cyl('plaster_white', 1.55, 1.85, (0, 0, 32.62), 16)
+    cyl('white', 1.7, 0.12, (0, 0, 34.45), 16)
+    # lattice crown rising from the deck edge around the lantern
     for k in range(12):
-        a = k / 12 * math.tau; rod('white', (math.cos(a) * 4.12, math.sin(a) * 4.12, 29.75), (math.cos(a) * 4.12, math.sin(a) * 4.12, 32.55), 0.06, 4)
-    cyl('white', 4.6, 0.3, (0, 0, 32.55), 24)
-    torus('alu', 4.45, 0.04, (0, 0, 33.9), seg=32, rseg=4)
-    for k in range(16):
-        a = k / 16 * math.tau; rod('alu', (math.cos(a) * 4.45, math.sin(a) * 4.45, 32.85), (math.cos(a) * 4.45, math.sin(a) * 4.45, 33.9), 0.03, 4)
-    cyl('plaster_white', 1.5, 1.6, (0, 0, 32.85), 16)
-    # lantern
-    cyl('white', 1.35, 0.25, (0, 0, 34.45), 16)
+        pts = []
+        for j in range(6):
+            t = j / 5; a = k / 12 * math.tau + t * 0.7
+            r = 4.3 - 2.6 * math.sin(t * math.pi / 2) ** 1.3
+            pts.append((math.cos(a) * r, math.sin(a) * r, 32.62 + 4.1 * t))
+        _pv_tube('white', pts, 0.07, 4, cap=False)
+    torus('white', 1.72, 0.06, (0, 0, 36.72), seg=20, rseg=3)
+    # lantern (turns)
     part('sea_candle_lamp', (0, 0, 35.6))
     cyl('glass', 1.15, 2.0, (0, 0, 34.7), 16)
+    cyl('steel_dark', 0.35, 0.3, (0, 0, 34.7), 8)
     ico('lamp', 0.5, (0, 0, 35.6), (1, 1, 1.2), 2)
-    box('lamp', (0.12, 2.0, 0.6), (0, 0, 35.3))
+    for sy in (-1, 1): cyl('lamp', 0.32, 0.12, (0, sy * 0.48, 35.55), 10, rot=(math.pi / 2, 0, 0))
     part(None)
     for k in range(8):
-        a = k / 8 * math.tau; rod('white', (math.cos(a) * 1.16, math.sin(a) * 1.16, 34.7), (math.cos(a) * 1.16, math.sin(a) * 1.16, 36.7), 0.035, 4)
+        a = (k + 0.5) / 8 * math.tau; rod('white', (math.cos(a) * 1.17, math.sin(a) * 1.17, 34.7), (math.cos(a) * 1.17, math.sin(a) * 1.17, 36.7), 0.035, 4)
     ico('white', 1.25, (0, 0, 36.75), (1, 1, 0.45), 2, flat_bottom=0)
     rod('steel_dark', (0, 0, 37.2), (0, 0, 39.6), 0.05, 5)
     ico('beacon_red', 0.12, (0, 0, 39.7), sub=1)
 
+
+# ----------------------------------------------------------------- yachts
 def _enz_yacht(sails):
     L, B, D = 9.0, 3.0, 1.15
-    rings = []
-    for i in range(17):
-        t = i / 16; y = -L / 2 + L * t                                            # bow (-Y) .. stern (+Y)
-        hb = B / 2 * (min(1.0, (t / 0.55)) ** 0.55 if t < 0.55 else 1.0 - 0.12 * (t - 0.55) / 0.45)
-        hb = max(0.03, hb); sh = D + 0.25 * (1 - t) ** 2
-        rings.append([(-hb, y, sh), (-hb * 0.97, y, 0.35), (-hb * 0.55, y, -0.1), (0, y, -0.28 * (0.3 + 0.7 * math.sin(math.pi * min(1, t * 1.1)))),
-                      (hb * 0.55, y, -0.1), (hb * 0.97, y, 0.35), (hb, y, sh)])
-    loft('white', rings, closed=False, cap=False)
-    deck = [[r[0], ((r[0][0] + r[6][0]) / 2, r[0][1], r[0][2] + 0.06), r[6]] for r in rings]
-    loft('enz_teak', deck, closed=False, cap=False)
-    loft('boat_blue', [[(r[1][0] * 1.005, r[1][1], 0.33), (r[1][0] * 1.005, r[1][1], 0.42)] for r in rings], closed=False, cap=False)
-    loft('boat_blue', [[(r[5][0] * 1.005, r[5][1], 0.42), (r[5][0] * 1.005, r[5][1], 0.33)] for r in rings], closed=False, cap=False)
-    box('steel_dark', (0.18, 1.2, 1.4), (0, 0.3, -1.6))                           # fin keel
-    box('steel_dark', (0.4, 1.4, 0.3), (0, 0.4, -1.75))
-    box('steel_dark', (0.08, 0.6, 1.0), (0, L / 2 - 0.6, -0.9))                   # rudder
-    # coachroof with dark windows, cockpit, rails
-    box('white', (1.9, 3.2, 0.55), (0, -0.4, D + 0.05)); box('white', (1.7, 2.9, 0.12), (0, -0.4, D + 0.6))
-    for sx in (-1, 1): box('glass', (0.02, 2.0, 0.22), (sx * 0.955, -0.5, D + 0.22))
-    box('black', (1.6, 1.8, 0.4), (0, 2.6, D - 0.3))                              # cockpit well
+    NS = 19
+    def hb_at(t): return max(0.035, B / 2 * (math.sin(min(1.0, t / 0.58) * math.pi / 2) ** 0.75 if t < 0.58 else 1.0 - 0.14 * ((t - 0.58) / 0.42) ** 1.6))
+    def sh_at(t): return D + 0.3 * (1 - t) ** 2.2 - 0.04 * t
+    def dk_at(t): return -0.16 - 0.3 * math.sin(math.pi * min(1.0, 0.08 + t * 0.95)) ** 0.8
+    def ov_at(t): return 0.95 * (1 - t) ** 3.5 - 0.28 * t ** 8                 # bow overhang / transom rake
+    def t_at(y): return min(1.0, max(0.0, (y + L / 2) / L))
+    def deck_z(y): return sh_at(t_at(y)) + 0.05
+    rows, deck = [], []
+    for i in range(NS + 1):
+        t = 0.015 + 0.985 * i / NS; y0 = -L / 2 + L * t
+        hb, sh, dk = hb_at(t), sh_at(t), dk_at(t)
+        half = [(hb, sh), (hb, sh - 0.1), (hb * 0.99, 0.55), (hb * 0.975, 0.17), (hb * 0.965, 0.07), (hb * 0.9, dk * 0.35), (hb * 0.6, dk * 0.82), (0.0, dk)]
+        yy = lambda z: y0 + ov_at(t) * (sh - z) / (sh - dk)
+        ring = [(-x, yy(z), z) for x, z in half] + [(x, yy(z), z) for x, z in reversed(half[:-1])]
+        rows.append(ring)
+        deck.append([(-hb, y0, sh), (-hb * 0.88, y0, sh + 0.03), (-hb * 0.45, y0, sh + 0.055), (0, y0, sh + 0.06),
+                     (hb * 0.45, y0, sh + 0.055), (hb * 0.88, y0, sh + 0.03), (hb, y0, sh)])
+    band = ['boat_blue', 'white', 'white', 'boat_blue', 'antifoul', 'antifoul', 'antifoul']
+    _en_skin(rows, lambda i, j, c: band[j] if j < 7 else band[13 - j], wrap=False, caps=('white', 'white'))
+    _en_skin(deck, lambda i, j, c: 'white' if j in (0, 5) else 'enz_teak', wrap=False)
+    for sx in (-1, 1):                                                            # toe rails
+        _pv_tube('enz_teak', [(sx * hb_at(0.015 + 0.985 * i / NS) * 0.985, -L / 2 + L * (0.015 + 0.985 * i / NS), sh_at(0.015 + 0.985 * i / NS) + 0.05)
+                              for i in range(1, NS + 1)], 0.03, 4, cap=True)
+    T = lambda y: (y + L / 2) / L
+    # keel with a bulb, spade rudder
+    prism('steel_dark', [(-0.55, -0.3), (0.65, -0.3), (0.45, -1.5), (-0.25, -1.55)], 0.16, loc=(0, 0.3, 0), axis='X')
+    ico('steel_dark', 0.5, (0, 0.2, -1.6), (0.24, 1.2, 0.2), 2)
+    prism('steel_dark', [(-0.25, -0.15), (0.2, -0.15), (0.15, -1.05), (-0.15, -1.0)], 0.07, loc=(0, L / 2 - 0.85, 0), axis='X')
+    # coachroof: sloped sides, rounded front, windows and portholes, hatches
+    zc = deck_z(-1.0) - 0.02
+    plan = [(-0.55, -2.75), (-0.85, -2.4), (-1.0, -1.7), (-1.02, 0.95), (1.02, 0.95), (1.0, -1.7), (0.85, -2.4), (0.55, -2.75)]
+    top = [(x * 0.9, y + (0.22 if y < -2 else 0.12 if y < -1.6 else 0), zc + 0.5) for x, y in plan]
+    loft('white', [[(x, y, zc) for x, y in plan], top], closed=True, cap=True)
+    ang = math.atan2(0.1, 0.5)
     for sx in (-1, 1):
-        for y in (-3.6, -1.8, 0.0, 1.8, 3.6): rod('alu', (sx * 1.3 * (0.6 if y < -3 else 1), y, D + 0.1), (sx * 1.3 * (0.6 if y < -3 else 1), y, D + 0.7), 0.02, 4)
-        rod('alu', (sx * 0.8, -3.6, D + 0.68), (sx * 1.3, 3.6, D + 0.68), 0.015, 3)
-    # rig: mast, boom, stays
-    mast = (0, -1.2, D + 0.6)
-    rod('alu', mast, (0, -1.2, D + 11.5), 0.07, 8)
-    rod('alu', (0, -1.15, D + 1.6), (0, 2.8, D + 1.75), 0.05, 6)                  # boom
-    rod('steel_dark', (0, -L / 2 + 0.1, D + 0.5), (0, -1.2, D + 11.0), 0.012, 3)  # forestay
-    rod('steel_dark', (0, L / 2 - 0.1, D + 0.4), (0, -1.2, D + 11.3), 0.012, 3)   # backstay
-    for sx in (-1, 1): rod('steel_dark', (sx * 1.35, -1.0, D + 0.1), (0, -1.2, D + 9.0), 0.01, 3)
-    if sails:
-        mesh('enz_sail', [(0, -1.12, D + 1.8), (0, -1.12, D + 11.2), (0.0, 2.7, D + 1.9)], [(0, 1, 2), (0, 2, 1)])
-        mesh('enz_sail', [(0, -L / 2 + 0.3, D + 0.7), (0, -1.3, D + 10.5), (0.35, 0.6, D + 0.8)], [(0, 1, 2), (0, 2, 1)])
+        _pv_rbox('glass', (0.02, 1.35, 0.17), (sx * 0.965, -0.85, zc + 0.2), 0.03, rot=(0, -sx * ang, 0))
+        _pv_rbox('glass', (0.02, 0.35, 0.14), (sx * 0.955, 0.45, zc + 0.21), 0.03, rot=(0, -sx * ang, 0))
+        for y in (-1.6, 1.0, 1.6):                                                # hull portholes
+            hb = hb_at(T(y)); cyl('glass', 0.06, 0.03, (sx * (hb + 0.0), y, sh_at(T(y)) - 0.32), 10, rot=(0, sx * math.pi / 2, 0))
+    _pv_rbox('white', (0.62, 0.62, 0.08), (0, -2.0, zc + 0.5), 0.03); box('glass', (0.5, 0.5, 0.02), (0, -2.0, zc + 0.58))
+    _pv_rbox('white', (0.45, 0.45, 0.07), (0, -0.35, zc + 0.5), 0.03); box('glass', (0.36, 0.36, 0.02), (0, -0.35, zc + 0.57))
+    _pv_rbox('white', (0.75, 0.8, 0.1), (0, 0.45, zc + 0.5), 0.03)                # companionway slide + washboards
+    box('enz_teak', (0.6, 0.04, 0.42), (0, 0.97, zc + 0.08))
+    # spray hood (dodger)
+    rws = []
+    for y, h in ((0.3, 0.04), (0.65, 0.42), (0.95, 0.5)):
+        rws.append([(math.sin(a) * 0.95, y, zc + 0.5 + h * math.cos(a) ** 0.6) for a in (math.pi / 2 * (k / 4 - 1) * 1.0 for k in range(9))])
+    _en_sheet(rws, 'enz_canvas_blue', 0.02)
+    # cockpit: coamings, benches, sole, wheel on a pedestal with compass, winches, traveller
+    zk = deck_z(2.5)
+    for sx in (-1, 1):
+        box('white', (0.08, 3.0, 0.38), (sx * 0.98, 2.45, zk - 0.05))
+        box('enz_teak', (0.42, 2.7, 0.06), (sx * 0.73, 2.5, zk + 0.12))
+        box('white', (0.4, 2.7, 0.18), (sx * 0.73, 2.5, zk - 0.06))
+        for y, z in ((1.25, zk + 0.33), (0.6, zc + 0.5)):
+            _pv_lathe('pv_chrome', [(0.07, 0), (0.075, 0.05), (0.06, 0.12), (0.075, 0.14), (0.04, 0.17), (0, 0.18)], (sx * (0.98 if y > 1 else 0.6), y, z), seg=10)
+    box('black', (1.1, 2.6, 0.03), (0, 2.5, zk - 0.01))
+    box('enz_teak', (1.1, 2.6, 0.02), (0, 2.5, zk + 0.01))
+    box('white', (1.96, 0.08, 0.3), (0, 1.0, zk - 0.05))
+    rod('alu', (-0.9, 3.0, zk + 0.2), (0.9, 3.0, zk + 0.2), 0.02, 4)              # main-sheet traveller
+    cyl('white', 0.09, 0.75, (0, 3.45, zk), 10, r2=0.06)                         # pedestal
+    ico('glass', 0.1, (0, 3.42, zk + 0.82), (1, 1, 0.6), 1)
+    with xf((0, 3.62, zk + 0.85), rx=math.pi / 2):
+        torus('pv_chrome', 0.45, 0.022, (0, 0, 0), seg=18, rseg=4)
+        for k in range(6):
+            a = k / 6 * math.tau; rod('pv_chrome', (0, 0, 0), (math.cos(a) * 0.44, math.sin(a) * 0.44, 0), 0.012, 3)
+        cyl('pv_chrome', 0.05, 0.08, (0, 0, -0.04), 8)
+    # stanchions with two lifelines, bow pulpit, stern pushpit, boarding ladder
+    ys = [-3.15, -2.0, -0.85, 0.3, 1.45, 2.6, 3.6]
+    for sx in (-1, 1):
+        tops, mids = [], []
+        for y in ys:
+            x = sx * (hb_at(T(y)) - 0.06); z = deck_z(y)
+            rod('alu', (x, y, z), (x, y, z + 0.62), 0.016, 4)
+            tops.append((x, y, z + 0.62)); mids.append((x, y, z + 0.32))
+        bow = (sx * 0.12, -4.25, deck_z(-4.25) + 0.62)
+        _pv_tube('alu', [(sx * (hb_at(T(-3.15)) - 0.06), -3.15, deck_z(-3.15) + 0.62), (sx * 0.38, -3.85, deck_z(-3.85) + 0.62), bow], 0.018, 4, cap=False)
+        rod('alu', (sx * 0.38, -3.85, deck_z(-3.85)), (sx * 0.38, -3.85, deck_z(-3.85) + 0.62), 0.018, 4)
+        rod('alu', bow, (sx * 0.12, -4.32, deck_z(-4.3)), 0.018, 4)
+        st = (sx * 1.2, 4.25, deck_z(4.25) + 0.66)
+        _pv_tube('alu', [tops[-1], (sx * 1.25, 4.05, deck_z(4.0) + 0.66), st, (sx * 0.45, 4.3, deck_z(4.25) + 0.66)], 0.018, 4, cap=True)
+        rod('alu', (sx * 1.25, 4.25, deck_z(4.25)), st, 0.018, 4)
+        for ln in (tops, mids): _pv_tube('steel_dark', ln, 0.006, 3, cap=False)
+        rod('alu', (sx * 0.25, 4.38, 0.15), (sx * 0.25, 4.36, deck_z(4.3)), 0.014, 3)
+    rod('alu', (-0.12, -4.25, deck_z(-4.25) + 0.62), (0.12, -4.25, deck_z(-4.25) + 0.62), 0.018, 4)
+    for z in (0.3, 0.6): rod('alu', (-0.25, 4.36, z), (0.25, 4.36, z), 0.014, 3)
+    # deck hardware: cleats, anchor on the bow roller, navigation lights
+    for y in (-3.9, 3.9):
+        for sx in (-1, 1): box('pv_chrome', (0.05, 0.18, 0.04), (sx * (hb_at(T(y)) - 0.18), y, deck_z(y)))
+    box('steel_dark', (0.12, 0.35, 0.08), (0, -4.38, deck_z(-4.4)))
+    rod('steel_dark', (0, -4.55, deck_z(-4.4) + 0.02), (0, -4.6, deck_z(-4.4) - 0.3), 0.025, 4)
+    for sx, m in ((-1, 'beacon_red'), (1, 'green')): box(m, (0.03, 0.08, 0.05), (sx * 0.14, -4.3, deck_z(-4.3) + 0.03))
+    # rig: tapered mast with spreaders, boom, stays and shrouds
+    mz = zc + 0.5; top_z = D + 11.5
+    cyl('alu', 0.085, top_z - mz, (0, -1.2, mz), 8, r2=0.055)
+    for sx in (-1, 1): rod('alu', (0, -1.22, 7.4), (sx * 0.85, -1.15, 7.45), 0.025, 4)
+    box('alu', (0.12, 0.2, 0.06), (0, -1.2, top_z))
+    rod('steel_dark', (0, -1.2, top_z + 0.06), (0, -1.15, top_z + 0.7), 0.008, 3)   # wind indicator
+    rod('steel_dark', (0, -L / 2 + 0.1, deck_z(-4.4) + 0.05), (0, -1.25, top_z - 0.2), 0.012, 3)
+    rod('steel_dark', (0, L / 2 - 0.25, deck_z(4.3) + 0.05), (0, -1.2, top_z), 0.012, 3)
+    for sx in (-1, 1):
+        cp = (sx * (hb_at(T(-1.0)) - 0.05), -1.0, deck_z(-1.0))
+        rod('steel_dark', cp, (sx * 0.85, -1.15, 7.45), 0.01, 3); rod('steel_dark', (sx * 0.85, -1.15, 7.45), (0, -1.2, top_z - 0.3), 0.01, 3)
+        rod('steel_dark', (sx * (hb_at(T(-0.5)) - 0.08), -0.5, deck_z(-0.5)), (0, -1.2, 7.3), 0.009, 3)
+    gz = 2.75
+    if not sails:
+        rod('alu', (0, -1.12, gz), (0, 3.0, gz + 0.12), 0.055, 6)                    # boom
+        _pv_tube('enz_canvas_blue', [(0, -1.05, gz + 0.22), (0, 0.0, gz + 0.24), (0, 1.6, gz + 0.22), (0, 2.85, gz + 0.18)], [0.17, 0.2, 0.17, 0.1], 8, flat=0.62)
+        for sx in (-1, 1): rod('steel_dark', (0, -1.2, 6.5), (sx * 0.15, 1.2, gz + 0.36), 0.006, 3)   # lazy jacks
+        # furled genoa on the forestay (the blue UV strip outermost) with its furling drum
+        a, b = Vector((0, -L / 2 + 0.25, deck_z(-4.4) + 0.3)), Vector((0, -1.3, top_z - 1.0))
+        cyl('alu', 0.09, 0.14, tuple(a - Vector((0, 0, 0.16))), 10)
+        _pv_tube('enz_canvas_blue', [tuple(a.lerp(b, k)) for k in (0, 0.06, 0.25, 0.5, 0.75, 0.95, 1.0)], [0.03, 0.085, 0.09, 0.075, 0.05, 0.03, 0.015], 7)
+        for k, y in enumerate((-2.6, 0.2, 3.0)):                                  # fenders hanging over the side
+            for sx in (-1, 1):
+                x = sx * (hb_at(T(y)) + 0.13); cyl('white', 0.11, 0.42, (x, y, 0.42), 10); rod('rope', (x, y, 0.84), (x * 0.92, y, deck_z(y) + 0.3), 0.008, 3)
+                for zz in (0.42, 0.84): ico('white', 0.11, (x, y, zz), (1, 1, 0.45), 1)
     else:
-        cyl('enz_canvas_blue', 0.2, 3.7, (0, -1.0, D + 1.85), 10).rotation_euler = (-math.pi / 2, 0, 0)   # sail cover on the boom
-    for k, y in enumerate((-2.5, 3.2)): ico('cloth_white', 0.18, (1.45, y, 0.5), (0.6, 0.6, 1.4), 1)        # fenders
+        # sailing: boom eased out to starboard, a cambered main with a roach and battens, a genoa sheeted outboard
+        swing = -0.32
+        cw = Vector((-math.sin(swing) * 4.05, -1.2 + math.cos(swing) * 4.05, gz + 0.2))
+        rod('steel_dark', tuple(cw), (cw.x * 0.8, 3.0, zk + 0.22), 0.008, 3)            # main sheet to the traveller
+        with xf((0, -1.2, 0), rz=swing):
+            rod('alu', (0, 0.08, gz), (0, 4.1, gz + 0.12), 0.055, 6)
+            tack, head = Vector((0, 0.1, gz + 0.08)), Vector((0, 0.08, top_z - 0.3))
+            clew = Vector((0, 4.05, gz + 0.2))
+            NR, NC = 9, 6; grid = []
+            for i in range(NR + 1):
+                h = i / NR
+                lu = tack.lerp(head, h)
+                le = clew.lerp(head + Vector((0, 0.32, 0)), h) + Vector((0, 0.55 * math.sin(math.pi * h) * (1 - 0.3 * h), 0))
+                depth = 0.11 * (1 - 0.5 * h) * (le - lu).length
+                grid.append([lu.lerp(le, c) + Vector((depth * 4 * c * (1 - c) * (1 - 0.35 * c) * 1.2, 0, 0)) for c in (j / NC for j in range(NC + 1))])
+            _en_sheet(grid, 'enz_sail', 0.012)
+            for hh in (0.22, 0.42, 0.62, 0.82):                                   # battens
+                i = hh * NR; i0 = int(i); k = i - i0
+                pts = [grid[i0][j].lerp(grid[min(NR, i0 + 1)][j], k) for j in (NC - 3, NC - 2, NC - 1, NC)]
+                _pv_tube('enz_canvas_blue', pts, 0.016, 4, cap=True)
+        tack, head = Vector((0, -L / 2 + 0.35, deck_z(-4.3) + 0.25)), Vector((0, -1.35, top_z - 1.3))
+        clew = Vector((1.05, 0.55, deck_z(0.5) + 0.75))
+        NR, NC = 8, 4; grid = []
+        for i in range(NR + 1):
+            h = i / NR; lu = tack.lerp(head, h); le = clew.lerp(head + Vector((0.02, 0.12, -0.05)), h ** 0.92)
+            ch = le - lu; depth = 0.12 * (1 - 0.4 * h) * ch.length
+            grid.append([lu.lerp(le, c) + Vector((depth * 4 * c * (1 - c) * (1 - 0.3 * c), -depth * 1.2 * c * (1 - c), 0)) for c in (j / NC for j in range(NC + 1))])
+        _en_sheet(grid, lambda i, j, c: 'enz_canvas_blue' if j == NC - 1 else 'enz_sail', 0.012)
+        rod('steel_dark', tuple(clew), (0.95, 1.3, zk + 0.33), 0.008, 3)
+        cyl('alu', 0.09, 0.14, (0, -L / 2 + 0.35, deck_z(-4.3) + 0.05), 10)
+        for y in (-2.6, 3.0): ico('white', 0.11, (1.62, y, 0.6), (1, 1, 2.0), 1)    # fenders stowed on deck lines
+    # ensign at the stern
+    rod('wood_dark', (0.8, 4.4, deck_z(4.3) + 0.5), (0.95, 4.75, deck_z(4.3) + 1.25), 0.012, 3)
+    box('red', (0.02, 0.36, 0.22), (0.96, 4.95, deck_z(4.3) + 1.05), rot=(0, 0, 0.35))
+    text3d('white', 'NAGI', 0.16, (0, L / 2 - 0.04, 0.85), rz=math.pi, depth=0.01)
 
 @model('yacht', 'ヨット(係留)', '船')
 def yacht(): _enz_yacht(False)
@@ -3921,111 +4725,445 @@ def yacht(): _enz_yacht(False)
 @model('yacht_sail', 'ヨット(帆走)', '船')
 def yacht_sail(): _enz_yacht(True)
 
+
+# ----------------------------------------------------------------- beach props
 @model('parasol', 'ビーチパラソル', '自然')
 def parasol():
-    rod('alu', (0, 0, -0.3), (0, 0, 2.3), 0.025, 6)
-    n = 12
-    for k in range(n):
-        a0, a1 = k / n * math.tau, (k + 1) / n * math.tau
-        mesh('cloth_red' if k % 2 else 'cloth_white', [(0, 0, 2.45), (math.cos(a0) * 1.25, math.sin(a0) * 1.25, 1.95), (math.cos(a1) * 1.25, math.sin(a1) * 1.25, 1.95)], [(0, 1, 2), (0, 2, 1)])
-    ico('white', 0.05, (0, 0, 2.47), sub=1)
-    box('cloth_blue', (0.9, 1.8, 0.02), (0.4, 0.6, 0.0))                        # beach towel
-    box('cloth_yellow', (0.25, 0.25, 0.22), (-0.4, -0.3, 0.0))                  # cool box
+    # beach umbrella: screw-in sand anchor, pole with a tilt joint, eight striped gores with ribs and stretchers,
+    # a scalloped valance; a striped towel, a cool box and a pair of beach sandals.
+    cyl('steel_dark', 0.05, 0.3, (0, 0, -0.3), 8, r2=0.03)                         # anchor screw (in the sand)
+    _pv_lathe('en_cool_blue', [(0.0, 0.0), (0.16, 0.0), (0.16, 0.025), (0.06, 0.06), (0.045, 0.16), (0.0, 0.16)], (0, 0, 0), seg=10)
+    rod('steel_dark', (-0.17, 0, 0.11), (0.17, 0, 0.11), 0.012, 4)                # anchor handle
+    cyl('alu', 0.024, 1.35, (0, 0, 0.12), 8)
+    cyl('pv_chrome', 0.032, 0.1, (0, 0, 1.46), 8); ico('pv_chrome', 0.035, (0, 0, 1.53), sub=1)   # tilt joint
+    rod('pv_chrome', (0.03, 0, 1.53), (0.12, 0, 1.6), 0.008, 3)
+    gores, R, Zr, Za = 8, 1.24, 0.48, 1.0
+    with xf((0, 0, 1.53), ry=0.2):
+        cyl('alu', 0.022, 1.08, (0, 0, 0.0), 8)
+        cyl('en_para_white', 0.04, 0.12, (0, 0, 0.3), 8)                            # runner
+        def cpt(r, a, sag=0.0):
+            k = r / R
+            return (math.cos(a) * r * (1 - sag * 0.03), math.sin(a) * r * (1 - sag * 0.03), Za - (Za - Zr) * k ** 1.7 - sag * 0.035 * k)
+        rad = [0.05, 0.4, 0.8, R]; cols = gores * 2; rows = []
+        for r in rad: rows.append([cpt(r, j / cols * math.tau, 1.0 if j % 2 else 0.0) for j in range(cols)])
+        cm = lambda i, j, c: 'en_para_red' if (j // 2) % 2 else 'en_para_white'
+        _en_sheet(rows, cm, 0.012, wrap=True)
+        val = []                                                                  # scalloped valance (one scallop per gore)
+        for j in range(gores * 3):
+            a = j / (gores * 3) * math.tau; x, y, z = cpt(R, a)
+            val.append((x, y, z))
+        vr = [[(p[0] * 1.004, p[1] * 1.004, p[2]) for p in val], [(p[0] * 1.012, p[1] * 1.012, p[2] - 0.08 - (0.05 if j % 3 == 1 else 0.0)) for j, p in enumerate(val)]]
+        _en_sheet(vr, lambda i, j, c: 'en_para_white' if (j // 3) % 2 else 'en_para_red', 0.008, wrap=True, rim=False)
+        for g in range(gores):                                                    # ribs and stretchers
+            a = g / gores * math.tau
+            _pv_tube('alu', [(p[0], p[1], p[2] - 0.02) for p in (cpt(0.12, a), cpt(0.6, a), cpt(R - 0.02, a))], 0.008, 3, cap=False)
+            p = cpt(0.55, a); rod('alu', (0, 0, 0.36), (p[0], p[1], p[2] - 0.025), 0.006, 3)
+        cyl('en_para_white', 0.035, 0.08, (0, 0, Za + 0.01), 8); ico('en_para_red', 0.04, (0, 0, Za + 0.1), sub=1)
+    # towel with stripes and a fringe-less rolled end
+    with xf((0.42, 0.55, 0), rz=0.12):
+        box('en_towel', (0.8, 1.6, 0.012), (0, 0, 0))
+        for yy in (-0.62, 0.62): box('en_para_white', (0.8, 0.1, 0.014), (0, yy, 0))
+        cyl('en_towel', 0.07, 0.8, (-0.4, -0.73, 0.07), 8, rot=(0, math.pi / 2, 0))
+    # cool box: blue tub with a white lid and a handle
+    with xf((-0.48, -0.35, 0), rz=0.4):
+        _pv_rbox('en_cool_blue', (0.42, 0.28, 0.24), (0, 0, 0), 0.03)
+        _pv_rbox('en_para_white', (0.44, 0.3, 0.06), (0, 0, 0.24), 0.025)
+        _pv_tube('en_para_white', [(-0.17, 0, 0.3), (-0.12, 0, 0.36), (0.12, 0, 0.36), (0.17, 0, 0.3)], 0.012, 4, cap=False)
+    # beach sandals (thongs)
+    for k, (x, y, rz) in enumerate(((0.2, -0.75, 0.3), (0.36, -0.7, 0.15))):
+        with xf((x, y, 0), rz=rz):
+            _pv_rbox('en_sandal', (0.1, 0.26, 0.02), (0, 0, 0), 0.03)
+            _pv_tube('white', [(-0.045, 0.03, 0.02), (0, -0.07, 0.045), (0.045, 0.03, 0.02)], 0.007, 3, cap=False)
+
+
+def _en_board(L, Wd, T, mats, nose=1.0, fins=3, stripe=None):
+    """Surfboard standing on its tail at the origin, deck facing -Y, nose up +Z. nose: 1 = pointed shortboard, 0 = round longboard."""
+    deck, rail, bottom = mats
+    n = 2.0 + 1.6 * (1 - nose); NS = 13; rows = []
+    for i in range(NS + 1):
+        t = i / NS
+        if t < 0.42: w = Wd / 2 * (0.62 + 0.38 * (1 - ((0.42 - t) / 0.42) ** 2))
+        else: u = min(0.998, (t - 0.42) / 0.58); w = Wd / 2 * max(0.02, (1 - u ** n) ** (0.95 / n * (1 + nose)))
+        th = T * (0.4 + 0.6 * math.sin(math.pi * (0.12 + 0.76 * t)))
+        rk = -0.11 * ((t - 0.45) / 0.55) ** 2 if t > 0.45 else -0.03 * ((0.25 - t) / 0.25) ** 2 if t < 0.25 else 0.0
+        z = L * t
+        sec = [(0.006, -0.5), (0.5, -0.45), (0.85, -0.25), (1.0, 0.02), (0.88, 0.32), (0.45, 0.5)]
+        ring = [(w * x, rk + th * yv, z) for x, yv in sec] + [(0.0, rk + th * 0.5, z)] + [(-w * x, rk + th * yv, z) for x, yv in reversed(sec)]
+        rows.append(ring)
+    def mf(i, j, c):
+        if j in (12,): return 'en_stringer'
+        if j in (2, 3, 9, 10): return rail
+        if j in (4, 5, 6, 7): return bottom
+        if stripe and stripe[0] <= i < stripe[1]: return stripe[2]
+        return deck
+    _en_skin(rows, mf, wrap=True, caps=(rail, rail))
+    tb = T * 0.5
+    def fin(x, y0, h, ln, rz=0.0):
+        _en_plate('en_leash', [(x, tb + 0.0, y0), (x, tb + h * 0.55, y0 + ln * 0.05), (x, tb + h, y0 + ln * 0.25), (x, tb + h * 0.8, y0 + ln * 0.38), (x, tb, y0 + ln)], 0.008)
+    if fins == 1: fin(0, 0.06, 0.2, 0.26)
+    else:
+        fin(0, 0.05, 0.11, 0.12)
+        for sx in (-1, 1): fin(sx * Wd * 0.3, 0.2, 0.11, 0.12)
+    cyl('en_leash', 0.012, 0.012, (0, tb * 0.0 - T * 0.5, 0.08), 6, rot=(math.pi / 2, 0, 0))
+
 
 @model('surfboards', 'サーフボード(立てかけ)', '自然')
 def surfboards():
-    for k, (x, col) in enumerate([(-0.35, 'enz_board_blue'), (0.0, 'enz_board_white'), (0.35, 'cloth_yellow')]):
-        with xf((x, 0.0, 0.0), rx=-0.18 + k * 0.05):
-            ico(col, 0.5, (0, 0, 1.05), (0.28, 0.06, 2.2), 2)
-            box('black', (0.02, 0.03, 0.2), (0, 0.04, 0.2))
-    box('enz_teak', (1.3, 0.12, 0.1), (0, 0.3, 0.0)); box('enz_teak', (1.3, 0.08, 0.08), (0, 0.38, 1.3))
-    for sx in (-1, 1): rod('enz_teak', (sx * 0.6, 0.35, 0), (sx * 0.6, 0.35, 1.4), 0.04, 4)
-
-@model('tonbi', 'トンビ', '動物', lod=False)
-def tonbi():
-    # black kite circling on thermals: brown body, long fingered wings with pale patches, a slightly forked tail
-    _pv_tube('enz_tb_brown', [(0, -0.3, 0.04), (0, -0.22, 0.03), (0, -0.05, 0.01), (0, 0.12, 0.0), (0, 0.3, 0.0)], [0.04, 0.07, 0.085, 0.07, 0.03], 8)
-    ico('enz_tb_light', 0.065, (0, -0.31, 0.05), (0.9, 1.1, 0.95), 2)
-    _pv_tube('enz_tb_dark', [(0, -0.37, 0.05), (0, -0.4, 0.04)], [0.014, 0.004], 4)
-    mesh('enz_tb_brown', [(0, 0.25, 0.01), (-0.12, 0.55, 0.0), (0, 0.5, 0.0), (0.12, 0.55, 0.0)], [(0, 1, 2), (0, 2, 3), (0, 2, 1), (0, 3, 2)])
-    st = [(0.0, -0.12, 0.16, 0.035), (0.25, -0.15, 0.2, 0.03), (0.5, -0.15, 0.2, 0.022), (0.72, -0.12, 0.17, 0.015), (0.9, -0.06, 0.1, 0.008)]
-    for sx, sd in ((-1, 'l'), (1, 'r')):
-        part(f'tonbi_wing_{sd}', (sx * 0.07, 0, 0.03))
-        rings = [[(sx * (0.07 + x), le, 0.03 + t), (sx * (0.07 + x), te, 0.03 - t * 0.3), (sx * (0.07 + x), le * 0.4 + te * 0.6, 0.03 - t)] for x, le, te, t in st]
-        loft('enz_tb_brown', rings[:4], closed=True, cap=True); loft('enz_tb_dark', rings[3:], closed=True, cap=True)
-        ico('enz_tb_light', 0.05, (sx * 0.62, 0.02, 0.025), (1.2, 0.8, 0.2), 1)
-        for f in range(5): rod('enz_tb_dark', (sx * 0.95, -0.05 + f * 0.035, 0.03), (sx * (1.08 + 0.02 * (2 - abs(f - 2))), -0.07 + f * 0.045, 0.03), 0.012, 3)   # primaries
-        part(None)
-
-def _enz_kanban(text):
+    # three shaped boards (rocker, rails, stringer, fins) leaning in a wooden rack; a leash coiled on the ground
+    for x, L, Wd, T, mats, nose, fins, rx, stripe in (
+            (-0.4, 2.15, 0.56, 0.075, ('enz_board_white', 'enz_board_blue', 'enz_board_blue'), 0.0, 1, -0.17, (9, 11, 'enz_board_blue')),
+            (0.0, 1.88, 0.5, 0.065, ('en_board_mint', 'enz_board_white', 'enz_board_white'), 1.0, 3, -0.19, (4, 5, 'en_board_coral')),
+            (0.4, 1.8, 0.49, 0.062, ('enz_board_white', 'en_board_coral', 'en_board_coral'), 1.0, 3, -0.2, (6, 7, 'cloth_yellow'))):
+        with xf((x, -0.02, 0.0), rx=rx): _en_board(L, Wd, T, mats, nose, fins, stripe)
+    # rack: two side frames (foot, upright, back brace), padded top rail, low front rail with dowel dividers
     for sx in (-1, 1):
-        rod('wood_dark', (sx * 0.28, -0.25, 0), (sx * 0.28, 0.0, 1.7), 0.025, 4); rod('wood_dark', (sx * 0.28, 0.25, 0), (sx * 0.28, 0.0, 1.7), 0.025, 4)
-    signboard(text, 0.5, 1.45, (0, -0.07, 1.75), board='white', ink='ink_red', frame='wood_dark', vertical=True, depth=0.04, rz=0.0)
+        box('enz_teak', (0.07, 0.5, 0.07), (sx * 0.64, 0.17, 0.0))
+        box('enz_teak', (0.07, 0.07, 1.42), (sx * 0.64, 0.33, 0.07))
+        o = box('enz_teak', (0.06, 0.06, 0.62), (sx * 0.64, 0.38, 0.62)); o.rotation_euler = (-0.35, 0, 0)
+    box('enz_teak', (1.36, 0.08, 0.08), (0, 0.33, 1.3)); _pv_rbox('en_pad', (1.24, 0.1, 0.1), (0, 0.27, 1.29), 0.03)
+    box('enz_teak', (1.36, 0.08, 0.06), (0, 0.02, 0.12))
+    for x in (-0.6, -0.2, 0.2, 0.6): cyl('enz_teak', 0.02, 0.3, (x, 0.02, 0.12), 6)
+    box('enz_teak', (1.36, 0.06, 0.06), (0, 0.3, 0.07))
+    # leash: cuff plus a loose coil lying on the ground
+    pts = []
+    for i in range(22):
+        a = i / 21 * math.tau * 1.6; r = 0.16 - 0.03 * i / 21
+        pts.append((0.52 + math.cos(a) * r, -0.32 + math.sin(a) * r * 0.8, 0.012 + 0.004 * math.sin(a * 2)))
+    pts.insert(0, (0.4, -0.06, 0.08)); _pv_tube('en_leash', pts, 0.008, 4, cap=False)
+    torus('en_leash', 0.06, 0.018, (0.52, -0.32, 0.02), seg=10, rseg=4)
+
+
+# ----------------------------------------------------------------- standing signboards
+def _enz_kanban(text, dish):
+    # standing signboard: cross feet, two posts, a little tiled gable roof, a white board with the dish name in red
+    # brush-style kana and a painted relief of the dish, and a red 名物 header plate
+    Wp = 0.26
+    for sx in (-1, 1):
+        box('wood_dark', (0.07, 0.07, 2.25), (sx * Wp, 0, 0))
+        box('wood_dark', (0.08, 0.5, 0.07), (sx * Wp, 0, 0))
+        for sy in (-1, 1): rod('wood_dark', (sx * Wp, sy * 0.2, 0.07), (sx * Wp, sy * 0.03, 0.3), 0.018, 4)
+    box('wood_dark', (0.62, 0.08, 0.06), (0, 0, 2.2)); box('wood_dark', (0.52, 0.05, 0.05), (0, 0, 0.38))
+    with xf((0, 0, 2.26)):                                                       # little gable roof
+        for sy in (-1, 1): box('roof_tile', (0.66, 0.2, 0.03), (0, sy * 0.085, 0.04), rot=(sy * 0.55, 0, 0))
+        rod('ridge_tile', (-0.34, 0, 0.14), (0.34, 0, 0.14), 0.025, 6)
+        prism('wood_dark', [(-0.17, 0.0), (0.17, 0.0), (0.0, 0.11)], 0.56, loc=(0, 0, 0), axis='X')
+    box('en_kanban', (0.46, 0.04, 1.76), (0, 0, 0.42))
+    box('ink_red', (0.46, 0.045, 0.2), (0, 0, 1.98))
+    text3d('ink_white', '名物', 0.12, (0, -0.03, 2.08), depth=0.008)
+    text3d('ink_red', text, 0.17, (0, -0.03, 1.47), vertical=True, depth=0.012, spacing=1.08)
+    with xf((0, -0.025, 0.72)):
+        if dish == 'don':
+            prism('en_lacquer', [(math.cos(a) * 0.17, -math.sin(a) * 0.1) for a in (math.pi * k / 8 for k in range(9))] + [(-0.19, 0.012), (0.19, 0.012)], 0.02, axis='Y')
+            prism('en_shirasu', [(math.cos(a) * 0.16, 0.012 + math.sin(a) * 0.09) for a in (math.pi * k / 8 for k in range(9))], 0.024, axis='Y')
+            ico('yellow', 0.035, (0.02, -0.012, 0.06), (1, 0.4, 0.9), 1)
+            for x, z in ((-0.08, 0.04), (0.08, 0.05), (-0.03, 0.08), (0.1, 0.02)): box('leaf_light', (0.02, 0.01, 0.015), (x, -0.012, z))
+            box('wood_light', (0.02, 0.01, 0.25), (0.16, -0.012, 0.0), rot=(0, 0.6, 0))
+        else:
+            cyl('en_senbei', 0.19, 0.02, (0, 0.0, 0.0), 14, rot=(math.pi / 2, 0, 0))
+            ico('en_tako', 0.07, (0, -0.02, 0.05), (1, 0.25, 1.15), 1)
+            for k in range(6):
+                a = math.pi * (1.15 + 0.7 * k / 5)
+                _pv_tube('en_tako', [(math.cos(a) * 0.04, -0.02, -0.005 + math.sin(a) * 0.03), (math.cos(a) * 0.1, -0.022, -0.02 + math.sin(a) * 0.08),
+                                     (math.cos(a) * 0.15 + 0.02 * math.cos(a + 1.5), -0.022, -0.03 + math.sin(a) * 0.11)], [0.016, 0.012, 0.005], 4, cap=False, flat=0.4)
+    box('wood_dark', (0.5, 0.06, 0.04), (0, 0, 0.4)); box('wood_dark', (0.5, 0.06, 0.04), (0, 0, 2.18))
 
 @model('kanban_shirasu', '立て看板(しらす丼)', '道の小物')
-def kanban_shirasu(): _enz_kanban('しらす丼')
+def kanban_shirasu(): _enz_kanban('しらす丼', 'don')
 
 @model('kanban_tako', '立て看板(たこせんべい)', '道の小物')
-def kanban_tako(): _enz_kanban('たこせん')
+def kanban_tako(): _enz_kanban('たこせん', 'tako')
 
 
+# ----------------------------------------------------------------- black kite
+@model('tonbi', 'トンビ', '動物', lod=False)
+def tonbi():
+    # black kite soaring: a fusiform body, head with a hooked bill, broad arched wings (pale band above, pale
+    # primary windows below), six separated fingered primaries and a shallow-forked tail. Parts: tonbi_wing_l/_r.
+    B, Dk, Lt = 'enz_tb_brown', 'enz_tb_dark', 'enz_tb_light'
+    _pv_tube(B, [(0, -0.3, 0.04), (0, -0.25, 0.034), (0, -0.15, 0.022), (0, -0.03, 0.012), (0, 0.09, 0.006), (0, 0.19, 0.004), (0, 0.26, 0.006)],
+             [0.04, 0.058, 0.074, 0.08, 0.07, 0.05, 0.03], 10, flat=0.85)
+    ico('en_tb_head', 0.056, (0, -0.33, 0.052), (0.85, 1.12, 0.86), 2)
+    _pv_tube('en_leash', [(0, -0.385, 0.056), (0, -0.405, 0.05), (0, -0.418, 0.036), (0, -0.414, 0.022)], [0.017, 0.012, 0.007, 0.002], 6)
+    ico('pv_beak', 0.018, (0, -0.378, 0.06), (1, 0.6, 0.8), 1)
+    for sx in (-1, 1): ico('eye', 0.009, (sx * 0.035, -0.355, 0.066), sub=1)
+    for sx in (-1, 1): ico('pv_beak', 0.02, (sx * 0.024, 0.14, -0.035), (0.8, 1.7, 0.7), 1)   # feet tucked under the tail
+    # tail: shallow fork, slightly fanned and tilted up, with two dark bars
+    zt = lambda y: 0.006 + (y - 0.2) * 0.07
+    outline = [(-0.035, 0.2), (-0.095, 0.4), (-0.13, 0.53), (-0.06, 0.505), (0, 0.475), (0.06, 0.505), (0.13, 0.53), (0.095, 0.4), (0.035, 0.2)]
+    _en_plate(B, [(x, y, zt(y)) for x, y in outline], 0.014, c=(0, 0.36, zt(0.36)))
+    for y0, w in ((0.39, 0.088), (0.455, 0.105)):
+        _en_plate(Dk, [(-w, y0, zt(y0)), (w, y0, zt(y0)), (w + 0.004, y0 + 0.022, zt(y0 + 0.022)), (-w - 0.004, y0 + 0.022, zt(y0 + 0.022))], 0.017)
+    # wings: arched (dihedral at the arm, drooping hand), broad chord, wrist pushed forward
+    ST = [(0.06, -0.09, 0.19, 0.035, 0.05), (0.16, -0.115, 0.215, 0.06, 0.04), (0.30, -0.135, 0.218, 0.085, 0.032),
+          (0.44, -0.155, 0.205, 0.1, 0.026), (0.56, -0.168, 0.185, 0.104, 0.022), (0.68, -0.158, 0.152, 0.094, 0.018),
+          (0.78, -0.138, 0.12, 0.08, 0.014), (0.85, -0.118, 0.095, 0.07, 0.011)]
+    CH = [(0.0, 0.0), (0.12, 0.85), (0.42, 0.62), (0.75, 0.25), (1.0, -0.02), (0.75, -0.04), (0.42, -0.14), (0.12, -0.34)]
+    def wm(i, j, c):
+        if j <= 1: return 'en_tb_band' if (i in (1, 2) and j == 1) else B
+        if j <= 3: return Dk
+        if j <= 5: return Lt if i in (4, 5) else 'en_tb_remex'
+        return Dk
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        part(f'tonbi_wing_{sd}', (sx * 0.07, 0, 0.03))
+        rows = [[(sx * x, le + cc * (te - le), z + k * th) for cc, k in CH] for x, le, te, z, th in ST]
+        _en_skin(rows, wm, wrap=True, caps=(None, Dk))
+        for k in range(6):                                                        # trailing-edge feather tips (secondaries)
+            x = 0.13 + k * 0.07; te = _en_lerp_table(ST, x, 2); z = _en_lerp_table(ST, x, 3)
+            _en_plate(Dk, [(sx * (x - 0.034), te - 0.012, z), (sx * (x + 0.034), te - 0.012, z), (sx * (x + 0.012), te + 0.03, z - 0.003)], 0.008)
+        for k in range(6):                                                        # fingered primaries
+            by = -0.1 + k * 0.034; ang = -0.16 + k * 0.15; ln = (0.21, 0.26, 0.28, 0.26, 0.21, 0.16)[k]
+            d = Vector((math.cos(ang), math.sin(ang), 0)); b = Vector((0.81 + 0.01 * (k in (2, 3)), by, 0.072))
+            pts = [b + d * ln * s + Vector((0, 0.015 * s * s * k / 5, 0.035 * s ** 2)) for s in (0.0, 0.35, 0.7, 1.0)]
+            _pv_tube(Dk, [(sx * p.x, p.y, p.z) for p in pts], [0.019, 0.018, 0.014, 0.004], 4, flat=0.22)
+        part(None)
+
+
+# ----------------------------------------------------------------- Enoden-style tram and station
 PALETTE.update({'eno_green': P((0.04, 0.28, 0.12), 0.45), 'eno_cream': P((0.86, 0.8, 0.62), 0.45), 'eno_roof': P((0.45, 0.47, 0.48), 0.6, 0.3),
                 'eno_skirt': P((0.08, 0.08, 0.08), 0.6), 'eno_dest': P((0.95, 0.95, 0.9), 0.5, e=(1.0, 0.98, 0.9), es=0.6)})
 
 @model('enoden', '江ノ電風の電車(1両)', '乗り物')
 def enoden():
-    # a retro coastal tram car: green below, cream above, rounded cab ends with a big two-pane windscreen,
-    # a lit destination board 「江ノ島」, headlights, pantograph, bogies. Length 12 m along Y, cab at -Y (the train
-    # runs either way; the game couples two cars back to back).
-    L, W, F, H = 12.0, 2.5, 0.95, 3.45
-    _pv_rbox('eno_green', (W, L - 0.6, 1.25), (0, 0, F), 0.25)                          # lower body
-    _pv_rbox('eno_cream', (W, L - 0.6, H - F - 1.25 - 0.25), (0, 0, F + 1.25), 0.25)    # upper body
-    _pv_rbox('eno_roof', (W - 0.2, L - 0.9, 0.3), (0, 0, H - 0.3), 0.15)
-    box('eno_green', (W + 0.02, L - 0.7, 0.08), (0, 0, F + 1.24))                       # belt line
-    for sy, y0 in ((-1, -L / 2 + 0.3), (1, L / 2 - 0.3)):                               # rounded ends
-        with xf((0, y0, 0)):
-            ico('eno_green', 1.0, (0, 0, F + 0.62), (W / 2, 0.45, 0.62), 2)
-            ico('eno_cream', 1.0, (0, 0, F + 1.75), (W / 2, 0.45, 0.55), 2)
-    # windows down both sides, doors
+    # a retro coastal tram car (green below, cream above). Cab at -Y with a rounded, raked front, two-pane windscreen,
+    # wipers, headlights and a lit destination board 「江ノ島」; the +Y end is the coupled end (gangway door).
+    # Length 12 m along Y, floor at 0.95 m; the game couples two cars back to back on the rails (gauge ~1.44 m).
+    L, W, F = 12.0, 2.5, 0.95
+    hw = W / 2
+    zb, zbelt, zw0, zw1, zd1, ze = F - 0.17, F + 0.92, F + 1.0, F + 1.82, F + 1.95, F + 2.08
+    prof = [(hw - 0.07, zb), (hw, F + 0.12), (hw, zbelt), (hw, zw0), (hw, zw1), (hw, zd1), (hw, ze), (hw - 0.07, ze + 0.16), (hw - 0.4, ze + 0.33), (0.6, ze + 0.43)]
+    ring_xz = [(-x, z) for x, z in prof] + [(0.0, ze + 0.45)] + [(x, z) for x, z in reversed(prof)]
+    NN = 2.4
+    fu = lambda u: (1 - min(1.0, u) ** NN) ** (1 / NN)
+    uf = lambda x: (1 - min(1.0, x / hw) ** NN) ** (1 / NN)                     # u where the half width is x
+    Rc, Rr = 0.78, 0.45
+    yc, yr = -L / 2 + Rc, L / 2 - Rr
+    def kz(z, rake): return 1 - rake * max(0.0, min(1.0, (z - zw0) / (ze + 0.45 - zw0))) - 0.08 * max(0.0, (F + 0.12 - z) / 0.3)
+    def nose(x, z, end):
+        """point on the end surface at lateral x (signed), height z; end -1 = cab, +1 = rear"""
+        u = uf(min(abs(x), hw)); R, y0, rake = (Rc, yc, 0.3) if end < 0 else (Rr, yr, 0.12)
+        return Vector((x, y0 + end * R * u * kz(z, rake), z))
+    # stations: cab end, side openings, rear end
+    wins = [(-5.12, -4.5), (-3.05, -2.2), (-2.0, -1.15), (-0.95, -0.1), (0.1, 0.95), (1.15, 2.0), (2.2, 3.05), (4.5, 5.12)]
+    doors = [(-4.25, -3.3), (3.3, 4.25)]
+    ys = {yc, yr}
+    for a, b in wins: ys |= {a, b}
+    for a, b in doors: ys |= {a, b, a + 0.14, b - 0.14}
+    ys = sorted(ys)
+    cab_x = [hw, 1.2, 1.1, 0.96, 0.78, 0.58, 0.38, 0.2, 0.08, 0.0]
+    rear_x = [hw, 1.15, 0.96, 0.66, 0.4, 0.26, 0.12, 0.0]
+    st = [(-1, x) for x in reversed(cab_x[1:])] + [(0, y) for y in ys] + [(1, x) for x in rear_x[1:]]
+    rows = [[(x, v, z) for x, z in ring_xz] if end == 0 else [(x * v / hw, nose(v, z, end).y, z) for x, z in ring_xz] for end, v in st]
+    def win_at(y, z):
+        for a, b in wins:
+            if a < y < b and zw0 < z < zw1: return True
+        for a, b in doors:
+            if a + 0.14 < y < b - 0.14 and zw0 < z < zw1: return True
+        return False
+    def mat(i, j, c):
+        if j == len(ring_xz) - 1: return 'eno_skirt'
+        if c.z > ze + 0.01: return 'eno_roof'
+        if c.y < yc - 0.01:                                                       # cab front
+            if zw0 < c.z < zw1 and 0.08 < abs(c.x) < 0.96: return 'glass'
+        elif c.y > yr + 0.01:                                                     # rear end: side windows and gangway door glass
+            if zw0 < c.z < zw1 and (0.4 < abs(c.x) < 0.96 or abs(c.x) < 0.26): return 'glass'
+        elif abs(c.x) > hw - 0.03 and win_at(c.y, c.z): return 'glass'
+        return 'eno_green' if c.z < zbelt else 'eno_cream'
+    _en_skin(rows, mat, wrap=True)
+    # side detail: window frames with a sash bar, door outlines, steps, belt strip, gutter, panel seams
     for sx in (-1, 1):
-        for k in range(8):
-            y = -L / 2 + 1.6 + k * 1.15
-            if k in (1, 6): box('glass', (0.04, 0.9, 1.75), (sx * (W / 2 + 0.005), y, F + 0.25)); continue   # door glass
-            box('glass', (0.04, 0.85, 0.8), (sx * (W / 2 + 0.005), y, F + 1.4))
-    # cab: windscreen, headlights, destination board
-    with xf((0, -L / 2 - 0.12, 0)):
-        for sx in (-1, 1): box('glass', (0.95, 0.05, 0.85), (sx * 0.5, -0.02, F + 1.35))
-        _pv_rbox('eno_dest', (1.2, 0.06, 0.32), (0, -0.04, F + 2.25), 0.04)
-        text3d('ink', '江ノ島', 0.2, (0, -0.075, F + 2.36), depth=0.01)
+        X = sx * (hw + 0.004); X2 = sx * (hw + 0.022)
+        fr = lambda y0, y1, z0, z1, m='alu': bar(m, min(X, X2), max(X, X2), y0, y1, z0, z1)
+        for a, b in wins:
+            fr(a - 0.03, b + 0.03, zw0 - 0.03, zw0); fr(a - 0.03, b + 0.03, zw1, zw1 + 0.03)
+            fr(a - 0.03, a, zw0, zw1); fr(b, b + 0.03, zw0, zw1)
+            fr(a, b, zw0 + 0.52, zw0 + 0.55)
+        for a, b in doors:
+            fr(a, a + 0.025, zb + 0.02, zd1, 'eno_skirt'); fr(b - 0.025, b, zb + 0.02, zd1, 'eno_skirt'); fr(a, b, zd1, zd1 + 0.025, 'eno_skirt')
+            fr(a + 0.12, b - 0.12, zw0 - 0.02, zw0, 'alu'); fr(a + 0.12, b - 0.12, zw1, zw1 + 0.02, 'alu')
+            box2('steel_dark', min(sx * (hw - 0.25), sx * (hw + 0.03)), max(sx * (hw - 0.25), sx * (hw + 0.03)), a + 0.02, b - 0.02, zb - 0.32, zb - 0.26)
+            box2('eno_skirt', min(sx * (hw - 0.2), sx * (hw - 0.17)), max(sx * (hw - 0.2), sx * (hw - 0.17)), a + 0.02, b - 0.02, zb - 0.32, zb)
+            fr(a + 0.02, a + 0.06, zw0 + 0.12, zw0 + 0.62, 'pv_chrome')
+        fr(yc, yr, zbelt - 0.015, zbelt + 0.015, 'pv_chrome')
+        bar('eno_cream', min(sx * hw, sx * (hw + 0.05)), max(sx * hw, sx * (hw + 0.05)), yc - 0.1, yr + 0.1, ze - 0.02, ze + 0.03)
+        for y in (-2.1, 2.1, -0.02):
+            fr(y - 0.008, y + 0.008, zb + 0.05, zbelt - 0.02, 'eno_skirt')
+    # cab front: gasketed windscreen, wipers, destination board, headlights, tail and marker lights, number
+    for z in (zw0 - 0.02, zw1 + 0.02):
+        _pv_tube('eno_skirt', [tuple(nose(x, z, -1) + Vector((0, -0.012, 0))) for x in (-0.98, -0.8, -0.6, -0.4, -0.2, 0.0, 0.2, 0.4, 0.6, 0.8, 0.98)], 0.022, 4, cap=True)
+    for x in (-0.98, -0.06, 0.06, 0.98):
+        _pv_tube('eno_skirt', [tuple(nose(x, z, -1) + Vector((0, -0.012, 0))) for z in (zw0 - 0.02, (zw0 + zw1) / 2, zw1 + 0.02)], 0.02, 4, cap=True)
+    for sx in (-1, 1):
+        a = nose(sx * 0.62, zw0 + 0.04, -1) + Vector((0, -0.035, 0)); b = nose(sx * 0.32, zw0 + 0.62, -1) + Vector((0, -0.03, 0))
+        rod('steel_dark', tuple(a), tuple(b), 0.012, 4); ico('steel_dark', 0.025, tuple(a), sub=1)
+        rod('rubber', tuple(a.lerp(b, 0.3) + Vector((0, -0.012, 0))), tuple(b + Vector((0, -0.012, 0.04))), 0.01, 3)
+    dest = [[tuple(nose(x, z, -1) + Vector((0, -0.02, 0))) for x in (-0.52, -0.26, 0.0, 0.26, 0.52)] for z in (zw1 + 0.06, zw1 + 0.24)]
+    _en_sheet(dest, 'eno_dest', 0.03)
+    tz = zw1 + 0.15; text3d('ink', '江ノ島', 0.15, (0, nose(0, tz, -1).y - 0.045, tz), depth=0.01)
+    for sx in (-1, 1):
+        for x, z, r, m in ((0.72, F + 0.5, 0.11, 'lamp'), (1.0, F + 0.5, 0.055, 'pv_tail_light')):
+            p = nose(sx * x, z, -1); ang = math.atan2(sx * x / hw * 0.9, 1.0) * 0.6
+            cyl('pv_chrome', r + 0.025, 0.05, tuple(p + Vector((0, 0.01, 0))), 12, rot=(math.pi / 2, 0, -ang * 1))
+            cyl(m, r, 0.06, tuple(p + Vector((0, -0.01, 0))), 12, rot=(math.pi / 2, 0, -ang))
+        p = nose(sx * 0.55, ze - 0.05, -1); cyl('pv_amber', 0.035, 0.04, tuple(p), 8, rot=(math.pi / 2, 0, 0))
+        p = nose(sx * 0.3, zbelt + 0.02, -1); rod('pv_chrome', tuple(p + Vector((0, -0.04, -0.02))), tuple(p + Vector((0, -0.04, -0.35))), 0.012, 4)   # grab rails
+    text3d('ink_white', '305', 0.12, (0, nose(0, F + 0.45, -1).y - 0.01, F + 0.45), depth=0.008)
+    # rear (coupled) end: tail lights, gangway diaphragm frame
+    for sx in (-1, 1):
+        p = nose(sx * 0.75, F + 0.5, 1); cyl('pv_tail_light', 0.06, 0.05, tuple(p + Vector((0, 0.02, 0))), 10, rot=(math.pi / 2, 0, 0))
+    _pv_tube('eno_skirt', [tuple(nose(x, z, 1) + Vector((0, 0.015, 0))) for x, z in ((-0.3, zb + 0.05), (-0.3, zd1 + 0.05), (0.3, zd1 + 0.05), (0.3, zb + 0.05))], 0.03, 4, cap=True)
+    # bumpers (anticlimbers), couplers, front skirt
+    for end in (-1, 1):
+        bp = [tuple(nose(x, zb - 0.02, end) + Vector((0, end * 0.05, 0))) for x in (-1.1, -0.85, -0.5, 0.0, 0.5, 0.85, 1.1)]
+        _pv_tube('eno_skirt', bp, 0.06, 6, cap=True, flat=0.7)
+        sk = [[tuple(nose(x * 0.85, z, end) + Vector((0, end * 0.0, 0))) for x in (-1.1, -0.6, 0.0, 0.6, 1.1)] for z in (zb - 0.02, zb - 0.38)]
+        _en_sheet(sk, 'eno_skirt', 0.03)
+        yb = nose(0, zb, end).y
+        box('steel_dark', (0.14, 0.3, 0.12), (0, yb + end * 0.1, zb - 0.25))
+        _pv_rbox('steel_dark', (0.24, 0.1, 0.18), (0, yb + end * 0.25, zb - 0.28), 0.03)
+    # bogies: side frames, axle boxes, springs, flanged wheels on the 1.44 m track
+    for yb in (-3.75, 3.75):
+        box('steel_dark', (1.5, 0.5, 0.14), (0, yb, 0.62))                        # bolster
+        cyl('steel_dark', 0.16, 0.12, (0, yb, 0.72), 10)
         for sx in (-1, 1):
-            cyl('lamp', 0.12, 0.08, (sx * 0.8, -0.03, F + 0.75), 12).rotation_euler = (math.pi / 2, 0, 0)
-            cyl('pv_tail_light', 0.06, 0.06, (sx * 0.95, -0.02, F + 0.4), 10).rotation_euler = (math.pi / 2, 0, 0)
-        box('eno_skirt', (W - 0.2, 0.15, 0.45), (0, 0.05, 0.4))
-    # bogies and wheels, underfloor boxes
-    for y in (-L / 2 + 2.2, L / 2 - 2.2):
-        box('eno_skirt', (W - 0.5, 2.2, 0.45), (0, y, 0.45))
-        for dy in (-0.7, 0.7):
-            for sx in (-1, 1): cyl('steel_dark', 0.38, 0.12, (sx * 0.72, y + dy, 0.38), 14).rotation_euler = (0, math.pi / 2, 0)
-    box('eno_skirt', (W - 0.6, L - 6.0, 0.4), (0, 0, 0.5))
-    # pantograph and roof gear
-    with xf((0, -L / 4, H)):
-        box('steel_dark', (1.0, 1.0, 0.15), (0, 0, 0))
-        for sy in (-1, 1): rod('steel_dark', (0, sy * 0.4, 0.15), (0, sy * 0.05, 1.1), 0.03, 4); rod('steel_dark', (0, sy * 0.05, 1.1), (0, sy * 0.35, 1.7), 0.025, 4)
-        box('steel_dark', (1.6, 0.08, 0.06), (0, 0, 1.72))
-    _pv_rbox('eno_roof', (1.2, 1.6, 0.35), (0, L / 4, H), 0.1)
+            prism('steel_dark', [(-1.05, 0.5), (1.05, 0.5), (1.05, 0.62), (0.75, 0.7), (-0.75, 0.7), (-1.05, 0.62)], 0.07, loc=(sx * 0.92, yb, 0), axis='X')
+            prism('steel_dark', [(-0.55, 0.38), (0.55, 0.38), (0.45, 0.5), (-0.45, 0.5)], 0.06, loc=(sx * 0.92, yb, 0), axis='X')
+            for dy in (-0.8, 0.8):
+                box('steel_dark', (0.14, 0.24, 0.24), (sx * 0.92, yb + dy, 0.46))
+                cyl('metal', 0.05, 0.14, (sx * 0.92, yb + dy * 0.62, 0.5), 8)
+                with xf((sx * 0.72, yb + dy, 0.56), ry=math.pi / 2):
+                    cyl('steel_dark', 0.33, 0.1, (0, 0, -0.05), 16)
+                    cyl('steel_dark', 0.37, 0.025, (0, 0, -sx * 0.075 - 0.0125), 16)
+                    cyl('metal', 0.18, 0.11, (0, 0, -0.055), 10)
+                    rod('steel_dark', (0, 0, -sx * 0.0), (0, 0, -sx * 0.72), 0.05, 6)
+                box('rubber', (0.08, 0.1, 0.18), (sx * 0.72, yb + dy - sx * 0.0 + (0.36 if dy < 0 else -0.36), 0.42))   # brake shoes
+    # underfloor equipment between the bogies
+    for y, w, h, m in ((-1.9, 1.3, 0.38, 'eno_skirt'), (-0.6, 1.6, 0.42, 'steel_dark'), (0.8, 1.1, 0.34, 'eno_skirt'), (1.95, 1.4, 0.4, 'steel_dark')):
+        _pv_rbox(m, (w, 1.0 if y < 1.5 else 0.7, h), (0, y, zb - h), 0.04)
+    for sx in (-1, 1): cyl('metal', 0.14, 1.6, (sx * 0.55, 0.0, zb - 0.18), 10, rot=(math.pi / 2, 0, 0))
+    # roof: walkway, vents, conduits, resistor/air-con box, pantograph (diamond) with insulators and horns
+    rt = ze + 0.45
+    for k, y in enumerate((-4.6, -1.2, 0.6, 1.8, 4.6)):
+        cyl('eno_roof', 0.12, 0.1, (0, y, rt - 0.03), 8); cyl('eno_roof', 0.18, 0.06, (0, y, rt + 0.07), 8, r2=0.05)
+    _pv_rbox('eno_roof', (1.3, 2.0, 0.32), (0, 2.85, rt - 0.04), 0.1, segs=2)
+    for sx in (-1, 1):
+        _pv_tube('steel_dark', [(sx * 0.35, -3.0, rt + 0.05), (sx * 0.35, -1.5, rt + 0.03), (sx * 0.5, 1.6, rt - 0.02)], 0.025, 4, cap=True)
+    box('wood_grey', (0.35, 2.4, 0.03), (0.7, -3.0, rt - 0.06), rot=(0, 0.1, 0))
+    with xf((0, -3.0, rt)):
+        for sx in (-1, 1):
+            for sy in (-1, 1):
+                cyl('white', 0.06, 0.16, (sx * 0.42, sy * 0.45, -0.02), 8); cyl('white', 0.085, 0.03, (sx * 0.42, sy * 0.45, 0.07), 8)
+        for sx in (-1, 1): box('steel_dark', (0.07, 1.06, 0.07), (sx * 0.42, 0, 0.14))
+        for sy in (-1, 1): box('steel_dark', (0.9, 0.07, 0.07), (0, sy * 0.5, 0.14))
+        zl, zk, zt = 0.24, 0.92, 1.66
+        for sx in (-1, 1):
+            X = sx * 0.4
+            for sy in (-1, 1):
+                rod('steel_dark', (X, 0.0, zl), (X, sy * 0.62, zk), 0.025, 5); rod('steel_dark', (X, sy * 0.62, zk), (X, 0, zt), 0.02, 5)
+                rod('metal', (X * 1.0, sy * 0.35, 0.2), (X, sy * 0.3, zl + 0.33), 0.012, 4)
+        for sy in (-1, 1): rod('steel_dark', (-0.4, sy * 0.62, zk), (0.4, sy * 0.62, zk), 0.022, 4)
+        rod('steel_dark', (-0.4, 0, zl), (0.4, 0, zl), 0.03, 5); rod('steel_dark', (-0.4, 0, zt), (0.4, 0, zt), 0.022, 4)
+        for sy in (-1, 1): box('metal', (1.25, 0.05, 0.05), (0, sy * 0.07, zt + 0.0))
+        for sx in (-1, 1):
+            _pv_tube('steel_dark', [(sx * 0.6, -0.07, zt + 0.05), (sx * 0.72, -0.0, zt + 0.06), (sx * 0.84, 0.0, zt - 0.02), (sx * 0.9, 0.0, zt - 0.14)], 0.018, 4, cap=True)
+            _pv_tube('steel_dark', [(sx * 0.6, 0.07, zt + 0.05), (sx * 0.72, 0.0, zt + 0.06)], 0.018, 4, cap=True)
+    cyl('white', 0.05, 0.18, (0.55, -1.9, rt - 0.04), 8); cyl('steel_dark', 0.08, 0.06, (0.55, -1.9, rt + 0.14), 8)   # lightning arrester
+
 
 @model('eno_station', '小さな駅(江ノ島駅風)', '乗り物')
 def eno_station():
-    # a small open platform shelter: posts, a tiled roof, a bench and a station sign 「えのしま」
+    # a small seaside tram stop: a gabled tiled canopy on green steel columns with knee braces, the station name
+    # board 「えのしま」 with romaji and neighbouring stops, benches, a ticket kiosk, IC card readers, a timetable,
+    # a clock, pendant lamps, a timber fence along the back with potted hydrangeas, a tactile strip along the edge.
+    # Front (-Y) faces the track; footprint 12.4 x 3 m.
+    G, C = 'eno_green', 'eno_cream'
+    zt = 2.5
+    box('yellow', (12.2, 0.3, 0.018), (0, -1.28, 0))
     for x in (-5.5, 0, 5.5):
-        for y in (-0.9, 0.9): cyl('wood_dark', 0.08, 2.9, (x, y, 0), 8)
-    with xf((0, 0, 2.9)): box('roof_tile', (12.4, 2.8, 0.18), (0, 0, 0))
-    box('wood_dark', (12.4, 0.12, 0.3), (0, -1.4, 2.75)); box('wood_dark', (12.4, 0.12, 0.3), (0, 1.4, 2.75))
-    for x in (-3, 3): box('wood', (2.0, 0.45, 0.08), (x, 0.6, 0.45)); box('wood_dark', (2.0, 0.08, 0.45), (x, 0.82, 0.5))
-    for x in (-3.9, -2.1, 2.1, 3.9): box('steel_dark', (0.06, 0.4, 0.45), (x, 0.6, 0))
-    with xf((0, 0, 2.2)):
-        box('white', (2.4, 0.08, 0.55), (0, 0, 0)); text3d('navy', 'えのしま', 0.3, (0, -0.05, 0.12), depth=0.01)
-        for sx in (-1, 1): rod('steel_dark', (sx * 1.0, 0, 0.55), (sx * 1.0, 0, 0.7), 0.02, 4)
+        for y in (-0.9, 0.9):
+            cyl(G, 0.085, zt, (x, y, 0), 10); cyl(G, 0.13, 0.14, (x, y, 0), 10); cyl(G, 0.11, 0.08, (x, y, zt - 0.08), 10)
+            for sx in (-1, 1):
+                if abs(x + sx * 0.6) < 6.1: rod(G, (x, y, zt - 0.6), (x + sx * 0.6, y, zt), 0.035, 4)
+            rod(G, (x, y, zt - 0.5), (x, y * 0.45, zt), 0.035, 4)
+        box(G, (0.14, 2.15, 0.22), (x, 0, zt))
+    for y in (-0.9, 0.9): box(G, (12.3, 0.14, 0.22), (0, y, zt))
+    # roof: ridge along X, eaves at +-1.5; trusses at the columns, tiled slabs over a boarded ceiling
+    zr, ze, hw = 3.12, 2.52, 6.2
+    for sg in (-1, 1):
+        slab('roof_tile', (-hw, sg * 1.5, ze), (hw, sg * 1.5, ze), (-hw, 0, zr), (hw, 0, zr), 0.07)
+        slab('wood', (-hw + 0.05, sg * 1.45, ze - 0.075), (hw - 0.05, sg * 1.45, ze - 0.075), (-hw + 0.05, 0, zr - 0.075), (hw - 0.05, 0, zr - 0.075), 0.02)
+        box(C, (2 * hw + 0.06, 0.05, 0.16), (0, sg * 1.53, ze - 0.14))
+        bar('alu', -hw, hw, sg * 1.56, sg * 1.62, ze - 0.12, ze - 0.04)
+        for sx in (-1, 1):
+            a = Vector((sx * (hw + 0.02), sg * 1.53, ze - 0.06)); b = Vector((sx * (hw + 0.02), 0, zr - 0.02)); d_ = b - a
+            o = box(C, (0.05, d_.length + 0.08, 0.17), (a + b) / 2 - Vector((0, 0, 0.1)))
+            o.rotation_euler = (math.atan2(d_.z, d_.y) + (0 if sg < 0 else math.pi), 0, 0)
+    box('ridge_tile', (2 * hw + 0.1, 0.24, 0.1), (0, 0, zr - 0.04)); rod('ridge_tile', (-hw - 0.05, 0, zr + 0.06), (hw + 0.05, 0, zr + 0.06), 0.07, 6)
+    for x in (-5.5, 0, 5.5):
+        rod(G, (x, 0, zt + 0.22), (x, 0, zr - 0.1), 0.04, 4)
+        for sg in (-1, 1): rod(G, (x, sg * 0.9, zt + 0.22), (x, sg * 0.08, zr - 0.1), 0.03, 4)
+    for sx in (-1, 1): rod('alu', (sx * 6.05, 1.58, ze - 0.08), (sx * 6.05, 1.58, 0.05), 0.03, 6)
+    # station name board hanging from the front beam
+    with xf((-2.75, -0.9, 0)):
+        for sx in (-1, 1): rod('steel_dark', (sx * 0.9, 0, zt), (sx * 0.9, 0, 2.42), 0.012, 4)
+        box(G, (2.16, 0.07, 0.56), (0, 0, 1.86)); box('white', (2.08, 0.08, 0.48), (0, 0, 1.9))
+        box(G, (2.08, 0.09, 0.1), (0, 0, 1.9))
+        text3d('navy', 'えのしま', 0.2, (0, -0.045, 2.22), depth=0.01)
+        text3d('ink', 'Enoshima', 0.08, (0, -0.045, 2.06), depth=0.006)
+        text3d('ink_white', '← こしごえ', 0.055, (-0.62, -0.05, 1.95), depth=0.004)
+        text3d('ink_white', 'しょうなんかいがんこうえん →', 0.05, (0.42, -0.05, 1.95), depth=0.004)
+        text3d('navy', 'えのしま', 0.2, (0, 0.045, 2.18), rz=math.pi, depth=0.01)
+    # benches
+    for x in (-2.75, 2.75):
+        with xf((x, 0.55, 0)):
+            for k in range(3): box('wood', (1.7, 0.1, 0.035), (0, -0.14 + k * 0.12, 0.42))
+            for k in range(2): box('wood', (1.7, 0.03, 0.1), (0, 0.24 + 0.03 * k, 0.56 + k * 0.17), rot=(0.18, 0, 0))
+            for sx in (-1, 1):
+                bar('steel_dark', sx * 0.7 - 0.02, sx * 0.7 + 0.02, -0.17, 0.2, 0.38, 0.42)
+                bar('steel_dark', sx * 0.7 - 0.02, sx * 0.7 + 0.02, -0.15, -0.11, 0.0, 0.38)
+                bar('steel_dark', sx * 0.7 - 0.02, sx * 0.7 + 0.02, 0.18, 0.22, 0.0, 0.85)
+    # ticket kiosk
+    with xf((-4.1, 0.8, 0)):
+        box(G, (1.3, 0.85, 1.0), (0, 0, 0))
+        box('glass', (1.2, 0.75, 0.8), (0, 0, 1.0))
+        for sx in (-1, 1):
+            for sy in (-1, 1): box(C, (0.06, 0.06, 0.8), (sx * 0.62, sy * 0.4, 1.0))
+        box(C, (1.36, 0.9, 0.35), (0, 0, 1.8)); box(G, (1.42, 0.96, 0.06), (0, 0, 2.15))
+        box(C, (0.6, 0.18, 0.04), (0, -0.5, 1.0))
+        box(C, (1.24, 0.04, 0.05), (0, -0.4, 1.4))
+        text3d('ink', 'きっぷ', 0.16, (0, -0.46, 1.98), depth=0.008)
+        box('window_lit', (1.1, 0.02, 0.5), (0, 0.3, 1.1))
+    # IC card readers (simple gates)
+    for x in (4.15, 4.95):
+        with xf((x, -0.05, 0)):
+            _pv_rbox('white', (0.22, 0.85, 0.95), (0, 0, 0), 0.04)
+            _pv_rbox('eno_skirt', (0.24, 0.3, 0.04), (0, -0.25, 0.95), 0.015, rot=(-0.2, 0, 0))
+            box('vend_panel', (0.16, 0.18, 0.012), (0, -0.25, 0.985), rot=(-0.2, 0, 0))
+            box(G, (0.23, 0.86, 0.06), (0, 0, 0.6))
+    # timetable on the rear centre column
+    with xf((0, 0.78, 0)):
+        box(G, (0.66, 0.04, 0.86), (0, 0, 1.08)); box('white', (0.6, 0.05, 0.72), (0, 0, 1.1))
+        text3d('ink_white', '時刻表', 0.06, (0, -0.03, 1.87), depth=0.004)
+        for k in range(6): box('ink', (0.5, 0.055, 0.008), (0, 0, 1.2 + k * 0.1))
+        box('ink', (0.006, 0.055, 0.6), (0, 0, 1.15))
+    # clock hanging from the centre cross beam, pendant lamps along the ridge
+    with xf((0, 0, 0)):
+        rod('steel_dark', (0, 0, zt), (0, 0, zt - 0.12), 0.015, 4)
+        cyl('white', 0.2, 0.07, (0, 0.035, zt - 0.33), 16, rot=(math.pi / 2, 0, 0))
+        torus(G, 0.2, 0.025, (0, 0, zt - 0.33), rot=(math.pi / 2, 0, 0), seg=16, rseg=4)
+        for sy in (-1, 1):
+            box('ink', (0.02, 0.01, 0.13), (0, sy * 0.04, zt - 0.33), rot=(0, 0.6, 0)); box('ink', (0.02, 0.01, 0.09), (0, sy * 0.04, zt - 0.33), rot=(0, -2.2, 0))
+    for x in (-4.1, -1.4, 1.4, 4.1):
+        rod('steel_dark', (x, 0, zr - 0.1), (x, 0, 2.55), 0.01, 3)
+        cyl(G, 0.2, 0.14, (x, 0, 2.42), 10, r2=0.05); ico('lamp', 0.07, (x, 0, 2.42), sub=1)
+    # timber fence along the back with potted hydrangeas
+    for k in range(9):
+        x = -6.1 + k * 12.2 / 8; box('wood_dark', (0.08, 0.08, 1.05), (x, 1.42, 0)); box('wood_dark', (0.11, 0.11, 0.03), (x, 1.42, 1.05))
+    for z in (0.3, 0.6, 0.9): box('wood', (12.2, 0.04, 0.08), (0, 1.38, z))
+    for k, (x, m) in enumerate(((-1.25, 'hydrangea'), (1.25, 'hydrangea_pink'), (5.0, 'hydrangea'), (-6.0, 'hydrangea_pink'))):
+        cyl('terracotta', 0.2, 0.34, (x, 1.12, 0), 10, r2=0.24)
+        ico('leaf', 0.3, (x, 1.12, 0.48), (1, 0.85, 0.65), 2, jitter=0.15, seed=k)
+        for j in range(3):
+            a = j * 2.1 + k; ico(m, 0.12, (x + math.cos(a) * 0.15, 1.12 + math.sin(a) * 0.1, 0.62 + 0.04 * j), sub=1, jitter=0.1, seed=j)
 
 
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
@@ -4042,10 +5180,10 @@ def fisherman():
             _pv_tube('pv_rubber_orange', [p0, (sx * 0.1, -0.08, 1.43), (sx * 0.075, 0.02, 1.47), (sx * 0.02, 0.09, 1.44)], 0.014, 4, flat=0.35)
             a = -math.pi / 2 + sx * 0.98
             _pv_tube('cloth_white', [(0.2 * math.cos(a), 0.2 * 0.68 * math.sin(a), 1.02), (sx * 0.19, 0.0, 1.02), (sx * 0.14, 0.11, 1.02), (0, 0.125, 1.02)], 0.009, 4)
-            torus('cloth_white', 0.03, 0.008, (sx * 0.03, 0.13, 1.02), rot=(math.pi / 2, 0, 0), seg=8, rseg=4)
-        for k in range(4): ico('white', 0.008, (0, -0.122, 1.12 + k * 0.08), (1, 0.5, 1), 1)   # shirt buttons above the bib
+            torus('cloth_white', 0.03, 0.008, (sx * 0.03, 0.13, 1.02), rot=(math.pi / 2, 0, 0), seg=7, rseg=3)
+        for z in (1.37, 1.42): ico('white', 0.008, (0, -0.128, z), (1, 0.5, 1), 1)   # shirt buttons above the bib
         # twisted towel headband with the knot at the front
-        ring = []; n = 16
+        ring = []; n = 15
         for k in range(n + 1):
             a = k / n * math.tau
             ring.append((x0 + 0.139 * math.sin(a), y0 - 0.141 * math.cos(a) + 0.004, z0 + 0.055 + 0.02 * math.cos(a)))
@@ -4063,7 +5201,7 @@ def shopkeeper():
     def body():
         x0, y0, z0 = _PV_HC
         rows = [(0.288, 0.45, 0.95), (0.278, 0.6, 0.95), (0.245, 0.8, 1.0), (0.212, 0.95, 1.08), (0.205, 1.05, 0.95), (0.21, 1.16, 0.66), (0.218, 1.27, 0.5)]
-        _pv_shell('pv_apron_cloth', rows, seg=10, t=0.01, sy=0.8)
+        _pv_shell('pv_apron_cloth', rows, seg=8, t=0.01, sy=0.8)
         _pv_shell('pv_apron_cloth', [(0.29, 0.66, 0.38), (0.285, 0.8, 0.38)], seg=6, t=0.012, sy=0.81)        # pocket
         _pv_shell('cloth_white', [(0.291, 0.785, 0.385), (0.287, 0.8, 0.385)], seg=6, t=0.013, sy=0.81)        # pocket hem
         for sx in (-1, 1):
@@ -4071,18 +5209,16 @@ def shopkeeper():
             _pv_tube('pv_apron_cloth', [p0, (sx * 0.12, -0.09, 1.38), (sx * 0.1, 0.0, 1.43), (sx * 0.03, 0.08, 1.42)], 0.013, 4, flat=0.4)
             a = -math.pi / 2 + sx * 1.0
             _pv_tube('pv_apron_cloth', [(0.205 * math.cos(a), 0.205 * 0.8 * math.sin(a), 1.02), (sx * 0.19, 0.02, 1.02), (sx * 0.12, 0.12, 1.02), (0, 0.13, 1.02)], 0.01, 4)
-            torus('pv_apron_cloth', 0.035, 0.009, (sx * 0.035, 0.135, 1.02), rot=(math.pi / 2, 0.3 * sx, 0), seg=8, rseg=4)
+            torus('pv_apron_cloth', 0.035, 0.009, (sx * 0.035, 0.135, 1.02), rot=(math.pi / 2, 0.3 * sx, 0), seg=7, rseg=3)
             _pv_tube('pv_apron_cloth', [(0, 0.13, 1.02), (sx * 0.03, 0.14, 0.94), (sx * 0.05, 0.135, 0.88)], 0.009, 4, flat=0.4)
         # perm curls and a bun
-        rnd = random.Random(3)
-        for k in range(16):
-            a = k / 16 * math.tau * 1.0; el = 0.25 + 0.6 * ((k * 7) % 5) / 5
-            if abs(math.atan2(math.sin(a), math.cos(a))) < 0.7 and el < 0.6: el = 0.65
-            px, py, pz = math.sin(a) * math.cos(el), -math.cos(a) * math.cos(el), math.sin(el)
-            ico('hair_grey', 0.038, (x0 + 0.138 * px, y0 + 0.006 + 0.142 * py, z0 + 0.158 * pz), sub=1, jitter=0.15, seed=k)
         ico('hair_grey', 0.058, (x0, y0 + 0.13, z0 + 0.1), (1, 0.9, 0.9), 2, jitter=0.12, seed=5)
-        torus('cloth_red', 0.045, 0.01, (x0, y0 + 0.1, z0 + 0.09), rot=(1.2, 0, 0), seg=10, rseg=4)
-    _pv_person('shopkeeper', 0.95, 'pv_blouse', 'cloth_khaki', hair='hair_grey', hairstyle='perm', sleeves='cover', shoes='shoe',
+        for k in range(9):   # a ring of tight curls along the hairline and over the crown, two greys
+            a = (k - 4) * 0.62; el = 0.62 if abs(k - 4) < 2 else 0.35
+            px, py, pz = math.sin(a) * math.cos(el), -math.cos(a) * math.cos(el), math.sin(el)
+            ico('pv_hair_grey_dk' if k % 2 else 'hair_grey', 0.036, (x0 + 0.158 * px, y0 + 0.006 + 0.16 * py, z0 + 0.172 * pz), (1, 1, 0.85), 1, jitter=0.1, seed=k)
+        torus('cloth_red', 0.045, 0.01, (x0, y0 + 0.1, z0 + 0.09), rot=(1.2, 0, 0), seg=8, rseg=3)
+    _pv_person('shopkeeper', 0.95, 'pv_blouse', 'cloth_khaki', skin='pv_skin', hair='hair_grey', hairstyle='perm', sleeves='cover', shoes='shoe',
                skirt=True, blush=True, body=body, collar='cloth_white')
 
 @model('townsman', '町の人(買い物帰り)', '人物', lod=False)
@@ -4091,8 +5227,8 @@ def townsman():
     # and an eco bag with a leek and a daikon sticking out (in the right hand: it swings with the arm)
     def body():
         x0, y0, z0 = _PV_HC
-        rod('metal', (0, -0.128, 0.9), (0, -0.133, 1.36), 0.0045, 4)                                     # zip
-        _pv_shell('white', [(0.205, 1.3, 0.22), (0.19, 1.39, 0.32)], seg=4, t=0.01, sy=0.66)                # tee at the neck
+        rod('metal', (0, -0.128, 0.9), (0, -0.136, 1.38), 0.0045, 4)                                     # zip
+        ico('metal', 0.01, (0, -0.138, 1.33), (1.0, 0.5, 1.4), 1)                                         # zip pull
         _pv_lathe('pv_jacket_dk', [(0.19, 0.905), (0.194, 0.915), (0.19, 0.95), (0.18, 0.955)], seg=14, sy=0.67)   # ribbed hem
         # cap: crown, button, brim; hair shows at the sides and the back
         _pv_dome('cloth_blue', (x0, y0 + 0.01, z0 + 0.012), (0.146, 0.15, 0.158), lambda a: 0.3 if abs(a) < 1.2 else 0.3 - 0.25 * (abs(a) - 1.2) / 1.94, seg=20, rings=6)
@@ -4108,8 +5244,8 @@ def townsman():
         for k in (-1, 1): _pv_tube('pv_leek', [(hx + 0.03, hy + 0.17, 0.97), (hx + 0.03 + k * 0.03, hy + 0.21, 1.05)], [0.01, 0.004], 4)
         o = cyl('white', 0.04, 0.2, (hx + 0.0, hy - 0.08, 0.6), 8, r2=0.035)
         ico('pv_leek', 0.035, (hx, hy - 0.08, 0.81), (1, 1, 0.6), 1)
-    _pv_person('townsman', 1.0, 'pv_jacket', 'cloth_khaki', hair='hair', hairstyle='capped', sleeves='long', shoes='sneaker', body=body,
-               arm_r=bag)
+    _pv_person('townsman', 1.0, 'pv_jacket', 'cloth_khaki', skin='pv_skin', hair='hair', hairstyle='capped', sleeves='long', shoes='sneaker', body=body,
+               arm_r=bag, collar='white')
 
 @model('cat', '猫(茶トラ)', '動物', lod=False)
 def cat():
@@ -4180,7 +5316,7 @@ def seagull():
 
 # ---------------------------------------------------------------- _pv_: helpers for people, animals, vehicles and boats
 PALETTE.update({
-    'pv_skin_tan': P((0.86, 0.56, 0.38), 0.7), 'pv_rubber_orange': P((0.95, 0.33, 0.04), 0.35), 'pv_boot_white': P((0.9, 0.9, 0.86), 0.4),
+    'pv_skin_tan': P((0.6, 0.32, 0.18), 0.7), 'pv_rubber_orange': P((0.95, 0.33, 0.04), 0.35), 'pv_boot_white': P((0.9, 0.9, 0.86), 0.4),
     'pv_mouth': P((0.45, 0.1, 0.08), 0.6), 'pv_iris': P((0.12, 0.06, 0.03), 0.15), 'pv_gull_grey': P((0.55, 0.6, 0.66), 0.8),
     'pv_beak': P((0.98, 0.75, 0.1), 0.45), 'pv_feet': P((0.95, 0.6, 0.45), 0.7), 'pv_apron_cloth': P((0.35, 0.55, 0.75), 0.9),
     'pv_sneaker': P((0.92, 0.92, 0.9), 0.7), 'pv_shoe_brown': P((0.22, 0.12, 0.06), 0.55), 'pv_leek': P((0.25, 0.55, 0.15), 0.7),
@@ -4317,92 +5453,147 @@ def _pv_wheel(loc, R, W, rim='pv_chrome', tyre='rubber', seg=20, hub=None, spoke
 # Parts as before: <prefix>_leg_l/r pivot at the hip (+-0.09h, 0, 0.84h), <prefix>_arm_l/r pivot at the shoulder (+-0.24h, 0, 1.4h).
 _PV_HC = (0.0, -0.005, 1.6)   # head centre
 
-def _pv_head(skin, hair, hairstyle='short', blush=False, brows=1.0):
+PALETTE.update({   # second pass on the townsfolk: soft blush, skin creases, darker hems and scuffs
+    'pv_cheek_soft': P((0.98, 0.6, 0.55), 0.8), 'pv_skin_shade': P((0.78, 0.5, 0.38), 0.8), 'pv_skin_shade_tan': P((0.62, 0.36, 0.22), 0.8),
+    'pv_khaki_dk': P((0.36, 0.32, 0.22), 0.9), 'pv_skin': P((0.8, 0.49, 0.34), 0.7), 'pv_boot_scuff': P((0.55, 0.53, 0.48), 0.6), 'pv_cover_band': P((0.02, 0.03, 0.1), 0.85), 'pv_hair_grey_dk': P((0.42, 0.42, 0.44), 0.75),
+})
+
+
+def _pv_sweep(mat, pts, rads, seg=8, side=(0, 1, 0), cap=True):
+    """Tube along a polyline with elliptical sections: rads[i] = r or (ra, rb), ra measured along `side` (projected
+    square to the path), rb across. For shaped limbs: flattened wrists, hands, thighs."""
+    pts = [Vector(p) for p in pts]; n = len(pts); sd = Vector(side); rings = []
+    for i in range(n):
+        t = (pts[min(n - 1, i + 1)] - pts[max(0, i - 1)]).normalized()
+        a = (sd - t * sd.dot(t)).normalized(); b = t.cross(a)
+        ra, rb = rads[i] if isinstance(rads[i], (tuple, list)) else (rads[i], rads[i])
+        rings.append([tuple(pts[i] + a * (math.cos(k / seg * math.tau) * ra) + b * (math.sin(k / seg * math.tau) * rb)) for k in range(seg)])
+    return loft(mat, rings, closed=True, cap=cap)
+
+def _pv_head(skin, hair, hairstyle='short', blush=False, brows=1.0, cheek='pv_cheek_soft'):
     x0, y0, z0 = _PV_HC
-    def jaw(x, y, z):  # chin a little forward and pointed: anime face
+    def jaw(x, y, z):  # soft rounded chin a little forward, full cheeks: friendly anime face
         k = max(0.0, -z / 0.135)
-        return (x * (1 - 0.12 * k * k), y - 0.014 * k * (1 if y < 0 else 0.3), z)
-    _pv_lathe(skin, [(0, -0.135), (0.05, -0.13), (0.088, -0.108), (0.112, -0.07), (0.124, -0.025), (0.128, 0.02), (0.124, 0.065),
+        return (x * (1 - 0.07 * k * k), y - 0.01 * k * (1 if y < 0 else 0.3), z)
+    _pv_lathe(skin, [(0, -0.132), (0.055, -0.127), (0.094, -0.104), (0.117, -0.068), (0.127, -0.025), (0.129, 0.02), (0.124, 0.065),
                      (0.105, 0.105), (0.07, 0.133), (0, 0.146)], (x0, y0, z0), seg=16, sy=0.98, f=jaw)
-    cyl(skin, 0.048, 0.14, (0, 0.0, 1.37), 10)                                              # neck
+    _pv_lathe(skin, [(0.05, 1.36), (0.047, 1.42), (0.05, 1.5)], seg=8)                          # neck
     for sx in (-1, 1):
-        ex = sx * 0.047
-        ico('eye', 0.024, (x0 + ex, y0 - 0.106, z0 - 0.004), (0.7, 0.32, 1.08), 2)             # big dark anime eye
-        ico('pv_iris', 0.013, (x0 + ex, y0 - 0.112, z0 - 0.012), (0.8, 0.3, 0.9), 1)           # warm lower iris
-        ico('white', 0.0075, (x0 + ex + sx * 0.006, y0 - 0.115, z0 + 0.008), sub=1)            # highlight
-        _pv_tube('ink', [(x0 + ex - sx * 0.02, y0 - 0.105, z0 + 0.018), (x0 + ex, y0 - 0.112, z0 + 0.026), (x0 + ex + sx * 0.022, y0 - 0.103, z0 + 0.02)], 0.004, 4)
-        _pv_tube(hair, [(x0 + ex - sx * 0.022, y0 - 0.108, z0 + 0.046), (x0 + ex + sx * 0.004, y0 - 0.112, z0 + 0.054 * brows), (x0 + ex + sx * 0.024, y0 - 0.1, z0 + 0.05)], 0.0045 * brows, 4)
-        ico(skin, 0.03, (x0 + sx * 0.124, y0 + 0.008, z0 - 0.012), (0.4, 0.65, 1.0), 1)        # ears
-        if blush: ico('cheek', 0.02, (x0 + sx * 0.068, y0 - 0.098, z0 - 0.045), (1.0, 0.35, 0.6), 1)
-    ico(skin, 0.013, (x0, y0 - 0.123, z0 - 0.032), (0.8, 0.9, 1.0), 1)                          # nose
-    _pv_tube('pv_mouth', [(x0 - 0.019, y0 - 0.11, z0 - 0.063), (x0, y0 - 0.117, z0 - 0.07), (x0 + 0.019, y0 - 0.11, z0 - 0.063)], 0.0042, 4)
+        ex = sx * 0.05; ey = y0 - 0.112; ez = z0 - 0.012
+        ico('white', 0.026, (x0 + ex, ey + 0.006, ez), (0.86, 0.3, 1.0), 1)                    # eye white
+        ico('pv_iris', 0.021, (x0 + ex - sx * 0.003, ey + 0.001, ez - 0.002), (0.78, 0.3, 1.0), 1)   # big warm-brown iris
+        ico('eye', 0.012, (x0 + ex - sx * 0.003, ey - 0.002, ez + 0.002), (0.8, 0.3, 1.0), 1)  # pupil
+        ico('white', 0.0075, (x0 + ex + sx * 0.004, ey - 0.006, ez + 0.01), sub=1)             # catch light
+        # upper lash line: a soft arc thickening to the outer corner, with a small flick
+        _pv_tube('ink', [(x0 + ex - sx * 0.023, ey + 0.004, ez + 0.012), (x0 + ex - sx * 0.006, ey - 0.002, ez + 0.026),
+                         (x0 + ex + sx * 0.016, ey + 0.001, ez + 0.022), (x0 + ex + sx * 0.027, ey + 0.008, ez + 0.012)], [0.0035, 0.0048, 0.005, 0.003], 4)
+        # gently arched brows, higher on the forehead
+        _pv_tube(hair, [(x0 + ex - sx * 0.022, ey + 0.004, z0 + 0.045), (x0 + ex, ey - 0.0, z0 + 0.054 * brows ** 0.3), (x0 + ex + sx * 0.024, ey + 0.012, z0 + 0.046)], 0.0038 * brows, 4)
+        ico(skin, 0.026, (x0 + sx * 0.126, y0 + 0.01, z0 - 0.014), (0.38, 0.62, 1.0), 1)       # ears
+        ico(cheek if not blush else 'cheek', 0.019, (x0 + sx * 0.074, y0 - 0.106, z0 - 0.05), (1.1, 0.3, 0.55), 1)  # cheeks
+    ico(skin, 0.01, (x0, y0 - 0.127, z0 - 0.036), (0.8, 0.9, 1.0), 1)                            # tiny nose
+    _pv_tube('pv_mouth', [(x0 - 0.016, y0 - 0.115, z0 - 0.068), (x0 - 0.006, y0 - 0.12, z0 - 0.074), (x0 + 0.006, y0 - 0.12, z0 - 0.074),
+                          (x0 + 0.016, y0 - 0.115, z0 - 0.068)], 0.0036, 4)                       # smile
     if hairstyle is None: return
     lo = {'short': -0.62, 'capped': -0.62, 'crop': -0.45, 'perm': -0.5}[hairstyle]
     def cut(a):
         A = abs(a)
-        if A < 0.85: c = 0.36 - (0.15 * abs(math.sin(a * 8.5)) if hairstyle != 'crop' else 0.0)   # spiky fringe
-        elif A < 1.5: c = 0.36 + (-0.02 - 0.36) * (A - 0.85) / 0.65
+        if A < 0.85: c = 0.38 - (0.13 * abs(math.sin(a * 8.5)) if hairstyle != 'crop' else 0.0)   # soft fringe locks
+        elif A < 1.5: c = 0.38 + (-0.02 - 0.38) * (A - 0.85) / 0.65
         elif A < 2.6: c = -0.02 + (lo + 0.02) * (A - 1.5) / 1.1
         else: c = lo
         return c
-    r = (0.138, 0.142, 0.158) if hairstyle != 'crop' else (0.134, 0.136, 0.15)
-    _pv_dome(hair, (x0, y0 + 0.006, z0 - 0.002), r, cut, seg=22, rings=6)
+    r = (0.139, 0.143, 0.158) if hairstyle != 'crop' else (0.134, 0.137, 0.15)
+    o = _pv_dome(hair, (x0, y0 + 0.006, z0 - 0.002), r, cut, seg=22, rings=6)
+    if hairstyle == 'perm':   # tight curls: bump the whole cap instead of stacking separate balls
+        for vt in o.data.vertices:
+            c = vt.co; a = math.atan2(c.x, -c.y); el = math.atan2(c.z, math.hypot(c.x, c.y))
+            c *= 1.08 + 0.13 * (0.5 + 0.5 * math.sin(a * 5.5)) * (0.5 + 0.5 * math.cos(el * 7)) * min(1.0, 0.4 + c.z / 0.1)
     if hairstyle == 'short':  # a few tufts at the crown and the nape
         for k, (dx, dy, dz) in enumerate(((0.02, 0.06, 0.15), (-0.05, 0.1, 0.11), (0.08, 0.09, 0.07))):
             o = cyl(hair, 0.03, 0.06, (x0 + dx, y0 + dy, z0 + dz), 6, r2=0.0); o.rotation_euler = (-0.9, dx * 6, 0)
 
+def _pv_hand(skin, sx, w=(0.257, -0.03, 0.89)):
+    """Relaxed hanging hand (palm towards the thigh): one mitten-shaped sweep with the four fingers grouped and
+    curling in, a separate thumb in front, and two finger grooves. w = wrist centre."""
+    x, y, z = w
+    P = lambda dx, dy, dz: (sx * (x + dx), y + dy, z + dz)
+    _pv_sweep(skin, [P(0, 0.002, 0.03), P(0.0, 0.0, 0.0), P(0.002, -0.006, -0.03), P(0.002, -0.01, -0.058), P(-0.004, -0.012, -0.083),
+                     P(-0.016, -0.012, -0.102), P(-0.025, -0.01, -0.108)],
+              [(0.022, 0.019), (0.026, 0.019), (0.034, 0.019), (0.036, 0.017), (0.034, 0.015), (0.03, 0.012), (0.022, 0.008)], 8)
+    _pv_tube(skin, [P(-0.006, -0.026, -0.012), P(-0.01, -0.044, -0.036), P(-0.016, -0.05, -0.058), P(-0.022, -0.046, -0.07)], [0.012, 0.011, 0.009, 0.007], 6)
+    for dy in (-0.011, 0.011):   # grooves between the grouped fingers on the back of the hand
+        _pv_tube('pv_skin_shade_tan' if skin == 'pv_skin_tan' else 'pv_skin_shade', [P(0.019, -0.01 + dy, -0.07), P(0.014, -0.012 + dy, -0.09), P(0.004, -0.012 + dy, -0.103)], 0.0028, 3, cap=False)
+
 def _pv_person(prefix, h, top, bottom, skin='skin', hair='hair', hairstyle='short', sleeves='long', shoes='shoe', skirt=False,
-               blush=False, brows=1.0, body=None, arm_r=None, collar=None):
+               blush=False, brows=1.0, body=None, arm_r=None, collar=None, cheek='pv_cheek_soft'):
     with xf((0, 0, 0), s=h):
-        _pv_head(skin, hair, hairstyle, blush, brows)
-        # torso (top colour) with a hem flaring over the trousers, pelvis in the bottom colour
-        _pv_lathe(top, [(0.0, 0.88), (0.176, 0.88), (0.19, 0.91), (0.175, 0.97), (0.166, 1.04), (0.178, 1.15), (0.194, 1.25), (0.2, 1.32),
-                        (0.188, 1.38), (0.145, 1.425), (0.075, 1.45), (0, 1.455)], seg=14, sy=0.66)
+        _pv_head(skin, hair, hairstyle, blush, brows, cheek)
+        # torso (top colour) with a hem flaring over the trousers; shoulders slope down from the neck to the arms
+        def shoulders(x, y, z):
+            k = max(0.0, (z - 1.25) / 0.2); q = min(1.0, abs(x) / 0.2)
+            return (x, y * (1.0 + 0.06 * k if y < 0 else 1.0), z - 0.035 * k * q * q)
+        _pv_lathe(top, [(0.0, 0.88), (0.176, 0.88), (0.19, 0.91), (0.175, 0.97), (0.166, 1.04), (0.178, 1.15), (0.194, 1.25), (0.204, 1.33),
+                        (0.198, 1.39), (0.16, 1.44), (0.09, 1.465), (0, 1.47)], seg=14, sy=0.66, f=shoulders)
         if skirt:
             _pv_lathe(bottom, [(0.0, 0.4), (0.27, 0.4), (0.272, 0.43), (0.235, 0.62), (0.2, 0.8), (0.176, 0.95), (0.0, 0.95)], seg=16, sy=0.85)
             for k in range(5):  # pleats
                 a = -math.pi / 2 + (k - 2) * 0.42
                 _pv_tube(bottom, [(0.265 * math.cos(a), 0.265 * 0.85 * math.sin(a), 0.42), (0.19 * math.cos(a), 0.19 * 0.85 * math.sin(a), 0.85)], [0.012, 0.004], 4)
         else:
-            _pv_lathe(bottom, [(0.0, 0.76), (0.12, 0.765), (0.172, 0.8), (0.182, 0.86), (0.174, 0.95), (0.0, 0.95)], seg=16, sy=0.72)
-        _pv_lathe(collar or top, [(0.064, 1.405), (0.08, 1.425), (0.07, 1.475), (0.058, 1.48)], seg=12, sy=0.92)   # collar
+            _pv_lathe(bottom, [(0.0, 0.76), (0.12, 0.765), (0.168, 0.8), (0.18, 0.86), (0.174, 0.95), (0.0, 0.95)], seg=16, sy=0.66)
+            for sx in (-1, 1): _pv_tube(bottom, [(sx * 0.045, -0.118, 0.9), (sx * 0.012, -0.124, 0.8)], 0.007, 4)   # fly / front seam
+        _pv_lathe(collar or top, [(0.064, 1.425), (0.08, 1.445), (0.07, 1.49), (0.058, 1.495)], seg=12, sy=0.92)   # collar
         if body: body()
     for sx, s_ in ((-1, 'l'), (1, 'r')):
         part(f'{prefix}_leg_{s_}', (sx * 0.09 * h, 0, 0.84 * h))
         with xf((0, 0, 0), s=h):
             x = sx * 0.09
-            if skirt:
-                _pv_tube(skin, [(x, 0, 0.82), (x, 0, 0.47), (x, 0.005, 0.1)], [0.07, 0.056, 0.042], 8)
-                _pv_tube('cloth_navy', [(x, 0.004, 0.25), (x, 0.005, 0.07)], [0.046, 0.044], 8)        # socks
-            else:
-                _pv_tube(bottom, [(x, 0, 0.9), (x, 0, 0.68), (x, -0.006, 0.47), (x, 0.0, 0.26), (x, 0.004, 0.1)], [0.088, 0.08, 0.068, 0.062, 0.066], 8)
-                for z in (0.42, 0.5): _pv_tube(bottom, [(x - 0.06, -0.035 - (z - 0.42) * 0.3, z), (x + 0.06, -0.04, z + 0.03)], 0.012, 4)  # knee folds
+            if skirt:   # bare shins with a calf curve and knee, navy socks
+                _pv_sweep(skin, [(x * 0.99, 0.0, 0.62), (x * 0.98, -0.008, 0.52), (x * 0.97, -0.004, 0.46), (x * 0.96, 0.01, 0.37),
+                                 (x * 0.96, 0.006, 0.24), (x * 0.96, 0.004, 0.1)], [0.06, 0.05, 0.05, 0.054, 0.042, 0.038], 10)
+                _pv_sweep('cloth_navy', [(x * 0.96, 0.006, 0.26), (x * 0.96, 0.004, 0.17), (x * 0.96, 0.004, 0.07)], [0.046, 0.042, 0.044], 10)
+                _pv_tube('cloth_navy', [(x * 0.96, 0.006, 0.27), (x * 0.96, 0.006, 0.245)], 0.049, 10)      # sock top
+            else:       # trouser leg: thigh, a knee pushed slightly forward, calf, loose hem over the shoe
+                k = 6 if shoes == 'boots' else 8
+                _pv_sweep(bottom, [(x, 0, 0.93), (x, 0, 0.8), (x, -0.004, 0.68), (x * 0.99, -0.012, 0.53), (x * 0.98, -0.006, 0.45),
+                                   (x * 0.97, 0.007, 0.36), (x * 0.96, 0.004, 0.24), (x * 0.96, 0.0, 0.12)][:k],
+                          [0.084, 0.087, 0.077, 0.066, 0.063, 0.065, 0.058, 0.062][:k], 10)
+                if shoes != 'boots': _pv_tube({'cloth_navy': 'navy', 'denim': 'navy'}.get(bottom, 'pv_khaki_dk'), [(x * 0.96, 0.0, 0.135), (x * 0.96, 0.0, 0.112)], 0.064, 10)   # turned-up hem
+                _pv_tube(bottom, [(x - 0.055, -0.058, 0.565), (x, -0.074, 0.55), (x + 0.055, -0.06, 0.565)], 0.009, 4, cap=False)   # knee crease
+                _pv_tube(bottom, [(x - sx * 0.06, 0.03, 0.8), (x - sx * 0.072, 0.0, 0.62)], 0.006, 3)   # inseam
             if shoes == 'boots':
                 _pv_lathe('pv_boot_white', [(0, 0.03), (0.07, 0.03), (0.072, 0.2), (0.077, 0.36), (0.086, 0.4), (0.086, 0.425), (0.066, 0.425), (0.0, 0.41)], (x, 0.008, 0), seg=10)
                 ico('pv_boot_white', 0.066, (x, -0.05, 0.055), (0.95, 1.55, 0.85), 2, flat_bottom=-0.04)
                 _pv_rbox('rubber', (0.13, 0.25, 0.03), (x, -0.03, 0.0), 0.012)
                 _pv_lathe('cloth_navy', [(0.086, 0.4), (0.09, 0.405), (0.09, 0.425), (0.086, 0.43)], (x, 0.008, 0), seg=10)   # top band
+                _pv_tube('pv_boot_scuff', [(x - sx * 0.068, -0.0, 0.14), (x - sx * 0.07, -0.05, 0.11)], 0.011, 4)        # scuff on the inner side
             else:
                 mat = 'pv_sneaker' if shoes == 'sneaker' else 'pv_shoe_brown'
-                ico(mat, 0.06, (x, -0.035, 0.055), (0.95, 1.9, 0.9), 2, flat_bottom=-0.035)
-                _pv_rbox('cloth_grey' if shoes == 'sneaker' else 'rubber', (0.115, 0.235, 0.025), (x, -0.035, 0.0), 0.01)
+                ico(mat, 0.06, (x * 0.96, -0.035, 0.055), (0.95, 1.9, 0.9), 2, flat_bottom=-0.035)
+                _pv_rbox('cloth_grey' if shoes == 'sneaker' else 'rubber', (0.115, 0.235, 0.025), (x * 0.96, -0.035, 0.0), 0.01)
                 if shoes == 'sneaker':
-                    _pv_tube('cloth_blue', [(x + sx * 0.055, 0.03, 0.04), (x + sx * 0.06, -0.03, 0.06), (x + sx * 0.05, -0.08, 0.04)], 0.008, 4)
-                    for k in range(3): rod('white', (x - 0.025, -0.07 + k * 0.025, 0.085 - k * 0.006), (x + 0.025, -0.07 + k * 0.025, 0.085 - k * 0.006), 0.005, 3)
+                    _pv_tube('cloth_blue', [(x * 0.96 + sx * 0.055, 0.03, 0.04), (x * 0.96 + sx * 0.06, -0.03, 0.06), (x * 0.96 + sx * 0.05, -0.08, 0.04)], 0.008, 4)
+                    for k in range(3): rod('white', (x * 0.96 - 0.025, -0.07 + k * 0.025, 0.085 - k * 0.006), (x * 0.96 + 0.025, -0.07 + k * 0.025, 0.085 - k * 0.006), 0.005, 3)
         part(f'{prefix}_arm_{s_}', (sx * 0.24 * h, 0, 1.4 * h))
         with xf((0, 0, 0), s=h):
-            ico(top, 0.062, (sx * 0.228, 0, 1.35), (1, 0.95, 1), 2)                               # shoulder
-            el, wr = (sx * 0.265, 0.01, 1.11), (sx * 0.272, -0.03, 0.87)
-            _pv_tube(top, [(sx * 0.232, 0, 1.4), (sx * 0.255, 0.005, 1.25), el], [0.064, 0.058, 0.053], 8)
+            # rounded deltoid tucked under the sloping shoulder, upper arm tapering to the elbow, slight bend, forearm
+            # swelling below the elbow and narrowing to a flattened wrist
+            _pv_lathe(top, [(0, -0.05), (0.04, -0.038), (0.056, 0.0), (0.042, 0.034), (0, 0.052)], (sx * 0.207, 0.0, 1.318), seg=8)
+            el = (sx * 0.256, 0.018, 1.115); wr = (sx * 0.257, -0.03, 0.89)
+            _pv_sweep(top, [(sx * 0.214, 0.0, 1.345), (sx * 0.236, 0.004, 1.27), (sx * 0.25, 0.01, 1.19), el],
+                      [(0.056, 0.056), (0.051, 0.053), (0.046, 0.047), (0.043, 0.043)], 8, cap=False)
             fore = skin if sleeves in ('rolled', 'short') else top
-            _pv_tube(fore, [el, (sx * 0.27, -0.01, 0.98), wr], [0.049 if fore == top else 0.043, 0.045 if fore == top else 0.04, 0.039 if fore == top else 0.032], 8)
-            if sleeves == 'rolled': torus(top, 0.052, 0.017, el, rot=(0, 0, 0), seg=12, rseg=5)
-            elif sleeves == 'long': torus(top, 0.04, 0.011, (wr[0], wr[1] + 0.004, wr[2] + 0.02), seg=12, rseg=4)
-            elif sleeves == 'cover':   # shop arm covers (腕カバー) over the forearm
-                _pv_tube('cloth_navy', [(el[0], el[1], el[2] + 0.01), (sx * 0.27, -0.01, 0.98), (wr[0], wr[1], wr[2] + 0.005)], [0.054, 0.05, 0.043], 8)
-                for p in (el, wr): torus('cloth_navy', 0.045, 0.01, (p[0], p[1], p[2] + 0.01), seg=8, rseg=3)
-            ico(skin, 0.045, (sx * 0.274, -0.036, 0.82), (0.55, 0.85, 1.05), 2)                       # hand
-            ico(skin, 0.018, (sx * 0.255, -0.068, 0.835), (0.8, 1.0, 1.3), 1)                          # thumb
+            fpts = [el, (sx * 0.26, 0.004, 1.05), (sx * 0.26, -0.016, 0.96), wr]
+            if fore == top: _pv_sweep(top, fpts, [(0.043, 0.043), (0.044, 0.043), (0.039, 0.036), (0.034, 0.03)], 8)
+            else: _pv_sweep(skin, fpts, [(0.04, 0.04), (0.041, 0.039), (0.035, 0.031), (0.027, 0.022)], 8)
+            if sleeves == 'rolled': _pv_sweep(top, [(el[0], el[1], el[2] + 0.03), el, (el[0], el[1] - 0.004, el[2] - 0.03)], [0.052, 0.058, 0.05], 10)
+            elif sleeves == 'long':   # ribbed cuff a little wider than the sleeve
+                _pv_sweep(top, [(wr[0], wr[1] + 0.006, wr[2] + 0.035), (wr[0], wr[1] + 0.002, wr[2] + 0.012), (wr[0], wr[1], wr[2])], [(0.038, 0.034), (0.039, 0.035), (0.036, 0.032)], 10)
+            elif sleeves == 'cover':   # shop arm covers (腕カバー) over the forearm, gathered at both ends
+                _pv_sweep('cloth_navy', [(el[0], el[1], el[2] + 0.012), fpts[1], fpts[2], (wr[0], wr[1], wr[2] + 0.002)], [0.047, 0.05, 0.046, 0.036], 8)
+                for p, r in ((el, 0.046), (wr, 0.035)): _pv_tube('pv_cover_band', [(p[0], p[1], p[2] + 0.018), (p[0], p[1], p[2] - 0.002)], r + 0.003, 8)
+            _pv_hand(skin, sx, (abs(wr[0]), wr[1], wr[2]))
             if sx > 0 and arm_r: arm_r()
         part(None)
 
