@@ -61,7 +61,9 @@ export class Life {
       for (const it of g.items) {
         p.setFromMatrixPosition(it.m);
         if (p.x < -160 || p.x > 155 || p.z < -142 || p.z > 230) continue;
-        (tree ? this.trees : this.rocks).push({ x: p.x, y: p.y, z: p.z, id: `${n}@${p.x.toFixed(1)},${p.z.toFixed(1)}` });
+        const sc = new THREE.Vector3().setFromMatrixScale(it.m).x, b = g.proto.box;
+        const rad = tree ? 0.45 * sc : Math.max(b.max.x - b.min.x, b.max.z - b.min.z) * 0.5 * sc;   // trunk / rock radius
+        (tree ? this.trees : this.rocks).push({ x: p.x, y: p.y, z: p.z, rad, id: `${n}@${p.x.toFixed(1)},${p.z.toFixed(1)}` });
       }
     }
   }
@@ -132,7 +134,7 @@ export class Life {
         if (l < 0.3 || v.walkT > 25) { v.target = null; v.wait = 3 + Math.random() * 8; }
         else if (d > 0.9) {
           const sp = 0.85 * dt, nx = p.x + dx / l * sp, nz = p.z + dz / l * sp;
-          if (this.walkable(nx, nz)) { p.x = nx; p.z = nz; moving = true; } else { v.target = null; v.wait = 1; }
+          if (this.walkable(nx, nz) && Math.abs(this.ground.height(nx, nz) - p.y) < 0.12) { p.x = nx; p.z = nz; moving = true; } else { v.target = null; v.wait = 1; }
           v.o.rotation.y += wrapA(Math.atan2(dx, dz) - v.o.rotation.y) * Math.min(1, dt * 5);
         }
       }
@@ -160,7 +162,7 @@ export class Life {
       const id = `fruit@${Math.round(p[0])},${Math.round(p[1])}`;
       this.fruitTrees.push({ o, x: p[0], z: p[1], id, fruit: o.getObjectByName('fruit_tree_fruit') });
       this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 0.3, y0: -50, y1: this.ground.height(p[0], p[1]) + 3 });
-      this.trees.push({ x: p[0], y: 0, z: p[1], id, fruitTree: true });
+      this.trees.push({ x: p[0], y: 0, z: p[1], rad: 0.3, id, fruitTree: true });
     }
     // dig spot / shell / bottle meshes are cloned per day in refreshDay()
     const sg = new THREE.ConeGeometry(0.07, 0.06, 9); sg.rotateX(-PI / 2 + 0.3); sg.translate(0, 0.025, 0);
@@ -183,7 +185,8 @@ export class Life {
       const o = this.town.clone('dig_spot', p[0], this.ground.height(p[0], p[1]) + 0.01, p[1], r() * 6.28, true); this.root.attach(o); o.scale.setScalar(1.1);
       this.spots.push({ i, o, x: p[0], z: p[1], money: i === 6 });
     }
-    this.moneyRock = this.rocks.length ? this.rocks[Math.floor(r() * this.rocks.length)] : null;
+    const reach = this.rocks.filter((rk) => rk.y > 0.2 && rk.rad < 3.5 && [0, 1.6, 3.2, 4.8].some((a) => this.walkable(rk.x + Math.cos(a) * (rk.rad + 0.8), rk.z + Math.sin(a) * (rk.rad + 0.8))));
+    this.moneyRock = reach.length ? reach[Math.floor(r() * reach.length)] : null;
     // beach combing: shells and one message bottle on the east beach and the island
     const sand = (x, z) => { const s = this.ground.sample(x, z); return !s.plat && s.h > 0.05 && s.h < 1.6 && !this.blockedAt(x, z, 0.3); };
     let n = 0;
@@ -301,16 +304,15 @@ export class Life {
         if (f.state === 'approach') { speed = d > 0.05 ? Math.min(0.55, d * 1.5) : 0; if (d < 0.08) { f.state = 'nibble'; c.phase = 'nibble'; c.nib = 1 + Math.floor(Math.random() * 4); c.nibT = 0.8 + Math.random() * 1.2; } }
         else { f.x += dx * Math.min(1, dt * 4); f.z += dz * Math.min(1, dt * 4); }
       } else if (f.state === 'flee') { speed = 3; f.fade += dt; if (f.fade > 1.2) f.state = 'gone'; }
-      if (f.state === 'gone') { this.root.remove(f.o); this.fish.splice(i, 1); if (c && c.fish === f) c.fish = null; continue; }
+      if (f.state === 'gone') { this.root.remove(f.o); if (f.o.material !== this.shadowMat) f.o.material.dispose(); this.fish.splice(i, 1); if (c && c.fish === f) c.fish = null; continue; }
       f.h += wrapA(want - f.h) * Math.min(1, dt * (f.state === 'flee' ? 6 : 2));
       const nx = f.x + Math.sin(f.h) * speed * dt, nz = f.z + Math.cos(f.h) * speed * dt;
       if (this.water(nx, nz) || f.state === 'flee') { f.x = nx; f.z = nz; } else if (f.state === 'swim') f.dh = PI;
       f.o.position.set(f.x, this.world.swell(f.x, f.z) + 0.04, f.z);
       f.o.rotation.y = f.h + Math.sin(f.t * 5) * 0.08;
-      f.o.material = f.fade ? this.fadeMat(1 - f.fade / 1.2) : this.shadowMat;
+      if (f.fade) { if (f.o.material === this.shadowMat) f.o.material = this.shadowMat.clone(); f.o.material.opacity = 0.42 * Math.max(0, 1 - f.fade / 1.2); }
     }
   }
-  fadeMat(k) { const m = this.shadowMatF ||= this.shadowMat.clone(); m.opacity = 0.42 * Math.max(0, k); return m; }
   rodTip() { const o = this.toolObj.rod; return o.localToWorld(new THREE.Vector3(0, o.userData.len || 1.2, 0)); }
   startCast() {
     const p = this.player.pos, h = this.player.heading;
@@ -488,7 +490,7 @@ export class Life {
         if (o.userData.glow) o.userData.glow.visible = Math.sin(b.t * 2.2) > -0.3;
       } else if (b.mode === 'skate' || b.mode === 'sit') {
         b.h += Math.sin(b.t * 0.6) * dt * 0.8;
-        const step = (Math.sin(b.t * 0.8) > 0.4 ? 0.15 : 0) * dt;
+        const step = (Math.sin(b.t * 0.8) > 0.4 && b.sp.where !== 'flower' ? 0.15 : 0) * dt;
         const nx = b.x + Math.sin(b.h) * step, nz = b.z + Math.cos(b.h) * step;
         if (Math.hypot(nx - b.x0, nz - b.z0) < 1.2) { b.x = nx; b.z = nz; }
         b.y = b.mode === 'skate' ? this.world.swell(b.x, b.z) + 0.02 : (b.sp.where === 'flower' ? b.y0 : this.ground.height(b.x, b.z));
@@ -511,6 +513,7 @@ export class Life {
   }
   // ---------------------------------------------------------------- dig, shake, rocks, pick up
   async dig(s) {
+    if (this.st.full() && !s.money) { this.ui.toast('ポケットが いっぱい! 何か 売ってからにしよう'); return; }
     this.anim = { kind: 'dig', t: 0, dur: 0.7 };
     this.splash(0.18, 300);
     this.root.remove(s.o); this.spots.splice(this.spots.indexOf(s), 1); this.st.daily.dug[s.i] = 1;
@@ -518,15 +521,14 @@ export class Life {
     this.st.stats.dig = (this.st.stats.dig || 0) + 1;
     if (s.money) { this.st.money += 1000; this.st.save(); this.ui.jingle([660, 880, 1320]); await this.ui.say(null, ['1,000 ナギの ふくろを ほりあてた!']); return; }
     this.ui.jingle([523, 659, 784]);
-    if (this.st.full()) { await this.ui.say(null, ['化石が出てきた!', '……でも ポケットがいっぱい。また今度にしよう。']); this.st.daily.dug[s.i] = 0; this.day = null; return; }
     this.st.add('fossil_unknown');
     await this.ui.say(null, ['化石を ほりだした!', '神社の ほうさくさんに 鑑定してもらおう。']);
   }
-  hitRock() {
+  hitRock(rock) {
     const r = this.moneyRock, pp = this.player.pos;
     this.anim = { kind: 'dig', t: 0, dur: 0.45 };
     this.ui.blip(1800, 0.06, 'square', 0.06);
-    if (!r || this.st.daily.rock >= 7 || Math.hypot(r.x - pp.x, r.z - pp.z) > 2.6) return;
+    if (!r || r !== rock || this.st.daily.rock >= 7) return;
     const v = [100, 150, 200, 300, 400, 600, 800][this.st.daily.rock++];
     const h = this.player.heading, a = h + PI + (Math.random() - 0.5) * 2.5;
     const p = this.near(pp.x + Math.sin(a) * 0.9, pp.z + Math.cos(a) * 0.9, (x, z) => this.walkable(x, z), 3) || [pp.x, pp.z];
@@ -750,8 +752,8 @@ export class Life {
     for (const p of this.pickups) if (front(p.x, p.z, 1.0)) return { kind: 'take', p, label: 'ひろう' };
     const tool = this.st.tool;
     for (const s of this.spots) if (front(s.x, s.z, 1.2)) return tool === 'shovel' ? { kind: 'dig', s, label: 'ほる' } : { kind: 'look', label: 'しらべる', msg: '何か うまっているみたい。スコップが ほしいな' };
-    if (tool !== 'shovel') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 2 && Math.abs(t.z - pp.z) < 2 && front(t.x, t.z, t.fruitTree ? 1.8 : 1.3)) return { kind: 'shake', t, label: 'ゆする' };
-    if (tool === 'shovel') { for (const r of this.rocks) if (Math.abs(r.x - pp.x) < 3 && front(r.x, r.z, 2.4)) return { kind: 'rock', label: 'たたく' }; return { kind: 'shovel', label: 'ほる' }; }
+    if (tool !== 'shovel') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + (t.fruitTree ? 1.5 : 1.0))) return { kind: 'shake', t, label: 'ゆする' };
+    if (tool === 'shovel') { for (const r of this.rocks) if (Math.abs(r.x - pp.x) < r.rad + 2 && Math.abs(r.z - pp.z) < r.rad + 2 && front(r.x, r.z, r.rad + 1.0)) return { kind: 'rock', r, label: 'たたく' }; return { kind: 'shovel', label: 'ほる' }; }
     if (tool === 'rod') return { kind: 'cast', label: 'つる' };
     if (tool === 'net') return { kind: 'net', label: this.ready ? 'ふる' : 'かまえる' };
     return null;
@@ -759,8 +761,8 @@ export class Life {
   press() {
     if (!this.app.playing) return;
     if (this.ui.busy()) { if (this.ui.queue) this.ui.key('Enter'); return; }
-    if (this.anim && this.anim.kind === 'show') return;
     const t = this.target(); if (!t) return;
+    if (this.anim && t.kind !== 'reel') return;
     if (this.player.state !== 'ground' && t.kind !== 'reel') return;
     switch (t.kind) {
       case 'reel': this.reel(); break;
@@ -769,7 +771,7 @@ export class Life {
       case 'dig': this.dig(t.s); break;
       case 'look': this.ui.toast(t.msg); break;
       case 'shake': this.shake(t.t); break;
-      case 'rock': this.hitRock(); break;
+      case 'rock': this.hitRock(t.r); break;
       case 'shovel': this.anim = { kind: 'dig', t: 0, dur: 0.6 }; this.splash(0.12, 300); setTimeout(() => this.ui.toast('なにも 出てこなかった'), 500); break;
       case 'cast': this.startCast(); break;
       case 'net': this.ready = true; break;

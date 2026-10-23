@@ -50,7 +50,9 @@ export class LifeUI {
   }
   // ---------------------------------------------------------------- talk
   // say(speaker, lines, choices?) -> Promise<choice index | undefined>. speaker: { name, color, pitch } or null (narration)
-  say(speaker, lines, choices) {
+  async say(speaker, lines, choices) {
+    // one talk window at a time: a second say() (a catch landing while a chat opens) waits for the first one
+    while (this.queue) await new Promise((r) => (this.waiters ||= []).push(r));
     this.open++;
     lines = [].concat(lines).flatMap((l) => String(l).split('\f'));
     const plate = $('tplate');
@@ -93,6 +95,7 @@ export class LifeUI {
   finish(k) {
     const q = this.queue; this.queue = null; $('talk').hidden = true; this.open--;
     this.blip(660, 0.05); q.res(k);
+    const w = this.waiters; this.waiters = null; if (w) for (const r of w) r();
   }
   // keyboard: Enter/E = next or confirm, arrows = move between choices, Esc = last choice (usually "bye")
   key(code) {
@@ -128,6 +131,7 @@ export class LifeUI {
   jingle(notes = [784, 988, 1175, 1568]) { notes.forEach((f, i) => setTimeout(() => this.blip(f, 0.16, 'triangle', 0.18), i * 90)); }
   // ---------------------------------------------------------------- panels
   panel(title, body) {
+    if (this.panelRes) this.closePanel(-1);
     this.open++;
     $('lptitle').textContent = title; const b = $('lpbody'); b.innerHTML = ''; b.appendChild(body); $('lpanel').hidden = false;
     return new Promise((res) => { this.panelRes = res; });

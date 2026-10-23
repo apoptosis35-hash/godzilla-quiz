@@ -195,7 +195,7 @@ class App {
     $('zin').onclick = () => { this.player.dist = Math.max(2.5, this.player.dist * 0.8); };
     $('zout').onclick = () => { this.player.dist = Math.min(30, this.player.dist * 1.25); };
     $('mute').onclick = () => { $('mute').textContent = this.sound.toggle() ? '🔊' : '🔇'; };
-    $('reset').onclick = () => { try { localStorage.removeItem(SAVE); } catch { /* ignore */ } location.search = ''; };
+    $('reset').onclick = () => { try { localStorage.removeItem(SAVE); localStorage.removeItem('uminagi_life_v1'); } catch { /* ignore */ } location.search = ''; };
     this.syncButtons();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
     addEventListener('keydown', (e) => {
