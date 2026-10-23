@@ -12,6 +12,7 @@ const check = (name, ok, info = '') => { console.log(`${ok ? 'ok  ' : 'FAIL'} ${
 const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || undefined, args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--ignore-gpu-blocklist'] });
 const ctx = await browser.newContext({ ...devices['iPhone 13 landscape'] });
 const p = await ctx.newPage();
+p.setDefaultTimeout(120000);   // taps wait for a composited frame, which SwiftShader can take a while to produce
 const errors = [];
 p.on('pageerror', (e) => errors.push(e.message));
 p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()); });
@@ -31,7 +32,7 @@ const stick = (dx, dy) => G(([dx, dy]) => {
 const release = () => G(() => window.__release && window.__release());
 
 const t0 = Date.now();
-await p.goto(URL + '?q=low');
+await p.goto(URL + '?q=low&town=all');   // the whole town (a fresh game starts as an empty bay)
 await p.waitForSelector('#start:not([hidden])', { timeout: 240000 });
 check('models, textures and terrain load; title appears', true, `${((Date.now() - t0) / 1000).toFixed(1)} s`);
 await G(() => { try { localStorage.removeItem('uminagi-save-v1'); } catch {} });

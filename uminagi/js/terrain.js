@@ -109,6 +109,26 @@ export function platformY(p, x, z) {
 
 // decorative ground overlays (no physics): road surface, terrace lanes, gardens, shrine approach
 export const OVERLAYS = [];
+// districts standing (set by main.js before the Ground is made; null = the whole town). Unbuilt districts keep
+// their land: piers and the bridge deck are left out, roads are dirt tracks, paved squares are bare earth.
+export const TOWN = { built: null };
+function applyTown() {
+  const B = TOWN.built; if (!B) return;
+  const drop = new Set([...(B.has('harbour') ? [] : ['pier1', 'pier2', 'pier3', 'pier3t', 'market_floor']), ...(B.has('island') ? [] : ['bridge_s', 'bridge', 'bridge_n'])]);
+  for (let i = PLATFORMS.length - 1; i >= 0; i--) if (drop.has(PLATFORMS[i].name)) PLATFORMS.splice(i, 1);
+  PLATFORMS.forEach((p, i) => { p.id = i; });   // ids are indices
+  const paved = { street: 'street', plaza: 'street', tram_station: 'tram' };
+  for (const p of PLATFORMS) {
+    // before the harbour works the quay is just a grassy shore above the old sea wall
+    if ((p.name === 'apron' || p.name === 'east_quay') && !B.has('harbour')) { p.mat = 'grass'; p.curb = false; p.wall = 'stone'; }
+    if (p.mat === 'asphalt' && !B.has('roads')) p.mat = 'dirt';
+    if (p.mat === 'paving' && paved[p.name] && !B.has(paved[p.name])) p.mat = 'dirt';
+  }
+  for (const o of OVERLAYS) {
+    if (o.mat === 'asphalt' && !B.has('roads')) o.mat = 'dirt';
+    if (o.mat === 'paving' && !B.has('shrine')) o.mat = 'dirt';
+  }
+}
 function overlays() {
   OVERLAYS.push({ x0: 37, x1: 43, z0: -96, z1: -6, mat: 'asphalt', on: 'street' });
   // the road across the top of the plaza, joining the shopping street to the hill road
@@ -190,7 +210,7 @@ G.nx = Math.round((G.x1 - G.x0) / G.res); G.nz = Math.round((G.z1 - G.z0) / G.re
 
 export class Ground {
   constructor() {
-    layout(); overlays();
+    layout(); overlays(); applyTown();
     const { nx, nz } = G, N = nx * nz;
     this.plat = new Int16Array(N).fill(-1);     // winning platform per cell
     this.ph = new Float32Array(N).fill(-1e9);   // platform height per cell

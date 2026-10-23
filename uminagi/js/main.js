@@ -1,6 +1,6 @@
 // 海凪の港町 — walk around a Japanese fishing port town. Entry point: renderer, quality, loading, HUD, save.
 import * as THREE from 'three';
-import { Ground, G, PLATFORMS, QY } from './terrain.js';
+import { Ground, G, PLATFORMS, QY, TOWN } from './terrain.js';
 import { MaterialLib } from './materials.js';
 import { World, TOD_NAMES } from './world.js';
 import { Town } from './town.js';
@@ -8,6 +8,7 @@ import { Player } from './player.js';
 import { Input } from './input.js';
 import { Sound } from './audio.js';
 import { Life } from './life/life.js';
+import { townBuilt } from './life/progress.js';
 
 // aerial perspective: fog thickens exponentially with distance (like real air) instead of the linear ramp
 THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
@@ -86,6 +87,7 @@ class App {
     const prog = (k, msg) => { $('loadbar').style.width = (k * 100).toFixed(0) + '%'; if (msg) $('loadmsg').textContent = msg; };
     prog(0.02, '地形をつくっています…');
     await new Promise((r) => setTimeout(r, 30));
+    this.built = TOWN.built = townBuilt();   // the town grows as districts are ordered (js/life/progress.js)
     this.ground = new Ground();
     prog(0.08, '素材を読み込んでいます…');
     this.mats = await new MaterialLib(this.renderer, Q).load();
@@ -94,14 +96,14 @@ class App {
     this.world.seaU.uCurve.value = CURVE ? 1 : 0;
     document.body.classList.toggle('post', !!Q.post);   // the post chain works in linear light
     this.scene.add(this.ground.buildMeshes(this.mats.mats));
-    this.town = new Town(this.scene, this.ground, this.mats, this.world, Q);
+    this.town = new Town(this.scene, this.ground, this.mats, this.world, Q, this.built);
     await this.town.load((k) => prog(0.12 + k * 0.78, '港町の建物を読み込んでいます…'));
     prog(0.92, '町を組み立てています…');
     await new Promise((r) => setTimeout(r, 30));
     this.town.build();
-    this.world.setupReflection([this.scene.getObjectByName('ground'), ...this.town.boats.map((b) => b.o), this.town.lighthouse, this.town.redLighthouse]);
+    this.world.setupReflection([this.scene.getObjectByName('ground'), ...this.town.boats.map((b) => b.o), this.town.lighthouse, this.town.redLighthouse].filter(Boolean));
     this.player = new Player(this.town, this.ground);
-    this.input = new Input($('stick'), $('knob'), $('dash'), $('web'));
+    this.input = new Input($('stick'), $('knob'), $('dash'));
     this.sound = new Sound();
     this.life = new Life(this);
     this.drawMapBase();

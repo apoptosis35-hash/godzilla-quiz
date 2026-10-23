@@ -115,7 +115,8 @@ class Pool {
 
 // ------------------------------------------------------------------ the town
 export class Town {
-  constructor(scene, ground, matlib, world, quality) {
+  constructor(scene, ground, matlib, world, quality, built = null) {
+    this.built = built;   // districts standing (js/life/progress.js), null = all
     this.scene = scene; this.ground = ground; this.mats = matlib; this.world = world; this.q = quality;
     this.protos = {}; this.pool = new Pool(scene);
     this.colliders = []; this.mapRects = []; this.boats = []; this.npcs = []; this.gulls = []; this.spinners = [];
@@ -345,11 +346,17 @@ export class Town {
   }
   // ------------------------------------------------------------------ build everything
   build() {
-    const r = rng(7);
-    this.harbour(r); this.street(r); this.terraces(r); this.shrine(r); this.hill(r); this.east(r); this.islandBridge(r); this.tramLine(r); this.roads(r); this.roadFurniture(r); this.hillside(r);
-    this.nature(r); this.wires(); this.people(r); this.birds(r); this.flowerBeds();
+    const r = rng(7), on = (k) => this.has(k);
+    // every district draws from its own random stream, so the town looks the same whichever districts stand
+    const R = (k) => rng(7 + [...k].reduce((a, c) => a * 31 + c.charCodeAt(0), 0));
+    if (on('harbour')) this.harbour(R('harbour')); if (on('street')) this.street(R('street')); if (on('houses')) this.terraces(R('terraces'));
+    if (on('shrine')) this.shrine(R('shrine')); if (on('hill')) this.hill(R('hill')); this.east(R('east'));
+    if (on('island')) this.islandBridge(R('island')); if (on('tram')) this.tramLine(R('tram'));
+    if (on('roads')) { this.roads(R('roads')); this.roadFurniture(R('furniture')); } if (on('houses')) this.hillside(R('hillside'));
+    this.nature(r); this.wires(); if (on('houses') || on('street')) this.people(r); this.birds(r); this.flowerBeds();
     this.pool.finalize();
   }
+  has(k) { return !this.built || this.built.has(k); }
   harbour(r) {
     const P = (...a) => this.put(...a);
     P('fish_market', -2, QY, 6, 0, { col: [[30.4, 0.5, 0, -8], [0.5, 16, -15, 0], [0.5, 16, 15, 0], ...[-15, -10, -5, 0, 5, 10, 15].map((x) => [0.5, 0.5, x, 8]), ...[-9, -3, 3, 9].map((x) => [4, 1.4, x, -1])] });
@@ -560,12 +567,12 @@ export class Town {
   east(r) {
     // the beach: rocks, a boat pulled up on the sand
     for (const [n, x, z, s] of [['rock_c', 118, 66, 1.4], ['rock_c', 104, 94, 1], ['rock_a', 92, 102, 1.2], ['rock_b', 110, 80, 1.3], ['rock_a', 70, 96, 1.5], ['rock_c', 66, 104, 1.3]]) this.put(n, x, null, z, r() * 6, { s });
-    this.put('skiff', 86, null, 74, 2.2, { rz: 0.12 });
+    if (this.has('beach')) this.put('skiff', 86, null, 74, 2.2, { rz: 0.12 });
     // a summer beach: parasols with towels, surfboard racks
-    for (const [x, z] of [[80, 46], [86, 52], [92, 44], [98, 52], [104, 46], [110, 54], [84, 60], [96, 62], [108, 64], [116, 58]]) {
+    if (this.has('beach')) for (const [x, z] of [[80, 46], [86, 52], [92, 44], [98, 52], [104, 46], [110, 54], [84, 60], [96, 62], [108, 64], [116, 58]]) {
       const y = this.at(x, z); if (y > 0.2 && y < 3) this.put('parasol', x, y, z, r() * 6, { col: false });
     }
-    for (const [x, z, ry] of [[76, 38, 0.3], [102, 38, -0.2], [118, 46, -0.6]]) { const y = this.at(x, z); if (y > 0.2) this.put('surfboards', x, y, z, ry); }
+    if (this.has('beach')) for (const [x, z, ry] of [[76, 38, 0.3], [102, 38, -0.2], [118, 46, -0.6]]) { const y = this.at(x, z); if (y > 0.2) this.put('surfboards', x, y, z, ry); }
     // rocks and weed on the clear sea floor (seen through the water)
     for (let i = 0; i < 70; i++) {
       const x = -70 + r() * 125, z = 24 + r() * 90, h = this.at(x, z);

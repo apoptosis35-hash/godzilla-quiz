@@ -40,17 +40,28 @@ export class LifeState {
     this.daily = s.daily || {};            // flags of the current game day
     this.stats = s.stats || { fish: 0, bug: 0, dig: 0, sold: 0 };
     this.lastCatch = s.lastCatch || null;
+    this.town = s.town || { built: [], orders: {} };   // districts (js/life/progress.js)
+    this.owlCalled = s.owlCalled || null;               // the day the raccoon sent for the owl
     this.checkDay();
+    this.finished = this.finishOrders();   // districts completed overnight (announced by the raccoon)
   }
   checkDay() {
     const k = dayKey();
     if (this.daily.day !== k) { this.daily = { day: k, talked: {}, gift: {}, shaken: {}, dug: {}, picked: {}, rock: 0, fruit: {}, bottle: false }; return true; }
     return false;
   }
+  // orders placed on an earlier day are finished: returns the newly finished ids
+  finishOrders() {
+    const today = dayKey(), done = [];
+    for (const [id, day] of Object.entries(this.town.orders)) if (day !== today) { done.push(id); delete this.town.orders[id]; if (!this.town.built.includes(id)) this.town.built.push(id); }
+    if (done.length) this.save();
+    return done;
+  }
+  owlHere() { return !!this.owlCalled && this.owlCalled !== dayKey(); }
   save() {
     try {
       localStorage.setItem(KEY, JSON.stringify({ money: this.money, pocket: this.pocket, tool: this.tool, caught: this.caught, donated: this.donated, friend: this.friend,
-        met: this.met, intro: this.intro, daily: this.daily, stats: this.stats, lastCatch: this.lastCatch }));
+        met: this.met, intro: this.intro, daily: this.daily, stats: this.stats, lastCatch: this.lastCatch, town: this.town, owlCalled: this.owlCalled }));
     } catch { /* private mode */ }
   }
   full() { return this.pocket.length >= POCKET; }

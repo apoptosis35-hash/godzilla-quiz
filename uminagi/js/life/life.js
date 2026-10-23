@@ -4,6 +4,7 @@
 import * as THREE from 'three';
 import { LifeState, ITEMS, dayKey, seeded, donatable, icon } from './state.js';
 import { LifeUI } from './ui.js';
+import { PROJECTS, FIRST_RESIDENTS } from './progress.js';
 import { FISH, BUGS, FOSSILS, SHELLS, VILLAGERS, DIALOGUE, SHOP_LINES, MUSEUM_LINES, SEASON_TALK, TOOLS } from './data.js';
 
 const PI = Math.PI;
@@ -22,6 +23,9 @@ const HOMES = {
   vil_penguin: [[28.6, 31.4, 21, 46]], vil_frog: [[78, 108, 62, 92]], vil_squirrel: [[29, 51, -119, -100]],
 };
 const FIXED = { vil_raccoon: [35.4, -42, PI / 2], vil_owl: [-13, -121.5, 0.5] };
+// the camp on the empty quay before the districts are built: the raccoon's stall, tents for the first residents
+const CAMP = { vil_raccoon: [3, 13, 0], vil_owl: [-9, 12.5, 0.3] };
+const TENTS = { vil_cat: [-30, 12, 0.4, 0xe8d7a8], vil_bear: [-22, -33, 0.2, 0x8fbf72], vil_frog: [96, 66, 2.6, 0xf0a050], vil_owl: [-12, 9, 0.3, 0xb89060] };
 const RARITY_W = [0, 10, 6, 3, 1.4, 0.5];
 
 // procedural bug looks: [shape, main colour, accent]
@@ -39,11 +43,14 @@ export class Life {
   constructor(app) {
     this.app = app; this.town = app.town; this.ground = app.ground; this.world = app.world; this.player = app.player; this.scene = app.scene;
     this.st = new LifeState();
+    this.news = this.st.finished || [];
+    this.owlWas = this.st.owlHere();
     this.ui = new LifeUI(app.sound);
     this.root = new THREE.Group(); this.root.name = 'life'; this.scene.add(this.root);
     this.villagers = []; this.fish = []; this.bugs = []; this.pickups = []; this.spots = []; this.fruitTrees = [];
     this.anim = null; this.cast = null; this.ready = false; this.t = 0; this.spawnT = 0; this.hudT = 0;
     this.collectNature();
+    this.buildCamp();
     this.buildVillagers();
     this.buildProps();
     this.buildTools();
@@ -95,8 +102,9 @@ export class Life {
   // ---------------------------------------------------------------- villagers
   buildVillagers() {
     for (const def of VILLAGERS) {
-      const name = def.id; if (!this.town.protos[name]) continue;
-      const fx = FIXED[name], home = HOMES[name];
+      const name = def.id; if (!this.town.protos[name] || !this.present(name)) continue;
+      const home = HOMES[name];
+      const fx = name === 'vil_raccoon' ? (this.has('street') ? FIXED[name] : CAMP[name]) : name === 'vil_owl' ? (this.has('shrine') ? FIXED[name] : CAMP[name]) : null;
       let x, z, ry = 0;
       if (fx) { [x, z, ry] = fx; [x, z] = this.near(x, z, (a, b) => this.walkable(a, b) && !this.blockedAt(a, b, 0.9), 6) || [x, z]; }
       else { const h = home[0]; const p = this.near((h[0] + h[1]) / 2, (h[2] + h[3]) / 2, (a, b) => this.walkable(a, b)) || [(h[0] + h[1]) / 2, (h[2] + h[3]) / 2]; [x, z] = p; }
@@ -106,6 +114,33 @@ export class Life {
       const v = { def, o, L, home, fixed: !!fx, ry0: ry, target: null, wait: Math.random() * 4, t: Math.random() * 9, r: 0.26, life: true, walkT: 0,
         speaker: { name: def.name, color: look[0], pitch: look[1] }, talking: false, wave: 0, bodyY: L.body ? L.body.position.y : 0 };
       this.villagers.push(v); this.town.npcs.push(v);   // traffic stops for them, the player bumps into them
+    }
+  }
+  has(k) { return !this.app.built || this.app.built.has(k); }
+  // who lives here today: the first residents, the ones whose district stands, the owl once sent for
+  present(id) {
+    if (id === 'vil_raccoon') return true;
+    if (id === 'vil_owl') return this.has('shrine') || !this.app.built || this.st.owlHere();
+    if (FIRST_RESIDENTS.includes(id) || !this.app.built) return true;
+    const p = PROJECTS.find((q) => q.moves === id); return !!p && this.has(p.id);
+  }
+  // camp: the raccoon's stall and simple canvas tents (they go when the houses / the shrine are built)
+  buildCamp() {
+    if (!this.has('street') && this.town.protos.market_tent) {
+      const [x, z] = CAMP.vil_raccoon, o = this.town.clone('market_tent', x, this.ground.height(x, z - 2.2), z - 2.2, PI); this.root.attach(o);
+      this.town.colliders.push({ type: 'b', x, z: z - 2.6, hw: 1.9, hd: 0.5, c: 1, s: 0, y0: -50, y1: this.ground.height(x, z) + 2.5 });
+    }
+    for (const [id, [x0, z0, ry, col]] of Object.entries(TENTS)) {
+      if (!this.present(id) || (id === 'vil_owl' ? this.has('shrine') : id !== 'vil_frog' && this.has('houses'))) continue;
+      const p = this.near(x0, z0, (a, b) => this.walkable(a, b) && !this.blockedAt(a, b, 1.6), 10); if (!p) continue;
+      const g = new THREE.Group(), y = this.ground.height(p[0], p[1]);
+      const cloth = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.9, 4, 1), new THREE.MeshStandardMaterial({ color: col, roughness: 0.85, flatShading: true }));
+      cloth.rotation.y = PI / 4; cloth.position.y = 0.95; cloth.castShadow = cloth.receiveShadow = true; g.add(cloth);
+      const door = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.1, 3, 1, true, 0, PI), new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1, side: THREE.DoubleSide }));
+      door.position.set(0, 0.55, 0.9); door.rotation.y = PI; door.scale.set(1, 1, 0.25); g.add(door);
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 5), new THREE.MeshStandardMaterial({ color: 0x6a4a2a })); pole.position.y = 2.05; g.add(pole);
+      g.position.set(p[0], y, p[1]); g.rotation.y = ry; this.root.add(g);
+      this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 1.2, y0: y - 1, y1: y + 1.9 });
     }
   }
   updateVillager(v, dt, pp) {
@@ -171,8 +206,13 @@ export class Life {
   onRoad(x, z) { const s = this.ground.sample(x, z); return !!(s.plat && /asphalt|road/.test(s.plat.mat || '')); }
   // today's dig spots, the money rock, shells and the message bottle (seeded by the date: the same all day)
   refreshDay() {
-    const k = dayKey(); if (this.day === k) return; this.day = k;
+    const k = dayKey(); if (this.day === k) return;
+    const first = this.day === null; this.day = k;
     this.st.checkDay();
+    if (!first) {   // a new morning while playing: finished districts / the owl need the town rebuilt
+      const done = this.st.finishOrders(), owl = !this.owlWas && this.st.owlHere();
+      if (done.length || owl) { this.app.save(); this.announce(done, owl).then(() => location.reload()); }
+    }
     for (const s of this.spots) this.root.remove(s.o); this.spots = [];
     for (const p of this.pickups) this.root.remove(p.o); this.pickups = [];
     const r = seeded('day' + k);
@@ -625,8 +665,14 @@ export class Life {
   async shop(v) {
     const st = this.st, sp = v.speaker, L = SHOP_LINES, V = (x = {}) => ({ name: PLAYER, ...x });
     let line = fill(pick(L.welcome), V());
+    // five kinds in the encyclopedia: the raccoon sends for a scholar friend, who arrives the next day
+    if (!st.owlCalled && Object.keys(st.caught).length >= 5) {
+      await this.ui.say(sp, ['おっ、図鑑が ずいぶん にぎやかに なってきたね!', 'そうだ、生きもの好きの 学者の友だちが いるんだ。\nふくろうの ほうさくさん。この町に 呼んでみるよ!', 'あしたには 来てくれると 思うよ。まいど!']);
+      st.owlCalled = dayKey(); st.save();
+    }
     for (let n = 0; n < 12; n++) {
-      const k = await this.ui.say(sp, line, ['売る', 'まとめて売る', '道具を買う', 'またね']);
+      const k = await this.ui.say(sp, line, ['売る', 'まとめて売る', '道具を買う', '町づくり', 'またね']);
+      if (k === 3) { line = await this.townWork(sp); continue; }
       if (k === 0) {
         const i = await this.ui.pocket(st, { title: '売る', filter: (id) => ITEMS[id].kind !== 'tool', note: '売るものを えらんでね' });
         if (i < 0) { line = 'ほかに なにか あるかい?'; continue; }
@@ -652,6 +698,37 @@ export class Life {
       } else break;
     }
     await this.ui.say(sp, fill(pick(L.thanks), V()));
+  }
+  // 町づくり: order a district; it is built overnight (js/life/progress.js)
+  async townWork(sp) {
+    const st = this.st, ok = (q) => (q.needs === 'owl' ? st.owlHere() || this.has('shrine') : !q.needs || this.has(q.needs));
+    const rows = PROJECTS.map((q) => {
+      const done = this.has(q.id), ordered = !!st.town.orders[q.id];
+      return { label: q.name, sub: done ? 'できている' : ordered ? 'あした完成' : !ok(q) ? (q.needs === 'owl' ? 'ほうさくさんが来てから' : '道路ができてから') : `${q.cost.toLocaleString()} ナギ`, ok: !done && !ordered && ok(q) };
+    });
+    if (!rows.some((r) => r.ok)) return 'いまは たのめる工事が ないみたい。\nまた こんど 相談してね!';
+    const i = await this.ui.list('町づくり', rows);
+    if (i < 0) return 'ほかに なにか あるかい?';
+    const q = PROJECTS[i];
+    const c = await this.ui.say(sp, [`「${q.name}」だね! ${q.desc}。`, `${q.cost.toLocaleString()} ナギで たのむかい?`], ['たのむ', 'やめる']);
+    if (c !== 0) return 'ほかに なにか あるかい?';
+    if (st.money < q.cost) return `おや、${(q.cost - st.money).toLocaleString()} ナギ たりないみたいだね。\n魚や虫を 売って ためておいで!`;
+    st.money -= q.cost; st.town.orders[q.id] = dayKey(); st.save(); this.ui.jingle([523, 659, 784, 1047]);
+    return `まいど! 「${q.name}」は 今夜のうちに つくっておくよ。\nあしたの朝 5時すぎには できあがってるからね!`;
+  }
+  // what changed overnight: finished districts, who moved in, the owl's arrival
+  async announce(list, owl) {
+    const sp = { name: 'あらた', color: '#4f8a46', pitch: 1.05 }, lines = [];
+    for (const id of list) {
+      const q = PROJECTS.find((p) => p.id === id); if (!q) continue;
+      lines.push(`おはよう! たのまれてた 「${q.name}」が できあがったよ!`);
+      const v = q.moves && VILLAGERS.find((x) => x.id === q.moves);
+      if (v) lines.push(`それから ${v.species}の ${v.name}が この町に 引っこしてきたよ。あいさつしておいで!`);
+      if (id === 'shrine') lines.push('ほうさくさんの 資料館も 神社に うつったよ。');
+      if (id === 'street') lines.push('オイラの 海凪商店も 商店街に うつったよ。');
+    }
+    if (owl) lines.push('学者の ほうさくさんが 来てくれたよ! オイラの テントの となりに いるからね。', '魚や虫や化石を 寄贈すると、資料館に 展示してくれるよ。');
+    if (lines.length) await this.ui.say(sp, lines);
   }
   async museum(v) {
     const st = this.st, sp = v.speaker, L = MUSEUM_LINES, V = (x = {}) => ({ name: PLAYER, ...x });
@@ -693,11 +770,11 @@ export class Life {
     if (this.st.intro || this.introRunning) return;
     this.introRunning = true;
     const sp = { name: 'あらた', color: '#4f8a46', pitch: 1.05 };
-    await this.ui.say(sp, ['おーい! キミが 港町に来た なぎ だね! まいど!', 'オイラは あらた。商店街で 「海凪商店」を やってるんだ。', 'この町では 魚をつったり 虫をとったり 化石をほったり……\nのんびり 暮らすのが いちばんさ!', 'はい、これ! 引っこし祝いに つりざお と あみ をあげる!']);
+    await this.ui.say(sp, ['おーい! キミが 港町に来た なぎ だね! まいど!', 'オイラは あらた。この テントで 「海凪商店」を やってるんだ。', 'ここは まだ なんにもない 入り江なんだ。\nいま住んでるのは ツムギと おもちと オイラだけ。', 'でも 海も 山も きれいだろ? みんなで すこしずつ 町を つくっていこう!', 'はい、これ! 引っこし祝いに つりざお と あみ をあげる!']);
     for (const id of ['rod', 'net']) if (!this.st.has(id)) this.st.add(id);
     this.equip('rod'); this.ui.jingle();
     await this.ui.say(null, ['つりざお と あみ を もらった!']);
-    await this.ui.say(sp, ['水ぎわで A ボタンを押すと つりができるよ。\n影が浮きをつついて、グッと しずんだ瞬間に もう一度 A!', 'あみは A ボタンを押しっぱなしで そーっと近づいて、はなすと ふれるよ。', 'とれたものは オイラの店で 買いとるし、\n神社の ほうさくさんに 寄贈もできるよ。', '時間は ほんとうの時計と いっしょ。毎朝5時に 新しい一日が はじまるよ。\nじゃ、よろしくね!']);
+    await this.ui.say(sp, ['水ぎわで A ボタンを押すと つりができるよ。\n影が浮きをつついて、グッと しずんだ瞬間に もう一度 A!', 'あみは A ボタンを押しっぱなしで そーっと近づいて、はなすと ふれるよ。', 'とれたものは オイラが 買いとるよ。\nナギが たまったら 「町づくり」で 港や お店を たのんでね。ひと晩で つくっちゃうから!', '時間は ほんとうの時計と いっしょ。毎朝5時に 新しい一日が はじまるよ。\nじゃ、よろしくね!']);
     this.st.intro = true; this.st.save(); this.introRunning = false;
   }
   // ---------------------------------------------------------------- input + per frame
@@ -781,9 +858,9 @@ export class Life {
   // before the player moves: freeze during talk / catches, creep while the net is ready, stop fishing when walking off
   preInput(input) {
     const lock = this.ui.busy() || (this.anim && (this.anim.kind === 'show' || this.anim.kind === 'dig' || this.anim.kind === 'shake'));
-    if (lock) { input.move.x = input.move.y = 0; input.jump = false; input.webHeld = false; input.run = false; }
-    if (this.ready) { input.move.x *= 0.33; input.move.y *= 0.33; input.run = false; input.jump = false; }
-    if (this.cast && (Math.hypot(input.move.x, input.move.y) > 0.3 || input.jump)) this.cancelCast();
+    if (lock) { input.move.x = input.move.y = 0; input.run = false; }
+    if (this.ready) { input.move.x *= 0.33; input.move.y *= 0.33; input.run = false; }
+    if (this.cast && Math.hypot(input.move.x, input.move.y) > 0.3) this.cancelCast();
   }
   pose(dt) {
     const L = this.player.limbs, a = this.anim, tool = this.st.tool;
@@ -829,5 +906,13 @@ export class Life {
       const t = this.ui.busy() ? null : this.target(); this.ui.action(t ? t.label : '');
     }
   }
-  start() { this.equip(this.st.tool); }
+  start() {
+    this.equip(this.st.tool);
+    const owlNew = this.st.owlHere() && !this.st.met.owlArrived;
+    if (this.st.intro && (this.news.length || owlNew)) {
+      if (owlNew) this.st.met.owlArrived = 1;
+      const news = this.news; this.news = [];
+      setTimeout(() => this.announce(news, owlNew), 1200);
+    }
+  }
 }
