@@ -717,7 +717,18 @@ export class Town {
   // static decorative boxes merged per material (bridge structure, track, markings): [mat, cx, cy, cz, sx, sy, sz, rotZ?, rotX?]
   boxMeshes(list, name) {
     const by = new Map(), m = new THREE.Matrix4(), q = new THREE.Quaternion(), e = new THREE.Euler();
-    for (const b of list) { if (!by.has(b[0])) by.set(b[0], []); by.get(b[0]).push(b); }
+    // long boxes (road lines, kerbs, railings) are cut into pieces of at most 4 m so they follow the curved-world bend
+    const o = new THREE.Vector3();
+    for (const b of list) {
+      const [mat, x, y, z, sx, sy, sz, rz = 0, rx = 0] = b, nx = Math.ceil(sx / 4), nz = Math.ceil(sz / 4);
+      if (!by.has(mat)) by.set(mat, []);
+      if (nx * nz === 1) { by.get(mat).push(b); continue; }
+      e.set(rx, 0, rz);
+      for (let i = 0; i < nx; i++) for (let k = 0; k < nz; k++) {
+        o.set((i + 0.5) / nx * sx - sx / 2, 0, (k + 0.5) / nz * sz - sz / 2).applyEuler(e);
+        by.get(mat).push([mat, x + o.x, y + o.y, z + o.z, sx / nx, sy, sz / nz, rz, rx]);
+      }
+    }
     for (const [mat, items] of by) {
       const im = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), this.roadMat(mat), items.length);
       items.forEach(([, x, y, z, sx, sy, sz, rz = 0, rx = 0], i) => { m.compose(new THREE.Vector3(x, y, z), q.setFromEuler(e.set(rx, 0, rz)), new THREE.Vector3(sx, sy, sz)); im.setMatrixAt(i, m); });

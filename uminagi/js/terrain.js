@@ -310,8 +310,19 @@ export class Ground {
     }
     return group;
   }
-  quad(g, a, b, c, d, n, uvs) {  // a,b,c,d counter-clockwise seen from the normal side
-    for (const [p, uv] of [[a, uvs[0]], [b, uvs[1]], [c, uvs[2]], [a, uvs[0]], [c, uvs[2]], [d, uvs[3]]]) { g.pos.push(...p); g.nor.push(...n); g.uv.push(...uv); }
+  // a,b,c,d counter-clockwise seen from the normal side. Big quads are cut into tiles of at most 4 m: the curved-world
+  // bend moves vertices, so a 100 m quad would stay flat in the middle and sink under the bent terrain around it
+  quad(g, a, b, c, d, n, uvs) {
+    const len = (p, q) => Math.hypot(q[0] - p[0], q[1] - p[1], q[2] - p[2]);
+    const nu = Math.max(1, Math.ceil(Math.max(len(a, b), len(d, c)) / 4)), nv = Math.max(1, Math.ceil(Math.max(len(a, d), len(b, c)) / 4));
+    const at = (u, v) => {   // bilinear point and uv
+      const w = [(1 - u) * (1 - v), u * (1 - v), u * v, (1 - u) * v], P = [a, b, c, d];
+      return [[0, 1, 2].map((i) => P.reduce((s, q, k) => s + q[i] * w[k], 0)), [0, 1].map((i) => uvs.reduce((s, q, k) => s + q[i] * w[k], 0))];
+    };
+    for (let j = 0; j < nv; j++) for (let i = 0; i < nu; i++) {
+      const A = at(i / nu, j / nv), B = at((i + 1) / nu, j / nv), C = at((i + 1) / nu, (j + 1) / nv), D = at(i / nu, (j + 1) / nv);
+      for (const [p, uv] of [A, B, C, A, C, D]) { g.pos.push(...p); g.nor.push(...n); g.uv.push(...uv); }
+    }
   }
   topGeo(p, g, lift) {
     const steps = p.ramp ? Math.max(1, Math.ceil(((p.ramp[0] === 'x' ? p.x1 - p.x0 : p.z1 - p.z0)) / 2)) : 1;
