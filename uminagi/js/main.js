@@ -7,6 +7,7 @@ import { Town } from './town.js';
 import { Player } from './player.js';
 import { Input } from './input.js';
 import { Sound } from './audio.js';
+import { Life } from './life/life.js';
 
 // aerial perspective: fog thickens exponentially with distance (like real air) instead of the linear ramp
 THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
@@ -17,6 +18,15 @@ THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
   #endif
   gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
 #endif`;
+// "rolling log" world: the ground bends down away from the camera, like the world is drawn on a big log
+// (on by default; 設定 → 地面のカーブ). Shadow-map depth passes stay flat.
+export const CURVE = (() => { try { return localStorage.getItem('uminagi_curve') !== 'off'; } catch { return true; } })();
+export const BEND_GLSL = `
+  #if !defined( DEPTH_PACKING ) && !defined( DISTANCE )
+    float cz_ = max( 0.0, -mvPosition.z - 4.0 );
+    mvPosition.y -= 45.0 * ( 1.0 - exp( -cz_ * cz_ * 0.0014 / 45.0 ) );
+  #endif`;
+if (CURVE) THREE.ShaderChunk.project_vertex = THREE.ShaderChunk.project_vertex.replace('gl_Position = projectionMatrix * mvPosition;', BEND_GLSL + '\ngl_Position = projectionMatrix * mvPosition;');
 const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping };
 
 const $ = (id) => document.getElementById(id);
@@ -81,6 +91,7 @@ class App {
     this.mats = await new MaterialLib(this.renderer, Q).load();
     this.world = new World(this.scene, this.renderer, this.ground, Q);
     if (Q.post) this.world.setLinearSky(true);
+    this.world.seaU.uCurve.value = CURVE ? 1 : 0;
     document.body.classList.toggle('post', !!Q.post);   // the post chain works in linear light
     this.scene.add(this.ground.buildMeshes(this.mats.mats));
     this.town = new Town(this.scene, this.ground, this.mats, this.world, Q);
@@ -92,10 +103,11 @@ class App {
     this.player = new Player(this.town, this.ground);
     this.input = new Input($('stick'), $('knob'), $('dash'), $('web'));
     this.sound = new Sound();
+    this.life = new Life(this);
     this.drawMapBase();
     const s = load();
-    if (s) { this.player.place(s.x, s.z, s.yaw); this.player.dist = s.dist || 9; this.world.setTimeOfDay(s.tod || 'day', true); }
-    else this.player.place(0, 19, 0);
+    if (s) { this.player.place(s.x, s.z, s.yaw); this.player.dist = s.dist || 9; if (!s.tod || s.tod === 'real') this.world.setClock(true); else this.world.setTimeOfDay(s.tod, true); }
+    else { this.player.place(0, 19, 0); this.world.setClock(true); }
     this.player.heading = this.player.yaw + Math.PI;
     this.ui(!!s);
     prog(1, '');
@@ -164,9 +176,9 @@ class App {
   ui(hasSave) {
     $('continue').hidden = !hasSave;
     const start = (fresh) => {
-      if (fresh) { this.player.place(0, 19, 0); this.player.heading = Math.PI; this.world.setTimeOfDay('day', true); }
+      if (fresh) { this.player.place(0, 19, 0); this.player.heading = Math.PI; this.world.setClock(true); }
       $('start').hidden = true; $('hud').hidden = false; this.input.enabled = true; this.playing = true;
-      this.sound.start(); this.areaShown = null;
+      this.sound.start(); this.areaShown = null; this.life.start();
       try { if (isMobile && screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {}); } catch { /* not supported */ }
     };
     $('startbtn').onclick = () => start(true);
@@ -175,7 +187,9 @@ class App {
     $('bigmap').onclick = (e) => { if (e.target.id === 'bigmap') this.toggleMap(false); };
     $('setbtn').onclick = () => { $('settings').hidden = !$('settings').hidden; };
     $('setclose').onclick = () => { $('settings').hidden = true; };
-    for (const b of document.querySelectorAll('[data-tod]')) b.onclick = () => { this.world.setTimeOfDay(b.dataset.tod); this.save(); this.syncButtons(); };
+    $('curve').textContent = CURVE ? '地面のカーブ: あり' : '地面のカーブ: なし';
+    $('curve').onclick = () => { try { localStorage.setItem('uminagi_curve', CURVE ? 'off' : 'on'); } catch { /* ignore */ } this.save(); location.reload(); };
+    for (const b of document.querySelectorAll('[data-tod]')) b.onclick = () => { if (b.dataset.tod === 'real') this.world.setClock(true); else this.world.setTimeOfDay(b.dataset.tod); this.save(); this.syncButtons(); };
     for (const b of document.querySelectorAll('[data-q]')) b.onclick = () => { this.save(b.dataset.q); location.search = '?q=' + b.dataset.q; };
     for (const b of document.querySelectorAll('[data-go]')) b.onclick = () => { const [x, z, yaw] = SPOTS[b.dataset.go]; this.player.place(x, z, yaw); this.player.heading = yaw + Math.PI; this.toggleMap(false); this.save(); };
     $('zin').onclick = () => { this.player.dist = Math.max(2.5, this.player.dist * 0.8); };
@@ -187,16 +201,16 @@ class App {
     addEventListener('keydown', (e) => {
       if (!this.playing) return;
       if (e.code === 'KeyM') { if (document.pointerLockElement) document.exitPointerLock(); this.toggleMap(); }
-      if (e.code === 'KeyT') { const order = ['day', 'evening', 'night']; this.world.setTimeOfDay(order[(order.indexOf(this.world.todName) + 1) % 3]); this.syncButtons(); }
+      if (e.code === 'KeyT') { const order = ['real', 'day', 'evening', 'night'], cur = this.world.clockMode ? 'real' : this.world.todName, nx = order[(order.indexOf(cur) + 1) % 4]; if (nx === 'real') this.world.setClock(true); else this.world.setTimeOfDay(nx); this.syncButtons(); }
     });
   }
   syncButtons() {
-    for (const b of document.querySelectorAll('[data-tod]')) b.classList.toggle('on', b.dataset.tod === this.world.todName);
+    for (const b of document.querySelectorAll('[data-tod]')) b.classList.toggle('on', this.world.clockMode ? b.dataset.tod === 'real' : b.dataset.tod === this.world.todName);
     for (const b of document.querySelectorAll('[data-q]')) b.classList.toggle('on', QUALITY[b.dataset.q] === Q);
   }
   save(quality) {
     const p = this.player;
-    store({ x: +p.pos.x.toFixed(2), z: +p.pos.z.toFixed(2), yaw: +p.yaw.toFixed(3), dist: +p.dist.toFixed(2), tod: this.world.todName, quality: quality || qName, t: Date.now() });
+    store({ x: +p.pos.x.toFixed(2), z: +p.pos.z.toFixed(2), yaw: +p.yaw.toFixed(3), dist: +p.dist.toFixed(2), tod: this.world.clockMode ? 'real' : this.world.todName, quality: quality || qName, t: Date.now() });
   }
   toggleMap(show = $('bigmap').hidden) { $('bigmap').hidden = !show; if (show) this.drawMap($('bigmapcv'), 1); }
   // ------------------------------------------------------------------ minimap
@@ -270,7 +284,9 @@ class App {
     const pl = this.player;
     if (this.playing) {
       this.input.update();
+      this.life.preInput(this.input);
       pl.update(dt, this.input, pl.yaw);
+      this.life.update(dt);
       this.saveT = (this.saveT || 0) + dt; if (this.saveT > 5) { this.saveT = 0; this.save(); }
       this.area();
       this.sound.update(dt, pl, this.world.todName, this.ground);

@@ -26,9 +26,11 @@ export const MODELS = {
     'a_frame_sign', 'bench', 'postbox', 'nobori', 'street_lantern', 'direction_sign', 'laundry_pole', 'fence_wood', 'fence_rail', 'fence_log', 'plant_pots',
     'propane', 'ishidoro', 'komainu', 'telescope', 'info_board', 'skiff', 'chochin_hanging', 'parasol', 'surfboards', 'kanban_shirasu', 'kanban_tako',
     'car_kei', 'car_kei_b', 'car_sedan', 'block_wall', 'guardrail', 'sign_stop', 'sign_speed', 'sign_noparking', 'curve_mirror', 'bus_stop', 'traffic_light'],
-  nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c', 'rock_cliff'],
+  nature: ['tree_pine', 'tree_pine_b', 'tree_broadleaf', 'tree_shinboku', 'tree_sakura', 'tree_cedar', 'bush', 'hydrangea', 'grass_tuft', 'rock_a', 'rock_b', 'rock_c', 'rock_cliff', 'flowers_a', 'flowers_b', 'flowers_c'],
   // animated (cloned)
-  dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'fisherman', 'shopkeeper', 'townsman', 'cat', 'seagull'],
+  dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'cat', 'seagull',
+    // island life (js/life): animal villagers, tools, fruit trees, dig spots, message bottles
+    'vil_cat', 'vil_rabbit', 'vil_bear', 'vil_penguin', 'vil_frog', 'vil_squirrel', 'vil_owl', 'vil_raccoon', 'tool_net', 'tool_rod', 'tool_shovel', 'fruit_tree', 'dig_spot', 'bottle_msg'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {
@@ -320,12 +322,23 @@ export class Town {
       if (!o.name.startsWith(name + '_') || o.name.endsWith('_lod1')) return;
       if ((!o.isMesh && o.children.some((c) => c.isMesh)) || (o.isMesh && o.parent && !o.parent.name.startsWith(name + '_'))) nodes.push(o);
     });
+    // mesh quantisation (optimize.sh) moves every part node to the centre of its mesh and gives it a scale, so the
+    // joints are lost: bake each part into model space and put the pivot back where the joint is (shoulder / hip at
+    // the top of an arm / leg, neck at the bottom of a head or ear, hips under the body, the inner edge of a wing)
+    const rootInv = inv.copy(p.scene.matrixWorld).invert().clone(), bb = new THREE.Box3(), v = new THREE.Vector3();
     for (const n of nodes) {
       const prims = [];
-      n.traverse((o) => { if (o.isMesh) prims.push({ geometry: o.geometry, material: o.material, matrix: inv.copy(n.matrixWorld).invert().multiply(o.matrixWorld).clone() }); });
-      const merged = keepTex ? this.mergePlain(prims, false, true) : this.mergePlain(prims, true, false, true);
-      const g = new THREE.Group(); g.name = n.name; n.matrixWorld.decompose(g.position, g.quaternion, g.scale);
-      for (const pr of merged) { const m = new THREE.Mesh(pr.geometry, pr.material); m.castShadow = true; m.applyMatrix4(pr.matrix); g.add(m); }
+      n.traverse((o) => { if (o.isMesh) prims.push({ geometry: o.geometry, material: o.material, matrix: rootInv.clone().multiply(o.matrixWorld) }); });
+      const merged = (keepTex ? this.mergePlain(prims, false, true) : this.mergePlain(prims, true, false, true))
+        .map((pr) => ({ geometry: pr.geometry.clone().applyMatrix4(pr.matrix), material: pr.material }));
+      bb.makeEmpty(); for (const pr of merged) { pr.geometry.computeBoundingBox(); bb.union(pr.geometry.boundingBox); }
+      const part = n.name.slice(name.length + 1), c = bb.getCenter(v.set(0, 0, 0)).clone();
+      if (/^(arm|leg)_/.test(part)) c.y = bb.max.y - (bb.max.y - bb.min.y) * 0.08;
+      else if (/^(head|ear_|body)/.test(part)) c.y = bb.min.y + (part === 'body' ? (bb.max.y - bb.min.y) * 0.15 : 0);
+      else if (part === 'tail') { c.y = bb.min.y; c.z = bb.max.z; }
+      else if (/^wing_/.test(part)) c.x = Math.abs(bb.min.x) < Math.abs(bb.max.x) ? bb.min.x : bb.max.x;
+      const g = new THREE.Group(); g.name = n.name; g.position.copy(c);
+      for (const pr of merged) { pr.geometry.translate(-c.x, -c.y, -c.z); pr.geometry.computeBoundingSphere(); const m = new THREE.Mesh(pr.geometry, pr.material); m.castShadow = true; g.add(m); }
       root.add(g);
     }
     return (p[key] = root);
@@ -334,7 +347,7 @@ export class Town {
   build() {
     const r = rng(7);
     this.harbour(r); this.street(r); this.terraces(r); this.shrine(r); this.hill(r); this.east(r); this.islandBridge(r); this.tramLine(r); this.roads(r); this.roadFurniture(r); this.hillside(r);
-    this.nature(r); this.wires(); this.people(r); this.birds(r);
+    this.nature(r); this.wires(); this.people(r); this.birds(r); this.flowerBeds();
     this.pool.finalize();
   }
   harbour(r) {
@@ -1017,6 +1030,29 @@ export class Town {
     const merged = mergeGeos(geo);
     const m = new THREE.Mesh(merged, mat); m.name = 'wires'; this.root.add(m);
   }
+  // flower beds along the quay, the shop street, the plaza, the shrine approach and the house lanes (bugs visit them, js/life)
+  flowerBeds() {
+    const r = rng(7), beds = [[-36, 13.5, 10], [-12, 13.5, 8], [33.4, -20, 6], [46.6, -26, 6], [33.4, -66, 6], [46.6, -74, 6], [30, -110, 10], [50, -112, 8],
+      [-14, -110, 6], [-4, -110, 6], [-30, -34, 8], [-60, -34, 6], [-100, 2, 8], [90, 52, 8]];
+    const free = (x, z) => {
+      const s = this.ground.sample(x, z); if (s.h < -0.2 || (s.plat && /asphalt/.test(s.plat.mat || ''))) return false;
+      for (const c of this.colliders) {
+        if (Math.abs(c.x - x) > 12 || Math.abs(c.z - z) > 12) continue;
+        if (c.type === 'c') { if (Math.hypot(c.x - x, c.z - z) < c.r + 0.3) return false; continue; }
+        const dx = x - c.x, dz = z - c.z, lx = dx * c.c - dz * c.s, lz = dx * c.s + dz * c.c;
+        if (Math.abs(lx) < c.hw + 0.3 && Math.abs(lz) < c.hd + 0.3) return false;
+      }
+      return true;
+    };
+    this.flowers = [];
+    for (const [bx, bz, n] of beds) for (let i = 0; i < n; i++) {
+      let p = null;
+      for (let k = 0; k < 12 && !p; k++) { const x = bx + (r() - 0.5) * (6 + k * 0.6), z = bz + (r() - 0.5) * (3 + k * 0.6); if (free(x, z)) p = [x, z]; }
+      if (!p) continue;
+      this.put(['flowers_a', 'flowers_b', 'flowers_c'][Math.floor(r() * 3)], p[0], null, p[1], r() * 6.28, { s: 1.6 + r() * 0.5, col: false });
+      this.flowers.push({ x: p[0], z: p[1] });
+    }
+  }
   // ------------------------------------------------------------------ people
   people(r) {
     const N = (name, x, z, ry, path) => {
@@ -1025,22 +1061,6 @@ export class Town {
       const npc = { o, name, limbs, path, seg: 0, t: r() * 10, speed: 1.1 + r() * 0.3, idle: !path, r: 0.35 };
       this.npcs.push(npc); return npc;
     };
-    N('fisherman', -46, 23.8, 0); N('fisherman', -10, 18.5, PI * 0.9); N('fisherman', 2, 9, PI, null);
-    N('fisherman', -60, 6, 0, [[-60, 6], [-30, 14], [-12, 16], [-30, 14]]);
-    N('fisherman', 30, 20, 0, [[30, 20], [30, 40], [30, 47], [30, 40]]);
-    N('fisherman', -24, 18.6, PI * 0.95); N('fisherman', 16, 16.8, -0.4); N('fisherman', -66, 19.5, PI);
-    N('fisherman', -40, 19.5, 0, [[-40, 19.5], [-4, 19.5], [20, 19.8], [-4, 19.5]]);
-    N('shopkeeper', 8, 15.5, PI * 0.7);
-    N('shopkeeper', 35.4, -10, H); N('shopkeeper', 35.4, -42, H); N('shopkeeper', 44.4, -28, -H); N('shopkeeper', 44.6, -57, -H);
-    N('townsman', 35.6, -12, PI, [[35.6, -12], [35.8, -60], [35.6, -94], [35.8, -60]]);
-    N('townsman', 44.4, -80, 0, [[44.4, -80], [44.3, -30], [44.4, -9], [44.3, -30]]);
-    N('shopkeeper', 35.4, -30, 0, [[35.4, -30], [35.6, -75], [35.4, -30], [35.6, -12]]);
-    N('townsman', 44.6, -45, PI, [[44.6, -45], [44.5, -15], [44.6, -45], [44.5, -88]]);
-    N('fisherman', 35.8, -64, 0, [[35.8, -64], [35.6, -22], [35.8, -64]]);
-    N('townsman', 35.4, -50, H); N('shopkeeper', 44.6, -38, -H); N('townsman', 35.6, -72, H * 0.8);
-    N('shopkeeper', -10, -16, 0, [[-30, -16], [10, -16]]);
-    N('townsman', -40, -36, 0, [[-50, -36], [0, -36], [16, -36]]);
-    N('townsman', -9, -118, 0); N('townsman', -110, 4, PI * 0.8);
     this.cats = [N('cat', -6, 17, 1), N('cat', 36, -50, 2), N('cat', -20, -36.5, 0.5)];
   }
   birds(r) {
@@ -1107,7 +1127,7 @@ export class Town {
       const f = g.soar ? 0.06 + Math.sin(t * 1.3 + g.ph) * 0.05 : Math.sin(t * 7 + g.ph) * 0.5 * (0.5 + 0.5 * Math.sin(t * 0.7 + g.ph));
       if (g.wl) g.wl.rotation.z = f; if (g.wr) g.wr.rotation.z = -f;
     }
-    for (const n of this.npcs) this.npc(n, dt, player);
+    for (const n of this.npcs) if (!n.life) this.npc(n, dt, player);
   }
   npc(n, dt, player) {
     n.t += dt;

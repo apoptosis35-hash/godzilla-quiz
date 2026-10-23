@@ -93,9 +93,38 @@ export class World {
     this.apply(true);
   }
   setLinearSky(on) { this.linearSky = on; this.skyU.uSkyLinear.value = on ? 1 : 0; this.apply(true); }
+  // real-time clock: the sky, sun, light and fog follow the device's local time (dawn, day, sunset, night)
+  setClock(on) { this.clockMode = on; if (on) { this.clockT = 1e9; this.envT = 1e9; } }
+  clockState(h) {
+    const mix = (a, b, t) => {
+      const o = this.copy(a);
+      for (const key of ['top', 'hor', 'sunCol', 'hemiS', 'hemiG', 'fog']) o[key].lerp(b[key], t);
+      for (const key of ['sunI', 'hemiI', 'fogNear', 'fogFar', 'glow', 'exp', 'stars', 'sunDisk']) o[key] = a[key] + (b[key] - a[key]) * t;
+      for (let i = 0; i < 3; i++) o.sun[i] = a.sun[i] + (b.sun[i] - a.sun[i]) * t;
+      return o;
+    };
+    const sm = (a, b, x) => { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+    const D = TOD.day, E = TOD.evening, N = TOD.night;
+    let st;
+    if (h < 4.5 || h >= 19.5) st = this.copy(N);
+    else if (h < 6) st = mix(N, E, sm(4.5, 6, h));
+    else if (h < 7.5) st = mix(E, D, sm(6, 7.5, h));
+    else if (h < 16) st = this.copy(D);
+    else if (h < 17.5) st = mix(D, E, sm(16, 17.5, h));
+    else if (h < 18.5) st = this.copy(E);
+    else st = mix(E, N, sm(18.5, 19.5, h));
+    // the sun crosses the southern sky from east (+x) to west (-x)
+    if (h > 5 && h < 19.3) {
+      const t = (h - 5.6) / 13 * Math.PI, el = Math.max(0.04, Math.sin(t) * 0.82);
+      const sun = [Math.cos(t) * 0.75, el, 0.45 + 0.2 * Math.sin(t)], w = sm(19.3, 18.6, h) * sm(5, 5.8, h);
+      for (let i = 0; i < 3; i++) st.sun[i] = st.sun[i] + (sun[i] - st.sun[i]) * w;
+    }
+    st.name = st.stars > 0.6 ? 'night' : (h >= 15.5 && h < 19.5) || (h >= 4.5 && h < 7) ? 'evening' : 'day';
+    return st;
+  }
   copy(t) { return { ...t, top: t.top.clone(), hor: t.hor.clone(), sunCol: t.sunCol.clone(), hemiS: t.hemiS.clone(), hemiG: t.hemiG.clone(), fog: t.fog.clone(), sun: [...t.sun] }; }
   setTimeOfDay(name, instant = false) {
-    this.todName = name; this.target = TOD[name]; this.blend = instant ? 1 : 0;
+    this.clockMode = false; this.todName = name; this.target = TOD[name]; this.blend = instant ? 1 : 0;
     if (instant) { this.cur = this.copy(this.target); this.apply(true); }
   }
   buildSky() {
@@ -142,14 +171,14 @@ export class World {
       uDepth: { value: this.depthTex }, uFar: { value: null }, uFarBox: { value: new THREE.Vector4(FAR.x0, FAR.z0, FAR.x1 - FAR.x0, FAR.z1 - FAR.z0) }, uBox: { value: new THREE.Vector4(WATER_BOX.x0, WATER_BOX.z0, WATER_BOX.x1 - WATER_BOX.x0, WATER_BOX.z1 - WATER_BOX.z0) },
       uCam: { value: new THREE.Vector3() },
       uScene: { value: null }, uRes: { value: new THREE.Vector2(1, 1) }, uRefract: { value: 0 }, uLinear: { value: 0 },
-      uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uUseRefl: { value: 0 },
+      uRefl: { value: null }, uReflMat: { value: new THREE.Matrix4() }, uUseRefl: { value: 0 }, uCurve: { value: 0 },
     }]);
     Object.assign(this.seaU, this.skyU, this.hazeU);
     this.seaU.uDepth.value = this.depthTex;
     const mat = new THREE.ShaderMaterial({
       uniforms: this.seaU, transparent: true, fog: false, depthWrite: true,
       vertexShader: `
-        uniform float uTime; uniform vec3 uCam; uniform sampler2D uDepth; uniform vec4 uBox;
+        uniform float uTime; uniform vec3 uCam; uniform sampler2D uDepth; uniform vec4 uBox; uniform float uCurve;
         varying vec3 vW; varying float vSwell; varying float vAmp;
         float swellAmp(vec2 p){
           float harbour = smoothstep(118.0, 95.0, p.y) * step(-82.0, p.x) * step(p.x, 64.0) * step(-150.0, p.y);
@@ -162,6 +191,7 @@ export class World {
           vSwell = w;
           vW = p;
           vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
+          if (uCurve > 0.5) { float cz_ = max(0.0, -mvPosition.z - 4.0); mvPosition.y -= 45.0 * (1.0 - exp(-cz_ * cz_ * 0.0014 / 45.0)); }
           gl_Position = projectionMatrix * mvPosition;
         }`,
       fragmentShader: SKY_FN + `
@@ -509,7 +539,17 @@ export class World {
   }
   update(dt, focus, camPos, matlib) {
     this.time += dt; this.skyU.uTime.value = this.time;
-    if (this.blend < 1) {
+    if (this.clockMode) {
+      this.clockT += dt; this.envT += dt;
+      if (this.clockT > 1) {
+        this.clockT = 0;
+        const d = new Date(), h = d.getHours() + d.getMinutes() / 60 + d.getSeconds() / 3600;
+        const st = this.clockState(h), env = this.envT > 90 || Math.abs(st.stars - this.cur.stars) > 0.15 || Math.abs(st.sunI - this.cur.sunI) > 0.4;
+        this.cur = st; this.todName = st.name; this.clockHour = h;
+        if (env) this.envT = 0;
+        this.apply(env);
+      }
+    } else if (this.blend < 1) {
       this.blend = Math.min(1, this.blend + dt / 2.5);
       const k = Math.min(1, dt * 2.2 + (this.blend >= 1 ? 1 : 0)), a = this.cur, b = this.target;
       for (const key of ['top', 'hor', 'sunCol', 'hemiS', 'hemiG', 'fog']) a[key].lerp(b[key], k);

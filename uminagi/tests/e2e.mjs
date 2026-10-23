@@ -42,6 +42,42 @@ check('HUD appears after start', await p.isVisible('#hud'));
 const info = await G(() => { const a = window.__uminagi; return { models: Object.keys(a.town.protos).length, colliders: a.town.colliders.length, trees: a.town.treeCount, npcs: a.town.npcs.length, boats: a.town.boats.length }; });
 check('town is built', info.models >= 80 && info.colliders > 300 && info.boats >= 6 && info.npcs >= 10, JSON.stringify(info));
 
+// --- island life (js/life): the shopkeeper's welcome on a fresh save hands over the rod and the net
+const talkThrough = (choices) => G(async (choices) => {
+  const L = window.__uminagi.life, said = [];
+  for (let i = 0; i < 300 && L.ui.busy(); i++) {
+    const q = L.ui.queue;
+    if (q) { if (L.ui.typing) L.ui.endLine(); said.push(q.lines[q.i]); if (q.choices && q.i === q.lines.length - 1) L.ui.finish(choices.length ? choices.shift() : q.choices.length - 1); else L.ui.advance(); }
+    else if (L.ui.panelRes) L.ui.closePanel(choices.length ? choices.shift() : -1);
+    await new Promise((r) => setTimeout(r, 5));
+  }
+  return said;
+}, choices);
+await G(() => { const L = window.__uminagi.life; L.introStarted = true; L.intro(); });
+await talkThrough([]);
+const life = await G(() => { const L = window.__uminagi.life; return { pocket: L.st.pocket.join(','), villagers: L.villagers.length, busy: L.ui.busy() }; });
+check('welcome talk gives the rod and the net', !life.busy && /rod/.test(life.pocket) && /net/.test(life.pocket) && life.villagers === 8, JSON.stringify(life));
+// fishing: cast from the quay, a fish takes the float, A on the bite lands it
+const fish = await G(() => {
+  const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  a.player.place(-20, 21.3, Math.PI); a.player.heading = 0; L.equip('rod'); step(2); L.press(); step(12);
+  const c = L.cast; if (!c || c.phase !== 'wait') return { phase: c && c.phase };
+  L.fish.length = 0; for (let i = 0; i < 40 && !L.fish.length; i++) L.spawnFish(a.player.pos);
+  const f = L.fish[0]; if (!f) return { phase: 'nofish' };
+  f.x = c.x + 1.2; f.z = c.z + 0.8; f.state = 'approach'; c.fish = f;
+  for (let i = 0; i < 400 && c.phase !== 'bite'; i++) step(1);
+  const phase = c.phase; L.press(); step(2);
+  return { phase, fish: f.sp.id, got: L.st.pocket.includes(f.sp.id) };
+});
+await talkThrough([]);
+check('fishing: bite and catch', fish.phase === 'bite' && fish.got, JSON.stringify(fish));
+// chat with a villager: first meeting, then friendship goes up
+const chat = await G(() => { const L = window.__uminagi.life, v = L.villagers.find((x) => x.def.role === 'resident'); L.talk(v); return v.def.id; });
+const said = await talkThrough([0, 2]);
+const fr = await G((id) => window.__uminagi.life.st.friend[id] || 0, chat);
+check('villager chat and friendship', said.length >= 3 && fr >= 1, `${said.length} lines, friend ${fr}`);
+await G(() => window.__uminagi.life.equip(null));
+
 // --- walking with the virtual stick (left half), camera-relative
 await tp(0, 19, 0);
 let a = await pos();

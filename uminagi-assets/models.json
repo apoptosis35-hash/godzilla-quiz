@@ -3341,6 +3341,475 @@
   "kb": 129.0
  },
  {
+  "name": "vil_cat",
+  "jp": "ねこの住民(サンドレス)",
+  "category": "人物",
+  "size_m": [
+   0.53,
+   1.06,
+   0.61
+  ],
+  "tris": 3276,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bow",
+   "ac_cat_cream",
+   "ac_cat_grey",
+   "ac_cat_white",
+   "ac_ear_pink",
+   "ac_sundress",
+   "cheek",
+   "eye",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_cat_body",
+   "vil_cat_head",
+   "vil_cat_arm_l",
+   "vil_cat_leg_l",
+   "vil_cat_arm_r",
+   "vil_cat_leg_r"
+  ],
+  "kb": 273.2
+ },
+ {
+  "name": "vil_rabbit",
+  "jp": "うさぎの住民(ピンクのオーバーオール)",
+  "category": "人物",
+  "size_m": [
+   0.52,
+   1.28,
+   0.5
+  ],
+  "tris": 3036,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_button",
+   "ac_ear_pink",
+   "ac_overall_dk",
+   "ac_overall_pink",
+   "ac_rabbit_white",
+   "ac_tee_blue",
+   "cheek",
+   "eye",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_rabbit_body",
+   "vil_rabbit_head",
+   "vil_rabbit_arm_l",
+   "vil_rabbit_leg_l",
+   "vil_rabbit_arm_r",
+   "vil_rabbit_leg_r"
+  ],
+  "kb": 242.5
+ },
+ {
+  "name": "vil_bear",
+  "jp": "くまの住民(緑のパーカー・のんびり屋)",
+  "category": "人物",
+  "size_m": [
+   0.58,
+   1.04,
+   0.56
+  ],
+  "tris": 3052,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bear_brown",
+   "ac_bear_nose",
+   "ac_bear_tan",
+   "ac_hoodie",
+   "ac_hoodie_dk",
+   "cheek",
+   "eye",
+   "white"
+  ],
+  "parts": [
+   "vil_bear_body",
+   "vil_bear_head",
+   "vil_bear_arm_l",
+   "vil_bear_leg_l",
+   "vil_bear_arm_r",
+   "vil_bear_leg_r"
+  ],
+  "kb": 256.0
+ },
+ {
+  "name": "vil_penguin",
+  "jp": "ペンギンの住民(セーラー服)",
+  "category": "人物",
+  "size_m": [
+   0.52,
+   1.07,
+   0.56
+  ],
+  "tris": 2448,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_beak",
+   "ac_peng_navy",
+   "ac_peng_white",
+   "ac_sailor_blue",
+   "ac_scarf_red",
+   "cheek",
+   "eye",
+   "white"
+  ],
+  "parts": [
+   "vil_penguin_body",
+   "vil_penguin_head",
+   "vil_penguin_arm_l",
+   "vil_penguin_leg_l",
+   "vil_penguin_arm_r",
+   "vil_penguin_leg_r"
+  ],
+  "kb": 198.2
+ },
+ {
+  "name": "vil_frog",
+  "jp": "かえるの住民(オレンジのレインコート)",
+  "category": "人物",
+  "size_m": [
+   0.57,
+   0.99,
+   0.49
+  ],
+  "tris": 3190,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_boot_yellow",
+   "ac_frog_belly",
+   "ac_frog_green",
+   "ac_raincoat",
+   "cheek",
+   "eye",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_frog_body",
+   "vil_frog_head",
+   "vil_frog_arm_l",
+   "vil_frog_leg_l",
+   "vil_frog_arm_r",
+   "vil_frog_leg_r"
+  ],
+  "kb": 233.8
+ },
+ {
+  "name": "vil_squirrel",
+  "jp": "りすの住民(デニムジャケット)",
+  "category": "人物",
+  "size_m": [
+   0.53,
+   1.1,
+   0.79
+  ],
+  "tris": 3320,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_button",
+   "ac_denim",
+   "ac_denim_dk",
+   "ac_squirrel",
+   "ac_squirrel_cream",
+   "ac_squirrel_dk",
+   "cheek",
+   "eye",
+   "ink",
+   "pv_shoe_brown",
+   "white"
+  ],
+  "parts": [
+   "vil_squirrel_body",
+   "vil_squirrel_head",
+   "vil_squirrel_arm_l",
+   "vil_squirrel_leg_l",
+   "vil_squirrel_arm_r",
+   "vil_squirrel_leg_r"
+  ],
+  "kb": 277.3
+ },
+ {
+  "name": "vil_owl",
+  "jp": "ふくろうの住民(博物館の館長)",
+  "category": "人物",
+  "size_m": [
+   0.55,
+   1.01,
+   0.55
+  ],
+  "tris": 3494,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_apron_green",
+   "ac_book",
+   "ac_boot_yellow",
+   "ac_owl_brown",
+   "ac_owl_chest",
+   "ac_owl_face",
+   "ac_rim_gold",
+   "ac_vest",
+   "cheek",
+   "eye",
+   "paper",
+   "white"
+  ],
+  "parts": [
+   "vil_owl_body",
+   "vil_owl_head",
+   "vil_owl_arm_l",
+   "vil_owl_leg_l",
+   "vil_owl_arm_r",
+   "vil_owl_leg_r"
+  ],
+  "kb": 286.5
+ },
+ {
+  "name": "vil_raccoon",
+  "jp": "たぬきの住民(雑貨屋の店主)",
+  "category": "人物",
+  "size_m": [
+   0.55,
+   1.04,
+   0.7
+  ],
+  "tris": 3464,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_apron_green",
+   "ac_cap_tweed",
+   "ac_pants_brown",
+   "ac_rim_dark",
+   "ac_shirt_cream",
+   "ac_tanuki",
+   "ac_tanuki_dk",
+   "ac_tanuki_light",
+   "cheek",
+   "eye",
+   "white"
+  ],
+  "parts": [
+   "vil_raccoon_body",
+   "vil_raccoon_head",
+   "vil_raccoon_arm_l",
+   "vil_raccoon_leg_l",
+   "vil_raccoon_arm_r",
+   "vil_raccoon_leg_r"
+  ],
+  "kb": 268.4
+ },
+ {
+  "name": "tool_net",
+  "jp": "虫取り網",
+  "category": "道具",
+  "size_m": [
+   0.32,
+   1.22,
+   0.33
+  ],
+  "tris": 500,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_grip",
+   "ac_net_line",
+   "ac_net_white",
+   "ac_ring_metal",
+   "ac_wood_handle"
+  ],
+  "parts": [
+   "tool_net_body"
+  ],
+  "kb": 38.3
+ },
+ {
+  "name": "tool_rod",
+  "jp": "釣り竿",
+  "category": "道具",
+  "size_m": [
+   0.07,
+   1.24,
+   0.13
+  ],
+  "tris": 570,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bamboo",
+   "ac_bamboo_node",
+   "ac_bobber_red",
+   "ac_cork",
+   "ac_grip_red",
+   "ac_line",
+   "ac_reel",
+   "ac_ring_metal",
+   "white"
+  ],
+  "parts": [
+   "tool_rod_body"
+  ],
+  "kb": 48.2
+ },
+ {
+  "name": "tool_shovel",
+  "jp": "スコップ",
+  "category": "道具",
+  "size_m": [
+   0.19,
+   0.96,
+   0.05
+  ],
+  "tris": 232,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_blade",
+   "ac_grip_red",
+   "ac_wood_handle"
+  ],
+  "parts": [
+   "tool_shovel_body"
+  ],
+  "kb": 17.6
+ },
+ {
+  "name": "flowers_a",
+  "jp": "花壇の花(チューリップ赤白)",
+  "category": "自然",
+  "size_m": [
+   0.45,
+   0.28,
+   0.48
+  ],
+  "tris": 392,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_leaf",
+   "ac_petal_white",
+   "ac_stem",
+   "ac_tulip_red"
+  ],
+  "parts": [
+   "flowers_a_body"
+  ],
+  "kb": 30.4
+ },
+ {
+  "name": "flowers_b",
+  "jp": "花壇の花(パンジー黄・橙)",
+  "category": "自然",
+  "size_m": [
+   0.48,
+   0.31,
+   0.47
+  ],
+  "tris": 454,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_dig_mid",
+   "ac_leaf",
+   "ac_pansy_orange",
+   "ac_pansy_yellow",
+   "ac_stem"
+  ],
+  "parts": [
+   "flowers_b_body"
+  ],
+  "kb": 47.0
+ },
+ {
+  "name": "flowers_c",
+  "jp": "花壇の花(コスモス紫・桃)",
+  "category": "自然",
+  "size_m": [
+   0.47,
+   0.29,
+   0.44
+  ],
+  "tris": 488,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_cosmos_pink",
+   "ac_cosmos_purple",
+   "ac_flower_eye",
+   "ac_leaf",
+   "ac_stem"
+  ],
+  "parts": [
+   "flowers_c_body"
+  ],
+  "kb": 51.7
+ },
+ {
+  "name": "fruit_tree",
+  "jp": "果物の木(みかん)",
+  "category": "自然",
+  "size_m": [
+   3.59,
+   4.18,
+   3.54
+  ],
+  "tris": 1864,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_leaf",
+   "ac_orange",
+   "ac_stem",
+   "bark",
+   "leaf_card",
+   "leaf_card_dark",
+   "leaf_dark"
+  ],
+  "parts": [
+   "fruit_tree_body",
+   "fruit_tree_fruit"
+  ],
+  "kb": 143.2
+ },
+ {
+  "name": "dig_spot",
+  "jp": "掘れる地面のヒビ(埋まった物の目印)",
+  "category": "自然",
+  "size_m": [
+   0.58,
+   0.01,
+   0.53
+  ],
+  "tris": 60,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_dig_dark",
+   "ac_dig_mid"
+  ],
+  "parts": [
+   "dig_spot_body"
+  ],
+  "kb": 6.0
+ },
+ {
+  "name": "bottle_msg",
+  "jp": "手紙入りの瓶",
+  "category": "自然",
+  "size_m": [
+   0.32,
+   0.09,
+   0.13
+  ],
+  "tris": 274,
+  "lod1_tris": 81,
+  "materials": [
+   "ac_bobber_red",
+   "ac_bottle_glass",
+   "ac_cork",
+   "paper"
+  ],
+  "parts": [
+   "bottle_msg_body"
+  ],
+  "kb": 31.2
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",

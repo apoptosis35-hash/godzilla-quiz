@@ -1,5 +1,5 @@
 // Touch: virtual stick on the left half, drag on the right half to look around, pinch to zoom, dash button.
-// Desktop: WASD / arrows to walk, Shift to dash, drag the mouse to look, wheel to zoom, Q/E to turn.
+// Desktop: WASD / arrows to walk, Shift to dash, drag the mouse to look, wheel to zoom, Q/C to turn.
 // Web button / Space / left mouse (while the mouse is captured): tap to jump, hold in the air to swing on a web.
 export class Input {
   constructor(stickEl, knobEl, dashEl, webEl) {
@@ -69,8 +69,8 @@ export class Input {
     if (k.has('KeyD') || k.has('ArrowRight')) x += 1;
     if (k.has('KeyW') || k.has('ArrowUp')) y += 1;
     if (k.has('KeyS') || k.has('ArrowDown')) y -= 1;
-    if (k.has('KeyQ')) this.look.x -= 0.03;
-    if (k.has('KeyE')) this.look.x += 0.03;
+    if (k.has('KeyQ') || k.has('KeyZ')) this.look.x -= 0.03;
+    if (k.has('KeyC')) this.look.x += 0.03;   // E is the action button (js/life)
     if (k.has('KeyR')) this.look.y -= 0.02;
     if (k.has('KeyF')) this.look.y += 0.02;
     if (k.has('Equal') || k.has('NumpadAdd')) this.zoom -= 0.05;

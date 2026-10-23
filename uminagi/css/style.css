@@ -75,3 +75,68 @@ h1 small { display: block; font-size: 13px; letter-spacing: .6em; opacity: .85; 
 /* lens vignette (the PC post chain draws its own) */
 #vig { position: fixed; inset: 0; pointer-events: none; background: radial-gradient(ellipse at 50% 45%, transparent 58%, rgba(0, 10, 20, .26) 100%); }
 body.post #vig { display: none; }
+
+/* ---------------------------------------------------------------- island life (js/life) */
+#life { position: absolute; inset: 0; pointer-events: none; font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "Noto Sans JP", system-ui, sans-serif; }
+#life > * { pointer-events: auto; }
+.lclock, .lmoney { position: absolute; left: max(12px, env(safe-area-inset-left)); background: rgba(255, 250, 235, .9); color: #4a3a22; border-radius: 14px; padding: 4px 12px; box-shadow: 0 3px 10px rgba(0, 0, 0, .25); pointer-events: none; }
+.lclock { top: calc(max(10px, env(safe-area-inset-top)) + 46px); }
+.lclock b { font-size: 22px; letter-spacing: .04em; margin-right: 6px; }
+.lclock small { font-size: 12px; }
+.lmoney { top: calc(max(10px, env(safe-area-inset-top)) + 88px); font-weight: bold; font-size: 15px; background: rgba(255, 236, 170, .92); }
+.lmoney small { font-size: 11px; }
+.lside { position: absolute; left: max(12px, env(safe-area-inset-left)); top: calc(max(10px, env(safe-area-inset-top)) + 124px); display: flex; gap: 8px; }
+.lbtn { font-size: 21px; background: rgba(255, 250, 235, .82); color: #4a3a22; border-color: rgba(120, 90, 40, .4); }
+#act { position: absolute; right: max(28px, env(safe-area-inset-right)); bottom: calc(max(28px, env(safe-area-inset-bottom)) + 100px); width: 86px; height: 86px; border-radius: 50%; padding: 0; background: rgba(80, 170, 110, .78); border: 2px solid rgba(255, 255, 255, .7); color: #fff; }
+#act b { display: block; font-size: 30px; line-height: 1; font-family: system-ui, sans-serif; }
+#act small { display: block; font-size: 12px; font-weight: bold; margin-top: 2px; min-height: 1em; }
+#act.dim { opacity: .55; }
+@media (hover: hover) and (pointer: fine) {
+  #act { width: auto; height: auto; border-radius: 12px; padding: 6px 14px; bottom: max(24px, env(safe-area-inset-bottom)); pointer-events: none; }
+  #act b { display: inline; font-size: 15px; } #act b::before { content: "E："; } #act b { font-size: 0; } #act b::before { font-size: 15px; }
+  #act small { display: inline; font-size: 15px; }
+  #act.dim { opacity: 0; }
+}
+.ltoast { position: absolute; left: 50%; top: 30%; transform: translateX(-50%); background: rgba(255, 250, 235, .95); color: #4a3a22; padding: 8px 18px; border-radius: 999px; font-weight: bold; opacity: 0; transition: opacity .3s; pointer-events: none; white-space: nowrap; box-shadow: 0 4px 14px rgba(0, 0, 0, .3); }
+.ltoast.show { opacity: 1; }
+.talk { position: absolute; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); width: min(640px, 94vw); z-index: 12; }
+.talk[hidden] { display: none; }
+.plate { display: inline-block; margin-left: 26px; padding: 4px 18px; border-radius: 999px; color: #fff; font-weight: bold; font-size: 16px; transform: rotate(-3deg) translateY(10px); box-shadow: 0 2px 6px rgba(0, 0, 0, .25); position: relative; z-index: 1; }
+.plate[hidden] { display: none; }
+.tbox { background: #fffaea; color: #4a3a22; border-radius: 34px; padding: 22px 30px 26px; font-size: 18px; line-height: 1.7; min-height: 3.4em; white-space: pre-line; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); position: relative; }
+.tnext { position: absolute; right: 26px; bottom: 10px; color: #e8a23a; font-style: normal; animation: tnext .7s ease-in-out infinite alternate; }
+.tnext[hidden] { display: none; }
+@keyframes tnext { to { transform: translateY(4px); } }
+.choices { position: absolute; right: 8px; bottom: calc(100% + 6px); display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+.choices .btn { background: #fffaea; color: #4a3a22; border: 2px solid #e8c77a; border-radius: 999px; font-weight: bold; font-size: 16px; padding: 8px 20px; min-width: 120px; }
+.choices .btn.on { background: #ffe39a; border-color: #e8a23a; }
+.lpanel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(560px, 94vw); max-height: 88vh; overflow: auto; z-index: 14; background: #fffaea; color: #4a3a22; border: 3px solid #e8c77a; }
+.lpanel[hidden] { display: none; }
+.lpanel h3 { margin: 0 0 10px; text-align: center; letter-spacing: .15em; }
+.lpanel .btn { background: #fff3cf; color: #4a3a22; border-color: #e0c27a; }
+.lpanel .btn.on { background: #e8b23a; }
+.pgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.slot, .bcell { aspect-ratio: 1; border-radius: 14px; border: 2px solid #ecd9a6; background: #fff; color: #4a3a22; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px; font-family: inherit; }
+.slot span, .bcell span { font-size: 26px; line-height: 1.1; }
+.slot small, .bcell small { font-size: 9.5px; line-height: 1.1; text-align: center; overflow: hidden; max-height: 2.2em; }
+.slot.empty { background: #f6eedb; border-style: dashed; }
+.slot.off { opacity: .35; }
+.slot.held { border-color: #e8a23a; background: #fff1c6; }
+.pnote { font-size: 13px; margin: 8px 0; text-align: center; }
+.plist { display: flex; flex-direction: column; gap: 6px; }
+.plist .btn { text-align: left; font-size: 16px; display: flex; justify-content: space-between; }
+.plist .btn.off { opacity: .4; }
+.bgrid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; margin-top: 8px; }
+.bcell.unknown { background: #eee3c8; color: #a89870; }
+.bcell.don { border-color: #7fbf6a; }
+@media (max-height: 460px) { .tbox { font-size: 16px; padding: 14px 24px 18px; } .lpanel { max-height: 94vh; } .pgrid { grid-template-columns: repeat(10, 1fr); } .bgrid { grid-template-columns: repeat(10, 1fr); } }
+@media (max-height: 460px) and (hover: none) {   /* phones in landscape: A sits above the jump button, clear of the zoom row */
+  #act { right: calc(max(28px, env(safe-area-inset-right)) + 112px); bottom: calc(max(40px, env(safe-area-inset-bottom)) + 100px); width: 76px; height: 76px; }
+  #map { width: 112px; height: 112px; }
+  .zoom { top: calc(max(10px, env(safe-area-inset-top)) + 122px); }
+  .lpanel { width: min(780px, 96vw); padding: 10px 14px; }
+  .slot span, .bcell span { font-size: 21px; }
+  .lclock { top: calc(max(8px, env(safe-area-inset-top)) + 42px); } .lclock b { font-size: 18px; }
+  .lmoney { top: calc(max(8px, env(safe-area-inset-top)) + 78px); font-size: 13px; }
+  .lside { top: calc(max(8px, env(safe-area-inset-top)) + 110px); }
+}

@@ -5,7 +5,7 @@ import * as THREE from 'three';
 
 const R = 0.34, MAX_UP = 0.6, MAX_SLOPE = 1.05, WALK = 3.4, RUN = 7.0, GRAV = 22;
 const JUMP = 9.5, CLIMB = 4.2, SWING_MAX = 38;
-const SIZE = 0.34;   // the Shiba model is 1.3 m tall; the dog in the game stands about 0.45 m (knee height on the townsfolk)
+const SIZE = 0.5;   // the Shiba model is 1.3 m tall; なぎ stands about 0.65 m, as tall as the animal villagers (half a grown-up)
 
 export class Player {
   constructor(town, ground) {
@@ -18,6 +18,8 @@ export class Player {
     this.model = town.clone('shiba', 0, 0, 0, 0, true); this.model.rotation.order = 'YXZ';
     this.limbs = {}; for (const s of ['body', 'head', 'ear_l', 'ear_r', 'arm_l', 'arm_r', 'leg_l', 'leg_r', 'tail']) this.limbs[s] = this.model.getObjectByName('shiba_' + s);
     const L = this.limbs;
+    // the part nodes carry the mesh quantisation scale (body 0.25): keep it, never reset it to 1
+    this.bodyScale = L.body.scale.x;
     for (const s of ['head', 'arm_l', 'arm_r', 'tail']) L.body.attach(L[s]);
     L.head.attach(L.ear_l); L.head.attach(L.ear_r);
     this.rest = {}; for (const [k, o] of Object.entries(L)) this.rest[k] = o.position.clone();
@@ -262,7 +264,7 @@ export class Player {
   animate(dt) {
     const L = this.limbs, st = this.state, t = this.t, R0 = this.rest;
     for (const [k, o] of Object.entries(L)) { o.rotation.set(0, 0, 0); o.position.copy(R0[k]); }
-    L.body.scale.set(1, 1, 1); this.model.scale.setScalar(SIZE);
+    L.body.scale.setScalar(this.bodyScale); this.model.scale.setScalar(SIZE);
     const v = this.vel, hs = Math.hypot(v.x, v.z), clamp = THREE.MathUtils.clamp;
     let pitch = 0, roll = 0, lift = 0;
     const wag = (f, a) => { L.tail.rotation.z = Math.sin(t * f) * a; L.tail.rotation.y = Math.sin(t * f) * a * 0.4; };
@@ -280,7 +282,7 @@ export class Player {
       const earBack = run ? 0.55 * k : 0, flap = Math.abs(c) * 0.16 * k;
       L.ear_l.rotation.x = earBack + flap; L.ear_r.rotation.x = earBack + flap;
       // idle: breathing, looking around, an ear twitch now and then, happy tail
-      L.body.scale.y = 1 + Math.sin(t * 2.4) * 0.018 * idle;
+      L.body.scale.y = this.bodyScale * (1 + Math.sin(t * 2.4) * 0.018 * idle);
       L.head.rotation.y += Math.sin(t * 0.45) * 0.45 * idle * (Math.sin(t * 0.13) > 0 ? 1 : 0.3);
       L.head.rotation.z = Math.sin(t * 0.7) * 0.08 * idle;
       if ((t * 0.37) % 1 < 0.05) L.ear_l.rotation.z = -0.3 * idle;

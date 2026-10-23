@@ -6093,6 +6093,610 @@ def traffic_light():
     _en_text('ink', 'おして', 0.035, (0, -0.1815, 1.17))
 # --- rd end
 
+# --- ac begin (cozy animal villagers, held tools, garden props; original designs)
+PALETTE.update({
+    # villagers
+    'ac_cat_cream': P((0.86, 0.74, 0.55), 0.85), 'ac_cat_grey': P((0.3, 0.29, 0.3), 0.85), 'ac_cat_white': P((0.88, 0.87, 0.84), 0.85),
+    'ac_ear_pink': P((0.85, 0.42, 0.45), 0.8), 'ac_sundress': P((0.85, 0.62, 0.07), 0.85), 'ac_bow': P((0.78, 0.08, 0.18), 0.6),
+    'ac_rabbit_white': P((0.85, 0.84, 0.82), 0.9), 'ac_overall_pink': P((0.82, 0.3, 0.45), 0.85), 'ac_overall_dk': P((0.55, 0.14, 0.26), 0.85),
+    'ac_tee_blue': P((0.3, 0.55, 0.82), 0.85), 'ac_button': P((0.85, 0.6, 0.15), 0.35, 0.5),
+    'ac_bear_brown': P((0.33, 0.17, 0.07), 0.9), 'ac_bear_tan': P((0.68, 0.46, 0.25), 0.9), 'ac_bear_nose': P((0.06, 0.03, 0.02), 0.35),
+    'ac_hoodie': P((0.18, 0.48, 0.14), 0.9), 'ac_hoodie_dk': P((0.08, 0.28, 0.07), 0.9),
+    'ac_peng_navy': P((0.03, 0.05, 0.15), 0.6), 'ac_peng_white': P((0.86, 0.86, 0.84), 0.7), 'ac_beak': P((0.85, 0.42, 0.04), 0.5),
+    'ac_sailor_blue': P((0.08, 0.22, 0.65), 0.85), 'ac_scarf_red': P((0.75, 0.06, 0.06), 0.7),
+    'ac_frog_green': P((0.22, 0.58, 0.1), 0.6), 'ac_frog_belly': P((0.62, 0.8, 0.34), 0.7), 'ac_raincoat': P((0.85, 0.3, 0.03), 0.35),
+    'ac_boot_yellow': P((0.85, 0.62, 0.04), 0.35),
+    'ac_squirrel': P((0.72, 0.28, 0.06), 0.9), 'ac_squirrel_cream': P((0.86, 0.7, 0.48), 0.9), 'ac_squirrel_dk': P((0.32, 0.12, 0.04), 0.9),
+    'ac_denim': P((0.12, 0.26, 0.55), 0.9), 'ac_denim_dk': P((0.05, 0.11, 0.28), 0.9),
+    'ac_owl_brown': P((0.3, 0.16, 0.07), 0.9), 'ac_owl_face': P((0.78, 0.62, 0.42), 0.9), 'ac_owl_chest': P((0.84, 0.74, 0.55), 0.9),
+    'ac_vest': P((0.4, 0.07, 0.1), 0.85), 'ac_rim_gold': P((0.75, 0.52, 0.15), 0.3, 0.7), 'ac_book': P((0.1, 0.38, 0.25), 0.7),
+    'ac_tanuki': P((0.38, 0.29, 0.19), 0.9), 'ac_tanuki_dk': P((0.08, 0.06, 0.05), 0.9), 'ac_tanuki_light': P((0.82, 0.74, 0.6), 0.9),
+    'ac_cap_tweed': P((0.2, 0.21, 0.24), 0.95), 'ac_apron_green': P((0.07, 0.42, 0.2), 0.85), 'ac_shirt_cream': P((0.85, 0.78, 0.55), 0.85),
+    'ac_pants_brown': P((0.17, 0.12, 0.09), 0.9), 'ac_rim_dark': P((0.12, 0.07, 0.04), 0.4, 0.3),
+    # tools
+    'ac_wood_handle': P((0.5, 0.29, 0.12), 0.6), 'ac_net_white': P((0.86, 0.86, 0.84), 0.95), 'ac_net_line': P((0.55, 0.58, 0.6), 0.8),
+    'ac_ring_metal': P((0.62, 0.63, 0.66), 0.3, 0.8), 'ac_grip': P((0.12, 0.35, 0.7), 0.6), 'ac_bamboo': P((0.66, 0.56, 0.24), 0.55),
+    'ac_bamboo_node': P((0.42, 0.34, 0.12), 0.6), 'ac_cork': P((0.62, 0.42, 0.22), 0.9), 'ac_reel': P((0.12, 0.38, 0.75), 0.35, 0.3),
+    'ac_line': P((0.85, 0.85, 0.85), 0.5), 'ac_bobber_red': P((0.8, 0.07, 0.05), 0.4), 'ac_blade': P((0.55, 0.58, 0.62), 0.35, 0.75),
+    'ac_grip_red': P((0.75, 0.1, 0.06), 0.55),
+    # garden props
+    'ac_tulip_red': P((0.8, 0.05, 0.05), 0.6), 'ac_petal_white': P((0.86, 0.85, 0.8), 0.7), 'ac_pansy_yellow': P((0.85, 0.68, 0.04), 0.7),
+    'ac_pansy_orange': P((0.85, 0.28, 0.03), 0.7), 'ac_cosmos_purple': P((0.38, 0.12, 0.6), 0.7), 'ac_cosmos_pink': P((0.85, 0.32, 0.55), 0.7),
+    'ac_flower_eye': P((0.85, 0.55, 0.04), 0.6), 'ac_stem': P((0.1, 0.32, 0.06), 0.8), 'ac_leaf': P((0.14, 0.42, 0.09), 0.7),
+    'ac_orange': P((0.85, 0.33, 0.02), 0.45), 'ac_dig_dark': P((0.1, 0.06, 0.03), 0.95), 'ac_dig_mid': P((0.2, 0.12, 0.05), 0.95),
+    'ac_bottle_glass': P((0.42, 0.72, 0.66), 0.08, 0.1),
+})
+
+# ---- shared shapes
+def _ac_ball(mat, c, r, seg=16, rings=8, f=None):
+    """Ellipsoid (radii r) made as a lathe; f deforms local vertices."""
+    prof = [(math.sin(math.pi * i / rings), -math.cos(math.pi * i / rings) * r[2]) for i in range(rings + 1)]
+    return _pv_lathe(mat, prof, c, seg=seg, sx=r[0], sy=r[1], f=f)
+
+def _ac_surf(c, R, x, z, out=0.0):
+    """Point on the front (-Y) half of the ellipsoid (centre c, radii R) at local x, z, pushed out along the normal."""
+    q = max(0.0, 1 - (x / R[0]) ** 2 - (z / R[2]) ** 2); y = -R[1] * math.sqrt(q)
+    n = Vector((x / R[0] ** 2, y / R[1] ** 2, z / R[2] ** 2)).normalized()
+    return Vector(c) + Vector((x, y, z)) + n * out, n
+
+def _ac_decal(mat, c, R, x, z, w, h, d=0.012, out=0.0, roll=0.0, sub=2):
+    """Flattened blob lying on the ellipsoid surface (eyes, noses, blush, markings)."""
+    p, n = _ac_surf(c, R, x, z)
+    o = ico(mat, 1.0, p + n * (out - d * 0.3), (w, d, h), sub)
+    o.rotation_mode = 'YXZ'; o.rotation_euler = (-math.asin(max(-1.0, min(1.0, n.z))), roll, math.atan2(n.x, -n.y))
+    return o
+
+def _ac_curve(mat, c, R, pts, r, out=0.0, seg=4):
+    return _pv_tube(mat, [_ac_surf(c, R, x, z, out + r * 0.4)[0] for x, z in pts], r, seg)
+
+def _ac_eyes(c, R, ex, ez, w, h, out=0.0, mat='eye', hl=True):
+    for sx in (-1, 1):
+        _ac_decal(mat, c, R, sx * ex, ez, w, h, 0.014, out)
+        if hl:
+            _ac_decal('white', c, R, sx * ex + w * 0.32, ez + h * 0.38, w * 0.34, w * 0.34, 0.008, out + 0.007, sub=1)
+            _ac_decal('white', c, R, sx * ex - w * 0.3, ez - h * 0.45, w * 0.15, w * 0.15, 0.006, out + 0.006, sub=1)
+
+def _ac_blush(c, R, x, z, w=0.04, h=0.022, out=0.0):
+    for sx in (-1, 1): _ac_decal('cheek', c, R, sx * x, z, w, h, 0.01, out, sub=1)
+
+def _ac_ear(mat, inner, base, r, h, rx=0.0, ry=0.0, rz=0.0, flat=0.5, sides=8):
+    """Soft cone ear standing on base, tilted; inner = paler cone in front."""
+    with xf(base, rz=rz, ry=ry, rx=rx):
+        o = cyl(mat, r, h, (0, 0, 0), sides, r2=0.0); o.scale = (1, flat, 1)
+        if inner:
+            o = cyl(inner, r * 0.66, h * 0.72, (0, -r * flat * 0.5, h * 0.06), sides, r2=0.0); o.scale = (1, flat * 0.45, 1)
+
+def _ac_foot(mat, x, r=0.066, y=-0.03, k=(1.0, 1.4, 0.62)):
+    h = r * k[2]
+    _ac_ball(mat, (x, y, h), (r * k[0], r * k[1], h), 12, 6, f=lambda a, b, z: (a, b, max(z, -h * 0.92)))
+
+def _ac_arm(n, sd, sx, fur, paw=None, sleeve=None, slen=0.55, sh=(0.125, 0.0, 0.5), hand=(0.205, -0.03, 0.315), r=0.045, cuff=None, puff=1.25):
+    a = Vector((sx * sh[0], sh[1], sh[2])); b = Vector((sx * hand[0], hand[1], hand[2]))
+    part(f'{n}_arm_{sd}', tuple(a))
+    if sleeve and slen >= 0.99:
+        _pv_tube(sleeve, [a, a.lerp(b, 0.5), b.lerp(a, 0.12)], [r * puff, r * 1.12, r * 1.08], 10)
+    else:
+        _pv_tube(fur, [a, a.lerp(b, 0.5), b], [r, r * 0.95, r * 0.9], 10)
+        if sleeve:
+            m = a.lerp(b, slen)
+            _pv_tube(sleeve, [a + (a - b).normalized() * 0.01, a.lerp(m, 0.5), m], [r * puff * 0.95, r * puff, r * puff * 0.92], 10)
+    ico(sleeve or fur, r * (puff if sleeve else 1.0), a, sub=2)
+    if cuff: _pv_tube(cuff, [b.lerp(a, 0.2), b.lerp(a, 0.08)], r * 1.2, 10)
+    _ac_ball(paw or fur, tuple(b), (r * 1.08, r * 1.0, r * 1.1), 10, 6)
+    return b
+
+def _ac_leg(n, sd, sx, mat, foot, x=0.075, r=0.058, pant=None, plen=0.5, foot_r=0.064, cuff=None):
+    part(f'{n}_leg_{sd}', (sx * x, 0, 0.3))
+    _pv_tube(mat, [(sx * x, 0, 0.33), (sx * x, 0, 0.18), (sx * x, -0.005, 0.05)], [r, r * 0.95, r * 0.9], 10)
+    if pant:
+        z1 = 0.33 - 0.28 * plen
+        _pv_tube(pant, [(sx * x, 0, 0.34), (sx * x, 0, z1)], [r * 1.22, r * 1.25], 10)
+        if cuff: _pv_tube(cuff, [(sx * x, 0, z1 + 0.025), (sx * x, 0, z1 - 0.005)], r * 1.33, 10)
+    _ac_foot(foot, sx * x, foot_r)
+
+def _ac_bands(mats, prof, seg=14, sy=0.88):
+    """Horizontal stripes: one open lathe band per profile step, cycling through mats."""
+    for i in range(len(prof) - 1):
+        _pv_lathe(mats[i % len(mats)], [prof[i], prof[i + 1]], seg=seg, sy=sy, cap=False)
+
+def _ac_lr(prof, z):
+    """Radius of a lathe profile [(r, z)] at height z."""
+    for (r0, z0), (r1, z1) in zip(prof, prof[1:]):
+        if z0 <= z <= z1 and z1 > z0: return r0 + (r1 - r0) * (z - z0) / (z1 - z0)
+    return prof[-1][0]
+
+def _ac_on(prof, z, a, sy=0.88, out=0.0):
+    """Point on a lathe surface at height z and angle a (0 = front)."""
+    r = _ac_lr(prof, z) + out
+    return (r * math.sin(a), -r * math.cos(a) * sy, z)
+
+def _ac_whiskers(c, R, x, z, out, n=2):
+    for sx in (-1, 1):
+        for k in range(n):
+            p, _ = _ac_surf(c, R, sx * x, z + k * 0.02 - 0.01, out)
+            rod('ink', tuple(p), (p.x + sx * 0.09, p.y - 0.01, p.z + (k - 0.5) * 0.035), 0.0035, 3)
+
+_AC_HC = (0.0, 0.0, 0.775)   # standard villager head centre / radii
+_AC_HR = (0.27, 0.24, 0.23)
+_AC_TORSO = [(0.0, 0.17), (0.13, 0.175), (0.158, 0.23), (0.162, 0.31), (0.148, 0.41), (0.122, 0.49), (0.08, 0.55), (0.0, 0.565)]
+
+# ---- villagers (front -Y, ~1 m, head ~45%): parts <n>_body (hips) <n>_head (neck) <n>_arm_l/r (shoulders) <n>_leg_l/r (hips)
+@model('vil_cat', 'ねこの住民(サンドレス)', '人物', lod=False)
+def vil_cat():
+    n, F, G = 'vil_cat', 'ac_cat_cream', 'ac_cat_grey'
+    part(n + '_body', (0, 0, 0.3))
+    _pv_lathe(F, _AC_TORSO, seg=14, sy=0.88)
+    dress = [(0.0, 0.15), (0.235, 0.15), (0.24, 0.17), (0.205, 0.26), (0.16, 0.36), (0.14, 0.43), (0.13, 0.49), (0.0, 0.49)]
+    _pv_lathe('ac_sundress', dress, seg=18, sy=0.9)
+    o = torus('white', 0.238, 0.012, (0, 0, 0.162), seg=18, rseg=4); o.scale = (1, 0.9, 1)                 # white hem
+    o = torus('white', 0.13, 0.009, (0, 0, 0.485), seg=16, rseg=4); o.scale = (1, 0.9, 1)                  # neckline
+    for sx in (-1, 1):   # shoulder straps
+        _pv_tube('ac_sundress', [_ac_on(dress, 0.48, sx * 0.55, 0.9), (sx * 0.085, -0.03, 0.555), (sx * 0.085, 0.05, 0.55), _ac_on(dress, 0.48, sx * (math.pi - 0.55), 0.9)], 0.013, 5)
+    for k, (a, z) in enumerate(((-0.35, 0.22), (0.25, 0.27), (0.6, 0.2), (-0.75, 0.3), (0.0, 0.33), (-0.15, 0.19), (0.95, 0.31))):   # little white flower dots
+        ico('white', 0.013, _ac_on(dress, z, a, 0.9, 0.002), (1, 0.5, 1), 1)
+    ico('ac_bow', 0.024, _ac_on(dress, 0.44, 0.0, 0.9, 0.006), (1, 0.6, 1), 2)                            # button at the bodice
+    _pv_tube(F, [(0, 0.12, 0.27), (0.02, 0.24, 0.24), (0.08, 0.31, 0.31), (0.11, 0.31, 0.45), (0.08, 0.27, 0.55)], [0.034, 0.034, 0.033, 0.031, 0.028], 8)   # tail
+    ico(G, 0.032, (0.075, 0.265, 0.56), (1, 1, 1.3), 2)
+    part(n + '_head', (0, 0, 0.55))
+    _ac_ball(F, _AC_HC, _AC_HR, 18, 10)
+    for x, rl in ((-0.055, -0.3), (0.0, 0.0), (0.055, 0.3)): _ac_decal(G, _AC_HC, _AC_HR, x, 0.165 - abs(x) * 0.35, 0.016, 0.042, 0.014, roll=rl, sub=1)   # tabby forehead
+    for sx in (-1, 1):
+        for k in range(2): _ac_decal(G, _AC_HC, _AC_HR, sx * 0.235, 0.02 - k * 0.05, 0.04, 0.012, 0.016, roll=-sx * 0.15, sub=1)   # cheek stripes
+    for sx in (-1, 1): _ac_decal('ac_cat_white', _AC_HC, _AC_HR, sx * 0.032, -0.085, 0.048, 0.036, 0.04)
+    _ac_decal('ac_ear_pink', _AC_HC, _AC_HR, 0, -0.05, 0.022, 0.015, 0.022, 0.02)                                 # nose
+    _ac_curve('ink', _AC_HC, _AC_HR, [(-0.035, -0.087), (-0.017, -0.098), (0.0, -0.082), (0.017, -0.098), (0.035, -0.087)], 0.0045, 0.024)   # :3 mouth
+    _ac_eyes(_AC_HC, _AC_HR, 0.1, 0.005, 0.028, 0.042)
+    _ac_blush(_AC_HC, _AC_HR, 0.16, -0.06)
+    _ac_whiskers(_AC_HC, _AC_HR, 0.09, -0.07, 0.03)
+    for sx in (-1, 1): _ac_ear(G, 'ac_ear_pink', (sx * 0.155, 0.0, 0.92), 0.085, 0.15, ry=sx * 0.35, rx=0.05)
+    with xf((0.1, -0.12, 0.97), ry=0.35, rx=-0.3):   # small ribbon bow by the right ear
+        for sx in (-1, 1): ico('ac_bow', 0.04, (sx * 0.038, 0, 0), (1, 0.45, 0.75), 2)
+        ico('ac_bow', 0.018, (0, -0.006, 0), (1, 0.8, 1), 2)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F)
+        _ac_leg(n, sd, sx, F, 'ac_bow')
+    part(None)
+
+@model('vil_rabbit', 'うさぎの住民(ピンクのオーバーオール)', '人物', lod=False)
+def vil_rabbit():
+    n, F, O = 'vil_rabbit', 'ac_rabbit_white', 'ac_overall_pink'
+    part(n + '_body', (0, 0, 0.3))
+    _pv_lathe('ac_tee_blue', _AC_TORSO, seg=14, sy=0.88)
+    pants = [(0.0, 0.2), (0.15, 0.2), (0.17, 0.25), (0.172, 0.31), (0.165, 0.36), (0.0, 0.36)]
+    _pv_lathe(O, pants, seg=16, sy=0.9)
+    bib = [(0.0, 0.33), (0.158, 0.34), (0.15, 0.42), (0.13, 0.49)]
+    _pv_shell(O, [(0.166, 0.34, 0.62), (0.158, 0.42, 0.58), (0.138, 0.49, 0.52)], seg=6, t=0.014, sy=0.9)   # bib
+    _pv_shell('ac_overall_dk', [(0.168, 0.375, 0.3), (0.165, 0.43, 0.3)], seg=4, t=0.008, sy=0.9)          # bib pocket
+    for sx in (-1, 1):
+        _pv_tube(O, [_ac_on(bib, 0.47, sx * 0.4, 0.9, 0.01), (sx * 0.08, -0.06, 0.545), (sx * 0.075, 0.05, 0.54), _ac_on(_AC_TORSO, 0.36, sx * (math.pi - 0.4), 0.88, 0.006)], 0.014, 5)
+        ico('ac_button', 0.016, _ac_on(bib, 0.465, sx * 0.4, 0.9, 0.018), (1, 0.6, 1), 2)
+    ico(F, 0.06, (0, 0.165, 0.25), sub=2, jitter=0.15, seed=3)                                             # cotton tail
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = (0, 0, 0.765), (0.265, 0.235, 0.225)
+    _ac_ball(F, hc, R, 18, 10)
+    for sx in (-1, 1): _ac_decal('white', hc, R, sx * 0.03, -0.08, 0.045, 0.035, 0.036)
+    _ac_decal('ac_ear_pink', hc, R, 0, -0.045, 0.024, 0.016, 0.02, 0.02)
+    _ac_curve('ink', hc, R, [(-0.03, -0.082), (-0.015, -0.095), (0.0, -0.08), (0.015, -0.095), (0.03, -0.082)], 0.0042, 0.022)
+    _ac_decal('white', hc, R, 0, -0.112, 0.02, 0.018, 0.012, 0.03)                                         # buck teeth
+    _ac_eyes(hc, R, 0.1, 0.0, 0.026, 0.044)
+    _ac_blush(hc, R, 0.155, -0.06)
+    for sx, sd in ((-1, 'l'), (1, 'r')):   # long ears; the right one flops over at the tip
+        b = Vector((sx * 0.085, 0.02, 0.95))
+        tip = [b + Vector((sx * 0.02, 0.0, 0.14)), b + Vector((sx * 0.04, 0.01, 0.27))]
+        if sx > 0: tip[1] = b + Vector((0.055, 0.0, 0.25))
+        pts = [b, tip[0], tip[1]] + ([b + Vector((0.14, 0.0, 0.28))] if sx > 0 else [b + Vector((sx * 0.045, 0.015, 0.33))])
+        _pv_sweep(F, pts, [(0.03, 0.04), (0.032, 0.055), (0.028, 0.05), (0.018, 0.025)], 10, side=(0, 1, 0))
+        _pv_sweep('ac_ear_pink', [p + Vector((0, -0.022, 0)) for p in pts[:3]] + [pts[3] + Vector((0, -0.014, -0.005))], [(0.012, 0.022), (0.012, 0.036), (0.01, 0.032), (0.006, 0.012)], 8, side=(0, 1, 0))
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, sleeve='ac_tee_blue', slen=0.45)
+        _ac_leg(n, sd, sx, F, F, pant=O, plen=0.62, cuff='ac_overall_dk', foot_r=0.068)
+    part(None)
+
+@model('vil_bear', 'くまの住民(緑のパーカー・のんびり屋)', '人物', lod=False)
+def vil_bear():
+    n, F, T, H = 'vil_bear', 'ac_bear_brown', 'ac_bear_tan', 'ac_hoodie'
+    part(n + '_body', (0, 0, 0.3))
+    hood = [(0.0, 0.16), (0.17, 0.165), (0.19, 0.2), (0.198, 0.29), (0.185, 0.4), (0.155, 0.48), (0.1, 0.54), (0.0, 0.555)]
+    _pv_lathe(H, hood, seg=16, sy=0.9)
+    _ac_bands(['ac_hoodie_dk'], [(0.175, 0.155), (0.178, 0.19)], seg=16, sy=0.9)                          # ribbed hem
+    _pv_shell('ac_hoodie_dk', [(0.2, 0.21, 0.55), (0.204, 0.3, 0.5), (0.195, 0.35, 0.36)], seg=6, t=0.012, sy=0.9)   # kangaroo pocket
+    ico(H, 0.13, (0, 0.11, 0.555), (1.15, 0.6, 0.52), 2)                                                     # hood bunched at the back
+    torus('ac_hoodie_dk', 0.105, 0.016, (0, 0.0, 0.545), seg=16, rseg=5)
+    for sx in (-1, 1):   # drawstrings
+        _pv_tube('white', [_ac_on(hood, 0.53, sx * 0.3, 0.9, 0.005), _ac_on(hood, 0.46, sx * 0.3, 0.9, 0.012), _ac_on(hood, 0.4, sx * 0.33, 0.9, 0.012)], 0.0065, 4)
+        ico('white', 0.011, _ac_on(hood, 0.395, sx * 0.33, 0.9, 0.014), sub=1)
+    ico(F, 0.04, (0, 0.18, 0.2), sub=2)                                                                       # stubby tail under the hem
+    part(n + '_head', (0, 0, 0.555))
+    hc, R = (0, 0, 0.785), (0.285, 0.255, 0.24)
+    _ac_ball(F, hc, R, 18, 10)
+    _ac_decal(T, hc, R, 0, -0.07, 0.1, 0.075, 0.07)                                                          # muzzle
+    _ac_decal('ac_bear_nose', hc, R, 0, -0.035, 0.03, 0.02, 0.025, 0.04)
+    _ac_curve('ac_bear_nose', hc, R, [(0, -0.05), (0, -0.075)], 0.0045, 0.04)
+    _ac_curve('ac_bear_nose', hc, R, [(-0.035, -0.07), (-0.017, -0.085), (0.0, -0.075), (0.017, -0.085), (0.035, -0.07)], 0.0045, 0.042)
+    for sx in (-1, 1):   # sleepy half-lidded eyes
+        _ac_decal('eye', hc, R, sx * 0.105, 0.0, 0.032, 0.03, 0.014)
+        _ac_decal('white', hc, R, sx * 0.105 + 0.01, 0.002, 0.009, 0.009, 0.006, 0.006, sub=1)
+        _ac_decal(F, hc, R, sx * 0.105, 0.022, 0.044, 0.024, 0.02, 0.004)                                   # heavy lid
+        _ac_curve('ac_bear_nose', hc, R, [(sx * 0.07, 0.008), (sx * 0.105, 0.0), (sx * 0.14, 0.008)], 0.0045, 0.012)   # lid line
+    _ac_blush(hc, R, 0.17, -0.055, 0.045)
+    for sx in (-1, 1):   # round ears
+        ico(F, 0.075, (sx * 0.19, 0.03, 0.97), (1, 0.6, 1), 2)
+        ico(T, 0.045, (sx * 0.19, -0.008, 0.965), (1, 0.4, 1), 2)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, sleeve=H, slen=1.0, sh=(0.15, 0.0, 0.49), hand=(0.235, -0.03, 0.3), r=0.052, cuff='ac_hoodie_dk', puff=1.2)
+        _ac_leg(n, sd, sx, F, F, x=0.085, r=0.068, foot_r=0.074)
+        _ac_decal(T, (sx * 0.085, -0.03, 0.046), (0.074, 0.104, 0.046), 0, -0.01, 0.04, 0.03, 0.01)   # toe pads
+    part(None)
+
+@model('vil_penguin', 'ペンギンの住民(セーラー服)', '人物', lod=False)
+def vil_penguin():
+    n, N, W = 'vil_penguin', 'ac_peng_navy', 'ac_peng_white'
+    part(n + '_body', (0, 0, 0.3))
+    shirt = [(0.0, 0.18), (0.15, 0.185), (0.17, 0.23), (0.172, 0.31), (0.16, 0.41), (0.135, 0.49), (0.09, 0.55), (0.0, 0.56)]
+    _pv_lathe(N, [(0.0, 0.14), (0.14, 0.15), (0.165, 0.2), (0.0, 0.2)], seg=14, sy=0.88)                    # hips
+    _ac_bands(['white', 'ac_sailor_blue'], [(0.15, 0.185), (0.17, 0.23), (0.172, 0.27), (0.17, 0.31), (0.166, 0.35), (0.16, 0.39), (0.15, 0.43), (0.135, 0.47), (0.12, 0.5), (0.09, 0.55)], seg=16, sy=0.88)
+    _pv_lathe('white', [(0.09, 0.55), (0.0, 0.56)], seg=16, sy=0.88)
+    _pv_shell(N, [(0.14, 0.4, 1.0), (0.14, 0.48, 1.1), (0.11, 0.545, 1.3)], seg=8, t=0.012, sy=0.9, a_mid=math.pi / 2)   # sailor collar (back)
+    for sx in (-1, 1): _pv_tube(N, [(sx * 0.1, 0.0, 0.545), _ac_on(shirt, 0.49, sx * 0.55, 0.88, 0.012), _ac_on(shirt, 0.43, sx * 0.12, 0.88, 0.014)], [0.016, 0.016, 0.012], 5)   # collar V
+    for sx in (-1, 1): _pv_tube('white', [(sx * 0.1, -0.01, 0.548), _ac_on(shirt, 0.49, sx * 0.55, 0.88, 0.02), _ac_on(shirt, 0.43, sx * 0.12, 0.88, 0.02)], 0.005, 4)   # collar trim
+    ico('ac_scarf_red', 0.03, _ac_on(shirt, 0.43, 0.0, 0.88, 0.02), (1.2, 0.6, 0.8), 2)                     # neckerchief knot
+    for sx in (-1, 1):
+        p = Vector(_ac_on(shirt, 0.43, 0.0, 0.88, 0.02))
+        _pv_tube('ac_scarf_red', [p, p + Vector((sx * 0.025, -0.008, -0.05)), p + Vector((sx * 0.03, -0.006, -0.08))], [0.016, 0.014, 0.006], 5, flat=0.4)
+    o = cyl(N, 0.05, 0.06, (0, 0.15, 0.17), 3, r2=0.0); o.rotation_euler = (2.0, 0, 0); o.scale = (1.3, 0.5, 1)   # tail
+    part(n + '_head', (0, 0, 0.56))
+    hc, R = (0, 0, 0.78), (0.265, 0.24, 0.235)
+    _ac_ball(N, hc, R, 18, 10)
+    for sx in (-1, 1): _ac_decal(W, hc, R, sx * 0.075, -0.03, 0.12, 0.13, 0.06, 0.0)                      # heart-shaped white face
+    _ac_decal(W, hc, R, 0, -0.08, 0.1, 0.09, 0.05, 0.0)
+    _ac_eyes(hc, R, 0.085, 0.01, 0.026, 0.04, 0.022)
+    _ac_blush(hc, R, 0.15, -0.06, out=0.016)
+    with xf(tuple(_ac_surf(hc, R, 0, -0.045, 0.015)[0])):
+        o = cyl('ac_beak', 0.04, 0.07, (0, 0, 0), 8, r2=0.0); o.rotation_euler = (math.pi / 2 + 0.15, 0, 0); o.scale = (1.35, 0.6, 1)
+    with xf((0.06, 0.02, 0.985), ry=0.3, rx=-0.15):   # little white sailor cap with a navy band
+        _pv_lathe('white', [(0.0, -0.01), (0.105, -0.01), (0.1, 0.035), (0.085, 0.07), (0.0, 0.075)], seg=14)
+        torus('white', 0.105, 0.018, (0, 0, 0.0), seg=14, rseg=5)
+        _ac_bands(['ac_sailor_blue'], [(0.104, 0.008), (0.1, 0.03)], seg=14, sy=1.0)
+    for sx, sd in ((-1, 'l'), (1, 'r')):   # flippers
+        a = Vector((sx * 0.13, 0.0, 0.49)); b = Vector((sx * 0.215, -0.01, 0.3))
+        part(f'{n}_arm_{sd}', tuple(a))
+        ico('white', 0.05, a, sub=2)
+        _pv_sweep(N, [a, a.lerp(b, 0.4), a.lerp(b, 0.8), b + (b - a).normalized() * 0.03], [(0.048, 0.02), (0.055, 0.02), (0.045, 0.018), (0.02, 0.012)], 8, side=(0, 1, 0))
+        _ac_leg(n, sd, sx, N, 'ac_beak', x=0.07, r=0.05, foot_r=0.068)
+    part(None)
+
+@model('vil_frog', 'かえるの住民(オレンジのレインコート)', '人物', lod=False)
+def vil_frog():
+    n, F, C = 'vil_frog', 'ac_frog_green', 'ac_raincoat'
+    part(n + '_body', (0, 0, 0.3))
+    coat = [(0.0, 0.14), (0.225, 0.14), (0.228, 0.16), (0.195, 0.26), (0.165, 0.37), (0.142, 0.45), (0.115, 0.51), (0.0, 0.52)]
+    _pv_lathe(C, coat, seg=18, sy=0.9)
+    _pv_lathe(C, [(0.1, 0.5), (0.12, 0.52), (0.108, 0.56), (0.0, 0.565)], seg=14, sy=0.9)                   # collar
+    _pv_tube('ac_boot_yellow', [_ac_on(coat, 0.15, 0.0, 0.9, 0.004), _ac_on(coat, 0.5, 0.0, 0.9, 0.004)], 0.007, 4)   # placket seam
+    for k, z in enumerate((0.22, 0.32, 0.42)):   # toggles
+        p = Vector(_ac_on(coat, z, 0.0, 0.9, 0.012))
+        rod('ac_boot_yellow', p - Vector((0.025, 0, 0)), p + Vector((0.025, 0, 0)), 0.009, 5)
+    for sx in (-1, 1): _pv_shell('ac_boot_yellow', [(0.206, 0.22, 0.13), (0.195, 0.27, 0.13)], seg=3, t=0.008, sy=0.9, a_mid=-math.pi / 2 + sx * 0.75)   # pocket flaps
+    ico(C, 0.12, (0, 0.11, 0.545), (1.1, 0.55, 0.45), 2)                                                    # hood down at the back
+    part(n + '_head', (0, 0, 0.56))
+    hc, R = (0, 0, 0.74), (0.29, 0.245, 0.2)
+    _ac_ball(F, hc, R, 18, 10)
+    _ac_decal('ac_frog_belly', hc, R, 0, -0.14, 0.13, 0.045, 0.012)                                            # pale throat
+    for sx in (-1, 1):   # big eyes on top of the head
+        ec = (sx * 0.12, -0.03, 0.905)
+        _ac_ball(F, ec, (0.088, 0.08, 0.085), 14, 8)
+        wc, wr = (sx * 0.12, -0.07, 0.915), (0.066, 0.05, 0.066)
+        _ac_ball('white', wc, wr, 14, 8)
+        _ac_decal('eye', wc, wr, sx * 0.004, -0.004, 0.034, 0.042, 0.016)
+        _ac_decal('white', wc, wr, sx * 0.004 + 0.012, 0.014, 0.012, 0.012, 0.008, 0.008, sub=1)
+    _ac_curve('ink', hc, R, [(-0.15, -0.035), (-0.08, -0.07), (0.0, -0.08), (0.08, -0.07), (0.15, -0.035)], 0.0055, 0.0)   # wide smile
+    for sx in (-1, 1): ico('ink', 0.006, _ac_surf(hc, R, sx * 0.025, 0.02, 0.0)[0], sub=1)                 # nostrils
+    _ac_blush(hc, R, 0.17, -0.03, 0.045, 0.024)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        b = _ac_arm(n, sd, sx, F, paw=F, sleeve=C, slen=1.0, r=0.046, cuff='ac_boot_yellow', puff=1.2)
+        part(f'{n}_leg_{sd}', (sx * 0.075, 0, 0.3))
+        _pv_tube(F, [(sx * 0.075, 0, 0.33), (sx * 0.075, 0, 0.14)], 0.05, 10)
+        _pv_lathe('ac_boot_yellow', [(0.0, 0.0), (0.062, 0.0), (0.064, 0.1), (0.068, 0.17), (0.0, 0.17)], (sx * 0.075, 0.005, 0), seg=12)
+        _ac_foot('ac_boot_yellow', sx * 0.075, 0.064, y=-0.035, k=(0.95, 1.35, 0.7))
+        torus('ac_boot_yellow', 0.066, 0.012, (sx * 0.075, 0.005, 0.168), seg=12, rseg=4)
+    part(None)
+
+@model('vil_squirrel', 'りすの住民(デニムジャケット)', '人物', lod=False)
+def vil_squirrel():
+    n, F, Cr, D = 'vil_squirrel', 'ac_squirrel', 'ac_squirrel_cream', 'ac_denim'
+    part(n + '_body', (0, 0, 0.3))
+    _pv_lathe('white', _AC_TORSO, seg=14, sy=0.88)                                                                 # white tee
+    jk = [(0.168, 0.2, 2.62), (0.172, 0.31, 2.62), (0.157, 0.41, 2.68), (0.132, 0.49, 2.78), (0.09, 0.552, 2.9)]
+    _pv_shell(D, jk, seg=14, t=0.016, sy=0.88, a_mid=math.pi / 2)                                              # open jacket
+    _ac_bands(['ac_denim_dk'], [(0.168, 0.185), (0.17, 0.215)], seg=16, sy=0.88)                              # waistband
+    for sx in (-1, 1):
+        a = sx * (math.pi - 2.62)
+        _pv_tube(D, [_ac_on(_AC_TORSO, 0.36, a * 1.05, 0.88, 0.02), _ac_on(_AC_TORSO, 0.47, a * 1.6, 0.88, 0.022), (sx * 0.09, -0.02, 0.555)], [0.012, 0.022, 0.018], 5, flat=0.5)   # lapel
+        ico('ac_button', 0.011, _ac_on(_AC_TORSO, 0.33, a * 1.6, 0.88, 0.022), sub=2)
+        _pv_shell('ac_denim_dk', [(0.16, 0.39, 0.16), (0.152, 0.44, 0.16)], seg=3, t=0.02, sy=0.88, a_mid=-math.pi / 2 + sx * 0.75)   # chest pocket
+    _pv_tube(F, [(0, 0.12, 0.24), (0, 0.27, 0.3), (0, 0.33, 0.48), (0, 0.29, 0.68), (0, 0.33, 0.86), (0, 0.42, 0.93), (0, 0.48, 0.88)],
+             [0.05, 0.1, 0.13, 0.13, 0.12, 0.09, 0.04], 12)                                                   # big fluffy tail
+    for k, (p, r) in enumerate((((0, 0.37, 0.5), 0.1), ((0, 0.34, 0.7), 0.1), ((0, 0.4, 0.9), 0.075))):
+        ico(F, r, p, sub=2, jitter=0.18, seed=k)
+    ico(Cr, 0.05, (0, 0.47, 0.885), sub=2, jitter=0.15, seed=7)
+    part(n + '_head', (0, 0, 0.555))
+    _ac_ball(F, _AC_HC, _AC_HR, 18, 10)
+    for sx in (-1, 1): _ac_decal(Cr, _AC_HC, _AC_HR, sx * 0.07, -0.07, 0.085, 0.07, 0.045)                         # cream cheeks
+    _ac_decal('ac_squirrel_dk', _AC_HC, _AC_HR, 0, -0.045, 0.022, 0.015, 0.02, 0.025)
+    _ac_curve('ink', _AC_HC, _AC_HR, [(-0.03, -0.083), (-0.015, -0.094), (0.0, -0.08), (0.015, -0.094), (0.03, -0.083)], 0.0042, 0.026)
+    _ac_decal('white', _AC_HC, _AC_HR, 0, -0.108, 0.018, 0.016, 0.012, 0.03)                                          # teeth
+    _ac_eyes(_AC_HC, _AC_HR, 0.1, 0.01, 0.028, 0.042)
+    _ac_blush(_AC_HC, _AC_HR, 0.165, -0.04, out=0.012)
+    for sx in (-1, 1):
+        _ac_ear(F, Cr, (sx * 0.14, 0.02, 0.93), 0.07, 0.15, ry=sx * 0.25, rx=0.1)
+        with xf((sx * 0.14, 0.02, 0.93), ry=sx * 0.25, rx=0.1): ico('ac_squirrel_dk', 0.03, (0, 0.0, 0.14), (0.8, 0.6, 1.4), 2)   # ear tufts
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, sleeve=D, slen=1.0, cuff='ac_denim_dk', puff=1.2)
+        _ac_leg(n, sd, sx, F, 'pv_shoe_brown')
+    part(None)
+
+@model('vil_owl', 'ふくろうの住民(博物館の館長)', '人物', lod=False)
+def vil_owl():
+    n, F, Fc, Ch = 'vil_owl', 'ac_owl_brown', 'ac_owl_face', 'ac_owl_chest'
+    part(n + '_body', (0, 0, 0.3))
+    body = [(0.0, 0.08), (0.12, 0.09), (0.17, 0.16), (0.185, 0.27), (0.17, 0.39), (0.14, 0.48), (0.09, 0.55), (0.0, 0.565)]
+    _pv_lathe(F, body, seg=16, sy=0.9)
+    _pv_shell(Ch, [(0.17, 0.12, 0.8), (0.188, 0.24, 0.9), (0.175, 0.37, 0.75), (0.145, 0.47, 0.55)], seg=6, t=0.012, sy=0.9)   # cream chest
+    for k, (x, z) in enumerate(((-0.04, 0.2), (0.04, 0.2), (0.0, 0.26), (-0.045, 0.32), (0.045, 0.32), (0.0, 0.15))):   # chevron feather marks
+        p = Vector(_ac_on(body, z, math.asin(x / 0.18), 0.9, 0.012))
+        _pv_tube(F, [p + Vector((-0.016, 0, 0.008)), p, p + Vector((0.016, 0, 0.008))], 0.005, 4)
+    _pv_shell('ac_vest', [(0.183, 0.18, 2.35), (0.192, 0.27, 2.35), (0.178, 0.39, 2.45), (0.148, 0.48, 2.6), (0.1, 0.545, 2.85)], seg=14, t=0.014, sy=0.9, a_mid=math.pi / 2)   # vest
+    for z in (0.22, 0.29, 0.36):
+        ico('ac_rim_gold', 0.011, _ac_on(body, z, -(math.pi - 2.35) * 1.05, 0.9, 0.018), sub=2)
+    with xf(_ac_on(body, 0.5, 0.0, 0.9, 0.02)):   # little bow tie
+        for sx in (-1, 1): o = cyl('ac_apron_green', 0.026, 0.04, (0, 0, 0), 3, r2=0.0, rot=(0, -sx * math.pi / 2, 0)); o.scale = (1, 0.5, 1)
+        ico('ac_apron_green', 0.012, (0, -0.004, 0), sub=1)
+    o = cyl(F, 0.06, 0.09, (0, 0.14, 0.12), 3, r2=0.0); o.rotation_euler = (2.3, 0, 0); o.scale = (1.4, 0.4, 1)   # tail feathers
+    part(n + '_head', (0, 0, 0.56))
+    hc, R = (0, 0, 0.78), (0.275, 0.24, 0.235)
+    _ac_ball(F, hc, R, 18, 10)
+    for sx in (-1, 1):
+        _ac_decal(Fc, hc, R, sx * 0.09, -0.01, 0.105, 0.11, 0.03, sub=3)                                               # facial discs
+        _ac_eyes(hc, R, 0.09, 0.0, 0.035, 0.04, 0.03) if sx > 0 else None
+        torus('ac_rim_gold', 0.058, 0.007, tuple(_ac_surf(hc, R, sx * 0.09, 0.0, 0.05)[0]), rot=(math.pi / 2, 0, sx * 0.35), seg=14, rseg=4)   # round glasses
+        rod('ac_rim_gold', tuple(_ac_surf(hc, R, sx * 0.145, 0.01, 0.04)[0]), (sx * 0.24, -0.06, 0.8), 0.005, 3)
+    _pv_tube('ac_rim_gold', [_ac_surf(hc, R, -0.032, 0.01, 0.055)[0], _ac_surf(hc, R, 0.0, 0.02, 0.06)[0], _ac_surf(hc, R, 0.032, 0.01, 0.055)[0]], 0.006, 4)   # bridge
+    with xf(tuple(_ac_surf(hc, R, 0, -0.05, 0.03)[0])):
+        o = cyl('ac_boot_yellow', 0.026, 0.05, (0, 0, 0), 6, r2=0.0); o.rotation_euler = (math.pi / 2 + 0.6, 0, 0); o.scale = (1.0, 0.8, 1)   # beak
+    _ac_blush(hc, R, 0.18, -0.08, out=0.0)
+    for sx in (-1, 1):   # feather tufts and a brow ridge
+        _ac_ear(F, None, (sx * 0.19, 0.0, 0.92), 0.045, 0.085, ry=sx * 0.8, rx=0.1, flat=0.5, sides=6)
+        _ac_curve(F, hc, R, [(sx * 0.02, 0.06), (sx * 0.09, 0.09), (sx * 0.17, 0.07)], 0.014, 0.0)
+    for sx, sd in ((-1, 'l'), (1, 'r')):   # wings
+        a = Vector((sx * 0.15, 0.01, 0.48)); b = Vector((sx * 0.235, -0.02, 0.29))
+        part(f'{n}_arm_{sd}', tuple(a))
+        with xf(tuple(a.lerp(b, 0.5)), ry=sx * 0.35): _ac_ball(F, (0, 0, 0), (0.04, 0.075, 0.14), 12, 8, f=lambda x, y, z: (x, y + 0.25 * max(0.0, -z), z))   # wing
+        with xf(tuple(a.lerp(b, 0.5)), ry=sx * 0.35): _ac_ball(Fc, (sx * 0.012, 0.0, -0.1), (0.03, 0.055, 0.05), 10, 6)
+        if sx > 0:   # carries the town's collection book
+            with xf((0.24, -0.06, 0.31), rz=0.25, rx=0.1):
+                _pv_rbox('ac_book', (0.035, 0.13, 0.17), (0, 0, -0.085), 0.006)
+                box('paper', (0.03, 0.12, 0.155), (0.005, 0, -0.078))
+                box('ac_rim_gold', (0.002, 0.06, 0.03), (-0.018, 0, 0.0))
+        part(f'{n}_leg_{sd}', (sx * 0.075, 0, 0.3))
+        _pv_tube('ac_boot_yellow', [(sx * 0.075, 0, 0.2), (sx * 0.075, -0.005, 0.03)], 0.026, 6)
+        for k in (-1, 0, 1): _ac_ball('ac_boot_yellow', (sx * 0.075 + k * 0.03, -0.05 - (1 - abs(k)) * 0.01, 0.018), (0.02, 0.045, 0.018), 8, 4)   # talons
+    part(None)
+
+@model('vil_raccoon', 'たぬきの住民(雑貨屋の店主)', '人物', lod=False)
+def vil_raccoon():
+    n, F, Dk, Lt = 'vil_raccoon', 'ac_tanuki', 'ac_tanuki_dk', 'ac_tanuki_light'
+    part(n + '_body', (0, 0, 0.3))
+    body = [(0.0, 0.17), (0.14, 0.175), (0.17, 0.23), (0.174, 0.31), (0.158, 0.41), (0.13, 0.49), (0.085, 0.55), (0.0, 0.565)]
+    _pv_lathe('ac_shirt_cream', body, seg=14, sy=0.88)
+    _pv_lathe('ac_pants_brown', [(0.0, 0.16), (0.15, 0.16), (0.176, 0.22), (0.172, 0.27), (0.0, 0.27)], seg=14, sy=0.88)
+    for sx in (-1, 1): _pv_tube('ac_shirt_cream', [(sx * 0.02, -0.11, 0.548), (sx * 0.075, -0.1, 0.53), (sx * 0.07, -0.08, 0.565)], 0.016, 4, flat=0.5)   # shirt collar
+    # green-and-white vertical striped apron: skirt (5 stripes) and a narrower bib (3 stripes)
+    sw = 0.17
+    for k in range(-2, 3):
+        mat = 'ac_apron_green' if k % 2 == 0 else 'white'
+        _pv_shell(mat, [(0.196, 0.15, sw / 2), (0.188, 0.24, sw / 2), (0.185, 0.33, sw / 2)], seg=2, t=0.012, sy=0.9, a_mid=-math.pi / 2 + k * sw)
+        if abs(k) <= 1:
+            _pv_shell(mat, [(0.185, 0.32, sw / 2), (0.168, 0.41, sw / 2), (0.146, 0.48, sw / 2)], seg=2, t=0.012, sy=0.9, a_mid=-math.pi / 2 + k * sw)
+    _pv_shell('ac_apron_green', [(0.198, 0.2, 0.18), (0.192, 0.26, 0.18)], seg=3, t=0.01, sy=0.9)            # pocket
+    _ac_bands(['ac_apron_green'], [(0.185, 0.32), (0.188, 0.345)], seg=16, sy=0.9)                          # apron ties round the waist
+    for sx in (-1, 1): _pv_tube('ac_apron_green', [_ac_on(body, 0.48, sx * 0.25, 0.88, 0.014), (sx * 0.085, -0.03, 0.56), (sx * 0.05, 0.07, 0.565)], 0.01, 4)
+    _pv_tube('ac_apron_green', [(0.02, 0.17, 0.33), (0.05, 0.19, 0.27), (0.03, 0.185, 0.22)], 0.012, 4, flat=0.5)   # bow tails at the back
+    tail = [(0, 0.13, 0.24), (0.02, 0.24, 0.2), (0.05, 0.31, 0.12), (0.07, 0.33, 0.05)]
+    _pv_tube(F, tail, [0.05, 0.08, 0.08, 0.055], 10)
+    ico(Dk, 0.06, (0.072, 0.335, 0.045), (1, 1, 1.1), 2)
+    part(n + '_head', (0, 0, 0.56))
+    hc, R = (0, 0, 0.78), (0.28, 0.245, 0.23)
+    _ac_ball(F, hc, R, 18, 10)
+    for sx in (-1, 1):
+        _ac_decal(Lt, hc, R, sx * 0.07, -0.085, 0.08, 0.06, 0.05)                                              # pale cheeks
+        _ac_decal(Dk, hc, R, sx * 0.1, 0.0, 0.075, 0.048, 0.02, roll=sx * 0.25, sub=1)                               # dark mask
+        _ac_decal('white', hc, R, sx * 0.1, 0.005, 0.03, 0.035, 0.012, 0.012, sub=1)
+        _ac_decal('eye', hc, R, sx * 0.1, 0.0, 0.02, 0.028, 0.012, 0.018)
+        _ac_decal('white', hc, R, sx * 0.1 + 0.007, 0.01, 0.007, 0.007, 0.006, 0.024, sub=1)
+        torus('ac_rim_dark', 0.05, 0.0065, tuple(_ac_surf(hc, R, sx * 0.1, 0.0, 0.045)[0]), rot=(math.pi / 2, 0, sx * 0.4), seg=12, rseg=3)   # round glasses
+        rod('ac_rim_dark', tuple(_ac_surf(hc, R, sx * 0.15, 0.01, 0.03)[0]), (sx * 0.25, -0.07, 0.82), 0.005, 3)
+    _pv_tube('ac_rim_dark', [_ac_surf(hc, R, -0.05, 0.01, 0.05)[0], _ac_surf(hc, R, 0.0, 0.02, 0.055)[0], _ac_surf(hc, R, 0.05, 0.01, 0.05)[0]], 0.006, 4)
+    _ac_decal(Lt, hc, R, 0, -0.07, 0.07, 0.05, 0.05)                                                           # muzzle
+    _ac_decal(Dk, hc, R, 0, -0.045, 0.026, 0.018, 0.022, 0.03)
+    _ac_curve(Dk, hc, R, [(-0.03, -0.08), (-0.015, -0.092), (0.0, -0.08), (0.015, -0.092), (0.03, -0.08)], 0.0045, 0.032)
+    _ac_blush(hc, R, 0.18, -0.07)
+    for sx in (-1, 1):   # small round dark ears poking out under the cap
+        ico(Dk, 0.06, (sx * 0.215, 0.03, 0.93), (1, 0.55, 0.9), 2)
+    with xf((0, 0.01, 0.92), rx=-0.12):   # flat cap (hunting cap) with a short peak
+        _ac_ball('ac_cap_tweed', (0, 0.02, 0.0), (0.23, 0.24, 0.1), 14, 7, f=lambda x, y, z: (x, y - max(0, z) * 0.25, max(z, -0.02)))
+        _pv_lathe('ac_cap_tweed', [(0.0, -0.025), (0.24, -0.025), (0.245, -0.005), (0.0, 0.0)], (0, 0.02, 0), seg=14, sx=1.0, sy=1.0)
+        _ac_ball('ac_cap_tweed', (0, -0.205, -0.01), (0.15, 0.08, 0.012), 12, 4)                              # peak
+        ico('ac_cap_tweed', 0.022, (0, -0.05, 0.085), (1, 1, 0.5), 1)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, paw=Dk, sleeve='ac_shirt_cream', slen=0.55, puff=1.2)
+        _ac_leg(n, sd, sx, Dk, Dk, pant='ac_pants_brown', plen=0.55)
+    part(None)
+
+# ---- held tools: origin at the grip, pointing up (+Z) when held upright
+@model('tool_net', '虫取り網', '道具', lod=False)
+def tool_net():
+    rod('ac_wood_handle', (0, 0, -0.14), (0, 0, 0.76), 0.015, 8)
+    _pv_tube('ac_grip', [(0, 0, -0.13), (0, 0, 0.09)], 0.019, 8)
+    ico('ac_wood_handle', 0.02, (0, 0, -0.14), sub=1)
+    cyl('ac_ring_metal', 0.019, 0.05, (0, 0, 0.72), 8, r2=0.016)
+    rc = (0, 0, 0.905)
+    torus('ac_ring_metal', 0.15, 0.008, rc, rot=(math.pi / 2, 0, 0), seg=18, rseg=4)
+    prof = [(0.148, 0.0), (0.142, 0.08), (0.12, 0.17), (0.085, 0.25), (0.04, 0.3), (0.0, 0.315)]
+    droop = lambda x, y, z: (x, y + 1.1 * z * z, z)
+    o = _pv_lathe('ac_net_white', prof, rc, seg=12, f=droop, cap=False); o.rotation_euler = (-math.pi / 2, 0, 0)
+    for k in range(6):   # mesh cords
+        a = k / 6 * math.tau
+        pts = []
+        for r, z in prof[:-1]:
+            x, y, zz = droop(r * 1.03 * math.cos(a), r * 1.03 * math.sin(a), z)
+            pts.append((x, zz, -y))
+        _pv_tube('ac_net_line', [Vector(rc) + Vector(p) for p in pts], 0.0035, 3, cap=False)
+
+@model('tool_rod', '釣り竿', '道具', lod=False)
+def tool_rod():
+    zs = [-0.3, 0.0, 0.3, 0.6, 0.9]
+    _pv_tube('ac_bamboo', [(0, 0, z) for z in zs], [0.017, 0.015, 0.012, 0.009, 0.006], 8)
+    _pv_tube('ac_cork', [(0, 0, -0.29), (0, 0, -0.12)], 0.021, 8)
+    for z, r in ((0.15, 0.0145), (0.45, 0.012), (0.75, 0.0085)): torus('ac_bamboo_node', r, 0.004, (0, 0, z), seg=6, rseg=3)
+    ico('ac_bamboo_node', 0.02, (0, 0, -0.3), sub=1)
+    # spinning reel under the grip
+    rod('ac_reel', (0, -0.015, -0.06), (0, -0.05, -0.07), 0.006, 4)
+    with xf((0, -0.065, -0.075)):
+        cyl('ac_reel', 0.042, 0.032, (-0.015, 0, 0), 12, rot=(0, math.pi / 2, 0))
+        cyl('ac_line', 0.03, 0.034, (-0.016, 0, 0), 10, rot=(0, math.pi / 2, 0))
+        rod('ac_ring_metal', (0.016, 0, 0), (0.03, 0, 0), 0.004, 4)
+        rod('ac_ring_metal', (0.03, 0, 0), (0.03, 0.0, -0.035), 0.004, 4)
+        ico('ac_grip_red', 0.009, (0.04, 0, -0.035), sub=1)
+    for z in (0.2, 0.5, 0.88):   # line guides
+        rod('ac_ring_metal', (0, 0, z), (0, -0.022, z), 0.0025, 3)
+        torus('ac_ring_metal', 0.009, 0.002, (0, -0.03, z), rot=(math.pi / 2, 0, 0), seg=6, rseg=3)
+    _pv_tube('ac_line', [(0, -0.065, -0.07), (0, -0.03, 0.2), (0, -0.03, 0.5), (0, -0.03, 0.88), (0, -0.03, 0.92), (0.0, -0.06, 0.8)], 0.0015, 3, cap=False)
+    ico('ac_bobber_red', 0.018, (0.0, -0.06, 0.785), (1, 1, 1.2), 1)
+    ico('white', 0.016, (0.0, -0.06, 0.76), (1, 1, 1.0), 1)
+
+@model('tool_shovel', 'スコップ', '道具', lod=False)
+def tool_shovel():
+    _pv_tube('ac_grip_red', [(-0.065, 0, 0), (0.065, 0, 0)], 0.017, 8)                                     # T grip
+    rod('ac_grip_red', (0, 0, 0), (0, 0, 0.07), 0.016, 8)
+    rod('ac_wood_handle', (0, 0, 0.06), (0, 0, 0.62), 0.016, 8)
+    cyl('ac_blade', 0.02, 0.09, (0, 0, 0.6), 8, r2=0.026)                                                     # socket
+    rows = [(0.66, 0.07), (0.7, 0.092), (0.8, 0.095), (0.87, 0.075), (0.92, 0.035), (0.945, 0.0)]
+    v, f = [], []
+    for z, hw in rows:
+        for s in (0, 1):
+            for j in range(5):
+                x = hw * (j / 2 - 1); y = 0.6 * x * x + (0.006 if s else 0.0)
+                v.append((x, y, z))
+    C = 10
+    for i in range(len(rows) - 1):
+        for j in range(4):
+            a, b = i * C + j, (i + 1) * C + j
+            f.append((a, a + 1, b + 1, b)); f.append((a + 5, b + 5, b + 6, a + 6))
+        f.append((i * C, (i + 1) * C, (i + 1) * C + 5, i * C + 5)); f.append((i * C + 4, i * C + 9, (i + 1) * C + 9, (i + 1) * C + 4))
+    f.append((0, 5, 6, 1)); f.append((1, 6, 7, 2)); f.append((2, 7, 8, 3)); f.append((3, 8, 9, 4))
+    mesh('ac_blade', v, f)
+    _pv_tube('ac_blade', [(-0.07, 0.6 * 0.0049 + 0.003, 0.66), (0, 0.003, 0.655), (0.07, 0.6 * 0.0049 + 0.003, 0.66)], 0.006, 4)   # rolled step
+
+# ---- garden props
+def _ac_leaf(mat, base, a, L, w, lift=0.35):
+    D = Vector((math.cos(a) * math.cos(lift), math.sin(a) * math.cos(lift), math.sin(lift))); S = Vector((-math.sin(a), math.cos(a), 0)); U = D.cross(S).normalized()
+    b = Vector(base); tip = b + D * L - Vector((0, 0, L * 0.25)); m = b + D * L * 0.45
+    v = [b, tip, m + S * w, m - S * w, m + U * 0.01, m - U * 0.01]
+    mesh(mat, v, [(0, 2, 4), (0, 4, 3), (2, 1, 4), (4, 1, 3), (0, 5, 2), (0, 3, 5), (2, 5, 1), (5, 3, 1)])
+
+def _ac_bloom(mat, eye, c, r, n, tilt, rz, cup=False):
+    """Flat star of n rounded petals (both faces) with a raised eye; cup=True: tulip cup."""
+    with xf(c, rz=rz, rx=tilt):
+        if cup:
+            _pv_lathe(mat, [(0.0, 0.0), (r * 0.75, r * 0.15), (r, r * 0.9), (r * 0.85, r * 1.7)], seg=6,
+                      f=lambda x, y, z: (x, y, z + (r * 0.25 * math.cos(3 * math.atan2(y, x)) if z > r * 1.6 else 0)))
+            return
+        v = [(0, 0, 0.012), (0, 0, -0.004)]
+        shape = [(-0.5, 0.55), (-0.2, 0.97), (0.2, 0.97)] if n <= 5 else [(-0.5, 0.3), (-0.2, 1.0), (0.2, 1.0)]   # rounded / notched petals
+        for k in range(n):
+            for u, q in shape:
+                a = (k + 0.5 + u) / n * math.tau
+                v.append((r * q * math.cos(a), r * q * math.sin(a), 0.008 * (q < 0.6)))
+        f = []; m = n * len(shape)
+        for k in range(m):
+            i, j = 2 + k, 2 + (k + 1) % m
+            f += [(0, i, j), (1, j, i)]
+        mesh(mat, v, f)
+        ico(eye, r * 0.3, (0, 0, 0.008), (1, 1, 0.6), 1)
+
+def _ac_flowers(seed, blooms, leaf_n=6):
+    rnd = random.Random(seed)
+    for k in range(leaf_n):
+        a = k / leaf_n * math.tau + rnd.uniform(-0.3, 0.3)
+        _ac_leaf('ac_leaf', (math.cos(a) * 0.04, math.sin(a) * 0.04, 0.0), a, rnd.uniform(0.2, 0.26), rnd.uniform(0.04, 0.055), rnd.uniform(0.45, 0.75))
+    N = len(blooms)
+    for k, (mat, eye, kind) in enumerate(blooms):
+        a = k * 2.4 + rnd.uniform(-0.3, 0.3); d = 0.07 + 0.15 * math.sqrt((k + 0.5) / N)
+        top = (math.cos(a) * d, math.sin(a) * d, rnd.uniform(0.19, 0.27) if kind != 'cup' else rnd.uniform(0.17, 0.23))
+        rod('ac_stem', (math.cos(a) * d * 0.4, math.sin(a) * d * 0.4, 0.0), top, 0.006, 3)
+        if kind == 'cup':
+            _ac_bloom(mat, eye, top, 0.034, 0, rnd.uniform(-0.15, 0.15), a, cup=True)
+        else:
+            _ac_bloom(mat, eye, top, 0.058 if kind == 'pansy' else 0.06, 5 if kind == 'pansy' else 8, -0.45 - rnd.uniform(0, 0.4) * (d / 0.22), a + math.pi / 2 + math.pi)
+
+@model('flowers_a', '花壇の花(チューリップ赤白)', '自然', lod=False)
+def flowers_a():
+    _ac_flowers(11, [('ac_tulip_red' if k % 2 == 0 else 'ac_petal_white', None, 'cup') for k in range(8)], 7)
+
+@model('flowers_b', '花壇の花(パンジー黄・橙)', '自然', lod=False)
+def flowers_b():
+    _ac_flowers(12, [('ac_pansy_yellow' if k % 2 == 0 else 'ac_pansy_orange', 'ac_dig_mid' if k % 2 == 0 else 'ac_pansy_yellow', 'pansy') for k in range(7)], 6)
+
+@model('flowers_c', '花壇の花(コスモス紫・桃)', '自然', lod=False)
+def flowers_c():
+    _ac_flowers(13, [('ac_cosmos_purple' if k % 2 == 0 else 'ac_cosmos_pink', 'ac_flower_eye', 'cosmos') for k in range(6)], 4)
+
+@model('fruit_tree', '果物の木(みかん)', '自然')
+def fruit_tree():
+    tube('bark', [(0, 0, -0.15), (0, 0, 0.5), (0.04, 0.02, 1.2), (0.02, -0.01, 1.8)], [0.28, 0.22, 0.19, 0.16], 9, wob=0.12, seed=5)
+    for k in range(3):   # root flare and three short limbs into the crown
+        a = k * math.tau / 3 + 0.3; D = Vector((math.cos(a), math.sin(a), 0))
+        tube('bark', [D * 0.1 + Vector((0, 0, 0.35)), D * 0.32 + Vector((0, 0, -0.05))], [0.13, 0.07], 6)
+        tube('bark', [Vector((0.02, -0.01, 1.7)), D * 0.35 + Vector((0, 0, 2.2)), D * 0.6 + Vector((0, 0, 2.55))], [0.13, 0.09, 0.06], 6)
+    clumps = [((0, 0, 3.05), 1.05), ((0.72, 0.15, 2.55), 0.85), ((-0.7, 0.25, 2.6), 0.85), ((0.1, 0.75, 2.65), 0.85),
+              ((0.05, -0.7, 2.55), 0.85), ((0.55, -0.45, 3.1), 0.7), ((-0.5, -0.4, 3.05), 0.7)]
+    canopy(clumps, seed=21, size=1.05, per=34, core_sub=2)
+    part('fruit_tree_fruit', (0, 0, 2.6))
+    for k, p in enumerate(((0.6, -1.32, 2.15), (-1.12, -0.95, 2.45), (0.12, -1.38, 2.95))):
+        _ac_ball('ac_orange', p, (0.16, 0.16, 0.15), 12, 7)
+        rod('ac_stem', (p[0], p[1], p[2] + 0.13), (p[0], p[1], p[2] + 0.19), 0.012, 4)
+        _ac_leaf('ac_leaf', (p[0], p[1], p[2] + 0.16), 0.6 + k, 0.14, 0.045, 0.4)
+    part(None)
+
+@model('dig_spot', '掘れる地面のヒビ(埋まった物の目印)', '自然', lod=False)
+def dig_spot():
+    rnd = random.Random(5); v = [(0, 0, 0.014), (0, 0, 0.004)]
+    for k in range(10):
+        a = k / 10 * math.tau + math.pi / 2 + rnd.uniform(-0.06, 0.06); r = (0.26 if k % 2 == 0 else 0.11) * rnd.uniform(0.9, 1.08)
+        v += [(r * math.cos(a), r * math.sin(a), 0.012), (r * math.cos(a), r * math.sin(a), 0.004)]
+    f = []
+    for k in range(10):
+        i, j = 2 + 2 * k, 2 + 2 * ((k + 1) % 10)
+        f += [(0, i, j), (1, j + 1, i + 1), (i, i + 1, j + 1, j)]
+    mesh('ac_dig_dark', v, f)
+    for k in range(5):   # hairline cracks running out of the star points
+        a = k / 5 * math.tau + math.pi / 2 + rnd.uniform(-0.1, 0.1) + 0.12; b = a + rnd.uniform(-0.25, 0.25)
+        p0 = Vector((math.cos(a) * 0.2, math.sin(a) * 0.2, 0)); p1 = Vector((math.cos(b) * 0.3, math.sin(b) * 0.3, 0))
+        s = Vector((-math.sin(a), math.cos(a), 0)) * 0.012
+        mesh('ac_dig_mid', [p0 + s + Vector((0, 0, 0.006)), p0 - s + Vector((0, 0, 0.006)), p1 + Vector((0, 0, 0.006)), p0 + Vector((0, 0, 0.002))],
+             [(0, 1, 2), (0, 3, 1), (1, 3, 2), (0, 2, 3)])
+
+@model('bottle_msg', '手紙入りの瓶', '自然')
+def bottle_msg():
+    with xf((-0.125, 0, 0.045), ry=math.pi / 2):   # lying on its side along X, neck to +X
+        _pv_lathe('ac_bottle_glass', [(0.0, 0.0), (0.04, 0.0), (0.045, 0.012), (0.045, 0.15), (0.038, 0.18), (0.02, 0.205), (0.017, 0.24),
+                                      (0.021, 0.244), (0.021, 0.256), (0.015, 0.258)], seg=10, cap=False)
+        cyl('paper', 0.013, 0.13, (0, 0.0, 0.16), 8)                                                          # rolled letter, its end poking out of the neck
+        torus('ac_bobber_red', 0.0135, 0.003, (0, 0, 0.268), seg=8, rseg=3)                                     # string
+    with xf((0.17, -0.06, 0.016), rz=0.6, ry=math.pi / 2):   # the cork, popped out beside it
+        cyl('ac_cork', 0.016, 0.03, (0, 0, -0.015), 8, r2=0.019)
+# --- ac end
+
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
 def fisherman():
     # weathered fisherman: navy work shirt with rolled sleeves, orange rubber apron (前掛け) on a neck strap, white rubber boots,
