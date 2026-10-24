@@ -2,6 +2,7 @@
 // the pocket (20 slots), the encyclopedia, the clock + money HUD, the context action button and toasts.
 import { ITEMS, POCKET, icon, TOOL_ICON } from './state.js';
 import { FISH, BUGS, FOSSILS } from './data.js';
+import { SEA } from './items2.js';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
@@ -18,6 +19,7 @@ export class LifeUI {
         <button class="btn round lbtn" id="ltool" aria-label="道具">✋</button>
         <button class="btn round lbtn" id="lpocket" aria-label="ポケット">🎒</button>
         <button class="btn round lbtn" id="lbook" aria-label="図鑑">📖</button>
+        <button class="btn round lbtn" id="lhat" aria-label="ぼうしを とる" hidden>👒</button>
       </div>
       <button class="btn" id="act" aria-label="アクション"><b>A</b><small id="actlbl"></small></button>
       <div class="ltoast" id="ltoast"></div>
@@ -33,10 +35,11 @@ export class LifeUI {
     this.typing = null;
   }
   // ---------------------------------------------------------------- HUD
-  hud(st, tool) {
+  hud(st, tool, weather) {
     const d = new Date();
     $('ltime').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
-    $('ldate').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${WEEK[d.getDay()]})`;
+    $('ldate').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${WEEK[d.getDay()]}) ${{ clear: '☀️', cloudy: '☁️', rain: '☔', snow: '⛄' }[weather] || ''}`;
+    $('lhat').hidden = !st.ext?.wear?.hat;
     $('lmoney').innerHTML = `${st.money.toLocaleString()} <small>ナギ</small>`;
     $('ltool').textContent = tool ? TOOL_ICON[tool] : '✋';
   }
@@ -76,7 +79,8 @@ export class LifeUI {
   }
   endLine() {
     clearInterval(this.typing); this.typing = null;
-    const q = this.queue; $('ttext').textContent = q.lines[q.i];
+    const q = this.queue; if (!q) return;
+    $('ttext').textContent = q.lines[q.i];
     const last = q.i === q.lines.length - 1;
     if (last && q.choices) {
       const box = $('tchoices'); box.innerHTML = '';
@@ -93,6 +97,7 @@ export class LifeUI {
     this.finish(undefined);
   }
   finish(k) {
+    clearInterval(this.typing); this.typing = null;
     const q = this.queue; this.queue = null; $('talk').hidden = true; this.open--;
     this.blip(660, 0.05); q.res(k);
     const w = this.waiters; this.waiters = null; if (w) for (const r of w) r();
@@ -161,7 +166,7 @@ export class LifeUI {
     const tabs = el('div', 'row'); wrap.appendChild(tabs);
     const grid = el('div', 'bgrid'); wrap.appendChild(grid);
     const info = el('p', 'pnote', ''); wrap.appendChild(info);
-    const sets = [['さかな', FISH], ['むし', BUGS], ['化石', FOSSILS]];
+    const sets = [['さかな', FISH], ['むし', BUGS], ['うみ', SEA], ['化石', FOSSILS]];
     const show = (k) => {
       [...tabs.children].forEach((b, j) => b.classList.toggle('on', j === k));
       grid.innerHTML = ''; const [, list] = sets[k];

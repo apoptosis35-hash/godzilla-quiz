@@ -1,0 +1,324 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 516,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 338,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 338,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 840,
+      "normalized": false,
+      "byteOffset": 1032,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 840,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 840,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 338,
+      "max": [
+        32767,
+        20538,
+        2564
+      ],
+      "min": [
+        -32767,
+        -20538,
+        -2564
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 840,
+      "max": [
+        22922,
+        6948,
+        792
+      ],
+      "min": [
+        -22922,
+        -10573,
+        536
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 2712,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 470,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 1356
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2712,
+      "byteLength": 1352,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 472,
+          "byteLength": 391,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 338
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 4064,
+      "byteLength": 2704,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 864,
+          "byteLength": 1870,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 338
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 6768,
+      "byteLength": 3360,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2736,
+          "byteLength": 1773,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 840
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 10128,
+      "byteLength": 6720,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 4512,
+          "byteLength": 5134,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 840
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 16848,
+      "byteLength": 2704,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 9648,
+          "byteLength": 1430,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 338
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 19552,
+      "byteLength": 6720,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 11080,
+          "byteLength": 3257,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 840
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "furn_fence_white.glb.bin",
+      "byteLength": 14340
+    },
+    {
+      "byteLength": 26272,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "home_paint_white",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.9300000071525574,
+          0.9200000166893005,
+          0.8799999952316284,
+          1
+        ],
+        "roughnessFactor": 0.6000000238418579,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "steel_dark",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.18000000715255737,
+          0.1899999976158142,
+          0.20000000298023224,
+          1
+        ],
+        "roughnessFactor": 0.5,
+        "metallicFactor": 0.699999988079071
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "furn_fence_white_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        },
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "furn_fence_white_body",
+      "translation": [
+        -2.9802322387695312e-8,
+        0.3400000035762787,
+        0
+      ],
+      "scale": [
+        0.5424263775348663,
+        0.5424263775348663,
+        0.5424263775348663
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "furn_fence_white",
+      "children": [
+        0
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

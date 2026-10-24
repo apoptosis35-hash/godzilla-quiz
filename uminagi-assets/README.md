@@ -186,6 +186,32 @@ python3 tools/render_town.py [--samples 96] [--size 1920x1080] [overview harbour
 | 果物の木(みかん) | `fruit_tree.glb` | 自然 | 3.59 × 4.18 × 3.54 | 1864 / — | fruit_tree_fruit |
 | 掘れる地面のヒビ(埋まった物の目印) | `dig_spot.glb` | 自然 | 0.58 × 0.01 × 0.53 | 60 / — | — |
 | 手紙入りの瓶 | `bottle_msg.glb` | 自然 | 0.32 × 0.09 × 0.13 | 274 / 81 | — |
+| 丸い木のテーブル | `furn_table_wood.glb` | 家具 | 0.7 × 0.45 × 0.7 | 972 / — | — |
+| 木の椅子 | `furn_chair_wood.glb` | 家具 | 0.4 × 0.74 × 0.43 | 640 / — | — |
+| シングルベッド(キルト・まくら) | `furn_bed.glb` | 家具 | 0.96 × 0.77 × 1.45 | 1312 / — | — |
+| 本棚 | `furn_bookshelf.glb` | 家具 | 0.84 × 1.02 × 0.33 | 1120 / — | — |
+| スタンドライト(布のシェード) | `furn_lamp.glb` | 家具 | 0.44 × 1.06 × 0.44 | 1300 / — | — |
+| 丸いラグ | `furn_rug.glb` | 家具 | 1.21 × 0.02 × 1.21 | 792 / — | — |
+| 和箪笥(金具付き) | `furn_tansu.glb` | 家具 | 0.76 × 0.72 × 0.4 | 1376 / — | — |
+| こたつ(こたつ布団) | `furn_kotatsu.glb` | 家具 | 1.29 × 0.44 × 1.29 | 1406 / — | — |
+| レトロなラジオ(台付き) | `furn_radio.glb` | 家具 | 0.4 × 0.83 × 0.26 | 984 / — | — |
+| 小さな水槽(キャビネット付き) | `furn_aquarium.glb` | 家具 | 0.64 × 0.84 × 0.35 | 1434 / — | — |
+| 丸太のスツール | `furn_log_stool.glb` | 屋外の家具 | 0.41 × 0.38 × 0.36 | 562 / — | — |
+| 丸太のベンチ | `furn_log_bench.glb` | 屋外の家具 | 1.1 × 0.37 × 0.3 | 396 / — | — |
+| 竹垣(1m・四つ目垣) | `furn_fence_bamboo.glb` | 屋外の家具 | 1.07 × 0.82 × 0.1 | 1280 / — | — |
+| 白いピケットフェンス(1m) | `furn_fence_white.glb` | 屋外の家具 | 1.08 × 0.68 × 0.08 | 452 / — | — |
+| DIY作業台(道具付き) | `furn_workbench.glb` | 屋外の家具 | 1.0 × 0.61 × 0.69 | 674 / — | — |
+| ポスト型の郵便受け(ポール付き) | `furn_mailbox.glb` | 屋外の家具 | 0.22 × 0.89 × 0.34 | 500 / — | — |
+| かぼちゃのランタン | `furn_pumpkin.glb` | 屋外の家具 | 0.44 × 0.35 × 0.44 | 872 / — | — |
+| ゆきだるま | `furn_snowman.glb` | 屋外の家具 | 0.61 × 0.59 × 0.37 | 1394 / — | — |
+| おの | `tool_axe.glb` | 道具 | 0.05 × 0.86 × 0.21 | 208 / — | — |
+| 大根の束(わらで結んだ3本) | `item_daikon.glb` | 作物 | 0.41 × 0.18 × 0.18 | 860 / — | — |
+| 若木(苗木) | `sapling.glb` | 自然 | 0.33 × 0.57 × 0.34 | 516 / — | — |
+| 麦わら帽子(なぎ用) | `hat_straw.glb` | 帽子 | 0.57 × 0.14 × 0.5 | 1000 / — | — |
+| キャップ帽(なぎ用) | `hat_cap.glb` | 帽子 | 0.41 × 0.16 × 0.5 | 386 / — | — |
+| ニット帽(なぎ用) | `hat_beanie.glb` | 帽子 | 0.47 × 0.3 × 0.41 | 894 / — | — |
+| 自分の家の部屋(床・3面の壁・窓) | `room_shell.glb` | 部屋 | 6.42 × 2.76 × 6.25 | 1198 / — | room_shell_floor, room_shell_wall_back, room_shell_wall_l, room_shell_wall_r |
+| 博物館の展示台(ガラスケース) | `museum_pedestal.glb` | 博物館 | 0.5 × 0.8 × 0.5 | 820 / — | museum_pedestal_glass |
 | 漁師(ゴム前掛け・長靴) | `fisherman.glb` | 人物 | 0.63 × 1.78 × 0.33 | 3992 / — | fisherman_leg_l, fisherman_arm_l, fisherman_leg_r, fisherman_arm_r |
 | お店のおばちゃん | `shopkeeper.glb` | 人物 | 0.59 × 1.68 × 0.44 | 3994 / — | shopkeeper_leg_l, shopkeeper_arm_l, shopkeeper_leg_r, shopkeeper_arm_r |
 | 町の人(買い物帰り) | `townsman.glb` | 人物 | 0.64 × 1.79 × 0.36 | 3812 / — | townsman_leg_l, townsman_arm_l, townsman_leg_r, townsman_arm_r |

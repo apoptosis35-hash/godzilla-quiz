@@ -270,7 +270,10 @@ class App {
   }
   area() {
     const p = this.player.pos;
-    const a = AREAS.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && (!r.test || r.test(p.x, p.z)));
+    const inside = this.life?.home.inside;   // interiors (js/life/home.js)
+    const a = inside ? { name: { home: 'なぎの家', visit: 'おとなりさんの家', gallery: '海凪資料館' }[inside], sub: { home: 'なぎのいえ', visit: 'おじゃまします', gallery: 'てんじしつ' }[inside] }
+      : AREAS.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && (!r.test || r.test(p.x, p.z)));
+    $('map').style.visibility = inside ? 'hidden' : '';
     const name = a ? a.name : '海凪の港町';
     if (name !== this.areaShown) {
       this.areaShown = name;
@@ -300,6 +303,7 @@ class App {
     const look = this.playing ? this.input.takeLook() : { x: dt * 0.05, y: 0 };
     const cam = pl.updateCamera(dt, this.camera, look, this.playing ? this.input.takeZoom() : 0);
     this.world.update(dt, pl.pos, cam, this.mats);
+    this.life.afterWorld();   // weather greys the sky after the time of day has set it
     this.mats.wind.value = this.world.time;
     this.town.update(dt, cam, pl.pos, Q.lod);
     if (this.playing && !this.mapT) this.drawMap($('map'), 0);

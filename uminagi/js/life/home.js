@@ -1,0 +1,301 @@
+// Home life: なぎ's tent on the east quay that becomes a house (ordered from the raccoon, built overnight), the
+// room inside it, furniture placed and turned anywhere indoors or out, the mailbox and its letters, clothes
+// (bandana colour and a hat), visiting a villager's home and the owl's exhibition room.
+// Interiors are a stage high above the lighthouse hill: entering hides the outside world and shows the room.
+import * as THREE from 'three';
+import { ITEMS, dayKey, icon } from './state.js';
+import { FURNITURE, CLOTHES } from './items2.js';
+import { VILLAGERS, FISH, BUGS, FOSSILS } from './data.js';
+import { SEA } from './items2.js';
+import { RACCOON, OWL, LETTERS } from './data2.js';
+
+const PI = Math.PI;
+const pick = (a) => a[Math.floor(Math.random() * a.length)];
+const STAGE = { x: -122, z: -40, y: 140 };          // where interiors are drawn
+const PLOT = { x: 49, z: 11, ry: 0 };               // なぎ's home on the east quay (front faces the sea, +z)
+export const HOUSE_COST = 20000;
+// what each villager has at home (furniture ids, room-local x, z, ry)
+const VILLA = {
+  kiza: [['furn_bed', -1.8, -1.8, 0], ['furn_lamp', -0.4, -2.4, 0], ['furn_rug', 0.6, 0.4, 0], ['furn_aquarium', 2, -2.4, 0], ['furn_chair_wood', 1.4, 0.9, PI]],
+  genki: [['furn_bed', 1.8, -1.8, 0], ['furn_radio', -2.2, -2.4, 0], ['furn_table_wood', -0.6, 0, 0], ['furn_chair_wood', -1.4, 0.4, PI / 2], ['furn_rug', 0.4, 0.8, 0]],
+  nonbiri: [['furn_kotatsu', 0, 0, 0], ['furn_bed', -1.8, -1.8, 0], ['furn_bookshelf', 1.6, -2.6, 0], ['furn_rug', 0, 0, 0], ['furn_lamp', 2.3, -1, 0]],
+  futsuu: [['furn_table_wood', 0.6, -0.6, 0], ['furn_chair_wood', 0.6, 0.3, PI], ['furn_bookshelf', -1.6, -2.6, 0], ['furn_bed', 1.9, -1.8, 0], ['plant_pots', -2.4, 0.4, PI / 2]],
+  kowai: [['furn_tansu', -1.6, -2.5, 0], ['furn_kotatsu', 0.5, -0.4, 0], ['furn_radio', 2, -2.5, 0], ['furn_bed', -1.9, 0, PI / 2], ['furn_lamp', 2.4, 0.6, 0]],
+  otona: [['furn_bookshelf', -1.4, -2.6, 0], ['furn_bookshelf', 0, -2.6, 0], ['furn_table_wood', 1.4, -0.4, 0], ['furn_chair_wood', 1.4, 0.4, PI], ['furn_lamp', -2.4, -0.4, 0], ['furn_rug', 0, 0.5, 0]],
+};
+
+export class Home {
+  constructor(life) {
+    this.life = life; this.town = life.town; this.player = life.player; this.scene = life.scene; this.st = life.st;
+    const e = this.st.ext;
+    e.home ||= { stage: -1 };                 // -1 nothing yet, 0 tent, 1 house
+    e.furn ||= [];                            // { id, x, z, ry, in } (in: room-local, else world)
+    e.mail ||= [];                            // { from, text, gift }
+    e.wear ||= { bandana: 'bandana_navy', hat: null };
+    this.inside = null; this.objs = []; this.outside = []; this.roomObjs = [];
+    this.room = new THREE.Group(); this.room.name = 'room'; this.room.visible = false; this.scene.add(this.room);
+    this.light = new THREE.PointLight(0xffd9a8, 0, 14, 1.2); this.light.position.set(STAGE.x, STAGE.y + 2.4, STAGE.z); this.scene.add(this.light);
+    this.newDay(true);
+    this.buildHouse();
+    this.buildOutdoorFurniture();
+    this.wear();
+  }
+  // ---------------------------------------------------------------- the house outside
+  buildHouse() {
+    for (const o of this.houseObjs || []) this.life.root.remove(o);
+    this.houseObjs = [];
+    for (const c of this.houseCols || []) { const i = this.town.colliders.indexOf(c); if (i >= 0) this.town.colliders.splice(i, 1); }
+    this.houseCols = [];
+    const h = this.st.ext.home, y = this.life.ground.height(PLOT.x, PLOT.z);
+    if (h.stage < 0) return;
+    if (h.stage >= 1 && this.town.protos.house_hira) {
+      const o = this.town.clone('house_hira', PLOT.x, y, PLOT.z, PLOT.ry, 'tex'); this.life.root.attach(o); o.scale.setScalar(0.8); this.houseObjs.push(o);
+      this.houseCols.push({ type: 'b', x: PLOT.x, z: PLOT.z, hw: 3.4, hd: 2.6, c: 1, s: 0, y0: y - 1, y1: y + 6 });
+      this.door = { x: PLOT.x, z: PLOT.z + 3.1 };
+    } else {
+      const o = this.life.tent(PLOT.x, PLOT.z, 0, 0xe88a3a, 1.25); this.houseObjs.push(o);
+      this.houseCols.push({ type: 'c', x: PLOT.x, z: PLOT.z, r: 1.5, y0: y - 1, y1: y + 2.4 });
+      this.door = { x: PLOT.x, z: PLOT.z + 1.9 };
+    }
+    // the mailbox by the door
+    const mx = PLOT.x + 2.8, mz = PLOT.z + (h.stage >= 1 ? 3.4 : 2.2);
+    const mb = this.town.protos.furn_mailbox ? this.town.clone('furn_mailbox', mx, this.life.ground.height(mx, mz), mz, 0, true) : this.town.clone('postbox', mx, this.life.ground.height(mx, mz), mz, 0, true);
+    this.life.root.attach(mb); this.houseObjs.push(mb); this.mailbox = { x: mx, z: mz, o: mb };
+    this.flag = this.life.textSprite('✉', 0.55); this.flag.position.set(mx, this.life.ground.height(mx, mz) + 1.5, mz); this.life.root.add(this.flag); this.houseObjs.push(this.flag);
+    this.houseCols.push({ type: 'c', x: mx, z: mz, r: 0.25, y0: y - 1, y1: y + 1 });
+    this.town.colliders.push(...this.houseCols);
+  }
+  // ---------------------------------------------------------------- furniture objects
+  furnObject(id) {
+    const it = ITEMS[id], name = it.model || id;
+    if (this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, true); o.parent.remove(o); return o; }
+    // stand-in until the model exists: a soft coloured block of the right footprint
+    const m = new THREE.Mesh(new THREE.BoxGeometry(it.w || 0.6, it.flat ? 0.03 : 0.6, it.d || 0.6), new THREE.MeshStandardMaterial({ color: 0xc8a070, roughness: 0.8 }));
+    m.position.y = it.flat ? 0.015 : 0.3; const g = new THREE.Group(); g.add(m); return g;
+  }
+  makeFurn(f, parent, base) {
+    const it = ITEMS[f.id], o = this.furnObject(f.id);
+    o.position.set(base.x + f.x, base.y(f.x, f.z), base.z + f.z); o.rotation.y = f.ry; parent.add(o);
+    let col = null;
+    if (!it.flat) { col = { type: 'b', x: o.position.x, z: o.position.z, hw: (it.w || 0.6) / 2, hd: (it.d || 0.6) / 2, c: Math.cos(f.ry), s: Math.sin(f.ry), y0: o.position.y - 1, y1: o.position.y + 0.9 }; this.town.colliders.push(col); }
+    let light = null;
+    if (it.light) { light = new THREE.PointLight(0xffc27a, 0, 6, 1.6); light.position.set(o.position.x, o.position.y + 1.1, o.position.z); parent.add(light); }
+    return { f, o, col, light };
+  }
+  dropFurn(list, rec) {
+    rec.o.parent?.remove(rec.o); if (rec.light) rec.light.parent?.remove(rec.light);
+    if (rec.col) { const i = this.town.colliders.indexOf(rec.col); if (i >= 0) this.town.colliders.splice(i, 1); }
+    list.splice(list.indexOf(rec), 1);
+  }
+  buildOutdoorFurniture() {
+    for (const r of [...this.outside]) this.dropFurn(this.outside, r);
+    const base = { x: 0, z: 0, y: (x, z) => this.life.ground.height(x, z) };
+    for (const f of this.st.ext.furn) if (!f.in) this.outside.push(this.makeFurn(f, this.life.root, base));
+  }
+  // ---------------------------------------------------------------- interiors
+  shell(scale) {
+    const g = new THREE.Group(), Y = STAGE.y, S = 3 * scale;
+    if (this.town.protos.room_shell) { const o = this.town.clone('room_shell', 0, 0, 0, 0, true); o.parent.remove(o); o.position.set(STAGE.x, Y, STAGE.z); o.scale.setScalar(scale); g.add(o); }
+    else {
+      const wood = new THREE.MeshStandardMaterial({ color: 0xb98a5a, roughness: 0.8 }), wall = new THREE.MeshStandardMaterial({ color: 0xf0e6d2, roughness: 0.95 });
+      const box = (m, x, y, z, sx, sy, sz) => { const b = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), m); b.position.set(STAGE.x + x, Y + y, STAGE.z + z); b.receiveShadow = true; g.add(b); };
+      box(wood, 0, -0.05, 0, S * 2, 0.1, S * 2); box(wall, 0, 1.3, -S - 0.05, S * 2 + 0.2, 2.6, 0.1); box(wall, -S - 0.05, 1.3, 0, 0.1, 2.6, S * 2); box(wall, S + 0.05, 1.3, 0, 0.1, 2.6, S * 2);
+    }
+    const mat = new THREE.Mesh(new THREE.PlaneGeometry(1.2, 0.7), new THREE.MeshStandardMaterial({ color: 0x7a4a3a, roughness: 1 }));
+    mat.rotation.x = -PI / 2; mat.position.set(STAGE.x, Y + 0.01, STAGE.z + S - 0.4); g.add(mat);
+    // colliders: floor, three walls, the front with a door gap
+    const c = (x, z, hw, hd, y0, y1) => ({ type: 'b', x: STAGE.x + x, z: STAGE.z + z, hw, hd, c: 1, s: 0, y0: Y + y0, y1: Y + y1 });
+    this.roomCols = [c(0, 0, S + 0.5, S + 0.5, -1, 0), c(0, -S - 0.1, S + 0.3, 0.12, -1, 3), c(-S - 0.1, 0, 0.12, S + 0.3, -1, 3), c(S + 0.1, 0, 0.12, S + 0.3, -1, 3),
+      c(-S / 2 - 0.5, S + 0.15, S / 2 - 0.4, 0.12, -1, 3), c(S / 2 + 0.5, S + 0.15, S / 2 - 0.4, 0.12, -1, 3), c(0, S + 0.6, 0.6, 0.12, -1, 3)];
+    this.town.colliders.push(...this.roomCols);
+    this.S = S;
+    return g;
+  }
+  // enter: { kind: 'home' | 'visit' | 'gallery', v?: villager }
+  enter(kind, v) {
+    if (this.inside) return;
+    const pl = this.player;
+    this.back = { x: pl.pos.x, z: pl.pos.z, heading: pl.heading, yaw: pl.yaw, pitch: pl.pitch, dist: pl.dist };
+    const scale = kind === 'home' && this.st.ext.home.stage < 1 ? 0.55 : kind === 'gallery' ? 1 : 0.75;   // tent / house rooms are cosy
+    this.room.clear(); this.roomObjs = [];
+    this.room.add(this.shell(scale));
+    const base = { x: STAGE.x, z: STAGE.z, y: () => STAGE.y };
+    if (kind === 'home') for (const f of this.st.ext.furn) if (f.in) this.roomObjs.push(this.makeFurn(f, this.room, base));
+    if (kind === 'visit') {
+      for (const [id, x, z, ry] of VILLA[v.def.personality] || VILLA.futsuu) if (ITEMS[id]) this.roomObjs.push(this.makeFurn({ id, x: x * scale, z: z * scale, ry }, this.room, base));
+      this.guest = { v, pos: v.o.position.clone(), ry: v.o.rotation.y, vis: v.o.visible };
+      v.visiting = true; v.o.position.set(STAGE.x + 0.4 * scale, STAGE.y, STAGE.z - 0.6 * scale); v.o.visible = true;
+    }
+    if (kind === 'gallery') this.gallery();
+    // hide the outside world
+    this.hidden = [];
+    for (const o of this.scene.children) if (o !== this.room && !o.isLight && o.visible && o !== this.town.root) { o.visible = false; this.hidden.push(o); }
+    for (const o of this.town.root.children) if (o !== pl.model && o !== this.guest?.v.o && o.visible) { o.visible = false; this.hidden.push(o); }
+    this.bg = this.scene.background; this.scene.background = new THREE.Color(0x2a2018);
+    this.fogFar = this.scene.fog.far; this.scene.fog.far = 1e6;
+    this.room.visible = true; this.light.intensity = 26;
+    this.inside = kind;
+    pl.place(STAGE.x, STAGE.z + this.S - 1.1, 0); pl.pos.y = STAGE.y; pl.heading = PI; pl.yaw = 0; pl.pitch = 0.62; pl.dist = 3 + 4 * scale; pl.snapCam = true;
+    this.life.ui.blip(520, 0.12, 'triangle', 0.12);
+  }
+  leave() {
+    if (!this.inside) return;
+    for (const r of [...this.roomObjs]) this.dropFurn(this.roomObjs, r);
+    for (const c of this.roomCols) { const i = this.town.colliders.indexOf(c); if (i >= 0) this.town.colliders.splice(i, 1); }
+    for (const o of this.hidden) o.visible = true;
+    if (this.guest) { const g = this.guest; g.v.o.position.copy(g.pos); g.v.o.rotation.y = g.ry; g.v.visiting = false; this.guest = null; }
+    this.scene.background = this.bg; this.scene.fog.far = this.fogFar;
+    this.room.visible = false; this.light.intensity = 0; this.inside = null;
+    const b = this.back, pl = this.player;
+    pl.place(b.x, b.z, b.yaw); pl.heading = b.heading + PI; pl.yaw = b.yaw; pl.pitch = b.pitch; pl.dist = b.dist;
+    pl.lastSafe.copy(pl.pos);
+  }
+  // the owl's exhibition room: a pedestal per donated item, its icon floating above
+  gallery() {
+    const st = this.st, all = [...FISH, ...BUGS, ...SEA, ...FOSSILS].filter((it) => st.donated[it.id]).slice(0, 49);
+    const n = Math.max(1, Math.ceil(Math.sqrt(all.length))), sp = Math.min(1.1, 6.2 / n);
+    all.forEach((it, i) => {
+      const x = (i % n - (n - 1) / 2) * sp, z = (Math.floor(i / n) - (n - 1) / 2) * sp - 0.4;
+      if (this.town.protos.museum_pedestal) { const p = this.town.clone('museum_pedestal', 0, 0, 0, 0, true); p.parent.remove(p); p.position.set(STAGE.x + x, STAGE.y, STAGE.z + z); p.scale.setScalar(Math.min(1, sp / 0.9)); const glass = p.getObjectByName('museum_pedestal_glass'); if (glass) glass.visible = false; this.room.add(p); }
+      const s = this.life.textSprite(icon(it.id), 0.42); s.position.set(STAGE.x + x, STAGE.y + 0.6 * Math.min(1, sp / 0.9) + 0.24, STAGE.z + z); this.room.add(s);
+    });
+    if (!all.length) { const s = this.life.textSprite('まだ 展示が ないよ', 0.6, 520); s.position.set(STAGE.x, STAGE.y + 1.4, STAGE.z - 1); this.room.add(s); }
+  }
+  // ---------------------------------------------------------------- placing furniture
+  roomBounds() { return this.S - 0.4; }
+  async place(i) {
+    const st = this.st, id = st.pocket[i], it = ITEMS[id], pl = this.player;
+    const inHome = this.inside === 'home';
+    if (this.inside && !inHome) { this.life.ui.toast('ここには 置けないよ'); return; }
+    if (inHome && it.where === 'out') { this.life.ui.toast('これは 外に置くものだよ'); return; }
+    if (!this.inside && it.where === 'in') { this.life.ui.toast('これは 家の中に置くものだよ'); return; }
+    const ry = Math.round(pl.heading / (PI / 2)) * (PI / 2) + PI;   // facing なぎ
+    const d = 0.6 + Math.max(it.w || 0.6, it.d || 0.6) / 2;
+    let x = pl.pos.x + Math.sin(pl.heading) * d, z = pl.pos.z + Math.cos(pl.heading) * d;
+    x = Math.round(x * 4) / 4; z = Math.round(z * 4) / 4;
+    if (inHome) {
+      const B = this.roomBounds(), lx = x - STAGE.x, lz = z - STAGE.z;
+      if (Math.abs(lx) > B || Math.abs(lz) > B || (lz > B - 1.2 && Math.abs(lx) < 0.9)) { this.life.ui.toast('ここには 置けないよ'); return; }
+      const f = { id, x: lx, z: lz, ry, in: true };
+      st.pocket.splice(i, 1); st.ext.furn.push(f); st.save();
+      this.roomObjs.push(this.makeFurn(f, this.room, { x: STAGE.x, z: STAGE.z, y: () => STAGE.y }));
+    } else {
+      if (!this.life.walkable(x, z) || this.life.water(x, z)) { this.life.ui.toast('ここには 置けないよ'); return; }
+      const f = { id, x, z, ry, in: false };
+      st.pocket.splice(i, 1); st.ext.furn.push(f); st.save();
+      this.outside.push(this.makeFurn(f, this.life.root, { x: 0, z: 0, y: (a, b) => this.life.ground.height(a, b) }));
+    }
+    this.life.ui.blip(700, 0.08, 'triangle', 0.14);
+  }
+  async furnMenu(rec, list) {
+    const it = ITEMS[rec.f.id], rows = [{ label: 'まわす' }, { label: 'しまう' }];
+    if (it.bench) rows.unshift({ label: 'DIYする' });
+    rows.push({ label: 'やめる' });
+    const k = await this.life.ui.list(it.name, rows), pick = rows[k]?.label;
+    if (pick === 'DIYする') return this.life.craft.menu();
+    if (pick === 'まわす') { rec.f.ry += PI / 2; rec.o.rotation.y = rec.f.ry; if (rec.col) { rec.col.c = Math.cos(rec.f.ry); rec.col.s = Math.sin(rec.f.ry); } this.st.save(); }
+    if (pick === 'しまう') {
+      if (this.st.full()) { this.life.ui.toast('ポケットが いっぱい!'); return; }
+      this.st.ext.furn.splice(this.st.ext.furn.indexOf(rec.f), 1); this.st.pocket.push(rec.f.id); this.st.save(); this.dropFurn(list, rec);
+    }
+  }
+  // ---------------------------------------------------------------- mail and clothes
+  async readMail() {
+    const st = this.st, mail = st.ext.mail;
+    if (!mail.length) { this.life.ui.toast('ポストは からっぽだ'); return; }
+    while (mail.length) {
+      const m = mail[0];
+      await this.life.ui.say(null, [`${m.from}から 手紙が とどいている。`, ...m.text.split('\f')]);
+      if (m.gift) {
+        if (st.full()) { await this.life.ui.say(null, ['プレゼントが 入っているけど、ポケットが いっぱいだ。']); return; }
+        st.add(m.gift); this.life.ui.jingle([659, 784, 988]);
+        await this.life.ui.say(null, [`${ITEMS[m.gift].name}が 入っていた!`]);
+      }
+      mail.shift(); st.save();
+    }
+  }
+  async wearItem(i) {
+    const st = this.st, id = st.pocket[i], c = ITEMS[id];
+    if (c.bandana) { const old = st.ext.wear.bandana; st.ext.wear.bandana = id; st.pocket[i] = old; }
+    else if (c.hat) { const old = st.ext.wear.hat; st.ext.wear.hat = id; if (old) st.pocket[i] = old; else st.pocket.splice(i, 1); }
+    st.save(); this.wear(); this.life.ui.blip(880, 0.08, 'triangle', 0.14);
+  }
+  async takeOffHat() {
+    const st = this.st; if (!st.ext.wear.hat) return;
+    if (st.full()) { this.life.ui.toast('ポケットが いっぱい!'); return; }
+    st.pocket.push(st.ext.wear.hat); st.ext.wear.hat = null; st.save(); this.wear();
+  }
+  // recolour the bandana in なぎ's vertex colours and put the hat on the head
+  wear() {
+    const w = this.st.ext.wear, L = this.player.limbs, c = CLOTHES.find((x) => x.id === w.bandana) || CLOTHES[0];
+    if (!this.bandana) {   // find the bandana vertices once: the navy colour on the body part
+      this.bandana = [];
+      L.body.traverse((m) => {
+        const col = m.isMesh && m.geometry.attributes.color; if (!col) return;
+        const idx = [];
+        for (let i = 0; i < col.count; i++) { const r = col.getX(i), g = col.getY(i), b = col.getZ(i); if (b > r * 1.6 && b > g * 1.3 && b > 0.05 && r < 0.25) idx.push(i); }
+        if (idx.length) this.bandana.push({ col, idx });
+      });
+    }
+    const target = new THREE.Color().setRGB(...c.bandana, THREE.SRGBColorSpace);
+    for (const { col, idx } of this.bandana) { for (const i of idx) col.setXYZ(i, target.r, target.g, target.b); col.needsUpdate = true; }
+    if (this.hat) { this.hat.parent?.remove(this.hat); this.hat = null; }
+    const h = w.hat && ITEMS[w.hat]?.hat;
+    if (h && this.town.protos[h]) {
+      const o = this.town.clone(h, 0, 0, 0, 0, true); o.parent.remove(o); L.head.add(o);
+      const R0 = this.player.rest; o.position.set(-R0.body.x - R0.head.x, 1.13 - R0.body.y - R0.head.y, -R0.body.z - R0.head.z); o.scale.setScalar(1.35); this.hat = o;   // hat brim at y 1.16 in the shiba's model space
+    }
+  }
+  // ---------------------------------------------------------------- per frame
+  target(front) {
+    const pl = this.player, pp = pl.pos;
+    if (this.inside) {
+      const S = this.S, lz = pp.z - STAGE.z, lx = pp.x - STAGE.x;
+      for (const r of this.roomObjs) { const it = ITEMS[r.f.id]; if (front(r.o.position.x, r.o.position.z, 0.7 + Math.max(it.w || 0.6, it.d || 0.6) / 2) && this.inside === 'home') return { label: 'しらべる', run: () => this.furnMenu(r, this.roomObjs) }; }
+      if (lz > S - 0.9 && Math.abs(lx) < 0.8) return { label: 'でる', run: () => this.leave() };
+      return null;
+    }
+    if (this.door && front(this.door.x, this.door.z, 1.3)) return { label: 'はいる', run: () => this.enter('home') };
+    if (this.mailbox && front(this.mailbox.x, this.mailbox.z, 1.2)) return { label: 'ポスト', run: () => this.readMail() };
+    for (const r of this.outside) { const it = ITEMS[r.f.id]; if (front(r.o.position.x, r.o.position.z, 0.6 + Math.max(it.w || 0.6, it.d || 0.6) / 2)) return { label: 'しらべる', run: () => this.furnMenu(r, this.outside) }; }
+    for (const v of this.life.villagers) if (v.door && !v.def.role.match(/shop|museum/) && front(v.door.x, v.door.z, 1.2)) return { label: 'たずねる', run: () => this.visit(v) };
+    return null;
+  }
+  async visit(v) {
+    await this.life.ui.say(null, [`${v.def.name}の 家だ。`], ['おじゃまする', 'やめる']).then((k) => { if (k === 0) this.enter('visit', v); });
+  }
+  update() {
+    if (this.flag) this.flag.visible = !this.inside && this.st.ext.mail.length > 0;
+    if (this.inside) {   // walking out through the door
+      const lz = this.player.pos.z - STAGE.z, lx = this.player.pos.x - STAGE.x;
+      if (lz > this.S + 0.2 && Math.abs(lx) < 0.8) this.leave();
+      const night = this.life.world.cur.glow;
+      for (const r of this.roomObjs) if (r.light) r.light.intensity = 6 + 6 * night;
+    } else for (const r of this.outside) if (r.light) r.light.intensity = 7 * this.life.world.cur.glow;
+  }
+  // a new day: the house finishes overnight, letters arrive (Social), gifts
+  newDay(first) {
+    const h = this.st.ext.home;
+    if (h.order && h.order !== dayKey()) { h.stage = 1; h.order = null; this.st.save(); if (!first) this.buildHouse(); this.life.news.push('__house'); }
+  }
+  // the raccoon's house offer (shop menu)
+  async houseMenu(sp) {
+    const h = this.st.ext.home, st = this.st, fill = (s) => s.replace(/\{name\}/g, 'なぎ').replace(/\{phrase\}/g, 'まいど').replace(/\{price\}/g, HOUSE_COST.toLocaleString());
+    if (h.stage >= 1) return 'ナギの 家は もう 立派だよ!';
+    if (h.order) return 'ナギの 家は いま 工事中だよ。あしたの朝を おたのしみに!';
+    const k = await this.life.ui.say(sp, [...RACCOON.house_offer.map(fill), `${HOUSE_COST.toLocaleString()} ナギで テントを 家に たてかえるよ。`], ['たのむ', 'やめる']);
+    if (k !== 0) return 'ほかに なにか あるかい?';
+    if (st.money < HOUSE_COST) return `おや、${(HOUSE_COST - st.money).toLocaleString()} ナギ たりないみたいだね。`;
+    st.money -= HOUSE_COST; h.order = dayKey(); st.save(); this.life.ui.jingle([523, 659, 784, 1047]);
+    return fill(pick(RACCOON.house_done)) || 'まいど! あしたの朝には できあがってるよ!';
+  }
+  // villagers' letters (called by Social each morning)
+  letterFrom(v) {
+    const lines = LETTERS[v.def.personality] || LETTERS.futsuu, text = pick(lines).replace(/\{name\}/g, 'なぎ').replace(/\{phrase\}/g, v.def.catchphrase);
+    const gifts = [...FURNITURE.filter((f) => f.price && f.price <= 2400 && !f.season), ...CLOTHES.filter((c) => c.price)];
+    const gift = Math.random() < 0.7 ? pick(gifts).id : null;
+    this.st.ext.mail.push({ from: v.def.name, text: text + (gift ? '\f' + pick(LETTERS.gift) : ''), gift }); this.st.save();
+  }
+  galleryLine() { return pick(OWL.gallery_intro); }
+}
+export { PLOT, STAGE, VILLAGERS };

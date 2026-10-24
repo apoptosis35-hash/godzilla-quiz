@@ -3,6 +3,14 @@
 // combing, the raccoon's shop and the owl's museum. Everything follows the real clock and resets at 5:00.
 import * as THREE from 'three';
 import { LifeState, ITEMS, dayKey, seeded, donatable, icon } from './state.js';
+import { SEA } from './items2.js';
+import { Season } from './season.js';
+import { Home } from './home.js';
+import { Craft } from './craft.js';
+import { Social } from './social.js';
+import { Market } from './market.js';
+import { Garden } from './garden.js';
+import { WEATHER_TALK, BIRTHDAY, OWL, BOTTLE_RECIPES } from './data2.js';
 import { LifeUI } from './ui.js';
 import { PROJECTS, FIRST_RESIDENTS } from './progress.js';
 import { FISH, BUGS, FOSSILS, SHELLS, VILLAGERS, DIALOGUE, SHOP_LINES, MUSEUM_LINES, SEASON_TALK, TOOLS } from './data.js';
@@ -56,6 +64,9 @@ export class Life {
     this.buildTools();
     this.buildFishing();
     this.day = null; this.refreshDay();
+    this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
+    this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
+    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden];
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries
@@ -113,7 +124,20 @@ export class Life {
       const look = def.role === 'shop' ? ['#4f8a46', 1.05] : def.role === 'museum' ? ['#7a5a32', 0.8] : LOOK[def.personality] || ['#e8b23a', 1];
       const v = { def, o, L, home, fixed: !!fx, ry0: ry, target: null, wait: Math.random() * 4, t: Math.random() * 9, r: 0.26, life: true, walkT: 0,
         speaker: { name: def.name, color: look[0], pitch: look[1] }, talking: false, wave: 0, bodyY: L.body ? L.body.position.y : 0 };
+      v.door = this.doors?.[name] || null;
       this.villagers.push(v); this.town.npcs.push(v);   // traffic stops for them, the player bumps into them
+    }
+    // with the houses district built the residents move into houses near their haunts
+    if (this.has('houses')) {
+      const houses = this.town.mapRects.filter((m) => m.kind === 'house'), used = new Set();
+      for (const v of this.villagers) {
+        if (v.def.role !== 'resident' || v.door) continue;
+        const h = v.home[0], cx = (h[0] + h[1]) / 2, cz = (h[2] + h[3]) / 2;
+        let best = null, bd = 1e9; for (const m of houses) { const d = Math.hypot(m.x - cx, m.z - cz); if (d < bd && !used.has(m)) { bd = d; best = m; } }
+        if (!best) continue; used.add(best);
+        const off = best.d / 2 + 0.9, p = this.near(best.x + Math.sin(best.ry) * off, best.z + Math.cos(best.ry) * off, (a, b) => this.walkable(a, b), 4);
+        if (p) v.door = { x: p[0], z: p[1] };
+      }
     }
   }
   has(k) { return !this.app.built || this.app.built.has(k); }
@@ -124,6 +148,39 @@ export class Life {
     if (FIRST_RESIDENTS.includes(id) || !this.app.built) return true;
     const p = PROJECTS.find((q) => q.moves === id); return !!p && this.has(p.id);
   }
+  // a simple canvas tent (camp, なぎ's first home, the merchant)
+  tent(x, z, ry, col, scale = 1) {
+    const g = new THREE.Group(), y = this.ground.height(x, z);
+    const cloth = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.9, 4, 1), new THREE.MeshStandardMaterial({ color: col, roughness: 0.85, flatShading: true }));
+    cloth.rotation.y = PI / 4; cloth.position.y = 0.95; cloth.castShadow = cloth.receiveShadow = true; g.add(cloth);
+    const door = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.1, 3, 1, true, 0, PI), new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1, side: THREE.DoubleSide }));
+    door.position.set(0, 0.55, 0.9); door.rotation.y = PI; door.scale.set(1, 1, 0.25); g.add(door);
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 5), new THREE.MeshStandardMaterial({ color: 0x6a4a2a })); pole.position.y = 2.05; g.add(pole);
+    g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(scale); this.root.add(g);
+    return g;
+  }
+  // a sprite showing a short text or an emoji (bubbles, marks, the gallery)
+  textSprite(text, scale = 0.5, width = 0) {
+    const emoji = !width, W = emoji ? 128 : width, H = emoji ? 128 : 96, cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+    const g = cv.getContext('2d');
+    if (!emoji) { g.fillStyle = 'rgba(255,250,235,0.95)'; g.beginPath(); g.roundRect(4, 4, W - 8, H - 26, 30); g.fill(); g.beginPath(); g.moveTo(W / 2 - 12, H - 23); g.lineTo(W / 2, H - 4); g.lineTo(W / 2 + 12, H - 23); g.fill(); }
+    g.fillStyle = '#4a3a22'; g.textAlign = 'center'; g.textBaseline = 'middle';
+    g.font = emoji ? '88px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif' : 'bold 30px "Hiragino Maru Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif';
+    g.fillText(text, W / 2, emoji ? 70 : (H - 22) / 2 + 4, W - 24);
+    const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace;
+    const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: !emoji, transparent: true })); s.scale.set(scale * W / H, scale, 1); s.renderOrder = 9;
+    return s;
+  }
+  // something washed up on the east beach (star fragments)
+  beachPickup(id) {
+    const r = Math.random;
+    for (let k = 0; k < 80; k++) {
+      const x = 64 + r() * 66, z = 40 + r() * 80, s = this.ground.sample(x, z);
+      if (s.plat || s.h < 0.05 || s.h > 1.6 || !this.nearWater(x, z, 5)) continue;
+      const p = this.addPickup(id, x, z, null); p.o.material && p.o.material.color && p.o.material.color.set(0xffe680); return p;
+    }
+    return null;
+  }
   // camp: the raccoon's stall and simple canvas tents (they go when the houses / the shrine are built)
   buildCamp() {
     if (!this.has('street') && this.town.protos.market_tent) {
@@ -133,20 +190,17 @@ export class Life {
     for (const [id, [x0, z0, ry, col]] of Object.entries(TENTS)) {
       if (!this.present(id) || (id === 'vil_owl' ? this.has('shrine') : id !== 'vil_frog' && this.has('houses'))) continue;
       const p = this.near(x0, z0, (a, b) => this.walkable(a, b) && !this.blockedAt(a, b, 1.6), 10); if (!p) continue;
-      const g = new THREE.Group(), y = this.ground.height(p[0], p[1]);
-      const cloth = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.9, 4, 1), new THREE.MeshStandardMaterial({ color: col, roughness: 0.85, flatShading: true }));
-      cloth.rotation.y = PI / 4; cloth.position.y = 0.95; cloth.castShadow = cloth.receiveShadow = true; g.add(cloth);
-      const door = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.1, 3, 1, true, 0, PI), new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1, side: THREE.DoubleSide }));
-      door.position.set(0, 0.55, 0.9); door.rotation.y = PI; door.scale.set(1, 1, 0.25); g.add(door);
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 5), new THREE.MeshStandardMaterial({ color: 0x6a4a2a })); pole.position.y = 2.05; g.add(pole);
-      g.position.set(p[0], y, p[1]); g.rotation.y = ry; this.root.add(g);
+      const y = this.ground.height(p[0], p[1]); this.tent(p[0], p[1], ry, col);
       this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 1.2, y0: y - 1, y1: y + 1.9 });
+      (this.doors ||= {})[id] = { x: p[0] + Math.sin(ry) * 1.9, z: p[1] + Math.cos(ry) * 1.9 };
     }
   }
   updateVillager(v, dt, pp) {
     v.t += dt;
     const p = v.o.position, d = Math.hypot(pp.x - p.x, pp.z - p.z);
-    v.o.visible = d < 120;
+    if (v.visiting) { const want = Math.atan2(pp.x - p.x, pp.z - p.z); v.o.rotation.y += wrapA(want - v.o.rotation.y) * Math.min(1, dt * 4); return; }
+    v.o.visible = d < 120 && !v.asleep && !this.home?.inside;
+    if (v.asleep) return;
     let moving = false;
     if (v.talking || (v.fixed && d < 6)) {
       const want = Math.atan2(pp.x - p.x, pp.z - p.z); v.o.rotation.y += wrapA(want - v.o.rotation.y) * Math.min(1, dt * 6);
@@ -212,6 +266,8 @@ export class Life {
     if (!first) {   // a new morning while playing: finished districts / the owl need the town rebuilt
       const done = this.st.finishOrders(), owl = !this.owlWas && this.st.owlHere();
       if (done.length || owl) { this.app.save(); this.announce(done, owl).then(() => location.reload()); }
+      for (const m of this.mods || []) m.newDay?.();
+      if (this.news.length) { const n = this.news; this.news = []; this.announce(n, false); }
     }
     for (const s of this.spots) this.root.remove(s.o); this.spots = [];
     for (const p of this.pickups) this.root.remove(p.o); this.pickups = [];
@@ -265,7 +321,7 @@ export class Life {
   buildTools() {
     this.toolObj = {};
     const arm = this.player.limbs.arm_r;
-    for (const t of TOOLS) {
+    for (const t of [...TOOLS, { id: 'axe' }]) {
       const name = 'tool_' + t.id; if (!this.town.protos[name]) continue;
       const o = this.town.clone(name, 0, 0, 0, 0, true); arm.add(o);
       o.position.set(0.06, -0.26, 0.05); o.rotation.set(PI / 2, 0, 0); o.scale.setScalar(t.id === 'shovel' ? 0.7 : 0.85);
@@ -299,7 +355,7 @@ export class Life {
   }
   pickSpecies(list, where, extra) {
     const m = this.month(), h = this.hour();
-    const ok = list.filter((s) => [].concat(s.where).includes(where) && s.months.includes(m) && inHours(s.hours, h) && (!extra || extra(s)));
+    const wet = this.season?.raining(), ok = list.filter((s) => [].concat(s.where).includes(where) && s.months.includes(m) && inHours(s.hours, h) && (!s.rain || wet) && (!extra || extra(s)));
     if (!ok.length) return null;
     let sum = 0; for (const s of ok) sum += RARITY_W[s.rarity] || 1;
     let u = Math.random() * sum; for (const s of ok) { u -= RARITY_W[s.rarity] || 1; if (u <= 0) return s; }
@@ -361,6 +417,7 @@ export class Life {
     this.anim = { kind: 'cast', t: 0, dur: 0.45 };
     if (!best) { this.ui.toast('ここでは つりができないみたい'); return; }
     this.cast = { x: best[0], z: best[1], phase: 'fly', t: 0, fish: null };
+    this.craft.use('rod');
     this.ui.blip(300, 0.15, 'sine', 0.1);
   }
   cancelCast(msg) {
@@ -479,33 +536,33 @@ export class Life {
     return g;
   }
   spawnBug(pp) {
-    const sp = this.pickSpecies(BUGS, pick(['flower', 'air', 'tree', 'tree', 'ground', 'water', 'beach', 'rock']), null);
+    const w = pick(['flower', 'air', 'tree', 'tree', 'ground', 'water', 'beach', 'rock']), sp = this.pickSpecies(BUGS, w, null);
     if (!sp) return;
     let x, y, z, mode = 'sit', base = null;
     const dist = (a) => Math.hypot(a.x - pp.x, a.z - pp.z), ring = (a) => { const d = dist(a); return d > 7 && d < 32; };
     const randLand = (test) => { for (let k = 0; k < 10; k++) { const a = Math.random() * 6.28, r = 8 + Math.random() * 20, px = pp.x + Math.cos(a) * r, pz = pp.z + Math.sin(a) * r; if (test(px, pz)) return [px, pz]; } return null; };
-    if (sp.where === 'tree') {
+    if (w === 'tree') {
       const ts = this.trees.filter((t) => ring(t) && !t.fruitTree); if (!ts.length) return;
       const t = pick(ts), a = Math.random() * 6.28; x = t.x + Math.sin(a) * 0.32; z = t.z + Math.cos(a) * 0.32; y = this.ground.height(t.x, t.z) + 0.9 + Math.random() * 0.7; base = a; mode = 'trunk';
-    } else if (sp.where === 'flower') {
+    } else if (w === 'flower') {
       const fs = this.flowers.filter(ring); if (!fs.length) return;
       const f = pick(fs); x = f.x; z = f.z; y = this.ground.height(x, z) + 0.3; mode = /monshiro|ageha|omurasaki|aosuji/.test(sp.id) ? 'hover' : 'sit';
-    } else if (sp.where === 'rock') {
+    } else if (w === 'rock') {
       const rs = this.rocks.filter(ring); if (!rs.length) return;
       const rk = pick(rs); const p = this.near(rk.x, rk.z, (a, b) => this.walkable(a, b) && Math.hypot(a - rk.x, b - rk.z) > 0.6, 4); if (!p) return; [x, z] = p; y = this.ground.height(x, z);
-    } else if (sp.where === 'water') {
+    } else if (w === 'water') {
       const p = randLand((a, b) => this.water(a, b) && this.nearLand(a, b, 3)); if (!p) return; [x, z] = p; y = this.world.swell(x, z) + 0.02;
       mode = sp.id === 'genjibotaru' ? 'hover' : 'skate'; if (mode === 'hover') { const q = this.near(x, z, (a, b) => !this.water(a, b), 4); if (q) [x, z] = q; y = this.ground.height(x, z) + 0.8; }
-    } else if (sp.where === 'beach') {
+    } else if (w === 'beach') {
       const p = randLand((a, b) => { const s = this.ground.sample(a, b); return a > 60 && !s.plat && s.h > 0.05 && s.h < 1.6; }); if (!p) return; [x, z] = p; y = this.ground.height(x, z);
-    } else if (sp.where === 'air') {
+    } else if (w === 'air') {
       const p = randLand((a, b) => { const s = this.ground.sample(a, b); return s.h > 0 && !this.blockedAt(a, b, 1); }); if (!p) return; [x, z] = p; y = this.ground.height(x, z) + 0.8 + Math.random() * 1.2; mode = 'fly';
     } else {
       const p = randLand((a, b) => this.soft(a, b, 0.3)); if (!p) return; [x, z] = p; y = this.ground.height(x, z);
     }
     const o = this.bugMesh(sp.id); o.position.set(x, y, z); this.root.add(o);
     if (mode === 'trunk') { o.rotation.set(-PI / 2, base + PI, 0, 'YXZ'); }
-    this.bugs.push({ sp, o, mode, x, y, z, x0: x, y0: y, z0: z, t: Math.random() * 9, h: Math.random() * 6.28, flee: 0, base });
+    this.bugs.push({ sp, w, o, mode, x, y, z, x0: x, y0: y, z0: z, t: Math.random() * 9, h: Math.random() * 6.28, flee: 0, base });
   }
   updateBugs(dt, pp) {
     const pl = this.player, sneak = this.ready, fast = pl.speed > (sneak ? 9 : 2.6), run = pl.speed > 5.2;
@@ -530,10 +587,10 @@ export class Life {
         if (o.userData.glow) o.userData.glow.visible = Math.sin(b.t * 2.2) > -0.3;
       } else if (b.mode === 'skate' || b.mode === 'sit') {
         b.h += Math.sin(b.t * 0.6) * dt * 0.8;
-        const step = (Math.sin(b.t * 0.8) > 0.4 && b.sp.where !== 'flower' ? 0.15 : 0) * dt;
+        const step = (Math.sin(b.t * 0.8) > 0.4 && b.w !== 'flower' ? 0.15 : 0) * dt;
         const nx = b.x + Math.sin(b.h) * step, nz = b.z + Math.cos(b.h) * step;
         if (Math.hypot(nx - b.x0, nz - b.z0) < 1.2) { b.x = nx; b.z = nz; }
-        b.y = b.mode === 'skate' ? this.world.swell(b.x, b.z) + 0.02 : (b.sp.where === 'flower' ? b.y0 : this.ground.height(b.x, b.z));
+        b.y = b.mode === 'skate' ? this.world.swell(b.x, b.z) + 0.02 : (b.w === 'flower' ? b.y0 : this.ground.height(b.x, b.z));
         o.position.set(b.x, b.y, b.z); o.rotation.y = b.h; this.flap(o, b.t, 0.05);
       } else {   // on a trunk: cicadas buzz in place, beetles creep up and down
         o.position.set(b.x, b.y0 + Math.sin(b.t * 0.3) * 0.1, b.z);
@@ -543,6 +600,7 @@ export class Life {
   flap(o, t, k) { const w = o.userData.wings; if (!w.length) return; const s = o.userData.shape === 'dragon' ? Math.sin(t * 40) * 0.25 * k : Math.sin(t * 14) * 0.9 * k; w[0].rotation.z = -s; w[1].rotation.z = s; }
   swingNet() {
     this.anim = { kind: 'net', t: 0, dur: 0.5 };
+    this.craft.use('net');
     this.ui.blip(500, 0.12, 'triangle', 0.08);
     const pp = this.player.pos, h = this.player.heading, nx = pp.x + Math.sin(h) * 0.75, nz = pp.z + Math.cos(h) * 0.75;
     let best = null, bd = 1.35;
@@ -555,7 +613,7 @@ export class Life {
   async dig(s) {
     if (this.st.full() && !s.money) { this.ui.toast('ポケットが いっぱい! 何か 売ってからにしよう'); return; }
     this.anim = { kind: 'dig', t: 0, dur: 0.7 };
-    this.splash(0.18, 300);
+    this.splash(0.18, 300); this.craft.use('shovel');
     this.root.remove(s.o); this.spots.splice(this.spots.indexOf(s), 1); this.st.daily.dug[s.i] = 1;
     await new Promise((r) => setTimeout(r, 600));
     this.st.stats.dig = (this.st.stats.dig || 0) + 1;
@@ -567,8 +625,9 @@ export class Life {
   hitRock(rock) {
     const r = this.moneyRock, pp = this.player.pos;
     this.anim = { kind: 'dig', t: 0, dur: 0.45 };
-    this.ui.blip(1800, 0.06, 'square', 0.06);
-    if (!r || r !== rock || this.st.daily.rock >= 7) return;
+    this.ui.blip(1800, 0.06, 'square', 0.06); this.craft.use('shovel');
+    if (!r || r !== rock) { if (rock) this.craft.rock(rock); return; }
+    if (this.st.daily.rock >= 7) { this.ui.toast('カツン!'); return; }
     const v = [100, 150, 200, 300, 400, 600, 800][this.st.daily.rock++];
     const h = this.player.heading, a = h + PI + (Math.random() - 0.5) * 2.5;
     const p = this.near(pp.x + Math.sin(a) * 0.9, pp.z + Math.cos(a) * 0.9, (x, z) => this.walkable(x, z), 3) || [pp.x, pp.z];
@@ -597,6 +656,11 @@ export class Life {
     else if (u < 0.3) { this.addPickup('branch', p[0], p[1], null); this.ui.toast('木の枝が おちてきた'); }
   }
   async take(p) {
+    if (ITEMS[p.id]?.kind === 'material') {
+      this.st.addMat(p.id); this.ui.blip(990, 0.08, 'triangle', 0.14); this.ui.toast(`${ITEMS[p.id].name}を ひろった`);
+      if (p.key) this.st.daily.picked[p.key] = 1;
+      this.root.remove(p.o); this.pickups.splice(this.pickups.indexOf(p), 1); this.st.save(); return;
+    }
     if (p.money) { this.st.money += p.money; this.ui.blip(1320, 0.1, 'triangle', 0.15); this.ui.toast(`${p.money} ナギ ひろった`); }
     else {
       if (this.st.full()) { this.ui.toast('ポケットが いっぱい!'); return; }
@@ -606,6 +670,8 @@ export class Life {
         const notes = ['海の向こうのだれかへ。きょうも波の音がきこえますか。わたしは元気です。', 'この瓶をひろったキミ、すてきな一日を! 浜辺のさくら貝は、しあわせのしるしだって。', '夕日が沈むとき、海が金色になるのを見たことある? 一度は見てほしいな。', 'みかんの木は、ゆすると実を落としてくれるよ。毎日ためしてみてね。'];
         this.ui.jingle([523, 784]);
         await this.ui.say(null, ['瓶に 手紙が 入っていた。', `「${pick(notes)}」`, `……すみっこに 「${from.name}」と 書いてある。`]);
+        const rid = this.craft.newRecipe();
+        if (rid) { this.craft.learn(rid); this.ui.jingle(); await this.ui.say(null, [pick(BOTTLE_RECIPES).replace(/\{item\}/g, ITEMS[rid].name), `「${ITEMS[rid].name}」の DIYレシピを おぼえた!`]); return; }
         const sh = pick(SHELLS); this.st.add(sh.id); this.ui.toast(`${sh.name}も 入っていた!`); return;
       }
       this.st.add(p.id); this.ui.blip(990, 0.08, 'triangle', 0.14); this.ui.toast(`${ITEMS[p.id].name}を ひろった`);
@@ -628,32 +694,41 @@ export class Life {
   timeKey() { const h = this.hour(); return h >= 5 && h < 11 ? 'morning' : h >= 11 && h < 17 ? 'noon' : h >= 17 && h < 20 ? 'evening' : 'night'; }
   lineFor(v, first) {
     const d = v.def, P = DIALOGUE[d.personality] || DIALOGUE.futsuu, st = this.st, lc = st.lastCatch;
-    const recent = lc && Date.now() - lc.t < 15 * 60e3;
+    const recent = lc && Date.now() - lc.t < 15 * 60e3, w = this.season.today.w;
     const opts = [[P[this.timeKey()], 3], [P.greet, 2], [SEASON_TALK[this.month()] || [], 1.5]];
     if (recent) opts.push([lc.kind === 'fish' ? P.afterFish : P.afterBug, first ? 4 : 2]);
     if ((st.friend[d.id] || 0) >= 8) opts.push([P.friend, 1.5]);
-    let sum = 0; for (const [a, w] of opts) if (a.length) sum += w;
+    if (w === 'rain') opts.push([P.rain || WEATHER_TALK.rain, 3]);
+    if (w === 'snow') opts.push([WEATHER_TALK.snow, 3]);
+    if (this.season.starNight()) opts.push([WEATHER_TALK.clear_night_stars, 2]);
+    const ev = this.season.eventLine(d.catchphrase); if (ev) opts.push([ev, first ? 5 : 2]);
+    let sum = 0; for (const [a, w2] of opts) if (a.length) sum += w2;
     let u = Math.random() * sum; let set = opts[0][0];
-    for (const [a, w] of opts) { if (!a.length) continue; u -= w; if (u <= 0) { set = a; break; } }
+    for (const [a, w2] of opts) { if (!a.length) continue; u -= w2; if (u <= 0) { set = a; break; } }
     return fill(pick(set), this.vars(d, { item: recent ? ITEMS[lc.id].name : '' }));
   }
   async chat(v) {
     const d = v.def, st = this.st, sp = v.speaker, P = DIALOGUE[d.personality] || DIALOGUE.futsuu;
     if (!st.met[d.id]) { st.met[d.id] = 1; await this.ui.say(sp, d.greeting.split('\n').join('\n')); }
     if (!st.daily.talked[d.id]) { st.daily.talked[d.id] = 1; st.friend[d.id] = (st.friend[d.id] || 0) + 1; }
+    await this.social.opening(v);
     let line = this.lineFor(v, true);
-    for (let n = 0; n < 6; n++) {
-      const k = await this.ui.say(sp, line, ['話す', 'プレゼント', 'またね']);
-      if (k === 0) { line = this.lineFor(v, false); continue; }
-      if (k === 1) {
+    for (let n = 0; n < 8; n++) {
+      const req = this.social.hasRequest(v), choices = ['話す', 'プレゼント', ...(req ? ['たのまれた物'] : []), 'またね'];
+      const k = choices[await this.ui.say(sp, line, choices)];
+      if (k === '話す') { line = this.lineFor(v, false); continue; }
+      if (k === 'たのまれた物') { await this.social.deliver(v); line = this.lineFor(v, false); continue; }
+      if (k === 'プレゼント') {
         const i = await this.ui.pocket(st, { title: `${d.name}に プレゼント`, filter: (id) => ITEMS[id].kind !== 'tool', note: 'あげるものを えらんでね' });
         if (i < 0) { line = fill(pick(P.greet), this.vars(d)); continue; }
-        const id = st.remove(i), it = ITEMS[id], love = it.price >= 500;
-        if (!st.daily.gift[d.id]) { st.daily.gift[d.id] = 1; st.friend[d.id] = (st.friend[d.id] || 0) + (love ? 4 : 2); }
+        const id = st.remove(i), it = ITEMS[id], love = it.price >= 500, bday = this.social.birthday(v);
+        if (!st.daily.gift[d.id]) { st.daily.gift[d.id] = 1; st.friend[d.id] = (st.friend[d.id] || 0) + (love ? 4 : 2) + (bday ? 5 : 0); }
         this.ui.jingle([659, 784, 988]);
-        const lines = [fill(pick(love ? P.giftLove : P.gift), this.vars(d, { item: it.name }))];
+        const lines = bday ? (BIRTHDAY[d.personality] || BIRTHDAY.futsuu).thanks.map((x) => fill(x, this.vars(d, { item: it.name }))) : [fill(pick(love ? P.giftLove : P.gift), this.vars(d, { item: it.name }))];
         if ((st.friend[d.id] || 0) >= 10 && Math.random() < 0.4 && !st.full()) {
-          const back = pick(SHELLS); st.add(back.id); lines.push(fill(`おかえしに、これあげる! ${back.name}だよ、{phrase}`, this.vars(d)));
+          const rid = Math.random() < 0.5 && this.craft.newRecipe();
+          if (rid) { this.craft.learn(rid); lines.push(fill(`おかえしに、「${ITEMS[rid].name}」の 作り方を 教えるね、{phrase}`, this.vars(d)), `「${ITEMS[rid].name}」の DIYレシピを おぼえた!`); }
+          else { const back = pick(SHELLS); st.add(back.id); lines.push(fill(`おかえしに、これあげる! ${back.name}だよ、{phrase}`, this.vars(d))); }
         }
         await this.ui.say(sp, lines);
         line = this.lineFor(v, false); continue;
@@ -662,6 +737,7 @@ export class Life {
     }
     await this.ui.say(sp, fill(pick(P.bye), this.vars(d)));
   }
+  sellValue(id) { const it = ITEMS[id]; return it.kind === 'furniture' || it.kind === 'clothes' ? Math.round(it.price / 4) : it.kind === 'seed' ? 30 : it.price; }
   async shop(v) {
     const st = this.st, sp = v.speaker, L = SHOP_LINES, V = (x = {}) => ({ name: PLAYER, ...x });
     let line = fill(pick(L.welcome), V());
@@ -670,32 +746,38 @@ export class Life {
       await this.ui.say(sp, ['おっ、図鑑が ずいぶん にぎやかに なってきたね!', 'そうだ、生きもの好きの 学者の友だちが いるんだ。\nふくろうの ほうさくさん。この町に 呼んでみるよ!', 'あしたには 来てくれると 思うよ。まいど!']);
       st.owlCalled = dayKey(); st.save();
     }
-    for (let n = 0; n < 12; n++) {
-      const k = await this.ui.say(sp, line, ['売る', 'まとめて売る', '道具を買う', '町づくり', 'またね']);
-      if (k === 3) { line = await this.townWork(sp); continue; }
-      if (k === 0) {
-        const i = await this.ui.pocket(st, { title: '売る', filter: (id) => ITEMS[id].kind !== 'tool', note: '売るものを えらんでね' });
-        if (i < 0) { line = 'ほかに なにか あるかい?'; continue; }
-        const it = ITEMS[st.pocket[i]];
-        const c = await this.ui.say(sp, fill(pick(L.buyPrompt), V({ item: it.name, price: it.price.toLocaleString() })), ['売る', 'やめる']);
-        if (c === 0) { st.remove(i); st.money += it.price; st.stats.sold++; this.ui.blip(1320, 0.1, 'triangle', 0.15); line = fill(pick(L.sold), V()); } else line = 'ほかに なにか あるかい?';
-      } else if (k === 1) {
-        const idx = st.pocket.map((id, i) => [id, i]).filter(([id]) => !['tool', 'fossil?', 'misc'].includes(ITEMS[id].kind) || id === 'branch');
-        if (!idx.length) { line = fill(pick(L.nothingToSell), V()); continue; }
-        const sum = idx.reduce((a, [id]) => a + ITEMS[id].price, 0);
-        const c = await this.ui.say(sp, `魚・虫・貝・果物 ぜんぶで ${idx.length}こ……\f${sum.toLocaleString()} ナギで どうだい?`, ['売る', 'やめる']);
-        if (c === 0) { for (const [, i] of idx.reverse()) st.remove(i); st.money += sum; st.stats.sold += idx.length; this.ui.jingle([880, 1175, 1568]); line = fill(pick(L.sold), V()); } else line = 'ほかに なにか あるかい?';
-      } else if (k === 2) {
-        const rows = TOOLS.map((t) => ({ label: `${t.name}`, sub: st.has(t.id) ? '持っている' : `${t.price} ナギ`, ok: !st.has(t.id) }));
-        const i = await this.ui.list('道具を買う', rows);
-        if (i < 0) { line = 'ほかに なにか あるかい?'; continue; }
-        const t = TOOLS[i];
-        const c = await this.ui.say(sp, fill(pick(L.buyTool), V({ item: t.name, price: t.price })), ['買う', 'やめる']);
-        if (c !== 0) { line = 'ほかに なにか あるかい?'; continue; }
-        if (st.money < t.price) { line = 'おや、ナギが たりないみたいだね。'; continue; }
-        if (st.full()) { line = 'ポケットが いっぱいだよ!'; continue; }
-        st.money -= t.price; st.add(t.id); this.equip(t.id); this.ui.jingle(); line = `まいど! ${t.name}は もう持ってるよ。\n道具ボタンで 持ちかえてね。`;
-      } else break;
+    const again = 'ほかに なにか あるかい?';
+    for (let n = 0; n < 14; n++) {
+      const k = ['売る', '買う', 'DIY', '町づくり', 'またね'][await this.ui.say(sp, line, ['売る', '買う', 'DIY', '町づくり', 'またね'])];
+      if (k === '町づくり') {
+        const c = await this.ui.list('町づくり', [{ label: '町の工事を たのむ' }, { label: 'なぎの 家', sub: this.st.ext.home.stage >= 1 ? 'できている' : '' }]);
+        line = c === 0 ? await this.townWork(sp) : c === 1 ? await this.home.houseMenu(sp) : again; continue;
+      }
+      if (k === 'DIY') { await this.ui.say(sp, this.craft.hint()); await this.craft.menu(); line = again; continue; }
+      if (k === '買う') {
+        const c = await this.ui.list('買う', [{ label: '品物を 買う', sub: '道具・今日の品・たね' }, { label: 'だいこん', sub: '日曜の朝に 売っているよ' }]);
+        line = c === 0 ? await this.market.menu(sp) : c === 1 ? await this.market.daikon(sp) : again; continue;
+      }
+      if (k === '売る') {
+        const dk = st.ext.daikon;
+        const c = await this.ui.list('売る', [{ label: 'ひとつずつ 売る' }, { label: 'まとめて 売る', sub: '魚・虫・貝・果物・海の幸' }, ...(dk.n ? [{ label: 'だいこんを 売る', sub: `${dk.n}本` }] : [])]);
+        if (c === 0) {
+          const i = await this.ui.pocket(st, { title: '売る', filter: (id) => !['tool', 'recipe'].includes(ITEMS[id].kind), note: '売るものを えらんでね' });
+          if (i < 0) { line = again; continue; }
+          const it = ITEMS[st.pocket[i]], price = this.sellValue(st.pocket[i]);
+          const ok = await this.ui.say(sp, fill(pick(L.buyPrompt), V({ item: it.name, price: price.toLocaleString() })), ['売る', 'やめる']);
+          if (ok === 0) { st.remove(i); st.money += price; st.stats.sold++; this.ui.blip(1320, 0.1, 'triangle', 0.15); line = fill(pick(L.sold), V()); } else line = again;
+        } else if (c === 1) {
+          const idx = st.pocket.map((id, i) => [id, i]).filter(([id]) => ['fish', 'bug', 'shell', 'fruit', 'sea'].includes(ITEMS[id].kind));
+          if (!idx.length) { line = fill(pick(L.nothingToSell), V()); continue; }
+          const sum = idx.reduce((a, [id]) => a + ITEMS[id].price, 0);
+          const ok = await this.ui.say(sp, `魚・虫・貝・果物・海の幸 ぜんぶで ${idx.length}こ……\f${sum.toLocaleString()} ナギで どうだい?`, ['売る', 'やめる']);
+          if (ok === 0) { for (const [, i] of idx.reverse()) st.remove(i); st.money += sum; st.stats.sold += idx.length; this.ui.jingle([880, 1175, 1568]); line = fill(pick(L.sold), V()); } else line = again;
+        } else if (c === 2) line = await this.market.daikon(sp);
+        else line = again;
+        continue;
+      }
+      break;
     }
     await this.ui.say(sp, fill(pick(L.thanks), V()));
   }
@@ -727,6 +809,8 @@ export class Life {
       if (id === 'shrine') lines.push('ほうさくさんの 資料館も 神社に うつったよ。');
       if (id === 'street') lines.push('オイラの 海凪商店も 商店街に うつったよ。');
     }
+    if (list.includes('__house')) lines.push('おはよう! キミの 家が できあがったよ!', '中は ひろくなったから、家具を たくさん おけるよ。まいど!');
+    if (list.includes('__stars')) lines.push(...this.season.starNews());
     if (owl) lines.push('学者の ほうさくさんが 来てくれたよ! オイラの テントの となりに いるからね。', '魚や虫や化石を 寄贈すると、資料館に 展示してくれるよ。');
     if (lines.length) await this.ui.say(sp, lines);
   }
@@ -734,7 +818,8 @@ export class Life {
     const st = this.st, sp = v.speaker, L = MUSEUM_LINES, V = (x = {}) => ({ name: PLAYER, ...x });
     let line = fill(pick(L.welcome), V());
     for (let n = 0; n < 10; n++) {
-      const k = await this.ui.say(sp, line, ['寄贈する', '化石の鑑定', '図鑑を見る', 'またね']);
+      const k = await this.ui.say(sp, line, ['寄贈する', '化石の鑑定', '展示室を見る', '図鑑を見る', 'またね']);
+      if (k === 2) { await this.ui.say(sp, pick(OWL.gallery_intro)); this.home.enter('gallery'); return; }
       if (k === 0) {
         const fresh = [];
         st.pocket.forEach((id, i) => { if (donatable(id) && !st.donated[id] && !fresh.some(([x]) => x === id)) fresh.push([id, i]); });
@@ -746,7 +831,7 @@ export class Life {
         for (const [, i] of fresh.sort((a, b) => b[1] - a[1])) { const id = st.remove(i); st.donated[id] = dayKey(); }
         this.ui.jingle([523, 659, 784, 1047]);
         const lines = [fill(pick(L.donate), V({ item: names.slice(0, 3).join('、') + (names.length > 3 ? ` ほか${names.length - 3}点` : '') }))];
-        const total = FISH.length + BUGS.length + FOSSILS.length, got = Object.keys(st.donated).length;
+        const total = FISH.length + BUGS.length + FOSSILS.length + SEA.length, got = Object.keys(st.donated).length;
         lines.push(`これで 展示は ${got} / ${total} 点になったよ。`);
         if (got >= total) lines.push(...L.complete.map((s) => fill(s, V())));
         await this.ui.say(sp, lines); line = 'ほかに なにか あるかね?';
@@ -761,7 +846,7 @@ export class Life {
         }
         this.ui.jingle([523, 784, 1047]);
         await this.ui.say(sp, [`ふむふむ……`, `これは 「${out.join('」と「')}」 だね!`, '寄贈してくれたら、うれしいのう。']); line = 'ほかに なにか あるかね?';
-      } else if (k === 2) { await this.ui.book(st); line = 'ほっほう、よく調べておるね。'; }
+      } else if (k === 3) { await this.ui.book(st); line = 'ほっほう、よく調べておるね。'; }
       else break;
     }
     await this.ui.say(sp, 'またおいで。発見は、まいにち 待っておるよ。');
@@ -774,15 +859,19 @@ export class Life {
     for (const id of ['rod', 'net']) if (!this.st.has(id)) this.st.add(id);
     this.equip('rod'); this.ui.jingle();
     await this.ui.say(null, ['つりざお と あみ を もらった!']);
+    this.giveTent();
+    await this.ui.say(sp, ['それから、東の 岸壁に キミの テントを はっておいたよ。\n中に 家具を おいて、すきに かざってね。', '道具は 使うと だんだん こわれるんだ。\n木の枝や 木材を あつめて、オイラの 屋台で DIYできるよ。']);
     await this.ui.say(sp, ['水ぎわで A ボタンを押すと つりができるよ。\n影が浮きをつついて、グッと しずんだ瞬間に もう一度 A!', 'あみは A ボタンを押しっぱなしで そーっと近づいて、はなすと ふれるよ。', 'とれたものは オイラが 買いとるよ。\nナギが たまったら 「町づくり」で 港や お店を たのんでね。ひと晩で つくっちゃうから!', '時間は ほんとうの時計と いっしょ。毎朝5時に 新しい一日が はじまるよ。\nじゃ、よろしくね!']);
     this.st.intro = true; this.st.save(); this.introRunning = false;
   }
+  giveTent() { const h = this.st.ext.home; if (h.stage < 0) { h.stage = 0; this.st.save(); this.home.buildHouse(); } }
   // ---------------------------------------------------------------- input + per frame
   bindUI() {
     const $ = (id) => document.getElementById(id);
     $('ltool').onclick = () => this.cycleTool();
     $('lpocket').onclick = () => this.openPocket();
     $('lbook').onclick = () => { if (!this.ui.busy()) this.ui.book(this.st); };
+    $('lhat').onclick = () => this.home.takeOffHat();
     const act = $('act');
     act.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); this.press(); });
     for (const ev of ['pointerup', 'pointercancel', 'pointerleave']) act.addEventListener(ev, () => this.release());
@@ -813,21 +902,37 @@ export class Life {
   }
   async openPocket() {
     if (this.ui.busy()) return;
-    const i = await this.ui.pocket(this.st, { note: '道具をタップすると 持ちかえ' });
+    const mats = Object.entries(this.st.mat).filter(([, n]) => n > 0).map(([k, n]) => `${ITEMS[k].name}×${n}`).join(' ');
+    const wear = this.st.ext.wear, dk = this.st.ext.daikon.n;
+    const i = await this.ui.pocket(this.st, { note: `ざいりょう: ${mats || 'なし'}${dk ? `　だいこん×${dk}` : ''}${wear.hat ? '　(👒ボタンで ぼうしを 外せるよ)' : ''}` });
     if (i < 0) return;
     const id = this.st.pocket[i], it = ITEMS[id];
     if (it.kind === 'tool') { this.equip(this.st.tool === id ? null : id); return; }
-    const k = await this.ui.list(it.name, [{ label: 'もどる', sub: `お店で ${it.price} ナギ` }, { label: it.kind === 'fish' || it.kind === 'bug' ? 'にがす' : 'すてる', sub: '' }]);
-    if (k === 1) { this.st.remove(i); this.ui.toast(`${it.name}を ${it.kind === 'fish' || it.kind === 'bug' ? 'にがした' : 'すてた'}`); }
+    const live = it.kind === 'fish' || it.kind === 'bug' || it.kind === 'sea';
+    const rows = [
+      ...(it.kind === 'furniture' ? [['置く', () => this.home.place(i)]] : []),
+      ...(it.kind === 'seed' || id === 'mikan' ? [['植える', () => this.garden.plant(i)]] : []),
+      ...(it.kind === 'clothes' ? [['身につける', () => this.home.wearItem(i)]] : []),
+      [live ? 'にがす' : 'すてる', () => { this.st.remove(i); this.ui.toast(`${it.name}を ${live ? 'にがした' : 'すてた'}`); }],
+      ['もどる', null],
+    ];
+    const k = await this.ui.list(`${it.name}　(お店で ${this.sellValue(id)} ナギ)`, rows.map(([label]) => ({ label })));
+    if (k >= 0 && rows[k][1]) rows[k][1]();
   }
   // the thing in front of なぎ that A would act on
   target() {
     const pl = this.player, pp = pl.pos, h = pl.heading, fx = Math.sin(h), fz = Math.cos(h);
     const front = (x, z, R) => { const dx = x - pp.x, dz = z - pp.z, d = Math.hypot(dx, dz); return d < R && (d < 0.45 || (dx * fx + dz * fz) / d > 0.35) ? d : 0; };
     if (this.cast) return { kind: 'reel', label: 'ひく' };
+    if (this.home.inside) {
+      const g = this.home.guest?.v; if (g && front(g.o.position.x, g.o.position.z, 1.7)) return { kind: 'talk', v: g, label: '話す' };
+      return this.home.target(front);
+    }
     for (const v of this.villagers) if (v.o.visible && front(v.o.position.x, v.o.position.z, 1.7)) return { kind: 'talk', v, label: '話す' };
+    for (const m of [this.season, this.home, this.market, this.garden]) { const t = m.target(front); if (t) return t; }
     for (const p of this.pickups) if (front(p.x, p.z, 1.0)) return { kind: 'take', p, label: 'ひろう' };
     const tool = this.st.tool;
+    if (tool === 'axe') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + 1.0)) return { label: 'きる', run: () => this.craft.chop(t) };
     for (const s of this.spots) if (front(s.x, s.z, 1.2)) return tool === 'shovel' ? { kind: 'dig', s, label: 'ほる' } : { kind: 'look', label: 'しらべる', msg: '何か うまっているみたい。スコップが ほしいな' };
     if (tool !== 'shovel') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + (t.fruitTree ? 1.5 : 1.0))) return { kind: 'shake', t, label: 'ゆする' };
     if (tool === 'shovel') { for (const r of this.rocks) if (Math.abs(r.x - pp.x) < r.rad + 2 && Math.abs(r.z - pp.z) < r.rad + 2 && front(r.x, r.z, r.rad + 1.0)) return { kind: 'rock', r, label: 'たたく' }; return { kind: 'shovel', label: 'ほる' }; }
@@ -841,6 +946,7 @@ export class Life {
     const t = this.target(); if (!t) return;
     if (this.anim && t.kind !== 'reel') return;
     if (this.player.state !== 'ground' && t.kind !== 'reel') return;
+    if (t.run) { t.run(); return; }
     switch (t.kind) {
       case 'reel': this.reel(); break;
       case 'talk': this.talk(t.v); break;
@@ -849,7 +955,7 @@ export class Life {
       case 'look': this.ui.toast(t.msg); break;
       case 'shake': this.shake(t.t); break;
       case 'rock': this.hitRock(t.r); break;
-      case 'shovel': this.anim = { kind: 'dig', t: 0, dur: 0.6 }; this.splash(0.12, 300); setTimeout(() => this.ui.toast('なにも 出てこなかった'), 500); break;
+      case 'shovel': this.anim = { kind: 'dig', t: 0, dur: 0.6 }; this.splash(0.12, 300); this.craft.use('shovel'); setTimeout(() => this.ui.toast('なにも 出てこなかった'), 500); break;
       case 'cast': this.startCast(); break;
       case 'net': this.ready = true; break;
     }
@@ -887,9 +993,10 @@ export class Life {
     const pp = this.player.pos;
     this.refreshDay();
     for (const v of this.villagers) this.updateVillager(v, dt, pp);
+    for (const m of this.mods) m.update?.(dt, this.app.camera.position);
     for (const ft of this.fruitTrees) if (ft.shakeT > 0) { ft.shakeT -= dt; ft.o.rotation.z = Math.sin(ft.shakeT * 30) * 0.03 * ft.shakeT; }
     this.spawnT -= dt;
-    if (this.spawnT <= 0) {
+    if (this.spawnT <= 0 && !this.home.inside) {
       this.spawnT = 1.2;
       if (this.fish.filter((f) => f.state !== 'flee').length < 5) this.spawnFish(pp);
       if (this.bugs.filter((b) => !b.flee).length < 6) this.spawnBug(pp);
@@ -902,12 +1009,14 @@ export class Life {
     if (!this.st.intro && !this.introStarted && this.app.playing) { this.introStarted = true; setTimeout(() => this.intro(), 1500); }
     this.hudT -= dt;
     if (this.hudT <= 0) {
-      this.hudT = 0.25; this.ui.hud(this.st, this.st.tool);
+      this.hudT = 0.25; this.ui.hud(this.st, this.st.tool, this.season.today.w);
       const t = this.ui.busy() ? null : this.target(); this.ui.action(t ? t.label : '');
     }
   }
+  afterWorld() { this.season?.overcast(); }
   start() {
     this.equip(this.st.tool);
+    if (this.st.intro && this.st.ext.home.stage < 0) { this.giveTent(); setTimeout(() => this.ui.say({ name: 'あらた', color: '#4f8a46', pitch: 1.05 }, ['あ、なぎ! 東の 岸壁に キミの テントを はっておいたよ。', '家具を おいたり、DIYしたり、くらしが もっと 楽しくなるよ。まいど!']), 1500); }
     const owlNew = this.st.owlHere() && !this.st.met.owlArrived;
     if (this.st.intro && (this.news.length || owlNew)) {
       if (owlNew) this.st.met.owlArrived = 1;

@@ -31,6 +31,10 @@ export const MODELS = {
   dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'cat', 'seagull',
     // island life (js/life): animal villagers, tools, fruit trees, dig spots, message bottles
     'vil_cat', 'vil_rabbit', 'vil_bear', 'vil_penguin', 'vil_frog', 'vil_squirrel', 'vil_owl', 'vil_raccoon', 'tool_net', 'tool_rod', 'tool_shovel', 'fruit_tree', 'dig_spot', 'bottle_msg'],
+  // home life (js/life/home.js): furniture, the room, hats... a missing one falls back to a stand-in
+  optional: ['furn_table_wood', 'furn_chair_wood', 'furn_bed', 'furn_bookshelf', 'furn_lamp', 'furn_rug', 'furn_tansu', 'furn_kotatsu', 'furn_radio', 'furn_aquarium',
+    'furn_log_stool', 'furn_log_bench', 'furn_fence_bamboo', 'furn_fence_white', 'furn_workbench', 'furn_mailbox', 'furn_pumpkin', 'furn_snowman', 'tool_axe', 'item_daikon',
+    'sapling', 'hat_straw', 'hat_cap', 'hat_beanie', 'room_shell', 'museum_pedestal'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {
@@ -124,11 +128,11 @@ export class Town {
     this.root = new THREE.Group(); this.root.name = 'town'; scene.add(this.root);
   }
   async load(onProgress) {
-    const names = [...MODELS.buildings, ...MODELS.props, ...MODELS.nature, ...MODELS.dynamic];
+    const names = [...MODELS.buildings, ...MODELS.props, ...MODELS.nature, ...MODELS.dynamic, ...MODELS.optional];
     let done = 0;
     await Promise.all(names.map((n) => loader.loadAsync(ASSETS + 'glb/' + n + '.glb').then((g) => {
       this.protos[n] = this.proto(n, g.scene); onProgress?.(++done / names.length);
-    })));
+    }, (e) => { if (!MODELS.optional.includes(n)) throw e; onProgress?.(++done / names.length); })));
   }
   proto(name, scene) {
     scene.updateMatrixWorld(true);

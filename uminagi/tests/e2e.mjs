@@ -78,6 +78,36 @@ const said = await talkThrough([0, 2]);
 const fr = await G((id) => window.__uminagi.life.st.friend[id] || 0, chat);
 check('villager chat and friendship', said.length >= 3 && fr >= 1, `${said.length} lines, friend ${fr}`);
 await G(() => window.__uminagi.life.equip(null));
+// home: into the tent, place a table, back out
+const home = await G(() => {
+  const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  L.giveTent(); L.st.add('furn_table_wood');
+  const d = L.home.door; a.player.place(d.x, d.z + 0.8, 0); a.player.heading = Math.PI; step(2);
+  const label = L.target()?.label; L.anim = null; L.press(); step(3);
+  const inside = L.home.inside; a.player.heading = Math.PI; L.home.place(L.st.pocket.indexOf('furn_table_wood')); step(2);
+  const placed = L.st.ext.furn.length; L.home.leave(); step(2);
+  return { label, inside, placed, out: !L.home.inside, y: +a.player.pos.y.toFixed(1) };
+});
+check('house: enter, place furniture, leave', home.label === 'はいる' && home.inside === 'home' && home.placed === 1 && home.out && home.y < 20, JSON.stringify(home));
+// DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
+const diy = await G(async () => {
+  const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  L.st.addMat('branch', 3); L.st.addMat('stone', 1);
+  const i0 = L.st.pocket.indexOf('axe'); if (i0 >= 0) L.st.pocket.splice(i0, 1);
+  const before = { busy: L.ui.busy(), open: L.ui.open, q: !!L.ui.queue, panel: !!L.ui.panelRes, full: L.st.full() };
+  let done = false; L.craft.menu().then(() => { done = true; });
+  for (let k = 0; k < 50 && !L.ui.panelRes; k++) await new Promise((r) => setTimeout(r, 5));
+  L.ui.closePanel(2);   // net, rod, axe ...
+  for (let k = 0; k < 300 && !done; k++) { if (L.ui.queue) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
+  if (!done) return { stuck: true, before, open: L.ui.open, q: L.ui.queue && L.ui.queue.lines, panel: !!L.ui.panelRes };
+  const axe = L.st.has('axe'); L.equip('axe');
+  const t = L.trees.find((q) => !q.fruitTree && L.walkable(q.x + q.rad + 0.8, q.z));
+  a.player.place(t.x + t.rad + 0.8, t.z, 0); a.player.heading = -Math.PI / 2; step(2);
+  const w0 = L.st.mat.wood || 0; for (let k = 0; k < 3; k++) { L.anim = null; L.press(); step(12); }
+  L.equip(null);
+  return { axe, wood: (L.st.mat.wood || 0) - w0, dur: L.st.ext.dur.axe };
+});
+check('DIY an axe and chop wood (the axe wears)', diy.axe && diy.wood === 3 && diy.dur < 40, JSON.stringify(diy));
 
 // --- walking with the virtual stick (left half), camera-relative
 await tp(0, 19, 0);

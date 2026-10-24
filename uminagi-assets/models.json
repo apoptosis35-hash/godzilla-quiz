@@ -3810,6 +3810,638 @@
   "kb": 31.2
  },
  {
+  "name": "furn_table_wood",
+  "jp": "丸い木のテーブル",
+  "category": "家具",
+  "size_m": [
+   0.7,
+   0.45,
+   0.7
+  ],
+  "tris": 972,
+  "lod1_tris": 0,
+  "materials": [
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_table_wood_body"
+  ],
+  "kb": 60.2
+ },
+ {
+  "name": "furn_chair_wood",
+  "jp": "木の椅子",
+  "category": "家具",
+  "size_m": [
+   0.4,
+   0.74,
+   0.43
+  ],
+  "tris": 640,
+  "lod1_tris": 0,
+  "materials": [
+   "home_cushion",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_chair_wood_body"
+  ],
+  "kb": 46.8
+ },
+ {
+  "name": "furn_bed",
+  "jp": "シングルベッド(キルト・まくら)",
+  "category": "家具",
+  "size_m": [
+   0.96,
+   0.77,
+   1.45
+  ],
+  "tris": 1312,
+  "lod1_tris": 0,
+  "materials": [
+   "home_pillow",
+   "home_quilt",
+   "home_quilt_b",
+   "home_sheet",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_bed_body"
+  ],
+  "kb": 92.1
+ },
+ {
+  "name": "furn_bookshelf",
+  "jp": "本棚",
+  "category": "家具",
+  "size_m": [
+   0.84,
+   1.02,
+   0.33
+  ],
+  "tris": 1120,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_leaf",
+   "home_book_blue",
+   "home_book_cream",
+   "home_book_green",
+   "home_book_purple",
+   "home_book_red",
+   "home_book_yellow",
+   "home_brass",
+   "home_wood",
+   "home_wood_dk",
+   "soil",
+   "terracotta"
+  ],
+  "parts": [
+   "furn_bookshelf_body"
+  ],
+  "kb": 88.6
+ },
+ {
+  "name": "furn_lamp",
+  "jp": "スタンドライト(布のシェード)",
+  "category": "家具",
+  "size_m": [
+   0.44,
+   1.06,
+   0.44
+  ],
+  "tris": 1300,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_lampshade",
+   "home_wood_dk",
+   "lamp"
+  ],
+  "parts": [
+   "furn_lamp_body"
+  ],
+  "kb": 89.5
+ },
+ {
+  "name": "furn_rug",
+  "jp": "丸いラグ",
+  "category": "家具",
+  "size_m": [
+   1.21,
+   0.02,
+   1.21
+  ],
+  "tris": 792,
+  "lod1_tris": 0,
+  "materials": [
+   "home_rug_a",
+   "home_rug_b",
+   "home_rug_c"
+  ],
+  "parts": [
+   "furn_rug_body"
+  ],
+  "kb": 39.6
+ },
+ {
+  "name": "furn_tansu",
+  "jp": "和箪笥(金具付き)",
+  "category": "家具",
+  "size_m": [
+   0.76,
+   0.72,
+   0.4
+  ],
+  "tris": 1376,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_iron",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_red"
+  ],
+  "parts": [
+   "furn_tansu_body"
+  ],
+  "kb": 108.6
+ },
+ {
+  "name": "furn_kotatsu",
+  "jp": "こたつ(こたつ布団)",
+  "category": "家具",
+  "size_m": [
+   1.29,
+   0.44,
+   1.29
+  ],
+  "tris": 1406,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_cosmos_pink",
+   "ac_leaf",
+   "ac_orange",
+   "home_basket",
+   "home_futon",
+   "home_futon_b",
+   "home_wood",
+   "home_wood_lt",
+   "white"
+  ],
+  "parts": [
+   "furn_kotatsu_body"
+  ],
+  "kb": 93.2
+ },
+ {
+  "name": "furn_radio",
+  "jp": "レトロなラジオ(台付き)",
+  "category": "家具",
+  "size_m": [
+   0.4,
+   0.83,
+   0.26
+  ],
+  "tris": 984,
+  "lod1_tris": 0,
+  "materials": [
+   "home_book_red",
+   "home_brass",
+   "home_dial",
+   "home_radio",
+   "home_radio_grill",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_radio_body"
+  ],
+  "kb": 67.5
+ },
+ {
+  "name": "furn_aquarium",
+  "jp": "小さな水槽(キャビネット付き)",
+  "category": "家具",
+  "size_m": [
+   0.64,
+   0.84,
+   0.35
+  ],
+  "tris": 1434,
+  "lod1_tris": 0,
+  "materials": [
+   "eye",
+   "granite",
+   "home_brass",
+   "home_fish_blue",
+   "home_fish_orange",
+   "home_gravel",
+   "home_iron",
+   "home_log_end",
+   "home_tank_glass",
+   "home_water",
+   "home_weed",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "lamp",
+   "rock"
+  ],
+  "parts": [
+   "furn_aquarium_body"
+  ],
+  "kb": 130.1
+ },
+ {
+  "name": "furn_log_stool",
+  "jp": "丸太のスツール",
+  "category": "屋外の家具",
+  "size_m": [
+   0.41,
+   0.38,
+   0.36
+  ],
+  "tris": 562,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_petal_white",
+   "ac_tulip_red",
+   "bark",
+   "home_log_end",
+   "home_log_ring",
+   "white"
+  ],
+  "parts": [
+   "furn_log_stool_body"
+  ],
+  "kb": 35.6
+ },
+ {
+  "name": "furn_log_bench",
+  "jp": "丸太のベンチ",
+  "category": "屋外の家具",
+  "size_m": [
+   1.1,
+   0.37,
+   0.3
+  ],
+  "tris": 396,
+  "lod1_tris": 0,
+  "materials": [
+   "bark",
+   "home_log_end",
+   "home_log_ring"
+  ],
+  "parts": [
+   "furn_log_bench_body"
+  ],
+  "kb": 22.3
+ },
+ {
+  "name": "furn_fence_bamboo",
+  "jp": "竹垣(1m・四つ目垣)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.07,
+   0.82,
+   0.1
+  ],
+  "tris": 1280,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bamboo",
+   "ac_bamboo_node",
+   "home_rope_dk"
+  ],
+  "parts": [
+   "furn_fence_bamboo_body"
+  ],
+  "kb": 88.1
+ },
+ {
+  "name": "furn_fence_white",
+  "jp": "白いピケットフェンス(1m)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.08,
+   0.68,
+   0.08
+  ],
+  "tris": 452,
+  "lod1_tris": 0,
+  "materials": [
+   "home_paint_white",
+   "steel_dark"
+  ],
+  "parts": [
+   "furn_fence_white_body"
+  ],
+  "kb": 41.7
+ },
+ {
+  "name": "furn_workbench",
+  "jp": "DIY作業台(道具付き)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.0,
+   0.61,
+   0.69
+  ],
+  "tris": 674,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_blade",
+   "ac_dig_mid",
+   "ac_grip_red",
+   "ac_pansy_yellow",
+   "ac_ring_metal",
+   "ac_wood_handle",
+   "home_mail_blue",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "metal",
+   "steel_dark"
+  ],
+  "parts": [
+   "furn_workbench_body"
+  ],
+  "kb": 58.9
+ },
+ {
+  "name": "furn_mailbox",
+  "jp": "ポスト型の郵便受け(ポール付き)",
+  "category": "屋外の家具",
+  "size_m": [
+   0.22,
+   0.89,
+   0.34
+  ],
+  "tris": 500,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bobber_red",
+   "ac_ring_metal",
+   "home_brass",
+   "home_mail_blue",
+   "home_paint_white",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_mailbox_body"
+  ],
+  "kb": 40.3
+ },
+ {
+  "name": "furn_pumpkin",
+  "jp": "かぼちゃのランタン",
+  "category": "屋外の家具",
+  "size_m": [
+   0.44,
+   0.35,
+   0.44
+  ],
+  "tris": 872,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_leaf",
+   "ac_stem",
+   "home_pumpkin",
+   "home_pumpkin_flesh",
+   "home_pumpkin_glow",
+   "home_stem"
+  ],
+  "parts": [
+   "furn_pumpkin_body"
+  ],
+  "kb": 57.7
+ },
+ {
+  "name": "furn_snowman",
+  "jp": "ゆきだるま",
+  "category": "屋外の家具",
+  "size_m": [
+   0.61,
+   0.59,
+   0.37
+  ],
+  "tris": 1394,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_orange",
+   "ac_ring_metal",
+   "ac_scarf_red",
+   "bark",
+   "cheek",
+   "eye",
+   "home_coal",
+   "home_snow",
+   "white"
+  ],
+  "parts": [
+   "furn_snowman_body"
+  ],
+  "kb": 111.8
+ },
+ {
+  "name": "tool_axe",
+  "jp": "おの",
+  "category": "道具",
+  "size_m": [
+   0.05,
+   0.86,
+   0.21
+  ],
+  "tris": 208,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_blade",
+   "ac_grip_red",
+   "ac_wood_handle",
+   "home_axe_edge",
+   "steel_dark"
+  ],
+  "parts": [
+   "tool_axe_body"
+  ],
+  "kb": 19.5
+ },
+ {
+  "name": "item_daikon",
+  "jp": "大根の束(わらで結んだ3本)",
+  "category": "作物",
+  "size_m": [
+   0.41,
+   0.18,
+   0.18
+  ],
+  "tris": 860,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_leaf",
+   "home_daikon",
+   "home_daikon_neck",
+   "straw"
+  ],
+  "parts": [
+   "item_daikon_body"
+  ],
+  "kb": 66.6
+ },
+ {
+  "name": "sapling",
+  "jp": "若木(苗木)",
+  "category": "自然",
+  "size_m": [
+   0.33,
+   0.57,
+   0.34
+  ],
+  "tris": 516,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bamboo",
+   "ac_dig_dark",
+   "ac_dig_mid",
+   "ac_leaf",
+   "bark",
+   "granite",
+   "leaf_light",
+   "straw"
+  ],
+  "parts": [
+   "sapling_body"
+  ],
+  "kb": 49.3
+ },
+ {
+  "name": "hat_straw",
+  "jp": "麦わら帽子(なぎ用)",
+  "category": "帽子",
+  "size_m": [
+   0.57,
+   0.14,
+   0.5
+  ],
+  "tris": 1000,
+  "lod1_tris": 0,
+  "materials": [
+   "home_hat_band",
+   "home_straw_hat"
+  ],
+  "parts": [
+   "hat_straw_body"
+  ],
+  "kb": 59.8
+ },
+ {
+  "name": "hat_cap",
+  "jp": "キャップ帽(なぎ用)",
+  "category": "帽子",
+  "size_m": [
+   0.41,
+   0.16,
+   0.5
+  ],
+  "tris": 386,
+  "lod1_tris": 0,
+  "materials": [
+   "home_cap",
+   "home_cap_front"
+  ],
+  "parts": [
+   "hat_cap_body"
+  ],
+  "kb": 25.2
+ },
+ {
+  "name": "hat_beanie",
+  "jp": "ニット帽(なぎ用)",
+  "category": "帽子",
+  "size_m": [
+   0.47,
+   0.3,
+   0.41
+  ],
+  "tris": 894,
+  "lod1_tris": 0,
+  "materials": [
+   "home_beanie",
+   "home_beanie_rib",
+   "home_pompom"
+  ],
+  "parts": [
+   "hat_beanie_body"
+  ],
+  "kb": 56.8
+ },
+ {
+  "name": "room_shell",
+  "jp": "自分の家の部屋(床・3面の壁・窓)",
+  "category": "部屋",
+  "size_m": [
+   6.42,
+   2.76,
+   6.25
+  ],
+  "tris": 1198,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_curtain",
+   "home_cushion",
+   "home_floor_a",
+   "home_floor_b",
+   "home_floor_base",
+   "home_floor_c",
+   "home_trim",
+   "home_wainscot",
+   "home_wainscot_b",
+   "home_wall",
+   "home_wall_out",
+   "home_wall_stripe",
+   "home_window_sky",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "room_shell_floor",
+   "room_shell_wall_back",
+   "room_shell_wall_l",
+   "room_shell_wall_r"
+  ],
+  "kb": 98.6
+ },
+ {
+  "name": "museum_pedestal",
+  "jp": "博物館の展示台(ガラスケース)",
+  "category": "博物館",
+  "size_m": [
+   0.5,
+   0.8,
+   0.5
+  ],
+  "tris": 820,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_case_glass",
+   "home_marble",
+   "home_marble_dk",
+   "home_velvet"
+  ],
+  "parts": [
+   "museum_pedestal_body",
+   "museum_pedestal_glass"
+  ],
+  "kb": 59.0
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",

@@ -1,0 +1,324 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 2304,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 1250,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 1250,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 696,
+      "normalized": false,
+      "byteOffset": 4608,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 408,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 408,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 1250,
+      "max": [
+        32767,
+        8164,
+        28671
+      ],
+      "min": [
+        -32767,
+        -8164,
+        -28671
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 408,
+      "max": [
+        18394,
+        1724,
+        16097
+      ],
+      "min": [
+        -18394,
+        -2760,
+        -16097
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 6000,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 1069,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 3000
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 6000,
+      "byteLength": 5000,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1072,
+          "byteLength": 2140,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 1250
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 11000,
+      "byteLength": 10000,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 3212,
+          "byteLength": 7703,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1250
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 21000,
+      "byteLength": 1632,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 10916,
+          "byteLength": 560,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 408
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 22632,
+      "byteLength": 3264,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 11476,
+          "byteLength": 2523,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 408
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 25896,
+      "byteLength": 10000,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 14000,
+          "byteLength": 6384,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 1250
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 35896,
+      "byteLength": 3264,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 20384,
+          "byteLength": 2021,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 408
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "hat_straw.glb.bin",
+      "byteLength": 22408
+    },
+    {
+      "byteLength": 39160,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "home_straw_hat",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.8600000143051147,
+          0.6200000047683716,
+          0.27000001072883606,
+          1
+        ],
+        "roughnessFactor": 0.8999999761581421,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "home_hat_band",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.75,
+          0.11999999731779099,
+          0.11999999731779099,
+          1
+        ],
+        "roughnessFactor": 0.800000011920929,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "hat_straw_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        },
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "hat_straw_body",
+      "translation": [
+        0,
+        0.07100000232458115,
+        0
+      ],
+      "scale": [
+        0.2849999964237213,
+        0.2849999964237213,
+        0.2849999964237213
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "hat_straw",
+      "children": [
+        0
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}

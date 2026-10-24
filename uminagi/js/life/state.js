@@ -17,9 +17,10 @@ ITEMS.fossil_unknown = { id: 'fossil_unknown', name: 'なぞの化石', kind: 'f
 ITEMS.branch = { id: 'branch', name: '木の枝', kind: 'misc', price: 5 };
 ITEMS.letter = { id: 'letter', name: '瓶の手紙', kind: 'misc', price: 10 };
 export const ICON = { fish: '🐟', bug: '🦋', fossil: '🦴', 'fossil?': '🪨', shell: '🐚', fruit: '🍊', tool: '🧰', misc: '🌿' };
-export const TOOL_ICON = { net: '🥅', rod: '🎣', shovel: '⛏️' };
-export const icon = (id) => (ITEMS[id]?.kind === 'tool' ? TOOL_ICON[id] : ICON[ITEMS[id]?.kind]) || '❔';
-export const donatable = (id) => ['fish', 'bug', 'fossil'].includes(ITEMS[id]?.kind);
+export const TOOL_ICON = { net: '🥅', rod: '🎣', shovel: '⛏️', axe: '🪓' };
+export const ICON_BY_ID = {};   // per-item icons (items2.js)
+export const icon = (id) => ICON_BY_ID[id] || (ITEMS[id]?.kind === 'tool' ? TOOL_ICON[id] : ICON[ITEMS[id]?.kind]) || '❔';
+export const donatable = (id) => ['fish', 'bug', 'fossil', 'sea'].includes(ITEMS[id]?.kind);
 
 // the game day starts at 5:00, like the villagers' morning
 export function dayKey(d = new Date()) { const t = new Date(d.getTime() - 5 * 3600e3); return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; }
@@ -42,6 +43,8 @@ export class LifeState {
     this.lastCatch = s.lastCatch || null;
     this.town = s.town || { built: [], orders: {} };   // districts (js/life/progress.js)
     this.owlCalled = s.owlCalled || null;               // the day the raccoon sent for the owl
+    this.mat = s.mat || {};                             // DIY materials: id -> count (not in the pocket)
+    this.ext = s.ext || {};                             // second-wave systems: home, recipes, durability, plants, mail, market...
     this.checkDay();
     this.finished = this.finishOrders();   // districts completed overnight (announced by the raccoon)
   }
@@ -61,7 +64,7 @@ export class LifeState {
   save() {
     try {
       localStorage.setItem(KEY, JSON.stringify({ money: this.money, pocket: this.pocket, tool: this.tool, caught: this.caught, donated: this.donated, friend: this.friend,
-        met: this.met, intro: this.intro, daily: this.daily, stats: this.stats, lastCatch: this.lastCatch, town: this.town, owlCalled: this.owlCalled }));
+        met: this.met, intro: this.intro, daily: this.daily, stats: this.stats, lastCatch: this.lastCatch, town: this.town, owlCalled: this.owlCalled, mat: this.mat, ext: this.ext }));
     } catch { /* private mode */ }
   }
   full() { return this.pocket.length >= POCKET; }
@@ -74,5 +77,8 @@ export class LifeState {
   }
   remove(i) { const id = this.pocket.splice(i, 1)[0]; if (id === this.tool && !this.pocket.includes(id)) this.tool = null; this.save(); return id; }
   has(id) { return this.pocket.includes(id); }
-  tools() { return TOOLS.map((t) => t.id).filter((id) => this.has(id)); }
+  tools() { return [...TOOLS.map((t) => t.id), 'axe'].filter((id) => this.has(id)); }
+  addMat(id, n = 1) { this.mat[id] = (this.mat[id] || 0) + n; this.save(); }
+  hasMats(req) { return Object.entries(req).every(([k, n]) => (this.mat[k] || 0) >= n); }
+  useMats(req) { for (const [k, n] of Object.entries(req)) this.mat[k] -= n; this.save(); }
 }

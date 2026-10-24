@@ -1,0 +1,324 @@
+{
+  "asset": {
+    "generator": "glTF-Transform v4.5.1",
+    "version": "2.0"
+  },
+  "accessors": [
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 204,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 103,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 1
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 103,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 2
+    },
+    {
+      "type": "SCALAR",
+      "componentType": 5123,
+      "count": 954,
+      "normalized": false,
+      "byteOffset": 408,
+      "bufferView": 0
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5120,
+      "count": 561,
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 3
+    },
+    {
+      "type": "VEC2",
+      "componentType": 5126,
+      "count": 561,
+      "normalized": false,
+      "byteOffset": 0,
+      "bufferView": 4
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 103,
+      "max": [
+        26955,
+        9137,
+        15201
+      ],
+      "min": [
+        -26955,
+        -7956,
+        -31967
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 5
+    },
+    {
+      "type": "VEC3",
+      "componentType": 5122,
+      "count": 561,
+      "max": [
+        26955,
+        10585,
+        32767
+      ],
+      "min": [
+        -26955,
+        -10585,
+        -32767
+      ],
+      "normalized": true,
+      "byteOffset": 0,
+      "bufferView": 6
+    }
+  ],
+  "bufferViews": [
+    {
+      "buffer": 1,
+      "byteOffset": 0,
+      "byteLength": 2316,
+      "target": 34963,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 0,
+          "byteLength": 405,
+          "mode": "TRIANGLES",
+          "byteStride": 2,
+          "count": 1158
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2316,
+      "byteLength": 412,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 408,
+          "byteLength": 209,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 103
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 2728,
+      "byteLength": 824,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 620,
+          "byteLength": 704,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 103
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 3552,
+      "byteLength": 2244,
+      "target": 34962,
+      "byteStride": 4,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 1324,
+          "byteLength": 924,
+          "mode": "ATTRIBUTES",
+          "filter": "OCTAHEDRAL",
+          "byteStride": 4,
+          "count": 561
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 5796,
+      "byteLength": 4488,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 2248,
+          "byteLength": 3537,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 561
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 10284,
+      "byteLength": 824,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 5788,
+          "byteLength": 586,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 103
+        }
+      }
+    },
+    {
+      "buffer": 1,
+      "byteOffset": 11108,
+      "byteLength": 4488,
+      "target": 34962,
+      "byteStride": 8,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "buffer": 0,
+          "byteOffset": 6376,
+          "byteLength": 3101,
+          "mode": "ATTRIBUTES",
+          "byteStride": 8,
+          "count": 561
+        }
+      }
+    }
+  ],
+  "buffers": [
+    {
+      "uri": "hat_cap.glb.bin",
+      "byteLength": 9480
+    },
+    {
+      "byteLength": 15596,
+      "extensions": {
+        "EXT_meshopt_compression": {
+          "fallback": true
+        }
+      }
+    }
+  ],
+  "materials": [
+    {
+      "name": "home_cap_front",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.949999988079071,
+          0.9399999976158142,
+          0.8999999761581421,
+          1
+        ],
+        "roughnessFactor": 0.8500000238418579,
+        "metallicFactor": 0
+      }
+    },
+    {
+      "name": "home_cap",
+      "doubleSided": true,
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.11999999731779099,
+          0.41999998688697815,
+          0.75,
+          1
+        ],
+        "roughnessFactor": 0.8500000238418579,
+        "metallicFactor": 0
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "hat_cap_body",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "TEXCOORD_0": 2,
+            "POSITION": 6
+          },
+          "mode": 4,
+          "material": 0,
+          "indices": 0
+        },
+        {
+          "attributes": {
+            "NORMAL": 4,
+            "TEXCOORD_0": 5,
+            "POSITION": 7
+          },
+          "mode": 4,
+          "material": 1,
+          "indices": 3
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "name": "hat_cap_body",
+      "translation": [
+        0,
+        0.0605000015348196,
+        0.06375632435083389
+      ],
+      "scale": [
+        0.24920617789030075,
+        0.24920617789030075,
+        0.24920617789030075
+      ],
+      "mesh": 0
+    },
+    {
+      "name": "hat_cap",
+      "children": [
+        0
+      ]
+    }
+  ],
+  "scenes": [
+    {
+      "name": "Scene",
+      "nodes": [
+        1
+      ]
+    }
+  ],
+  "scene": 0,
+  "extensionsUsed": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ],
+  "extensionsRequired": [
+    "EXT_meshopt_compression",
+    "KHR_mesh_quantization"
+  ]
+}
