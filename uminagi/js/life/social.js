@@ -43,7 +43,7 @@ export class Social {
   // hand over the requested thing (from the pocket, or wood from the material bag)
   async deliver(v) {
     const st = this.st, q = st.ext.req, P = v.def.personality, R = REQUESTS[P] || REQUESTS.futsuu;
-    const vars = (s, x = {}) => s.replace(/\{(\w+)\}/g, (m, k) => ({ name: 'なぎ', phrase: v.def.catchphrase, ...x })[k] ?? m);
+    const vars = (s, x = {}) => s.replace(/\{(\w+)\}/g, (m, k) => ({ name: 'なぎ', phrase: v.def.catchphrase, item: q.name, ...x })[k] ?? m);
     if (q.kind === 'wood') {
       if ((st.mat.wood || 0) < 1) { await this.life.ui.say(v.speaker, vars(pick(R.wrong))); return; }
       st.mat.wood--;

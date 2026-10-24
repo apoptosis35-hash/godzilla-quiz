@@ -58,7 +58,9 @@ export class LifeUI {
     // one talk window at a time: a second say() (a catch landing while a chat opens) waits for the first one
     while (this.queue) await new Promise((r) => (this.waiters ||= []).push(r));
     this.open++; document.body.classList.add('talking');
-    lines = [].concat(lines).flatMap((l) => String(l).split('\f'));
+    // a placeholder a caller forgot to fill never reaches the screen
+    const LEFT = { name: 'なぎ', item: 'それ', other: 'あの子', price: 'その', phrase: '' };
+    lines = [].concat(lines).flatMap((l) => String(l).replace(/[、,]?\s?\{(\w+)\}/g, (m, k) => { console.warn('unfilled placeholder', k, l); return k === 'phrase' ? '' : m.replace(/\{\w+\}/, LEFT[k] ?? ''); }).split('\f'));
     const plate = $('tplate');
     plate.hidden = !speaker; if (speaker) { plate.textContent = speaker.name; plate.style.background = speaker.color || '#e8b23a'; }
     $('talk').hidden = false; $('tchoices').innerHTML = '';

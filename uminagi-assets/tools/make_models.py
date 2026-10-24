@@ -6096,7 +6096,9 @@ def traffic_light():
 # --- ac begin (cozy animal villagers, held tools, garden props; original designs)
 PALETTE.update({
     # villagers
-    'ac_cat_cream': P((0.86, 0.74, 0.55), 0.85), 'ac_cat_grey': P((0.3, 0.29, 0.3), 0.85), 'ac_cat_white': P((0.88, 0.87, 0.84), 0.85),
+    'ac_cat_cream': P((0.86, 0.74, 0.55), 0.85), 'ac_cat_grey': P((0.3, 0.29, 0.3), 0.85),
+    'ac_cat_ginger': P((0.74, 0.36, 0.12), 0.85), 'ac_cat_ginger_dk': P((0.4, 0.17, 0.05), 0.85),
+    'ac_petal_yellow': P((0.96, 0.8, 0.22), 0.7), 'ac_flower_mid': P((0.42, 0.24, 0.1), 0.8), 'ac_sandal': P((0.55, 0.36, 0.2), 0.75), 'ac_cat_white': P((0.88, 0.87, 0.84), 0.85),
     'ac_ear_pink': P((0.85, 0.42, 0.45), 0.8), 'ac_sundress': P((0.85, 0.62, 0.07), 0.85), 'ac_bow': P((0.78, 0.08, 0.18), 0.6),
     'ac_rabbit_white': P((0.85, 0.84, 0.82), 0.9), 'ac_overall_pink': P((0.82, 0.3, 0.45), 0.85), 'ac_overall_dk': P((0.55, 0.14, 0.26), 0.85),
     'ac_tee_blue': P((0.3, 0.55, 0.82), 0.85), 'ac_button': P((0.85, 0.6, 0.15), 0.35, 0.5),
@@ -6223,7 +6225,7 @@ _AC_TORSO = [(0.0, 0.17), (0.13, 0.175), (0.158, 0.23), (0.162, 0.31), (0.148, 0
 # ---- villagers (front -Y, ~1 m, head ~45%): parts <n>_body (hips) <n>_head (neck) <n>_arm_l/r (shoulders) <n>_leg_l/r (hips)
 @model('vil_cat', 'ねこの住民(サンドレス)', '人物', lod=False)
 def vil_cat():
-    n, F, G = 'vil_cat', 'ac_cat_cream', 'ac_cat_grey'
+    n, F, G = 'vil_cat', 'ac_cat_ginger', 'ac_cat_ginger_dk'   # a ginger tabby
     part(n + '_body', (0, 0, 0.3))
     _pv_lathe(F, _AC_TORSO, seg=14, sy=0.88)
     dress = [(0.0, 0.15), (0.235, 0.15), (0.24, 0.17), (0.205, 0.26), (0.16, 0.36), (0.14, 0.43), (0.13, 0.49), (0.0, 0.49)]
@@ -6234,7 +6236,7 @@ def vil_cat():
         _pv_tube('ac_sundress', [_ac_on(dress, 0.48, sx * 0.55, 0.9), (sx * 0.085, -0.03, 0.555), (sx * 0.085, 0.05, 0.55), _ac_on(dress, 0.48, sx * (math.pi - 0.55), 0.9)], 0.013, 5)
     for k, (a, z) in enumerate(((-0.35, 0.22), (0.25, 0.27), (0.6, 0.2), (-0.75, 0.3), (0.0, 0.33), (-0.15, 0.19), (0.95, 0.31))):   # little white flower dots
         ico('white', 0.013, _ac_on(dress, z, a, 0.9, 0.002), (1, 0.5, 1), 1)
-    ico('ac_bow', 0.024, _ac_on(dress, 0.44, 0.0, 0.9, 0.006), (1, 0.6, 1), 2)                            # button at the bodice
+    ico('white', 0.024, _ac_on(dress, 0.44, 0.0, 0.9, 0.006), (1, 0.6, 1), 2)                              # button at the bodice
     _pv_tube(F, [(0, 0.12, 0.27), (0.02, 0.24, 0.24), (0.08, 0.31, 0.31), (0.11, 0.31, 0.45), (0.08, 0.27, 0.55)], [0.034, 0.034, 0.033, 0.031, 0.028], 8)   # tail
     ico(G, 0.032, (0.075, 0.265, 0.56), (1, 1, 1.3), 2)
     part(n + '_head', (0, 0, 0.55))
@@ -6249,12 +6251,12 @@ def vil_cat():
     _ac_blush(_AC_HC, _AC_HR, 0.16, -0.06)
     _ac_whiskers(_AC_HC, _AC_HR, 0.09, -0.07, 0.03)
     for sx in (-1, 1): _ac_ear(G, 'ac_ear_pink', (sx * 0.155, 0.0, 0.92), 0.085, 0.15, ry=sx * 0.35, rx=0.05)
-    with xf((0.1, -0.12, 0.97), ry=0.35, rx=-0.3):   # small ribbon bow by the right ear
-        for sx in (-1, 1): ico('ac_bow', 0.04, (sx * 0.038, 0, 0), (1, 0.45, 0.75), 2)
-        ico('ac_bow', 0.018, (0, -0.006, 0), (1, 0.8, 1), 2)
+    with xf((0.1, -0.12, 0.97), ry=0.35, rx=-0.3):   # a little sunflower hairpin by the right ear
+        for k in range(6): a = k * math.pi / 3; ico('ac_petal_yellow', 0.024, (math.cos(a) * 0.03, 0, math.sin(a) * 0.03), (1, 0.35, 0.55), 2)
+        ico('ac_flower_mid', 0.02, (0, -0.008, 0), (1, 0.6, 1), 2)
     for sx, sd in ((-1, 'l'), (1, 'r')):
         _ac_arm(n, sd, sx, F)
-        _ac_leg(n, sd, sx, F, 'ac_bow')
+        _ac_leg(n, sd, sx, F, 'ac_sandal')
     part(None)
 
 @model('vil_rabbit', 'うさぎの住民(ピンクのオーバーオール)', '人物', lod=False)
