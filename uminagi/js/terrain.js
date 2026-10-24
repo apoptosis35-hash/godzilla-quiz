@@ -441,28 +441,38 @@ export class Ground {
       }
     }
   }
+  // height of the coarse 25 m ring mesh at (x, z), interpolated over the same triangles it is drawn with
+  // (things placed out there must sit on what is drawn, not on the exact natural height)
+  farAt(x, z) {
+    const S = 25, fi = (x + 1500) / S, fj = (z + 1500) / S, i = Math.floor(fi), j = Math.floor(fj), fx = fi - i, fz = fj - j;
+    const v = (a, b) => this.vertexY(-1500 + a * S, -1500 + b * S);
+    if (fx + fz < 1) { const a = v(i, j); return a + (v(i + 1, j) - a) * fx + (v(i, j + 1) - a) * fz; }
+    const d = v(i + 1, j + 1); return d + (v(i, j + 1) - d) * (1 - fx) + (v(i + 1, j) - d) * (1 - fz);
+  }
+  // natural terrain height at a mesh vertex
+  vertexY(x, z) {
+    const k = this.idx(x, z);
+    let y = k >= 0 ? this.natAt(x, z) : naturalRaw(x, z);
+    // roughen steep natural slopes (cliffs) away from the town
+    const far = k < 0 ? 1 : smooth(4, 12, this.pdist[k]);
+    if (far > 0 && y > 0.5) {
+      const e = 1.5, sl = Math.hypot((k >= 0 ? this.natAt(x + e, z) : naturalRaw(x + e, z)) - y, (k >= 0 ? this.natAt(x, z + e) : naturalRaw(x, z + e)) - y) / e;
+      y += (fbm(x * 0.21 + 7, z * 0.21, 3) - 0.5) * 5 * smooth(0.5, 1.4, sl) * far;
+    }
+    if (k >= 0 && this.plat[k] >= 0) {  // under platforms: below the lowest platform nearby (never bulges over a lower terrace)
+      let lo = this.ph[k];
+      for (let dj = -5; dj <= 5; dj += 1) for (let di = -5; di <= 5; di += 1) {
+        const q = k + dj * G.nx + di;
+        if (q >= 0 && q < this.ph.length && this.plat[q] >= 0) lo = Math.min(lo, this.ph[q]);
+      }
+      y = Math.min(y, lo - 0.25);
+    }
+    return y;
+  }
   // natural terrain: a 2 m mesh over the town box (with a skirt) and a coarse 25 m ring out to 1.5 km
   terrainMesh(mat) {
     const group = new THREE.Group(); group.name = 'terrain';
-    const vertexY = (x, z) => {
-      const k = this.idx(x, z);
-      let y = k >= 0 ? this.natAt(x, z) : naturalRaw(x, z);
-      // roughen steep natural slopes (cliffs) away from the town
-      const far = k < 0 ? 1 : smooth(4, 12, this.pdist[k]);
-      if (far > 0 && y > 0.5) {
-        const e = 1.5, sl = Math.hypot((k >= 0 ? this.natAt(x + e, z) : naturalRaw(x + e, z)) - y, (k >= 0 ? this.natAt(x, z + e) : naturalRaw(x, z + e)) - y) / e;
-        y += (fbm(x * 0.21 + 7, z * 0.21, 3) - 0.5) * 5 * smooth(0.5, 1.4, sl) * far;
-      }
-      if (k >= 0 && this.plat[k] >= 0) {  // under platforms: below the lowest platform nearby (never bulges over a lower terrace)
-        let lo = this.ph[k];
-        for (let dj = -5; dj <= 5; dj += 1) for (let di = -5; di <= 5; di += 1) {
-          const q = k + dj * G.nx + di;
-          if (q >= 0 && q < this.ph.length && this.plat[q] >= 0) lo = Math.min(lo, this.ph[q]);
-        }
-        y = Math.min(y, lo - 0.25);
-      }
-      return y;
-    };
+    const vertexY = (x, z) => this.vertexY(x, z);
     const grid = (xs, zs, skip, skirt) => {
       const W = xs.length, H = zs.length, pos = [], idx = [];
       for (let j = 0; j < H; j++) for (let i = 0; i < W; i++) pos.push(xs[i], vertexY(xs[i], zs[j]), zs[j]);

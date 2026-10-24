@@ -983,9 +983,9 @@ export class Town {
     for (const [, jx, jz] of cand) {
       if (n >= dens) break;
       const inBox = jx > G.x0 && jx < G.x1 && jz > G.z0 && jz < G.z1;
-      const h = inBox ? g.natAt(jx, jz) : naturalRaw(jx, jz);
+      const h = inBox ? g.natAt(jx, jz) : g.farAt(jx, jz);   // outside the town box: on the coarse ring mesh as drawn
       if (h < 1.8) continue;
-      const h2 = inBox ? g.natAt(jx + 2, jz) : naturalRaw(jx + 2, jz), h3 = inBox ? g.natAt(jx, jz + 2) : naturalRaw(jx, jz + 2);
+      const h2 = inBox ? g.natAt(jx + 2, jz) : g.farAt(jx + 2, jz), h3 = inBox ? g.natAt(jx, jz + 2) : g.farAt(jx, jz + 2);
       if (Math.hypot(h2 - h, h3 - h) / 2 > 0.9) continue;
       const f = fbm(jx * 0.012 + 3, jz * 0.012);
       if (f < 0.3) continue;

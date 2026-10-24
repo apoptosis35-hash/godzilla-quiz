@@ -85,7 +85,7 @@ class App {
     this.scene = new THREE.Scene();
     this.camera = new THREE.PerspectiveCamera(58, 1, 0.25, 6000);
     if (Q.post) await this.setupPost();
-    this.resize(); addEventListener('resize', () => this.resize());
+    this.resize(); addEventListener('resize', () => this.resize()); window.visualViewport?.addEventListener('resize', () => this.resize());
     const prog = (k, msg) => { $('loadbar').style.width = (k * 100).toFixed(0) + '%'; if (msg) $('loadmsg').textContent = msg; };
     prog(0.02, '地形をつくっています…');
     await new Promise((r) => setTimeout(r, 30));
@@ -174,7 +174,7 @@ class App {
     this.smaa = new SMAAPass(1, 1); c.addPass(this.smaa);
   }
   resize() {
-    const w = innerWidth, h = innerHeight;
+    const cv = this.renderer.domElement, w = cv.clientWidth || innerWidth, h = cv.clientHeight || innerHeight;   // the canvas's CSS size (100dvh)
     this.renderer.setSize(w, h, false); this.camera.aspect = w / h;
     if (this.composer) { this.composer.setPixelRatio(this.renderer.getPixelRatio()); this.composer.setSize(w, h); }
     this.camera.fov = w < h ? 70 : 58; this.camera.updateProjectionMatrix();
