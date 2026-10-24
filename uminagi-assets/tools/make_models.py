@@ -7422,6 +7422,1082 @@ def museum_pedestal():
     part(None)
 # --- home end
 
+# --- home2 begin (second furniture set: Japanese room, seaside, cafe, rooms, garden, art; original designs)
+# Same conventions as the home block: sized for the ~0.65 m villagers, origin at the floor centre, front -Y (glTF +Z),
+# one body part, flat home_* colours; light sources glow with home_glow_* materials. furn_easel and art_frame carry a
+# picture surface in material `home_canvas` with authored 0..1 UVs (see _h2_canvas) for the game's painting textures.
+PALETTE.update({
+    # Japanese room
+    'home_tatami': P((0.58, 0.64, 0.3), 0.9), 'home_tatami_b': P((0.53, 0.59, 0.27), 0.9), 'home_tatami_edge': P((0.1, 0.13, 0.24), 0.8),
+    'home_zabuton': P((0.62, 0.14, 0.2), 0.95), 'home_zabuton_b': P((0.95, 0.74, 0.32), 0.9),
+    'home_washi': P((0.96, 0.93, 0.84), 0.9), 'home_glow_andon': P((1.0, 0.9, 0.66), 0.85, e=(1.0, 0.74, 0.4), es=2.2),
+    'home_lacquer': P((0.14, 0.05, 0.035), 0.3), 'home_gold_leaf': P((0.88, 0.7, 0.32), 0.4, 0.55),
+    'home_wave': P((0.1, 0.27, 0.58), 0.6), 'home_wave_lt': P((0.36, 0.6, 0.86), 0.6), 'home_foam': P((0.96, 0.95, 0.9), 0.6),
+    'home_cloud': P((0.97, 0.86, 0.58), 0.5, 0.3), 'home_sun': P((0.85, 0.16, 0.08), 0.6),
+    'home_teaware': P((0.42, 0.58, 0.52), 0.3), 'home_tea': P((0.45, 0.58, 0.18), 0.15), 'home_matcha': P((0.5, 0.68, 0.3), 0.8),
+    'home_mochi_pink': P((0.98, 0.7, 0.75), 0.8), 'home_mochi': P((0.97, 0.95, 0.9), 0.8),
+    'home_pine': P((0.1, 0.33, 0.15), 0.85), 'home_pine_lt': P((0.24, 0.48, 0.2), 0.85), 'home_glaze': P((0.14, 0.3, 0.56), 0.25),
+    'home_glaze_w': P((0.92, 0.92, 0.88), 0.3), 'home_ash': P((0.62, 0.6, 0.56), 0.95),
+    'home_glow_ember': P((1.0, 0.35, 0.08), 0.6, e=(1.0, 0.3, 0.05), es=3.0),
+    'home_scroll_mount': P((0.26, 0.4, 0.38), 0.85), 'home_inkwash': P((0.42, 0.45, 0.5), 0.8),
+    # seaside
+    'home_stripe_red': P((0.88, 0.24, 0.2), 0.85), 'home_stripe_blue': P((0.18, 0.42, 0.8), 0.85), 'home_navy': P((0.1, 0.15, 0.3), 0.45, 0.3),
+    'home_buoy_red': P((0.86, 0.15, 0.1), 0.4), 'home_glow_buoy': P((1.0, 0.92, 0.7), 0.4, e=(1.0, 0.82, 0.5), es=3.0),
+    'home_glow_shell': P((1.0, 0.72, 0.62), 0.5, e=(1.0, 0.62, 0.48), es=1.3), 'home_pearl': P((0.98, 0.96, 0.93), 0.2),
+    'home_sand': P((0.9, 0.8, 0.6), 0.9), 'home_coral': P((0.95, 0.48, 0.38), 0.7),
+    'home_crab': P((0.92, 0.22, 0.1), 0.9), 'home_crab_belly': P((0.99, 0.84, 0.66), 0.9),
+    'home_glow_lighthouse': P((1.0, 0.95, 0.75), 0.2, e=(1.0, 0.9, 0.6), es=4.0),
+    # cafe
+    'home_mint': P((0.56, 0.82, 0.74), 0.4), 'home_cream': P((0.98, 0.94, 0.84), 0.6), 'home_cake_pink': P((0.98, 0.64, 0.72), 0.7),
+    'home_sponge': P((0.98, 0.8, 0.48), 0.85), 'home_berry': P((0.85, 0.07, 0.12), 0.35), 'home_croissant': P((0.86, 0.55, 0.2), 0.6),
+    'home_coffee': P((0.2, 0.1, 0.05), 0.2), 'home_macaron_a': P((0.68, 0.86, 0.62), 0.7), 'home_macaron_b': P((0.78, 0.66, 0.92), 0.7),
+    'home_monstera': P((0.05, 0.3, 0.1), 0.55), 'home_monstera_stem': P((0.3, 0.5, 0.2), 0.6), 'home_pot_white': P((0.92, 0.9, 0.85), 0.5),
+    'home_pot_band': P((0.55, 0.68, 0.55), 0.5),
+    # rooms
+    'home_sofa': P((0.3, 0.58, 0.6), 0.95), 'home_sofa_dk': P((0.2, 0.42, 0.45), 0.95),
+    'home_lampshade_green': P((0.16, 0.45, 0.3), 0.4), 'home_glow_desk': P((1.0, 0.94, 0.76), 0.4, e=(1.0, 0.84, 0.55), es=3.0),
+    'home_tv': P((0.82, 0.3, 0.07), 0.45), 'home_glow_crt': P((0.55, 0.78, 0.82), 0.15, e=(0.55, 0.85, 0.95), es=1.0),
+    'home_piano': P((0.05, 0.045, 0.05), 0.2), 'home_key_white': P((0.96, 0.95, 0.9), 0.4),
+    'home_mirror': P((0.68, 0.86, 0.95), 0.05, 0.3), 'home_clock_face': P((0.97, 0.94, 0.85), 0.5),
+    'home_teddy': P((0.6, 0.34, 0.14), 0.95), 'home_teddy_lt': P((0.94, 0.8, 0.62), 0.95), 'home_duck': P((0.98, 0.82, 0.15), 0.4),
+    'home_guitar_top': P((0.9, 0.64, 0.33), 0.35), 'home_guitar_side': P((0.45, 0.2, 0.08), 0.35),
+    # garden
+    'home_stone': P((0.26, 0.25, 0.23), 0.9), 'home_stone_dk': P((0.17, 0.165, 0.16), 0.9), 'home_roof': P((0.16, 0.22, 0.32), 0.6),
+    'home_glow_fire': P((1.0, 0.42, 0.06), 0.6, e=(1.0, 0.36, 0.04), es=3.5), 'home_glow_fire_core': P((1.0, 0.9, 0.5), 0.5, e=(1.0, 0.85, 0.4), es=5.0),
+    'home_bird': P((0.98, 0.78, 0.2), 0.7), 'home_post_red': P((0.74, 0.05, 0.035), 0.4),
+    # art
+    'home_canvas': P((0.97, 0.96, 0.93), 0.85), 'home_canvas_edge': P((0.88, 0.85, 0.78), 0.9), 'home_gilt': P((0.86, 0.64, 0.24), 0.3, 0.85),
+})
+ATLAS['home_canvas'] = -1   # not a foliage card: listed so uv_project keeps the authored 0..1 UVs of the picture surface
+
+# ---- shared shapes (prefix _h2_)
+def _h2_uvquad(mat, quad, uvs):
+    """One quad with explicit UVs (Blender UV space)."""
+    me = bpy.data.meshes.new('uvq'); me.from_pydata([tuple(v) for v in quad], [], [(0, 1, 2, 3)]); me.update()
+    uvl = me.uv_layers.new(name='UVMap').data
+    for j, li in enumerate(me.polygons[0].loop_indices): uvl[li].uv = uvs[j]
+    o = bpy.data.objects.new('uvq', me); bpy.context.scene.collection.objects.link(o)
+    return _take(o, mat)
+
+def _h2_canvas(x0, x1, y, z0, z1, depth, edge='home_canvas_edge'):
+    """Picture surface facing -Y (glTF +Z): one quad in home_canvas whose UVs span 0..1 (u left -> right seen from the
+    front; in the exported glTF v = 0 at the bottom edge and 1 at the top, so a three.js texture with the default
+    flipY = true, e.g. a CanvasTexture, shows upright), closed by a box of `edge` behind it (welds into one solid)."""
+    f = [(x0, y, z0), (x1, y, z0), (x1, y, z1), (x0, y, z1)]
+    _h2_uvquad('home_canvas', f, [(0, 1), (1, 1), (1, 0), (0, 0)])   # Blender v is flipped on export (v_gltf = 1 - v)
+    b = [(x, y + depth, z) for x, _, z in f]
+    mesh(edge, f + b, [(4, 7, 6, 5), (0, 4, 5, 1), (1, 5, 6, 2), (2, 6, 7, 3), (3, 7, 4, 0)])
+
+def _h2_sheet(mats, fn, nu, nv, t):
+    """Thin closed sheet (cloth, shells, leaves): front at fn(u, v) for u, v in 0..1, back offset t along the surface
+    normal; mats = one material or a list cycling over the nu columns (stripes). Columns weld into one solid."""
+    mats = list(mats) if isinstance(mats, (list, tuple)) else [mats]
+    def nrm(u, v, e=1e-3):
+        du = Vector(fn(u + e, v)) - Vector(fn(u - e, v)); dv = Vector(fn(u, v + e)) - Vector(fn(u, v - e))
+        n = du.cross(dv)
+        return n.normalized() if n.length > 1e-12 else Vector((0, 0, 1))
+    F = [[Vector(fn(i / nu, j / nv)) for j in range(nv + 1)] for i in range(nu + 1)]
+    B = [[F[i][j] - nrm(i / nu, j / nv) * t for j in range(nv + 1)] for i in range(nu + 1)]
+    for i in range(nu):
+        v, f = [], []
+        def q(*p): f.append(tuple(range(len(v), len(v) + 4))); v.extend(p)
+        for j in range(nv):
+            q(F[i][j], F[i + 1][j], F[i + 1][j + 1], F[i][j + 1]); q(B[i][j + 1], B[i + 1][j + 1], B[i + 1][j], B[i][j])
+        q(F[i + 1][0], F[i][0], B[i][0], B[i + 1][0]); q(F[i][nv], F[i + 1][nv], B[i + 1][nv], B[i][nv])
+        if i == 0:
+            for j in range(nv): q(F[0][j + 1], F[0][j], B[0][j], B[0][j + 1])
+        if i == nu - 1:
+            for j in range(nv): q(F[nu][j], F[nu][j + 1], B[nu][j + 1], B[nu][j])
+        mesh(mats[i % len(mats)], v, f)
+
+def _h2_plate(mat, outline, t, top=None, z0=0.0):
+    """Planar outline [(x, y)] extruded t up from z0; the top face can take another material (welds on)."""
+    n = len(outline); v = [(x, y, z0) for x, y in outline] + [(x, y, z0 + t) for x, y in outline]
+    mesh(mat, v, [tuple(reversed(range(n)))] + [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)])
+    mesh(top or mat, v[n:], [tuple(range(n))])
+
+def _h2_lathe_bands(prof, mats, loc=(0, 0, 0), seg=16, caps=(None, None), f=None):
+    """Lathe whose profile intervals take mats[i] (painted stripes); caps = materials of the end discs (None = open,
+    e.g. when _hm_rings closes it). The bands weld into one closed surface."""
+    i = 0
+    while i < len(prof) - 1:
+        j = i
+        while j + 1 < len(prof) - 1 and mats[j + 1] == mats[i]: j += 1
+        _pv_lathe(mats[i], prof[i:j + 2], loc, seg=seg, f=f, cap=False)
+        i = j + 1
+    if caps[0] and prof[0][0] > 1e-5: _pv_lathe(caps[0], [(0.0, prof[0][1]), prof[0]], loc, seg=seg, f=f, cap=False)
+    if caps[1] and prof[-1][0] > 1e-5: _pv_lathe(caps[1], [prof[-1], (0.0, prof[-1][1])], loc, seg=seg, f=f, cap=False)
+
+def _h2_torus_arc(mat, R, r, a0, a1, seg=4, rseg=8):
+    """Open piece of a torus (XY plane) from angle a0 to a1; neighbouring arcs weld into a striped ring."""
+    v, f = [], []
+    for i in range(seg + 1):
+        a = a0 + (a1 - a0) * i / seg
+        for j in range(rseg):
+            b = j / rseg * math.tau
+            v.append(((R + r * math.cos(b)) * math.cos(a), (R + r * math.cos(b)) * math.sin(a), r * math.sin(b)))
+    for i in range(seg):
+        for j in range(rseg):
+            j2 = (j + 1) % rseg; f.append((i * rseg + j, (i + 1) * rseg + j, (i + 1) * rseg + j2, i * rseg + j2))
+    return mesh(mat, v, f)
+
+def _h2_oval_ring(mat, a, b, r, seg=24, rseg=6):
+    """Closed tube along an ellipse in the XZ plane (half axes a along X, b along Z) centred on the origin."""
+    v, f = [], []
+    for i in range(seg):
+        t = i / seg * math.tau; p = Vector((a * math.cos(t), 0, b * math.sin(t)))
+        n = Vector((b * math.cos(t), 0, a * math.sin(t))).normalized()
+        for j in range(rseg):
+            q = j / rseg * math.tau; v.append(p + (n * math.cos(q) + Vector((0, 1, 0)) * math.sin(q)) * r)
+    for i in range(seg):
+        for j in range(rseg):
+            i2, j2 = (i + 1) % seg, (j + 1) % rseg; f.append((i * rseg + j, i2 * rseg + j, i2 * rseg + j2, i * rseg + j2))
+    return mesh(mat, v, f)
+
+def _h2_beam(mat, a, b, w, t, bev=0.006):
+    """Softly chamfered rectangular beam from a to b (w across, t thick)."""
+    a, b = Vector(a), Vector(b); d = b - a
+    o = _pv_rbox(mat, (w, t, d.length), a, bev)
+    o.rotation_euler = d.to_track_quat('Z', 'Y').to_euler()
+    return o
+
+def _h2_star(n, r1, r2, a0=math.pi / 2):
+    return [((r1 if k % 2 == 0 else r2) * math.cos(a0 + k * math.pi / n), (r1 if k % 2 == 0 else r2) * math.sin(a0 + k * math.pi / n)) for k in range(2 * n)]
+
+def _h2_stadium(u0, u1, z, h, n=4):
+    """Rounded strip outline [(u, z)] from u0 to u1 centred at height z (clouds, decals)."""
+    r = h / 2; pts = []
+    for k in range(n + 1): a = -math.pi / 2 + math.pi * k / n; pts.append((u1 - r + r * math.cos(a), z + r * math.sin(a)))
+    for k in range(n + 1): a = math.pi / 2 + math.pi * k / n; pts.append((u0 + r + r * math.cos(a), z + r * math.sin(a)))
+    return pts
+
+def _h2_heart(mat, c, s, t=0.006, rz=0.0, rx=math.pi / 2):
+    """Little flat heart (front faces -Y by default) centred on c."""
+    pts = []
+    for k in range(17):
+        a = k / 16 * math.tau
+        pts.append((s * 16 * math.sin(a) ** 3 / 17, s * (13 * math.cos(a) - 5 * math.cos(2 * a) - 2 * math.cos(3 * a) - math.cos(4 * a)) / 17))
+    with xf(c, rz=rz, rx=rx): _h2_plate(mat, pts[:-1], t, z0=-t / 2)
+
+# ---- Japanese room
+@model('furn_zabuton', '座布団(房付き)', '家具', lod=False)
+def furn_zabuton():
+    Z, G = 'home_zabuton', 'home_zabuton_b'
+    _st_rbox(Z, 0.5, 0.5, [(0.03, 0.05, 0.0), (0.0, 0.07, 0.025), (0.0, 0.07, 0.045), (0.03, 0.07, 0.072), (0.09, 0.05, 0.086)], 3)
+    ico(G, 0.02, (0, 0, 0.083), (1, 1, 0.5), 2)                                                                 # centre tuft
+    for k in range(4):   # cross stitches from the tuft
+        a = math.pi / 4 + k * math.pi / 2
+        rod(G, (0.018 * math.cos(a), 0.018 * math.sin(a), 0.087), (0.04 * math.cos(a), 0.04 * math.sin(a), 0.086), 0.004, 4)
+    for sx in (-1, 1):
+        for sy in (-1, 1):   # corner tassels
+            ico(G, 0.014, (sx * 0.232, sy * 0.232, 0.042), sub=2)
+            _pv_lathe(G, [(0.006, 0.0), (0.016, -0.03), (0.012, -0.036), (0.0, -0.036)], (sx * 0.25, sy * 0.25, 0.04), seg=6,
+                      f=lambda x, y, z, sx=sx, sy=sy: (x - sx * z * 0.6, y - sy * z * 0.6, z))
+
+@model('furn_byobu', '波の屏風(四曲・金箔)', '家具', lod=False)
+def furn_byobu():
+    n, w, H, ang = 4, 0.34, 0.86, math.radians(28)
+    dx, dy = w * math.cos(ang), w * math.sin(ang)
+    Fm = 'home_lacquer'
+    near = lambda g: 0.27 + 0.045 * math.sin(g / 0.42 * math.tau + 0.6) + 0.018 * math.sin(g / 0.17 * math.tau)
+    far = lambda g: 0.42 + 0.04 * math.sin(g / 0.55 * math.tau + 2.2)
+    clouds = {0: [(0.05, 0.24, 0.64, 0.028)], 1: [(0.09, 0.3, 0.72, 0.03), (0.03, 0.14, 0.6, 0.022)], 2: [(0.03, 0.12, 0.56, 0.024)],
+              3: [(0.05, 0.25, 0.58, 0.028), (0.13, 0.3, 0.7, 0.024)]}
+    for i in range(n):
+        y0 = dy / 2 if i % 2 == 0 else -dy / 2
+        with xf((-n * dx / 2 + i * dx, y0, 0), rz=-ang if i % 2 == 0 else ang):
+            box2('home_gold_leaf', 0.012, w - 0.012, -0.008, 0.008, 0.04, H - 0.02)                            # gold-leaf board
+            for xa, xb in ((0.0, 0.024), (w - 0.024, w)): box2(Fm, xa, xb, -0.015, 0.015, 0.0, H)               # lacquer frame
+            for za, zb in ((0.03, 0.06), (H - 0.03, H)): box2(Fm, 0.024, w - 0.024, -0.015, 0.015, za, zb)
+            u0, u1 = 0.024, w - 0.024
+            us = [u0 + (u1 - u0) * k / 6 for k in range(7)]
+            prism('home_wave_lt', [(u1, 0.06), (u0, 0.06)] + [(u, far(i * w + u)) for u in us], 0.0015, loc=(0, -0.00875, 0), axis='Y')   # far swell
+            prism('home_wave', [(u1, 0.06), (u0, 0.06)] + [(u, near(i * w + u)) for u in us], 0.0015, loc=(0, -0.01025, 0), axis='Y')   # near wave
+            for k in (1, 3, 5):   # whitecaps
+                g = i * w + us[k]
+                cyl('home_foam', 0.014, 0.0015, (us[k], -0.011, near(g) + 0.004), 7, rot=(math.pi / 2, 0, 0))
+            cyl('home_foam', 0.01, 0.0015, (us[2], -0.0095, far(i * w + us[2]) + 0.002), 7, rot=(math.pi / 2, 0, 0))
+            for ua, ub, z, h in clouds[i]: prism('home_cloud', _h2_stadium(ua, ub, z, h), 0.0015, loc=(0, -0.00875, 0), axis='Y')
+            if i == 2: cyl('home_sun', 0.065, 0.0015, (0.19, -0.008, 0.7), 16, rot=(math.pi / 2, 0, 0))     # red sun
+        if i:
+            px, py = -n * dx / 2 + i * dx, y0
+            for z in (0.16, H - 0.16): cyl('home_brass', 0.011, 0.03, (px, py, z), 8)                         # hinges
+
+@model('furn_andon', '行灯(和紙のあかり)', '家具', lod=False)
+def furn_andon():
+    D, G = 'home_wood_dk', 'home_glow_andon'
+    a, z0, z1 = 0.13, 0.14, 0.6
+    box2(G, -a + 0.01, a - 0.01, -a + 0.01, a - 0.01, z0, z1)                                                   # glowing paper box
+    for sx in (-1, 1):
+        for sy in (-1, 1): box2(D, sx * a - 0.016, sx * a + 0.016, sy * a - 0.016, sy * a + 0.016, 0.0, 0.64)   # corner posts / legs
+    for z in (z0 - 0.022, z1):
+        for sy in (-1, 1): box2(D, -a, a, sy * a - 0.012, sy * a + 0.012, z, z + 0.022)
+        for sx in (-1, 1): box2(D, sx * a - 0.012, sx * a + 0.012, -a, a, z, z + 0.022)
+    for k in range(4):   # kumiko lattice in front of the paper on all four sides
+        with xf((0, 0, 0), rz=k * math.pi / 2):
+            for z in (0.29, 0.45): box2(D, -a + 0.012, a - 0.012, -a + 0.004, -a + 0.0115, z, z + 0.012)
+            box2(D, -0.006, 0.006, -a + 0.0025, -a + 0.0115, z0, z1)
+    _hm_slab('home_wood', 0.25, 0.25, 0.05, 0.068, r=0.015, bev=0.005)                                          # low shelf
+    for sx in (-1, 1): box2(D, sx * a - 0.012, sx * a + 0.012, -0.012, 0.012, z1 + 0.022, 0.72)                 # handle posts
+    box2(D, -a - 0.012, a + 0.012, -0.013, 0.013, 0.72, 0.745)                                                   # carry handle
+    for sx in (-1, 1): ico('home_brass', 0.01, (sx * (a + 0.016), 0, 0.7325), sub=1)
+
+@model('furn_chabudai', 'ちゃぶ台(お茶とだんご)', '家具', lod=False)
+def furn_chabudai():
+    W, D, T = 'home_wood', 'home_wood_dk', 'home_teaware'
+    zt = 0.3
+    _pv_lathe(W, [(0.0, zt - 0.035), (0.37, zt - 0.035), (0.385, zt - 0.024), (0.385, zt - 0.01), (0.372, zt)], seg=32, cap=False)
+    _hm_rings(zt, [(0.0, 0.3, W), (0.3, 0.312, D), (0.312, 0.372, W)], seg=32)
+    cyl(D, 0.29, 0.04, (0, 0, zt - 0.076), 24)                                                                # apron
+    for k in range(4):
+        a = math.pi / 4 + k * math.pi / 2
+        _pv_rbox(W, (0.045, 0.045, zt - 0.07), (0.22 * math.cos(a), 0.22 * math.sin(a), 0), 0.01)
+    # kyusu teapot with its side handle
+    with xf((0.1, 0.06, zt), rz=-0.5):
+        _pv_lathe(T, [(0.0, 0.0), (0.045, 0.0), (0.064, 0.03), (0.062, 0.058), (0.042, 0.078), (0.0, 0.078)], seg=14)
+        _pv_lathe(T, [(0.04, 0.076), (0.04, 0.086), (0.016, 0.094), (0.0, 0.095)], seg=14)
+        ico(T, 0.012, (0, 0, 0.099), (1, 1, 0.8), 2)
+        _pv_tube(T, [(-0.055, 0, 0.035), (-0.085, 0, 0.05), (-0.1, 0, 0.07)], [0.014, 0.01, 0.007], 6)          # spout
+        rod(T, (0, 0.055, 0.04), (0.0, 0.13, 0.055), 0.013, 6, r2=0.011)                                       # side handle
+    for (x, y) in ((-0.13, -0.12), (0.06, -0.2)):   # yunomi cups of green tea
+        _pv_lathe(T, [(0.0, zt), (0.024, zt), (0.03, zt + 0.06), (0.026, zt + 0.06), (0.023, zt + 0.048)], (x, y, 0), seg=14, cap=False)
+        _hm_rings(zt + 0.048, [(0.0, 0.023, 'home_tea')], seg=14, cx=x, cy=y)
+    _pv_lathe('white', [(0.0, zt), (0.05, zt), (0.075, zt + 0.012), (0.07, zt + 0.014), (0.045, zt + 0.006), (0.0, zt + 0.006)], (-0.17, 0.1, 0), seg=16)
+    with xf((-0.17, 0.1, zt + 0.03), rz=0.4):   # three-colour dango on a skewer
+        rod('home_wood_lt', (-0.085, 0, 0.0), (0.075, 0, 0.0), 0.003, 4)
+        for k, m in enumerate(('home_mochi_pink', 'home_mochi', 'home_matcha')):
+            _ac_ball(m, (-0.04 + k * 0.04, 0, 0.0), (0.021, 0.021, 0.02), 8, 4)
+
+@model('furn_bonsai', '松の盆栽(飾り台つき)', '家具', lod=False)
+def furn_bonsai():
+    S = 'home_wood_red'
+    _hm_slab(S, 0.46, 0.32, 0.12, 0.155, r=0.02, bev=0.008)                                                    # display stand
+    for sx in (-1, 1):
+        for sy in (-1, 1): _pv_rbox(S, (0.04, 0.04, 0.12), (sx * 0.19, sy * 0.12, 0), 0.008)
+    for sx in (-1, 1): box2(S, sx * 0.19 - 0.012, sx * 0.19 + 0.012, -0.12, 0.12, 0.03, 0.05)                    # stretchers
+    for sx in (-1, 1):
+        for sy in (-1, 1): box2('home_glaze', sx * 0.13 - 0.02, sx * 0.13 + 0.02, sy * 0.07 - 0.015, sy * 0.07 + 0.015, 0.155, 0.176)   # pot feet
+    _st_rbox('home_glaze', 0.34, 0.22, [(0.02, 0.03, 0.175), (0.0, 0.035, 0.195), (0.0, 0.035, 0.245), (-0.008, 0.04, 0.25), (-0.008, 0.04, 0.258)], 2)
+    _hm_slab('moss', 0.33, 0.2, 0.257, 0.266, r=0.03, bev=0.004)
+    ico('home_stone', 0.025, (-0.1, -0.04, 0.262), (1.3, 1, 0.7), 2, jitter=0.2, seed=2)
+    tr = [(0.03, 0.0, 0.262), (0.06, 0.0, 0.32), (0.015, 0.01, 0.38), (-0.045, 0.0, 0.43), (-0.02, -0.01, 0.5), (0.03, 0.0, 0.545)]
+    _pv_tube('bark_pine', tr, [0.034, 0.029, 0.024, 0.02, 0.016, 0.012], 7)
+    for p, q in (((0.06, 0.0, 0.33), (0.14, -0.01, 0.39)), ((-0.04, 0.0, 0.43), (-0.13, 0.02, 0.445)), ((-0.025, -0.01, 0.49), (-0.07, 0.02, 0.53))):
+        _pv_tube('bark_pine', [p, q], [0.012, 0.007], 5)
+    for k, a in enumerate((0.8, 2.6, 4.4)): _pv_tube('bark_pine', [(0.03, 0, 0.262), (0.03 + 0.05 * math.cos(a), 0.05 * math.sin(a), 0.262)], [0.016, 0.006], 5)   # nebari roots
+    for k, (c, r) in enumerate((((0.04, 0.0, 0.57), 0.085), ((-0.14, 0.02, 0.455), 0.08), ((0.15, -0.01, 0.405), 0.075), ((-0.075, 0.025, 0.54), 0.06))):
+        ico('home_pine', r, c, (1.35, 1.05, 0.45), 2, jitter=0.18, seed=k + 3)                               # cloud pads
+        ico('home_pine_lt', r * 0.78, (c[0] - 0.01, c[1] - 0.008, c[2] + 0.014), (1.3, 1.0, 0.4), 2, jitter=0.18, seed=k + 9)
+
+@model('furn_hibachi', '火鉢(鉄瓶つき)', '家具', lod=False)
+def furn_hibachi():
+    G, Wt, I = 'home_glaze', 'home_glaze_w', 'home_iron'
+    prof = [(0.15, 0.0), (0.18, 0.015), (0.2, 0.06), (0.205, 0.1), (0.2, 0.15), (0.19, 0.21), (0.192, 0.235), (0.175, 0.245), (0.16, 0.23), (0.155, 0.2)]
+    _h2_lathe_bands(prof, [G, G, Wt, Wt, G, G, G, G, G], seg=18, caps=(G, None))
+    _hm_rings(0.2, [(0.0, 0.155, 'home_ash')], seg=18)                                                         # ash bed
+    for k in range(5):   # blue dots on the white band
+        a = -math.pi / 2 + (k - 2) * 0.5
+        with xf((0, 0, 0), rz=a + math.pi / 2): cyl(G, 0.012, 0.004, (0, -0.2035, 0.1), 6, rot=(math.pi / 2, 0, 0))
+    for k, (x, y) in enumerate(((-0.06, -0.05), (0.06, -0.06), (0.0, 0.07))):
+        ico('home_coal', 0.038, (x, y, 0.2), (1.25, 1.0, 0.6), 2, jitter=0.22, seed=k)                        # charcoal
+    for x, y in ((0.0, -0.06), (0.06, -0.01), (-0.02, 0.03)): _ac_ball('home_glow_ember', (x, y, 0.212), (0.03, 0.024, 0.014), 6, 3)
+    torus(I, 0.11, 0.008, (0, 0, 0.27), seg=12, rseg=4)                                                       # gotoku trivet
+    for k in range(3):
+        a = math.pi / 2 + k * math.tau / 3; rod(I, (0.11 * math.cos(a), 0.11 * math.sin(a), 0.27), (0.13 * math.cos(a), 0.13 * math.sin(a), 0.2), 0.007, 4)
+    with xf((0, 0, 0.274), rz=-0.7):   # tetsubin kettle
+        _pv_lathe(I, [(0.0, 0.0), (0.05, 0.0), (0.085, 0.025), (0.095, 0.055), (0.085, 0.09), (0.05, 0.11), (0.035, 0.115)], seg=16)
+        _pv_lathe(I, [(0.037, 0.114), (0.036, 0.122), (0.015, 0.13), (0.0, 0.131)], seg=16)
+        ico('home_brass', 0.012, (0, 0, 0.134), (1, 1, 0.8), 2)
+        _pv_tube(I, [(0.08, 0, 0.05), (0.12, 0, 0.07), (0.14, 0, 0.1)], [0.016, 0.011, 0.008], 6)
+        _pv_tube(I, [(0, -0.07, 0.095), (0, -0.065, 0.16), (0, 0, 0.195), (0, 0.065, 0.16), (0, 0.07, 0.095)], 0.007, 5)   # bail handle
+    for dx in (0.0, 0.016): rod('home_brass', (0.11 + dx, 0.06, 0.2), (0.15 + dx, 0.1, 0.43), 0.0045, 5)   # hibashi tongs
+
+@model('furn_tatami', '畳(1畳)', '家具', lod=False)
+def furn_tatami():
+    x0, x1, y0, y1, H, n = -0.898, 0.898, -0.425, 0.425, 0.04, 30
+    xs = [x0 + (x1 - x0) * i / n for i in range(n + 1)]
+    for i in range(n):   # woven rush top in faint alternating stripes, one closed solid with the sides and bottom
+        xa, xb = xs[i], xs[i + 1]
+        mesh('home_tatami' if i % 2 else 'home_tatami_b', [(xa, y0, H), (xb, y0, H), (xb, y1, H), (xa, y1, H)], [(0, 1, 2, 3)])
+        mesh('home_tatami_b', [(xa, y0, 0), (xb, y0, 0), (xb, y0, H), (xa, y0, H), (xa, y1, 0), (xb, y1, 0), (xb, y1, H), (xa, y1, H)],
+             [(0, 1, 2, 3), (5, 4, 7, 6), (0, 4, 5, 1)])
+    for x in (x0, x1): mesh('home_tatami_b', [(x, y0, 0), (x, y1, 0), (x, y1, H), (x, y0, H)], [(0, 1, 2, 3)])
+    for sy in (-1, 1): box2('home_tatami_edge', -0.9, 0.9, min(sy * 0.405, sy * 0.45), max(sy * 0.405, sy * 0.45), 0.0, 0.044)   # heri borders
+
+@model('furn_kakejiku', '掛け軸(木の掛け台つき)', '家具', lod=False)
+def furn_kakejiku():
+    D, yS = 'home_wood_dk', -0.005
+    for sx in (-1, 1):
+        _pv_rbox(D, (0.06, 0.3, 0.04), (sx * 0.25, 0.02, 0), 0.012)                                             # feet
+        _pv_rbox(D, (0.036, 0.036, 1.02), (sx * 0.25, 0.04, 0.03), 0.008)                                       # posts
+    box2(D, -0.25, 0.25, 0.028, 0.052, 0.13, 0.16)                                                              # low stretcher
+    prism(D, [(-0.33, 1.03), (0.33, 1.03), (0.36, 1.08), (0.3, 1.066), (-0.3, 1.066), (-0.36, 1.08)], 0.045, loc=(0, 0.04, 0), axis='Y')   # top rail
+    rod('home_brass', (0, 0.018, 1.02), (0, 0.004, 1.004), 0.004, 4)                                            # hook
+    _pv_tube('home_zabuton_b', [(-0.12, yS, 0.948), (0, yS + 0.002, 1.004), (0.12, yS, 0.948)], 0.003, 4)      # hanging cord
+    rod(D, (-0.18, yS, 0.945), (0.18, yS, 0.945), 0.008, 6)                                                     # top stave
+    box2('home_scroll_mount', -0.165, 0.165, yS - 0.002, yS + 0.002, 0.2, 0.945)                               # silk mounting
+    yP = yS - 0.002
+    box2('home_washi', -0.125, 0.125, yP - 0.0035, yP + 0.0005, 0.33, 0.82)                                    # painting paper
+    for za, zb in ((0.315, 0.33), (0.82, 0.835)): box2('home_cloud', -0.125, 0.125, yP - 0.0035, yP + 0.0005, za, zb)   # gold bands
+    for x in (-0.05, 0.05): box2('home_inkwash', x - 0.007, x + 0.007, yP - 0.0025, yP + 0.0005, 0.845, 0.945)  # futai strips
+    rod(D, (-0.19, yS, 0.195), (0.19, yS, 0.195), 0.012, 8)                                                     # bottom roller
+    for sx in (-1, 1): rod('home_wood_lt', (sx * 0.19, yS, 0.195), (sx * 0.215, yS, 0.195), 0.016, 8)
+    yd = yP - 0.0045   # ink painting: far mountain, a pine, the red sun, two birds, a seal and a column of brush strokes
+    prism('home_inkwash', [(0.125, 0.345), (-0.125, 0.345), (-0.125, 0.5), (-0.07, 0.56), (-0.03, 0.52), (0.02, 0.63), (0.07, 0.53), (0.125, 0.48)], 0.0015, loc=(0, yd, 0), axis='Y')
+    prism('ink', [(-0.094, 0.345), (-0.086, 0.345), (-0.088, 0.4), (-0.078, 0.45), (-0.084, 0.452), (-0.096, 0.4)], 0.0015, loc=(0, yd - 0.0015, 0), axis='Y')   # pine trunk
+    for ua, ub, z, h in ((-0.122, -0.05, 0.41, 0.022), (-0.115, -0.06, 0.435, 0.02), (-0.1, -0.066, 0.457, 0.018)):
+        prism('ink', _h2_stadium(ua, ub, z, h), 0.0015, loc=(0, yd - 0.0015, 0), axis='Y')                      # pine pads
+    cyl('home_sun', 0.035, 0.0015, (0.065, yd + 0.00075, 0.71), 16, rot=(math.pi / 2, 0, 0))
+    for x, z, s in ((-0.04, 0.67, 1.0), (0.0, 0.715, 0.8)):
+        prism('ink', [(x - 0.02 * s, z + 0.01 * s), (x, z), (x + 0.02 * s, z + 0.01 * s), (x, z + 0.004 * s)], 0.0015, loc=(0, yd, 0), axis='Y')
+    box2('ink_red', 0.085, 0.104, yd - 0.0025, yd - 0.0005, 0.37, 0.389)
+    for k in range(4): box2('ink', 0.098 - 0.003 * (k % 2), 0.106, yd - 0.0025, yd - 0.0005, 0.79 - k * 0.026, 0.808 - k * 0.026)
+
+# ---- seaside
+@model('furn_beach_chair', 'ビーチチェア(しましまの布)', '屋外の家具', lod=False)
+def furn_beach_chair():
+    W = 'home_wood_lt'
+    A, B, C, E = Vector((-0.45, 0.0)), Vector((0.42, 0.68)), Vector((0.38, 0.0)), Vector((-0.36, 0.34))   # (y, z)
+    d1, d2 = B - A, E - C
+    t = ((C - A).x * d2.y - (C - A).y * d2.x) / (d1.x * d2.y - d1.y * d2.x); X = A + d1 * t                 # where the rails cross
+    for sx in (-1, 1):
+        _h2_beam(W, (sx * 0.27, A.x, A.y), (sx * 0.27, B.x, B.y), 0.028, 0.045)
+        _h2_beam(W, (sx * 0.236, C.x, C.y), (sx * 0.236, E.x, E.y), 0.028, 0.045)
+        rod('home_brass', (sx * 0.22, X.x, X.y), (sx * 0.29, X.x, X.y), 0.012, 8)                               # pivot bolt
+    rod(W, (-0.29, B.x, B.y), (0.29, B.x, B.y), 0.017, 8)                                                       # top bar
+    rod(W, (-0.255, E.x, E.y), (0.255, E.x, E.y), 0.017, 8)                                                     # front bar
+    for P0, Q, x in ((A, B, 0.27), (C, E, 0.236)):
+        p = P0.lerp(Q, 0.08); rod(W, (-x, p.x, p.y), (x, p.x, p.y), 0.013, 6)                                    # foot stretchers
+    def sling(u, v):
+        s = v; y = E.x + (B.x - E.x) * s; z = E.y + (B.y - E.y) * s - 0.27 * max(0.0, math.sin(math.pi * s)) ** 1.3 * (1 - 0.25 * s)
+        return (-0.205 + 0.41 * u, y, z + 0.016)
+    _h2_sheet(['home_stripe_red', 'home_paint_white'], sling, 7, 10, 0.006)
+    _ac_ball('home_stripe_blue', (0, B.x - 0.06, B.y - 0.035), (0.13, 0.045, 0.05), 10, 5)                      # headrest pillow
+    rod('home_paint_white', (-0.13, B.x - 0.06, B.y - 0.035), (0.13, B.x - 0.06, B.y - 0.035), 0.012, 6)        # its piping
+
+@model('furn_ship_wheel', '船の舵輪(飾り台つき)', '家具', lod=False)
+def furn_ship_wheel():
+    W, D, Br = 'home_wood', 'home_wood_dk', 'home_brass'
+    _hm_slab(D, 0.4, 0.26, 0.0, 0.05, r=0.03, bev=0.01)
+    _pv_rbox(W, (0.08, 0.06, 0.5), (0, 0.05, 0.04), 0.012)                                                      # post
+    rod(Br, (0, 0.03, 0.5), (0, -0.07, 0.5), 0.016, 8)                                                          # axle
+    torus('rope', 0.065, 0.016, (0.12, -0.03, 0.066), seg=12, rseg=4)                                          # coiled rope on the base
+    torus('rope', 0.045, 0.014, (0.12, -0.03, 0.09), seg=10, rseg=4)
+    with xf((0, -0.05, 0.5), rx=math.pi / 2):
+        torus(W, 0.25, 0.022, (0, 0, 0), seg=20, rseg=6)                                                       # rim
+        torus(D, 0.13, 0.011, (0, 0, 0), seg=16, rseg=4)                                                       # inner ring
+        cyl(Br, 0.05, 0.05, (0, 0, -0.025), 12)                                                                # hub
+        ico(Br, 0.03, (0, 0, 0.025), (1, 1, 0.5), 2)
+        for k in range(8):
+            with xf((0, 0, 0), rz=k * math.pi / 4, ry=math.pi / 2):
+                _pv_lathe(W, [(0.013, 0.045), (0.015, 0.13), (0.012, 0.24), (0.018, 0.275), (0.023, 0.31), (0.017, 0.345), (0.0, 0.36)], seg=6)
+
+@model('furn_anchor', '錨のオブジェ(ロープ巻き)', '家具', lod=False)
+def furn_anchor():
+    N = 'home_navy'
+    _hm_slab('home_wood', 0.48, 0.24, 0.0, 0.06, r=0.03, bev=0.01)
+    _hm_slab('home_wood_dk', 0.4, 0.18, 0.06, 0.07, r=0.025, bev=0.004)
+    cz, R = 0.29, 0.2
+    _pv_tube(N, [(0, 0, 0.12), (0, 0, 0.35), (0, 0, 0.63)], [0.025, 0.022, 0.019], 8)                           # shank
+    angs = [math.radians(200 + 140 * k / 8) for k in range(9)]
+    _pv_tube(N, [(R * math.cos(a), 0, cz + R * math.sin(a)) for a in angs], [0.016, 0.02, 0.023, 0.025, 0.026, 0.025, 0.023, 0.02, 0.016], 8)   # arms
+    for a, sg in ((angs[0], -1), (angs[-1], 1)):   # flukes
+        dx, dz = -math.sin(a) * sg, math.cos(a) * sg
+        prism(N, [(-0.04, -0.04), (0.04, -0.04), (0.0, 0.06)], 0.022, loc=(R * math.cos(a), 0, cz + R * math.sin(a)), axis='Y', rot=(0, math.atan2(dx, dz), 0))
+    ico(N, 0.03, (0, 0, cz - R + 0.005), (1, 0.8, 0.8), 2)                                                     # crown
+    torus(N, 0.048, 0.012, (0, 0, 0.675), rot=(math.pi / 2, 0, 0), seg=14, rseg=5)                              # ring
+    rod('home_wood', (-0.17, 0, 0.56), (0.17, 0, 0.56), 0.02, 8)                                                 # stock
+    for sx in (-1, 1): ico('home_brass', 0.024, (sx * 0.17, 0, 0.56), sub=2)
+    pts = []
+    for k in range(22):   # rope spiralling down the shank and drooping on the base
+        a = k * 0.85; z = 0.62 - k * 0.019
+        pts.append((0.032 * math.cos(a), 0.032 * math.sin(a), z))
+    pts += [(0.06, -0.06, 0.16), (0.11, -0.07, 0.085), (0.16, -0.04, 0.078)]
+    _pv_tube('rope', pts, 0.008, 5)
+
+@model('furn_buoy_lamp', 'ブイのランプ(しましま)', '家具', lod=False)
+def furn_buoy_lamp():
+    R_, Wt, I = 'home_buoy_red', 'home_paint_white', 'home_iron'
+    prof = [(0.12, 0.0), (0.17, 0.03), (0.195, 0.08), (0.2, 0.13), (0.19, 0.19), (0.16, 0.25), (0.11, 0.3), (0.075, 0.32)]
+    _h2_lathe_bands(prof, [R_, R_, Wt, Wt, R_, R_, Wt], seg=20, caps=(R_, Wt))
+    torus('rope', 0.198, 0.011, (0, 0, 0.055), seg=20, rseg=4)                                                 # rope band
+    cyl(I, 0.085, 0.025, (0, 0, 0.312), 16)                                                                     # lamp base
+    cyl('home_glow_buoy', 0.056, 0.17, (0, 0, 0.337), 12)                                                       # glowing lantern
+    for k in range(6):
+        a = k / 6 * math.tau; rod(I, (0.063 * math.cos(a), 0.063 * math.sin(a), 0.337), (0.063 * math.cos(a), 0.063 * math.sin(a), 0.507), 0.005, 4)
+    for z in (0.39, 0.455): torus(I, 0.063, 0.005, (0, 0, z), seg=12, rseg=3)
+    cyl(R_, 0.085, 0.05, (0, 0, 0.505), 16, r2=0.025)                                                           # roof
+    cyl(R_, 0.025, 0.012, (0, 0, 0.555), 10)
+    torus(I, 0.022, 0.005, (0, 0, 0.587), rot=(math.pi / 2, 0, 0), seg=10, rseg=4)
+
+@model('furn_shell_lamp', '貝がらのテーブルランプ', '家具', lod=False)
+def furn_shell_lamp():
+    _pv_lathe('home_sand', [(0.0, 0.0), (0.12, 0.0), (0.125, 0.014), (0.1, 0.04), (0.04, 0.058), (0.0, 0.06)], seg=16)
+    rod('home_brass', (0, 0.0, 0.05), (0, 0.0, 0.215), 0.009, 8)
+    def shell(u, v):   # scallop: ribbed fan from the hinge, pressed onto a sphere so it cups towards the front
+        th = (u - 0.5) * 2.1; c = math.cos(7 * math.tau * u)
+        rho = 0.03 + 0.19 * v * (1 + 0.025 * c)
+        x, z = rho * math.sin(th), 0.205 + rho * math.cos(th)
+        y = -0.22 + math.sqrt(max(0.0, 0.0576 - x * x - (z - 0.3) ** 2)) + 0.008 * (0.3 + v) * c
+        return (x, y, z)
+    _h2_sheet('home_glow_shell', shell, 35, 5, 0.006)                                                           # glowing scallop shade
+    for sx in (-1, 1): prism('home_glow_shell', [(0.0, -0.005), (sx * 0.055, -0.014), (sx * 0.05, 0.028)], 0.012, loc=(0, 0.004, 0.205), axis='Y')   # hinge ears
+    rod('home_brass', (0, -0.01, 0.21), (0, -0.04, 0.3), 0.004, 4)
+    ico('home_pearl', 0.03, (0, -0.05, 0.31), sub=2)                                                          # pearl
+    with xf((0.02, -0.085, 0.036), rz=0.3, rx=0.45): _h2_plate('home_coral', _h2_star(5, 0.032, 0.013), 0.008)  # starfish on the sand
+    ico('home_pearl', 0.012, (-0.07, -0.05, 0.035), (1, 1, 0.6), 2)
+
+@model('furn_lifebuoy', '浮き輪スタンド', '屋外の家具', lod=False)
+def furn_lifebuoy():
+    _hm_slab('home_wood_dk', 0.3, 0.24, 0.0, 0.05, r=0.03, bev=0.01)
+    _pv_rbox('home_wood', (0.07, 0.07, 0.86), (0, 0.03, 0.04), 0.012)
+    _pv_rbox('home_paint_white', (0.09, 0.09, 0.03), (0, 0.03, 0.9), 0.008)
+    rod('home_wood_dk', (0, 0.0, 0.79), (0, -0.115, 0.795), 0.012, 6)                                           # peg
+    ico('home_wood_dk', 0.018, (0, -0.115, 0.795), sub=2)
+    R, r = 0.19, 0.05
+    with xf((0, -0.058, 0.79 - 0.012 - (R - r)), rx=math.pi / 2):
+        for k in range(8):
+            a0 = math.pi / 2 - math.pi / 8 + k * math.pi / 4
+            _h2_torus_arc('home_buoy_red' if k % 2 == 0 else 'home_paint_white', R, r, a0, a0 + math.pi / 4, 4, 8)
+        for k in range(4):   # grab line in four loops between rope bands
+            a, b = k * math.pi / 2, (k + 1) * math.pi / 2
+            pts = [((R + r + 0.004 + 0.022 * math.sin(math.pi * i / 6)) * math.cos(a + (b - a) * i / 6), (R + r + 0.004 + 0.022 * math.sin(math.pi * i / 6)) * math.sin(a + (b - a) * i / 6), 0.0) for i in range(7)]
+            _pv_tube('rope', pts, 0.007, 5)
+            with xf((R * math.cos(a), R * math.sin(a), 0), rz=a): torus('rope', r + 0.004, 0.007, (0, 0, 0), rot=(math.pi / 2, 0, 0), seg=10, rseg=3)
+
+@model('furn_crab_plush', 'カニのクッション', '家具', lod=False)
+def furn_crab_plush():
+    C, Bl = 'home_crab', 'home_crab_belly'
+    c, R = (0, 0, 0.125), (0.24, 0.18, 0.12)
+    _ac_ball(C, c, R, 16, 8, f=lambda x, y, z: (x, y, max(z, -0.112)))
+    _ac_decal(Bl, c, R, 0, -0.07, 0.1, 0.03, 0.016, sub=2)                                                   # pale tummy
+    _ac_blush(c, R, 0.12, 0.0, 0.03, 0.018)
+    _ac_curve('eye', c, R, [(-0.035, 0.02), (-0.018, 0.008), (0.0, 0.014), (0.018, 0.008), (0.035, 0.02)], 0.005)   # w-smile
+    for sx in (-1, 1):
+        rod(C, (sx * 0.06, -0.06, 0.2), (sx * 0.075, -0.075, 0.29), 0.02, 6)                                   # eye stalks
+        ico('white', 0.042, (sx * 0.078, -0.078, 0.31), sub=2)
+        ico('eye', 0.022, (sx * 0.075, -0.112, 0.312), (1, 0.6, 1.1), 2)
+        ico('white', 0.007, (sx * 0.068, -0.124, 0.322), sub=1)
+        _pv_tube(C, [(sx * 0.2, -0.06, 0.12), (sx * 0.27, -0.13, 0.14), (sx * 0.29, -0.17, 0.15)], [0.035, 0.032, 0.03], 7)   # arms
+        _ac_ball(C, (sx * 0.3, -0.21, 0.155), (0.075, 0.065, 0.065), 12, 6)                                    # claw
+        _ac_ball(C, (sx * 0.275, -0.265, 0.215), (0.03, 0.05, 0.034), 10, 5)                                     # pincer finger
+        for k, y in enumerate((-0.02, 0.05, 0.11)):   # legs
+            _pv_tube(C, [(sx * 0.19, y, 0.08), (sx * 0.28, y + 0.03, 0.05), (sx * 0.31, y + 0.04, 0.02)], [0.026, 0.022, 0.018], 6)
+
+@model('furn_lighthouse_model', '灯台の模型(飾り台つき)', '家具', lod=False)
+def furn_lighthouse_model():
+    R_, Wt, I = 'home_buoy_red', 'home_paint_white', 'home_iron'
+    _pv_lathe('home_wood_dk', [(0.0, 0.0), (0.16, 0.0), (0.165, 0.015), (0.155, 0.035), (0.0, 0.035)], seg=20)
+    ico('home_stone', 0.11, (0, 0, 0.035), (1.25, 1.15, 0.5), 2, jitter=0.2, seed=3, flat_bottom=0.0)          # rocky islet
+    bands = [(0.075, 0.06), (0.071, 0.15), (0.066, 0.24), (0.061, 0.33), (0.056, 0.42), (0.052, 0.5)]
+    _h2_lathe_bands(bands, [R_, Wt, R_, Wt, R_], seg=16, caps=(R_, Wt))
+    cyl(I, 0.078, 0.014, (0, 0, 0.5), 16)                                                                      # gallery
+    for k in range(8):
+        a = k / 8 * math.tau; rod(I, (0.072 * math.cos(a), 0.072 * math.sin(a), 0.514), (0.072 * math.cos(a), 0.072 * math.sin(a), 0.55), 0.003, 4)
+    torus(I, 0.072, 0.004, (0, 0, 0.55), seg=16, rseg=3)
+    cyl('home_glow_lighthouse', 0.042, 0.066, (0, 0, 0.514), 12)                                                # lantern room
+    for k in range(4):
+        a = math.pi / 4 + k * math.pi / 2; rod(I, (0.044 * math.cos(a), 0.044 * math.sin(a), 0.514), (0.044 * math.cos(a), 0.044 * math.sin(a), 0.58), 0.004, 4)
+    cyl(R_, 0.056, 0.042, (0, 0, 0.578), 12, r2=0.008)                                                          # dome roof
+    ico('home_brass', 0.011, (0, 0, 0.625), sub=2)
+    _pv_rbox('home_wood_dk', (0.032, 0.012, 0.05), (0, -0.073, 0.072), 0.004)                                    # door
+    for z, r in ((0.27, 0.0645), (0.385, 0.058)): box2('home_coal', -0.009, 0.009, -r - 0.003, -r + 0.008, z, z + 0.024)   # windows
+    _pv_rbox('home_brass', (0.1, 0.006, 0.022), (0, -0.157, 0.008), 0.003)                                       # name plate on the stand
+
+# ---- cafe
+@model('furn_cafe_table', 'カフェテーブル(大理石)', '家具', lod=False)
+def furn_cafe_table():
+    _pv_lathe('home_marble', [(0.0, 0.42), (0.27, 0.42), (0.28, 0.43), (0.28, 0.443), (0.27, 0.45), (0.0, 0.45)], seg=28)
+    torus('home_brass', 0.279, 0.007, (0, 0, 0.432), seg=28, rseg=4)
+    _pv_lathe('home_iron', [(0.0, 0.0), (0.2, 0.0), (0.2, 0.012), (0.12, 0.022), (0.04, 0.05), (0.024, 0.09), (0.022, 0.25), (0.032, 0.33),
+                            (0.022, 0.37), (0.05, 0.405), (0.07, 0.42), (0.0, 0.42)], seg=14)
+    _pv_lathe('home_glaze', [(0.0, 0.45), (0.022, 0.45), (0.03, 0.48), (0.012, 0.53), (0.014, 0.545), (0.009, 0.545), (0.0, 0.52)], (0.1, 0.06, 0), seg=10)   # bud vase
+    rod('ac_stem', (0.1, 0.06, 0.53), (0.11, 0.055, 0.62), 0.003, 4)
+    _ac_leaf('ac_leaf', (0.104, 0.058, 0.57), 0.5, 0.05, 0.016, 0.5)
+    _ac_bloom('ac_cosmos_pink', 'ac_flower_eye', (0.11, 0.055, 0.62), 0.033, 8, -0.5, 0.0)
+    _pv_lathe('white', [(0.0, 0.45), (0.05, 0.45), (0.065, 0.458), (0.06, 0.46), (0.0, 0.455)], (-0.08, -0.08, 0), seg=14)   # saucer + coffee cup
+    _pv_lathe('white', [(0.0, 0.455), (0.028, 0.455), (0.036, 0.5), (0.032, 0.5), (0.03, 0.49)], (-0.08, -0.08, 0), seg=14, cap=False)
+    _hm_rings(0.49, [(0.0, 0.03, 'home_coffee')], seg=14, cx=-0.08, cy=-0.08)
+    torus('white', 0.014, 0.004, (-0.04, -0.08, 0.478), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)
+
+@model('furn_cafe_chair', 'カフェチェア(曲げ木風)', '家具', lod=False)
+def furn_cafe_chair():
+    I, W = 'home_iron', 'home_wood'
+    _pv_lathe(W, [(0.0, 0.27), (0.165, 0.27), (0.175, 0.28), (0.175, 0.29), (0.165, 0.3), (0.0, 0.3)], seg=20)
+    _pv_lathe('home_cushion', [(0.0, 0.3), (0.145, 0.3), (0.152, 0.312), (0.14, 0.324), (0.0, 0.327)], seg=20)
+    for sx in (-1, 1):
+        for sy in (-1, 1): rod(I, (sx * 0.11, sy * 0.11, 0.275), (sx * 0.15, sy * 0.15, 0.0), 0.012, 6)
+    torus(I, 0.13, 0.006, (0, 0, 0.11), seg=16, rseg=4)
+    hoop = [(0.13 * math.cos(math.pi * k / 12), 0.12 + 0.05 * math.sin(math.pi * k / 12), 0.29 + 0.37 * math.sin(math.pi * k / 12)) for k in range(13)]
+    _pv_tube(I, hoop, 0.011, 6)                                                                              # bentwood back hoop
+    for sx in (-1, 1): rod(I, (sx * 0.13, 0.12, 0.29), (sx * 0.13, 0.12, 0.27), 0.011, 6)
+    with xf((0, 0.155, 0.47), rx=math.pi / 2 - 0.14): torus(I, 0.065, 0.007, (0, 0, 0), seg=14, rseg=4)        # decorative ring
+    with xf((0, 0.165, 0.575), rx=-0.14): _pv_rbox(W, (0.21, 0.022, 0.07), (0, 0, 0), 0.008)                  # back rest slat
+
+@model('furn_counter', 'カフェのカウンター(コーヒーマシン)', '家具', lod=False)
+def furn_counter():
+    W, L, D = 'home_wood', 'home_wood_lt', 'home_wood_dk'
+    box2(D, -0.57, 0.57, -0.19, 0.21, 0.0, 0.045)                                                               # plinth
+    box2(W, -0.58, 0.58, -0.2, 0.22, 0.045, 0.56)                                                               # carcass
+    for i in range(12): box2(L if i % 2 else W, -0.575 + i * 0.0958 + 0.002, -0.575 + (i + 1) * 0.0958 - 0.002, -0.207, -0.199, 0.06, 0.55)   # beadboard front
+    _hm_slab('home_marble', 1.26, 0.52, 0.56, 0.6, r=0.03, bev=0.01, cy=0.01)
+    with xf((0.33, -0.209, 0.38)):   # little chalk menu hanging on the front
+        _pv_rbox(D, (0.2, 0.012, 0.14), (0, 0, 0), 0.006)
+        box('st_chalkboard', (0.17, 0.006, 0.11), (0, -0.006, 0.015))
+        for k, (w_, m) in enumerate(((0.1, 'st_chalk_white'), (0.12, 'st_chalk_yellow'), (0.08, 'st_chalk_white'))): box(m, (w_, 0.004, 0.008), (-0.01, -0.01, 0.1 - k * 0.028))
+        _h2_heart('st_chalk_pink', (0.06, -0.01, 0.045), 0.018, 0.003)
+    zt = 0.6
+    with xf((-0.32, 0.06, zt)):   # retro espresso machine
+        _pv_rbox('home_mint', (0.26, 0.2, 0.24), (0, 0, 0.02), 0.04, segs=2)
+        _pv_rbox('steel_dark', (0.24, 0.18, 0.02), (0, 0, 0), 0.006)
+        _pv_rbox('ac_ring_metal', (0.18, 0.06, 0.012), (0, -0.12, 0.02), 0.004)                                 # drip tray
+        cyl('home_brass', 0.028, 0.03, (0, -0.12, 0.13), 10)                                                    # group head
+        rod('home_coal', (0, -0.13, 0.12), (0, -0.24, 0.115), 0.01, 6)                                          # portafilter handle
+        _pv_lathe('white', [(0.0, 0.032), (0.02, 0.032), (0.026, 0.07), (0.022, 0.07), (0.018, 0.06)], (0, -0.12, 0), seg=10, cap=False)
+        _hm_rings(0.06, [(0.0, 0.018, 'home_coffee')], seg=10, cx=0, cy=-0.12)
+        cyl('home_clock_face', 0.032, 0.008, (0.0, -0.1, 0.205), 14, rot=(math.pi / 2, 0, 0))                  # pressure gauge
+        torus('home_brass', 0.033, 0.005, (0, -0.104, 0.205), rot=(math.pi / 2, 0, 0), seg=14, rseg=3)
+        rod('home_book_red', (0, -0.11, 0.205), (0.015, -0.11, 0.218), 0.0025, 3)
+        _pv_tube('ac_ring_metal', [(0.12, -0.04, 0.16), (0.16, -0.06, 0.15), (0.165, -0.08, 0.08)], 0.006, 5)    # steam wand
+        for k in range(2): _pv_lathe('white', [(0.0, 0.26), (0.022, 0.26), (0.03, 0.3), (0.0, 0.29)], (-0.05 + 0.1 * k, 0.02, 0), seg=10)   # cups warming on top
+    with xf((0.08, 0.02, zt)):   # croissants on a plate
+        _pv_lathe('white', [(0.0, 0.0), (0.09, 0.0), (0.12, 0.014), (0.115, 0.016), (0.085, 0.006), (0.0, 0.006)], seg=12)
+        for k, (x, y, a) in enumerate(((-0.03, -0.03, 0.3), (0.04, 0.0, 2.0), (-0.01, 0.045, 4.0))):
+            with xf((x, y, 0.024), rz=a):
+                arc = [(0.045 * math.cos(t), 0.045 * math.sin(t) - 0.02, 0.0) for t in (math.pi * (0.1 + 0.8 * i / 6) for i in range(7))]
+                _pv_tube('home_croissant', arc, [0.01, 0.016, 0.02, 0.022, 0.02, 0.016, 0.01], 5)
+    _pv_lathe('home_glaze', [(0.0, zt), (0.045, zt), (0.05, zt + 0.1), (0.04, zt + 0.12), (0.03, zt + 0.12), (0.0, zt + 0.115)], (0.42, 0.08, 0), seg=12)   # cookie jar
+    _pv_lathe('home_wood_lt', [(0.04, zt + 0.12), (0.042, zt + 0.13), (0.0, zt + 0.135)], (0.42, 0.08, 0), seg=12)
+    ico('home_wood_lt', 0.012, (0.42, 0.08, zt + 0.14), sub=2)
+
+@model('furn_cake_stand', 'ケーキスタンド(レースのテーブル)', '家具', lod=False)
+def furn_cake_stand():
+    _pv_lathe('home_wood', [(0.0, 0.0), (0.14, 0.0), (0.14, 0.018), (0.05, 0.03), (0.025, 0.06), (0.02, 0.3), (0.0, 0.3)], seg=12)
+    hem = lambda x, y, z: (x, y, z + (0.012 * math.cos(12 * math.atan2(y, x)) if z < 0.27 else 0.0))
+    _pv_lathe('home_mint', [(0.0, 0.352), (0.2, 0.352), (0.215, 0.345), (0.224, 0.3), (0.226, 0.262), (0.22, 0.262), (0.216, 0.3), (0.203, 0.34), (0.0, 0.34)], seg=18, f=hem)
+    rod('home_brass', (0, 0, 0.35), (0, 0, 0.71), 0.007, 6)
+    torus('home_brass', 0.028, 0.006, (0, 0, 0.735), rot=(math.pi / 2, 0, 0), seg=12, rseg=4)                 # carry ring
+    plate = lambda r, z: _pv_lathe('home_cream', [(0.0, z), (r, z + 0.012), (r * 0.93, z + 0.016), (0.0, z + 0.006)], seg=12)
+    plate(0.17, 0.36); plate(0.13, 0.49); plate(0.09, 0.61)
+    for k in range(3):   # cupcakes on the bottom tier
+        a = k / 3 * math.tau + 0.4; x, y = 0.105 * math.cos(a), 0.105 * math.sin(a)
+        _pv_lathe('home_cake_pink', [(0.0, 0.37), (0.026, 0.37), (0.034, 0.405), (0.0, 0.405)], (x, y, 0), seg=8,
+                  f=lambda x_, y_, z_: (x_ * (1 + 0.08 * math.cos(8 * math.atan2(y_, x_))), y_ * (1 + 0.08 * math.cos(8 * math.atan2(y_, x_))), z_))
+        _pv_lathe('home_cream', [(0.036, 0.405), (0.03, 0.425), (0.018, 0.44), (0.006, 0.455), (0.0, 0.458)], (x, y, 0), seg=8, cap=False)
+        _ac_ball('home_berry', (x, y, 0.462), (0.012, 0.012, 0.012), 6, 3)
+    for k in range(3):   # layered cake slices on the middle tier
+        a = k / 3 * math.tau + 1.2
+        with xf((0.06 * math.cos(a), 0.06 * math.sin(a), 0.502), rz=a + math.pi):
+            sl = [(0.0, 0.0), (0.065, -0.026), (0.07, 0.0), (0.065, 0.026)]
+            for z0, t, m in ((0.0, 0.02, 'home_sponge'), (0.02, 0.008, 'home_cream'), (0.028, 0.02, 'home_sponge'), (0.048, 0.008, 'home_cake_pink')):
+                _h2_plate(m, sl, t, z0=z0)
+            _ac_ball('home_berry', (0.05, 0.0, 0.064), (0.011, 0.011, 0.011), 6, 3)
+    for k, m in enumerate(('home_macaron_a', 'home_macaron_b')):   # macarons and a strawberry on top
+        with xf((0.045 * math.cos(k * 2.6 + 0.5), 0.045 * math.sin(k * 2.6 + 0.5), 0.622), ry=0.2):
+            cyl(m, 0.022, 0.01, (0, 0, 0.0), 10); cyl('home_cream', 0.019, 0.006, (0, 0, 0.01), 10); cyl(m, 0.022, 0.01, (0, 0, 0.016), 10)
+    _pv_lathe('home_berry', [(0.0, 0.622), (0.012, 0.626), (0.022, 0.645), (0.02, 0.66), (0.0, 0.668)], (-0.04, -0.03, 0), seg=8)
+    for k in range(4): _ac_leaf('ac_leaf', (-0.04, -0.03, 0.666), k * math.pi / 2, 0.018, 0.008, 0.2)
+
+@model('furn_monstera', 'モンステラの鉢植え', '家具', lod=False)
+def furn_monstera():
+    Pw, Bd = 'home_pot_white', 'home_pot_band'
+    _h2_lathe_bands([(0.13, 0.0), (0.15, 0.03), (0.162, 0.1), (0.166, 0.13), (0.172, 0.2), (0.18, 0.27), (0.165, 0.27), (0.158, 0.25)],
+                    [Pw, Pw, Bd, Pw, Pw, Pw, Pw], seg=14, caps=(Pw, 'ac_dig_mid'))
+    def leaf(L, W, dl, dr):
+        def wid(v, side):
+            w = W * max(0.02, math.sin(math.pi * (0.1 + 0.9 * v))) ** 0.55
+            for vk, dep in zip((5 / 18, 8 / 18, 11 / 18, 14 / 18), dl if side < 0 else dr):
+                w *= 1 - dep * max(0.0, 1 - abs(v - vk) * 18)      # deep narrow splits from the edge towards the midrib
+            return max(w, 0.004)
+        def fn(u, v):
+            x = (2 * u - 1) * wid(v, -1 if u < 0.5 else 1)
+            return (x, v * L, L * (0.14 * math.sin(math.pi * v) - 0.34 * v * v) + 0.25 * abs(x))
+        _h2_sheet('home_monstera', fn, 2, 18, 0.005)
+    rnd = random.Random(5)
+    for k, (a, h, tilt, L, W) in enumerate(((0.5, 0.64, 0.35, 0.34, 0.17), (1.75, 0.8, 0.6, 0.3, 0.15), (3.0, 0.6, 0.28, 0.36, 0.18),
+                                             (4.4, 0.7, 0.4, 0.35, 0.18), (5.6, 0.86, 0.7, 0.28, 0.14))):
+        B = (0.1 * math.cos(a), 0.1 * math.sin(a), h)
+        _pv_tube('home_monstera_stem', [(0.02 * math.cos(a), 0.02 * math.sin(a), 0.24), (0.05 * math.cos(a), 0.05 * math.sin(a), h * 0.6), B], [0.011, 0.009, 0.007], 4)
+        with xf(B, rz=a - math.pi / 2, rx=tilt):
+            leaf(L, W, [rnd.uniform(0.55, 0.8) for _ in range(4)], [rnd.uniform(0.55, 0.8) for _ in range(4)])
+
+# ---- rooms
+@model('furn_sofa', 'ふかふかソファ', '家具', lod=False)
+def furn_sofa():
+    S, Sd = 'home_sofa', 'home_sofa_dk'
+    for sx in (-1, 1):
+        for sy in (-1, 1): _pv_lathe('home_wood_dk', [(0.0, 0.0), (0.022, 0.0), (0.03, 0.075), (0.0, 0.075)], (sx * 0.52, sy * 0.21, 0), seg=8)
+    _hm_slab(Sd, 1.18, 0.56, 0.07, 0.2, r=0.06, bev=0.025)                                                    # base
+    for sx in (-1, 1):
+        _hm_slab(S, 0.17, 0.6, 0.07, 0.43, r=0.075, bev=0.05, cx=sx * 0.535)                                     # rolled arms
+        ico(Sd, 0.02, (sx * 0.535, -0.305, 0.36), (1, 0.5, 1), 2)                                              # arm buttons
+    _hm_slab(S, 0.9, 0.17, 0.18, 0.64, r=0.06, bev=0.05, cy=0.2)                                               # back
+    for sx in (-1, 1):
+        _hm_slab(S, 0.443, 0.46, 0.2, 0.3, r=0.06, bev=0.035, cx=sx * 0.2245, cy=-0.045)                      # seat cushions
+        with xf((sx * 0.2245, 0.12, 0.29), rx=-0.18):
+            _hm_slab(S, 0.43, 0.11, 0.0, 0.31, r=0.05, bev=0.04)                                              # back cushions
+            ico(Sd, 0.014, (0, -0.056, 0.17), (1, 0.5, 1), 2)
+    for (x, m, rz) in ((-0.33, 'home_cushion', 0.25), (0.35, 'home_quilt_b', -0.3)):   # throw pillows
+        with xf((x, 0.03, 0.39), rz=rz, rx=-0.35):
+            _ac_ball(m, (0, 0, 0), (0.12, 0.045, 0.11), 10, 6, f=lambda x_, y_, z_: (x_ * (1 + 0.25 * (z_ / 0.11) ** 2), y_, z_ * (1 + 0.2 * (x_ / 0.12) ** 2)))
+
+@model('furn_desk', '書きもの机(ランプと本)', '家具', lod=False)
+def furn_desk():
+    W, L, D = 'home_wood', 'home_wood_lt', 'home_wood_dk'
+    _hm_slab(W, 0.95, 0.48, 0.48, 0.52, r=0.02, bev=0.008)
+    _pv_rbox(W, (0.3, 0.42, 0.46), (-0.3, 0.0, 0.02), 0.008)                                                     # drawer pedestal
+    box2(D, -0.44, -0.16, -0.19, 0.19, 0.0, 0.02)
+    for z in (0.05, 0.27):
+        _pv_rbox(L, (0.26, 0.014, 0.19), (-0.3, -0.212, z), 0.006)
+        ico('home_brass', 0.014, (-0.3, -0.222, z + 0.13), (1, 0.7, 1), 2)
+    for sy in (-1, 1): _pv_rbox(W, (0.045, 0.045, 0.48), (0.42, sy * 0.19, 0.0), 0.008)
+    box2(D, -0.15, 0.4, 0.185, 0.205, 0.32, 0.48)                                                               # modesty panel
+    box2(D, 0.4, 0.44, -0.17, 0.17, 0.08, 0.11)                                                                 # foot rail
+    zt = 0.52
+    with xf((0.3, 0.12, zt)):   # desk lamp
+        cyl('home_lampshade_green', 0.06, 0.02, (0, 0, 0), 14)
+        jt = Vector((-0.04, 0.02, 0.24)); rod('home_brass', (0, 0, 0.02), jt, 0.007, 6); ico('home_brass', 0.014, jt, sub=2)
+        tip = Vector((-0.13, -0.06, 0.2)); rod('home_brass', jt, tip, 0.006, 6)
+        d = Vector((0.0, -0.15, -1.0)).normalized(); e = d.to_track_quat('Z', 'Y').to_euler()
+        with xf(tuple(tip), rz=e.z, ry=e.y, rx=e.x):
+            _pv_lathe('home_lampshade_green', [(0.0, -0.01), (0.026, -0.01), (0.074, 0.075), (0.068, 0.075), (0.022, 0.0), (0.0, 0.0)], seg=14)
+            ico('home_glow_desk', 0.03, (0, 0, 0.05), sub=2)
+    for k, (w_, d_, h, m, r) in enumerate(((0.22, 0.16, 0.035, 'home_book_blue', 0.05), (0.2, 0.15, 0.03, 'home_book_red', -0.08), (0.18, 0.13, 0.03, 'home_book_yellow', 0.15))):
+        box(m, (w_, d_, h), (-0.26, 0.08, zt + sum((0.035, 0.03, 0.03)[:k])), rot=(0, 0, r))                     # book stack
+    with xf((0.02, -0.08, zt), rz=-0.12):   # open notebook
+        box('home_book_red', (0.26, 0.17, 0.006), (0, 0, 0))
+        for sx in (-1, 1): box('home_sheet', (0.12, 0.16, 0.008), (sx * 0.064, 0, 0.006), rot=(0, sx * 0.05, 0))
+        for k in range(4): box('home_inkwash', (0.08, 0.004, 0.002), (-0.07, 0.05 - k * 0.025, 0.0145))
+        rod('ac_pansy_yellow', (0.06, -0.04, 0.02), (0.13, 0.02, 0.02), 0.005, 6)                               # pencil
+    _pv_lathe('home_mail_blue', [(0.0, zt), (0.03, zt), (0.032, zt + 0.08), (0.028, zt + 0.08), (0.026, zt + 0.07), (0.0, zt + 0.07)], (-0.4, -0.12, 0), seg=10)
+    for k, m in enumerate(('home_book_red', 'home_book_green', 'ac_pansy_yellow')):
+        a = k * 2.1; rod(m, (-0.4 + 0.01 * math.cos(a), -0.12 + 0.01 * math.sin(a), zt + 0.06), (-0.4 + 0.035 * math.cos(a), -0.12 + 0.035 * math.sin(a), zt + 0.17), 0.005, 5)
+
+@model('furn_tv_retro', 'レトロなブラウン管テレビ(台つき)', '家具', lod=False)
+def furn_tv_retro():
+    W, L, D = 'home_wood', 'home_wood_lt', 'home_wood_dk'
+    _pv_rbox(W, (0.62, 0.4, 0.2), (0, 0, 0.1), 0.012)                                                           # cabinet
+    for sx in (-1, 1):
+        for sy in (-1, 1): rod(D, (sx * 0.26, sy * 0.15, 0.105), (sx * 0.29, sy * 0.17, 0.0), 0.016, 6, r2=0.011)
+        _pv_rbox(L, (0.28, 0.012, 0.16), (sx * 0.146, -0.204, 0.12), 0.005)                                    # sliding doors
+        cyl(D, 0.014, 0.006, (sx * 0.05, -0.21, 0.2), 10, rot=(math.pi / 2, 0, 0))                              # finger pulls
+    _pv_rbox('home_tv', (0.48, 0.36, 0.37), (0, 0.01, 0.3), 0.05, segs=2)                                         # TV body
+    _pv_rbox('home_tv', (0.3, 0.12, 0.3), (0, 0.2, 0.33), 0.04)                                                   # tube housing at the back
+    with xf((-0.055, -0.17, 0.485), rx=math.pi / 2):
+        _hm_slab('home_wood_dk', 0.33, 0.28, -0.004, 0.01, r=0.045, bev=0.004)                                  # bezel
+        _hm_slab('home_glow_crt', 0.29, 0.24, 0.0, 0.02, r=0.04, bev=0.012)                                     # bulging screen
+    for k, z in enumerate((0.56, 0.49)):
+        cyl('home_wood_dk', 0.022, 0.016, (0.17, -0.17, z), 12, rot=(math.pi / 2, 0, 0))                        # channel knobs
+        box('home_cream', (0.004, 0.004, 0.026), (0.17, -0.187, z - 0.013))
+    for k in range(4): box('home_wood_dk', (0.07, 0.006, 0.007), (0.17, -0.17, 0.35 + k * 0.022))               # speaker slots
+    ico('home_iron', 0.026, (0, 0.06, 0.67), (1, 1, 0.6), 2)                                                     # rabbit ears
+    for sx in (-1, 1):
+        rod('ac_ring_metal', (sx * 0.01, 0.06, 0.68), (sx * 0.16, 0.09, 0.93), 0.004, 4)
+        ico('ac_ring_metal', 0.009, (sx * 0.16, 0.09, 0.93), sub=2)
+
+@model('furn_piano', 'アップライトピアノ', '家具', lod=False)
+def furn_piano():
+    Pn, Br = 'home_piano', 'home_brass'
+    _pv_rbox(Pn, (0.98, 0.26, 0.82), (0, 0.06, 0.0), 0.012)                                                     # case
+    _hm_slab(Pn, 1.02, 0.3, 0.82, 0.85, r=0.015, bev=0.006, cy=0.06)                                            # lid
+    _pv_rbox(Pn, (0.84, 0.01, 0.3), (0, -0.07, 0.07), 0.004)                                                     # lower front panel
+    box2(Pn, -0.47, 0.47, -0.235, -0.065, 0.4, 0.445)                                                           # keybed
+    for sx in (-1, 1):
+        box2(Pn, min(sx * 0.47, sx * 0.51), max(sx * 0.47, sx * 0.51), -0.25, -0.065, 0.4, 0.53)                # cheeks
+        _pv_lathe(Pn, [(0.0, 0.0), (0.03, 0.0), (0.024, 0.06), (0.02, 0.25), (0.03, 0.34), (0.028, 0.4), (0.0, 0.4)], (sx * 0.49, -0.21, 0), seg=8)   # legs
+        box2(Pn, min(sx * 0.46, sx * 0.52), max(sx * 0.46, sx * 0.52), -0.24, 0.06, 0.0, 0.04)                  # toe blocks
+    nw = 26; kw = 0.92 / nw
+    for i in range(nw):
+        x = -0.46 + i * kw
+        box2('home_key_white', x + 0.0012, x + kw - 0.0012, -0.235, -0.09, 0.445, 0.468)
+        if i % 7 in (0, 1, 3, 4, 5) and i < nw - 1: box2(Pn, x + kw - 0.0085, x + kw + 0.0085, -0.165, -0.09, 0.468, 0.485)
+    box2(Pn, -0.47, 0.47, -0.09, -0.065, 0.445, 0.5)                                                            # key slip at the back
+    box2(Pn, -0.27, 0.27, -0.13, -0.065, 0.5, 0.512)                                                             # music ledge
+    for sx in (-1, 1):   # open music book
+        with xf((sx * 0.105, -0.118, 0.512), rz=sx * 0.12, rx=-0.2):
+            box('home_sheet', (0.2, 0.004, 0.2), (0, 0, 0))
+            for k in range(5): box('ink', (0.16, 0.003, 0.0025), (0, -0.0025, 0.035 + k * 0.03))
+    for k in range(3): _pv_rbox(Br, (0.03, 0.06, 0.012), ((k - 1) * 0.06, -0.09, 0.05), 0.004)                     # pedals
+    with xf((0.32, 0.06, 0.85)):   # metronome
+        _pv_lathe('home_wood_red', [(0.05, 0.0), (0.014, 0.13), (0.0, 0.13)], seg=4, a0=math.pi / 4)
+        rod(Br, (0.0, -0.034, 0.02), (0.025, -0.022, 0.12), 0.003, 3)
+
+@model('furn_wardrobe', '洋服だんす(両開き)', '家具', lod=False)
+def furn_wardrobe():
+    W, L, D = 'home_wood', 'home_wood_lt', 'home_wood_dk'
+    for sx in (-1, 1):
+        for sy in (-1, 1): _pv_lathe(D, [(0.0, 0.0), (0.028, 0.0), (0.036, 0.035), (0.03, 0.07), (0.0, 0.07)], (sx * 0.34, sy * 0.16, 0), seg=8)
+    _hm_slab(D, 0.82, 0.44, 0.07, 0.11, r=0.015, bev=0.006)
+    _pv_rbox(W, (0.78, 0.4, 1.08), (0, 0, 0.11), 0.012)
+    _hm_slab(D, 0.86, 0.46, 1.18, 1.21, r=0.015, bev=0.006)
+    _hm_slab(W, 0.82, 0.43, 1.21, 1.23, r=0.012, bev=0.005)
+    prism(W, [(0.26 * math.cos(math.pi * k / 10), 1.23 + 0.09 * math.sin(math.pi * k / 10)) for k in range(11)], 0.03, loc=(0, -0.17, 0), axis='Y')   # arched pediment
+    _h2_heart(D, (0, -0.187, 1.27), 0.03, 0.006)
+    for sx in (-1, 1):
+        _pv_rbox(L, (0.375, 0.016, 0.84), (sx * 0.1925, -0.206, 0.32), 0.006)                                   # doors
+        for z in (0.37, 0.75): _pv_rbox(W, (0.27, 0.012, 0.32), (sx * 0.1925, -0.218, z), 0.01)                # raised panels
+        ico('home_brass', 0.016, (sx * 0.03, -0.226, 0.72), (1, 0.7, 1), 2)
+    _pv_rbox(L, (0.76, 0.016, 0.17), (0, -0.206, 0.13), 0.006)                                                  # drawer
+    for sx in (-1, 1): ico('home_brass', 0.014, (sx * 0.17, -0.218, 0.215), (1, 0.7, 1), 2)
+
+@model('furn_mirror', 'スタンドミラー(楕円)', '家具', lod=False)
+def furn_mirror():
+    W, D = 'home_wood', 'home_wood_dk'
+    for sx in (-1, 1):
+        _pv_rbox(D, (0.05, 0.36, 0.04), (sx * 0.23, 0, 0), 0.015)                                               # sled feet
+        _pv_lathe(W, [(0.0, 0.04), (0.024, 0.04), (0.018, 0.12), (0.022, 0.4), (0.016, 0.7), (0.019, 0.98), (0.0, 1.0)], (sx * 0.23, 0, 0), seg=8)
+        ico('home_brass', 0.022, (sx * 0.23, 0, 1.0), sub=2)
+        rod('home_brass', (sx * 0.18, 0, 0.62), (sx * 0.235, 0, 0.62), 0.008, 6)                               # pivots
+        ico('home_brass', 0.016, (sx * 0.255, 0, 0.62), (0.6, 1, 1), 2)
+    rod(W, (-0.23, 0, 0.17), (0.23, 0, 0.17), 0.014, 8)                                                          # stretcher
+    a, b = 0.155, 0.3
+    with xf((0, 0, 0.62), rx=-0.07):
+        _h2_oval_ring(W, a, b, 0.024, 28, 6)                                                                  # frame
+        with xf((0, 0.006, 0), rx=math.pi / 2):
+            _h2_plate(W, [(a * math.cos(k / 28 * math.tau), b * math.sin(k / 28 * math.tau)) for k in range(28)], 0.014, top='home_mirror')   # glass on a backing board
+            for dx, L_, w_ in ((-0.05, 0.12, 0.016), (-0.015, 0.07, 0.009)):   # highlight streaks
+                with xf((dx, 0.1, 0.0145), rz=-0.6): _h2_plate('home_foam', [(-w_ / 2, -L_ / 2), (w_ / 2, -L_ / 2), (w_ / 2, L_ / 2), (-w_ / 2, L_ / 2)], 0.0015)
+        ico('home_brass', 0.02, (0, 0, b + 0.03), (1, 0.6, 1), 2)
+
+@model('furn_clock_tall', 'のっぽの古時計', '家具', lod=False)
+def furn_clock_tall():
+    W, L, D, Br = 'home_wood', 'home_wood_lt', 'home_wood_dk', 'home_brass'
+    for sx in (-1, 1):
+        for sy in (-1, 1): cyl(D, 0.025, 0.025, (sx * 0.16, sy * 0.1, 0), 8)
+    _pv_rbox(W, (0.4, 0.27, 0.19), (0, 0, 0.025), 0.01)                                                         # plinth
+    _hm_slab(D, 0.42, 0.29, 0.215, 0.24, r=0.012, bev=0.006)
+    _pv_rbox(W, (0.32, 0.22, 0.71), (0, 0, 0.24), 0.01)                                                         # trunk
+    _pv_rbox(L, (0.22, 0.012, 0.52), (0, -0.112, 0.33), 0.006)                                                   # trunk door
+    box2(D, -0.075, 0.075, -0.1215, -0.1175, 0.39, 0.8)                                                          # dark window
+    for x0, x1, z0, z1 in ((-0.085, 0.085, 0.38, 0.39), (-0.085, 0.085, 0.8, 0.81), (-0.085, -0.075, 0.39, 0.8), (0.075, 0.085, 0.39, 0.8)):
+        box2(Br, x0, x1, -0.124, -0.117, z0, z1)
+    rod(Br, (0, -0.124, 0.78), (0, -0.124, 0.5), 0.004, 4)                                                       # pendulum
+    cyl(Br, 0.045, 0.008, (0, -0.122, 0.48), 16, rot=(math.pi / 2, 0, 0))
+    _hm_slab(D, 0.4, 0.27, 0.95, 0.975, r=0.012, bev=0.006)
+    _pv_rbox(W, (0.36, 0.25, 0.32), (0, 0, 0.97), 0.012)                                                          # hood
+    for sx in (-1, 1): _pv_lathe(D, [(0.0, 0.97), (0.018, 0.97), (0.014, 1.0), (0.012, 1.26), (0.018, 1.29), (0.0, 1.29)], (sx * 0.155, -0.135, 0), seg=8)   # hood columns
+    with xf((0, -0.125, 1.13), rx=math.pi / 2):
+        cyl('home_clock_face', 0.12, 0.006, (0, 0, 0), 24)
+        torus(Br, 0.122, 0.009, (0, 0, 0.004), seg=24, rseg=4)
+        for k in range(12):
+            a = k / 12 * math.tau; s = 1.6 if k % 3 == 0 else 1.0
+            box('ink', (0.007 * s, 0.018, 0.002), (0.098 * math.cos(a), 0.098 * math.sin(a), 0.006), rot=(0, 0, a + math.pi / 2))
+        box('ink', (0.008, 0.06, 0.002), (0, 0.03, 0.007), rot=(0, 0, 0.6)); box('ink', (0.006, 0.085, 0.002), (0, 0.042, 0.009), rot=(0, 0, -1.9))
+        cyl(Br, 0.01, 0.004, (0, 0, 0.011), 8)
+    prism(W, [(0.19 * math.cos(math.pi * k / 10), 1.29 + 0.07 * math.sin(math.pi * k / 10)) for k in range(11)], 0.25, loc=(0, 0, 0), axis='Y')   # bonnet
+    for x, z in ((-0.17, 1.29), (0.17, 1.29), (0.0, 1.36)): ico(Br, 0.02, (x, -0.11, z + 0.02), sub=2)
+
+@model('furn_toy_box', 'おもちゃ箱(ふたが開いている)', '家具', lod=False)
+def furn_toy_box():
+    B, Wt = 'home_mail_blue', 'home_paint_white'
+    for sx in (-1, 1):
+        for sy in (-1, 1): cyl('home_wood_dk', 0.02, 0.03, (sx * 0.27, sy * 0.16, 0), 8)
+    box2(B, -0.3, 0.3, -0.19, 0.19, 0.03, 0.06)                                                                  # bottom
+    for sy in (-1, 1): box2(B, -0.28, 0.28, min(sy * 0.16, sy * 0.19), max(sy * 0.16, sy * 0.19), 0.03, 0.36)    # front / back
+    for sx in (-1, 1): box2(B, min(sx * 0.27, sx * 0.3), max(sx * 0.27, sx * 0.3), -0.16, 0.16, 0.03, 0.36)      # sides
+    for sx in (-1, 1):
+        for sy in (-1, 1): _pv_rbox(Wt, (0.05, 0.05, 0.35), (sx * 0.285, sy * 0.175, 0.025), 0.012)            # white corner posts
+    for sy in (-1, 1): box2(Wt, -0.28, 0.28, min(sy * 0.165, sy * 0.195), max(sy * 0.165, sy * 0.195), 0.36, 0.375)
+    for sx in (-1, 1): box2(Wt, min(sx * 0.27, sx * 0.3), max(sx * 0.27, sx * 0.3), -0.165, 0.165, 0.36, 0.375)
+    box2('home_wood_lt', -0.27, 0.27, -0.16, 0.16, 0.06, 0.27)                                                   # pile under the toys
+    for k, (x, z, s, m) in enumerate(((-0.13, 0.2, 0.05, 'ac_pansy_yellow'), (0.0, 0.14, 0.035, Wt), (0.13, 0.22, 0.045, 'home_cake_pink'))):
+        with xf((x, -0.19, z), rx=math.pi / 2, rz=0.0): _h2_plate(m, _h2_star(5, s, s * 0.45), 0.006, z0=-0.0005)   # stars on the front
+    with xf((0, 0.19, 0.37), rx=-(math.pi / 2 + 0.32)):   # lid propped open
+        _hm_slab(B, 0.62, 0.4, 0.0, 0.035, r=0.02, bev=0.008, cy=-0.2)
+        with xf((0, -0.2, 0)): _h2_plate('ac_pansy_yellow', _h2_star(5, 0.08, 0.035), 0.004, z0=-0.0035)
+        for (x, y) in ((-0.2, -0.32), (0.2, -0.1)): ico(Wt, 0.016, (x, y, -0.002), (1, 1, 0.4), 1)
+    rod('home_brass', (0.25, 0.16, 0.34), (0.25, 0.26, 0.5), 0.005, 4)                                           # lid stay
+    lat = [(0.0, 0.0), (0.05, 0.007), (0.087, 0.03), (0.1, 0.07), (0.087, 0.11), (0.05, 0.133), (0.0, 0.14)]   # beach ball
+    with xf((-0.14, 0.02, 0.27), rx=0.5, rz=0.3):
+        _h2_lathe_bands(lat, ['home_book_red', Wt, 'home_book_blue', 'home_book_yellow', Wt, 'home_book_red'], seg=12)
+    with xf((0.13, -0.06, 0.3)):   # rubber duck
+        _ac_ball('home_duck', (0, 0.0, 0.04), (0.07, 0.085, 0.055), 12, 6)
+        _ac_ball('home_duck', (0, -0.05, 0.11), (0.045, 0.045, 0.045), 10, 5)
+        _ac_ball('ac_beak', (0, -0.1, 0.1), (0.025, 0.02, 0.01), 8, 4)
+        for sx in (-1, 1): ico('eye', 0.008, (sx * 0.022, -0.087, 0.123), sub=1)
+    for k, (x, y, rz, rx, m) in enumerate(((0.05, 0.1, 0.3, 0.2, 'home_book_green'), (-0.03, 0.09, -0.4, 0.0, 'home_book_red'), (0.21, 0.08, 0.6, 0.4, 'ac_pansy_yellow'))):
+        _pv_rbox(m, (0.075, 0.075, 0.075), (x, y, 0.27), 0.012, rot=(rx, 0, rz))                                # building blocks
+    rod('home_wood_lt', (-0.02, 0.1, 0.3), (-0.04, 0.12, 0.56), 0.006, 6)                                       # toy sailboat mast
+    prism(Wt, [(0.0, 0.33), (0.0, 0.54), (0.12, 0.35)], 0.004, loc=(-0.025, 0.11, 0), axis='Y')
+    prism('home_book_red', [(-0.12, 0.3), (0.06, 0.3), (0.03, 0.27), (-0.1, 0.27)], 0.05, loc=(-0.02, 0.1, 0), axis='Y')
+
+@model('furn_teddy', '大きなくまのぬいぐるみ', '家具', lod=False)
+def furn_teddy():
+    T, Tl = 'home_teddy', 'home_teddy_lt'
+    bc, BR = (0, 0.03, 0.16), (0.15, 0.13, 0.17)
+    _ac_ball(T, bc, BR, 12, 6, f=lambda x, y, z: (x, y, max(z, -0.155)))                                          # body
+    _ac_decal(Tl, bc, BR, 0, 0.0, 0.085, 0.1, 0.016, sub=2)                                                     # belly
+    hc, HR = (0, 0.0, 0.42), (0.13, 0.11, 0.115)
+    _ac_ball(T, hc, HR, 14, 6)                                                                                 # head
+    _ac_ball(Tl, (0, -0.085, 0.4), (0.055, 0.04, 0.04), 10, 5)                                                  # muzzle
+    ico('ac_bear_nose', 0.018, (0, -0.124, 0.418), (1.3, 0.8, 0.9), 2)
+    _pv_tube('ac_bear_nose', [(-0.015, -0.12, 0.385), (0.0, -0.124, 0.395), (0.015, -0.12, 0.385)], 0.0035, 4)
+    for sx in (-1, 1):
+        _ac_decal('eye', hc, HR, sx * 0.048, 0.025, 0.017, 0.021, 0.01, sub=2)
+        _ac_decal('white', hc, HR, sx * 0.048 + 0.006, 0.033, 0.006, 0.006, 0.006, 0.004, sub=1)
+        _ac_ball(T, (sx * 0.09, 0.005, 0.515), (0.045, 0.026, 0.042), 8, 4)                                    # ears
+        ico(Tl, 0.026, (sx * 0.09, -0.018, 0.513), (1, 0.4, 0.95), 1)
+        _pv_tube(T, [(sx * 0.12, 0.0, 0.27), (sx * 0.165, -0.05, 0.19), (sx * 0.155, -0.09, 0.13)], [0.045, 0.042, 0.038], 8)   # arms
+        _ac_ball(T, (sx * 0.155, -0.095, 0.12), (0.042, 0.042, 0.04), 8, 4)
+        _ac_ball(T, (sx * 0.085, -0.11, 0.06), (0.06, 0.1, 0.055), 10, 5)                                       # legs
+        _ac_ball(Tl, (sx * 0.085, -0.205, 0.065), (0.04, 0.012, 0.04), 8, 4)                                    # foot pads
+    with xf((0, -0.1, 0.31), rx=0.25):   # red bow at the neck
+        for sx in (-1, 1): _ac_ball('ac_bow', (sx * 0.035, 0, 0), (0.04, 0.018, 0.028), 8, 4)
+        ico('ac_bow', 0.016, (0, -0.005, 0), sub=1)
+
+@model('furn_guitar', 'アコースティックギター(スタンドつき)', '家具', lod=False)
+def furn_guitar():
+    I = 'home_iron'
+    wv = [(0.0, 0.0), (0.006, 0.05), (0.02, 0.085), (0.045, 0.108), (0.085, 0.118), (0.125, 0.11), (0.16, 0.088), (0.19, 0.072), (0.215, 0.075),
+          (0.245, 0.086), (0.275, 0.088), (0.305, 0.075), (0.33, 0.05), (0.345, 0.022), (0.35, 0.0)]
+    outline = [(w, y) for y, w in wv[:-1]] + [(-w, y) for y, w in reversed(wv[1:])]
+    outline = [p for i, p in enumerate(outline) if i == 0 or abs(p[0]) > 1e-6 or abs(p[1] - outline[i - 1][1]) > 1e-6]
+    Mg = Matrix.Translation(Vector((0, 0.035, 0.088))) @ Matrix.Rotation(-0.22, 4, 'X') @ Matrix.Rotation(math.pi / 2, 4, 'X')
+    with xf((0, 0.035, 0.088), rx=-0.22):
+        with xf((0, 0, 0), rx=math.pi / 2):
+            _h2_plate('home_guitar_side', outline, 0.065, top='home_guitar_top')
+            cyl('home_coal', 0.032, 0.002, (0, 0.215, 0.065), 16)                                              # sound hole
+            torus('home_wood_dk', 0.038, 0.003, (0, 0.215, 0.0655), seg=16, rseg=3)
+            box('home_wood_dk', (0.075, 0.016, 0.008), (0, 0.075, 0.065))                                        # bridge
+            box('home_wood_lt', (0.036, 0.2, 0.026), (0, 0.44, 0.033))                                           # neck
+            box('home_wood_dk', (0.04, 0.27, 0.006), (0, 0.405, 0.062))                                          # fretboard
+            for k in range(6): box('ac_ring_metal', (0.04, 0.002, 0.002), (0, 0.33 + k * 0.042, 0.068))
+            box('home_cream', (0.04, 0.006, 0.006), (0, 0.54, 0.062))                                            # nut
+            with xf((0, 0.54, 0.05), rx=-0.25):
+                box('home_wood_dk', (0.058, 0.1, 0.018), (0, 0.05, 0.0))                                         # headstock
+                for k in range(3):
+                    for sx in (-1, 1):
+                        rod('ac_ring_metal', (sx * 0.029, 0.025 + k * 0.03, 0.009), (sx * 0.05, 0.025 + k * 0.03, 0.009), 0.003, 4)
+                        cyl('home_cream', 0.008, 0.004, (sx * 0.054, 0.025 + k * 0.03, 0.004), 6, rot=(0, math.pi / 2, 0))
+            for k in range(6):
+                rod('ac_line', ((k - 2.5) * 0.009, 0.075, 0.075), ((k - 2.5) * 0.006, 0.54, 0.067), 0.0012, 3)
+            _pv_tube('rubber', [(-0.035, 0.46, 0.042), (-0.035, 0.46, 0.01), (0.0, 0.46, -0.004), (0.035, 0.46, 0.01), (0.035, 0.46, 0.042)], 0.006, 5)   # neck yoke
+    yoke = Mg @ Vector((0, 0.46, -0.01))
+    H = Vector((0, 0.12, 0.09))
+    for sx in (-1, 1): rod(I, H, (sx * 0.17, -0.1, 0.0), 0.009, 6)                                               # stand legs
+    rod(I, H, (0, 0.28, 0.0), 0.009, 6)
+    rod(I, H, yoke, 0.008, 6)                                                                                   # mast
+    for sx in (-1, 1): rod(I, H, (sx * 0.08, 0.0, 0.07), 0.008, 6)                                              # cradle arms
+    rod('rubber', (-0.09, 0.0, 0.07), (0.09, 0.0, 0.07), 0.011, 6)
+    for sx in (-1, 1): rod('rubber', (sx * 0.08, 0.0, 0.07), (sx * 0.08, -0.07, 0.11), 0.01, 6)
+    for p in ((0.17, -0.1, 0.0), (-0.17, -0.1, 0.0), (0, 0.28, 0.0)): ico('rubber', 0.016, p, (1, 1, 0.6), 2)
+
+# ---- garden / outdoor
+@model('furn_well', '井戸(屋根・つるべ)', '屋外の家具', lod=False)
+def furn_well():
+    W, D, I = 'home_wood', 'home_wood_dk', 'home_iron'
+    _pv_lathe(W, [(0.3, 0.0), (0.31, 0.02), (0.31, 0.42), (0.3, 0.45), (0.27, 0.45), (0.26, 0.43), (0.26, 0.2)], seg=16, cap=False)   # tub curb
+    _pv_lathe(W, [(0.0, 0.0), (0.3, 0.0)], seg=16, cap=False)
+    _hm_rings(0.2, [(0.0, 0.26, 'home_water')], seg=16)
+    for z in (0.08, 0.36): torus(I, 0.313, 0.01, (0, 0, z), seg=16, rseg=4)                                       # hoops
+    for k in range(8):
+        a = k / 8 * math.tau + 0.2; box(D, (0.006, 0.004, 0.36), (0.3115 * math.cos(a), 0.3115 * math.sin(a), 0.045), rot=(0, 0, a + math.pi / 2))   # stave seams
+    for sx in (-1, 1):
+        _pv_rbox(D, (0.07, 0.07, 1.3), (sx * 0.38, 0, 0.0), 0.01)                                                # posts
+        _pv_rbox(D, (0.1, 0.16, 0.05), (sx * 0.38, 0, 0.0), 0.01)
+    box2(D, -0.42, 0.42, -0.03, 0.03, 0.98, 1.04)                                                               # cross beam
+    box2(D, -0.42, 0.42, -0.03, 0.03, 1.22, 1.3)                                                                # ridge beam
+    prism('home_roof', [(-0.47, 1.06), (0.0, 1.3), (0.47, 1.06), (0.47, 1.105), (0.0, 1.345), (-0.47, 1.105)], 1.0, loc=(0, 0, 0), axis='X')   # gable roof
+    rod(D, (-0.52, 0, 1.34), (0.52, 0, 1.34), 0.03, 8)                                                          # ridge cap
+    for sx in (-1, 1): rod('home_wood_dk', (sx * 0.52, 0, 1.34), (sx * 0.54, 0, 1.34), 0.034, 8)
+    box2(I, -0.045, -0.035, -0.012, 0.012, 0.86, 0.98); box2(I, 0.035, 0.045, -0.012, 0.012, 0.86, 0.98)          # pulley bracket
+    with xf((0, 0, 0.88), rx=math.pi / 2):
+        cyl('home_wood_lt', 0.055, 0.03, (0, 0, -0.015), 14)                                                     # pulley wheel
+        torus(I, 0.055, 0.006, (0, 0, 0.0), seg=14, rseg=3)
+    rod('rope', (-0.055, 0, 0.88), (-0.055, 0, 0.21), 0.007, 5)                                                   # rope down into the well
+    bx, by = 0.46, -0.33
+    rod('rope', (0.055, 0, 0.88), (bx, by, 0.27), 0.007, 5)                                                       # rope to the bucket
+    _pv_lathe(W, [(0.0, 0.0), (0.07, 0.0), (0.085, 0.14), (0.078, 0.14), (0.065, 0.022), (0.0, 0.022)], (bx, by, 0), seg=12)   # bucket
+    for z, r in ((0.025, 0.073), (0.11, 0.083)): torus(I, r, 0.005, (bx, by, z), seg=10, rseg=3)
+    _pv_tube(I, [(bx - 0.08, by, 0.13), (bx - 0.06, by, 0.22), (bx, by, 0.26), (bx + 0.06, by, 0.22), (bx + 0.08, by, 0.13)], 0.005, 4)
+    for k, (x, y, s) in enumerate(((-0.42, -0.26, 0.06), (0.3, 0.38, 0.05))):
+        ico('home_stone', s, (x, y, 0.0), (1.3, 1.1, 0.7), 2, jitter=0.2, seed=k, flat_bottom=0.0)
+
+@model('furn_planter', '花のプランター(木箱)', '屋外の家具', lod=False)
+def furn_planter():
+    W, L, D = 'home_wood', 'home_wood_lt', 'home_wood_dk'
+    box2(W, -0.48, 0.48, -0.14, 0.14, 0.03, 0.25)                                                                # box
+    for sy in (-1, 1):
+        for k, (za, zb) in enumerate(((0.03, 0.105), (0.105, 0.18), (0.18, 0.25))):
+            y0, y1 = sorted((sy * 0.138, sy * 0.152)); box2(L if k % 2 else W, -0.46, 0.46, y0, y1, za + 0.003, zb - 0.003)   # planks
+    for sx in (-1, 1):
+        for k, (za, zb) in enumerate(((0.03, 0.105), (0.105, 0.18), (0.18, 0.25))):
+            x0, x1 = sorted((sx * 0.478, sx * 0.492)); box2(L if k % 2 else W, x0, x1, -0.12, 0.12, za + 0.003, zb - 0.003)
+        for sy in (-1, 1): box2(D, min(sx * 0.45, sx * 0.505), max(sx * 0.45, sx * 0.505), min(sy * 0.115, sy * 0.165), max(sy * 0.115, sy * 0.165), 0.0, 0.27)   # corner posts / feet
+    for sy in (-1, 1): box2(D, -0.45, 0.45, min(sy * 0.12, sy * 0.165), max(sy * 0.12, sy * 0.165), 0.25, 0.268)   # rim
+    box2('ac_dig_mid', -0.45, 0.45, -0.12, 0.12, 0.25, 0.262)                                                     # soil
+    rnd = random.Random(3)
+    kinds = [('ac_tulip_red', 'ac_flower_eye', 'cup'), ('ac_petal_white', 'ac_flower_eye', 'daisy'), ('ac_pansy_yellow', 'ac_pansy_orange', 'cup'),
+             ('ac_cosmos_pink', 'ac_flower_eye', 'daisy'), ('home_cake_pink', 'ac_flower_eye', 'cup'), ('ac_cosmos_purple', 'ac_pansy_yellow', 'daisy')]
+    for i in range(9):
+        x = -0.4 + i * 0.1; y = 0.035 * (1 if i % 2 else -1); m, eye, kind = kinds[i % len(kinds)]
+        top = (x + rnd.uniform(-0.015, 0.015), y, 0.262 + rnd.uniform(0.15, 0.22))
+        rod('ac_stem', (x, y, 0.262), top, 0.005, 3)
+        _ac_leaf('ac_leaf', (x, y, 0.262), rnd.uniform(0, math.tau), rnd.uniform(0.08, 0.11), 0.025, 0.7)
+        if kind == 'cup': _ac_bloom(m, eye, top, 0.032, 0, rnd.uniform(-0.15, 0.15), rnd.uniform(0, 1), cup=True)
+        else: _ac_bloom(m, eye, top, 0.045, 8, -0.7, math.pi)
+
+@model('furn_swing', '庭のブランコ', '屋外の家具', lod=False)
+def furn_swing():
+    W, D = 'home_wood', 'home_wood_dk'
+    for sx in (-1, 1):
+        x = sx * 0.72
+        for sy in (-1, 1): rod(W, (x, sy * 0.44, 0.0), (x, sy * 0.02, 1.22), 0.035, 8)                           # A-frame legs
+        rod(W, (x, -0.33, 0.33), (x, 0.33, 0.33), 0.022, 8)                                                     # brace
+    _pv_rbox(D, (1.56, 0.09, 0.09), (0, 0, 1.18), 0.012)                                                        # top beam
+    _hm_slab('home_wood_lt', 0.52, 0.22, 0.3, 0.34, r=0.04, bev=0.01)                                          # seat
+    for sx in (-1, 1):
+        torus('home_iron', 0.018, 0.005, (sx * 0.23, 0, 1.17), rot=(0, math.pi / 2, 0), seg=8, rseg=3)
+        for sy in (-1, 1): rod('rope', (sx * 0.23, 0, 1.165), (sx * 0.23, sy * 0.085, 0.335), 0.009, 5)
+    rnd = random.Random(7)
+    for k in range(7):   # climbing rose along the beam
+        x = -0.6 + k * 0.2
+        _ac_leaf('ac_leaf', (x, -0.045, 1.2), -math.pi / 2 + rnd.uniform(-0.6, 0.6), 0.07, 0.025, -0.4)
+        if k % 2 == 0: _ac_bloom('home_cake_pink' if k % 4 else 'ac_tulip_red', 'ac_flower_eye', (x + 0.05, -0.05, 1.23), 0.032, 5, -1.4, 0.0)
+    _pv_tube('ac_stem', [(-0.72, -0.05, 1.0), (-0.66, -0.05, 1.21)] + [(-0.6 + k * 0.2, -0.048, 1.21 + 0.02 * math.sin(k * 1.7)) for k in range(7)], 0.005, 4)
+
+@model('furn_birdhouse', '巣箱(ポールつき・小鳥)', '屋外の家具', lod=False)
+def furn_birdhouse():
+    W, D, M = 'home_wood', 'home_wood_dk', 'home_mint'
+    _hm_slab(D, 0.26, 0.26, 0.0, 0.04, r=0.03, bev=0.01)
+    _pv_rbox(W, (0.05, 0.05, 0.86), (0, 0, 0.04), 0.01)
+    _hm_slab(W, 0.24, 0.24, 0.88, 0.9, r=0.015, bev=0.005)
+    for sy in (-1, 1): rod(W, (0, sy * 0.02, 0.76), (0, sy * 0.1, 0.885), 0.01, 5)
+    prism(M, [(-0.09, 0.9), (0.09, 0.9), (0.09, 1.08), (0.0, 1.16), (-0.09, 1.08)], 0.18, loc=(0, 0, 0), axis='Y')   # house
+    prism('home_buoy_red', [(-0.125, 1.053), (0.0, 1.158), (0.125, 1.053), (0.125, 1.08), (0.0, 1.185), (-0.125, 1.08)], 0.24, loc=(0, 0, 0), axis='Y')   # roof
+    cyl('home_coal', 0.026, 0.004, (0, -0.0905, 1.02), 14, rot=(math.pi / 2, 0, 0))                                 # entrance hole
+    torus('home_paint_white', 0.03, 0.004, (0, -0.091, 1.02), rot=(math.pi / 2, 0, 0), seg=14, rseg=3)
+    rod(D, (0, -0.09, 0.965), (0, -0.14, 0.965), 0.006, 5)                                                         # perch
+    _h2_heart('home_paint_white', (0, -0.0915, 1.105), 0.016, 0.004)
+    with xf((0.03, 0.02, 1.17), rz=0.3):   # little bird on the roof
+        _ac_ball('home_bird', (0, 0, 0.025), (0.028, 0.042, 0.026), 10, 5)
+        _ac_ball('home_bird', (0, -0.034, 0.055), (0.022, 0.022, 0.022), 8, 4)
+        cyl('ac_beak', 0.008, 0.016, (0, -0.054, 0.055), 6, r2=0.0, rot=(math.pi / 2, 0, 0))
+        for sx in (-1, 1): ico('eye', 0.004, (sx * 0.014, -0.05, 0.062), sub=1)
+        prism('home_bird', [(-0.012, 0.0), (0.012, 0.0), (0.0, 0.035)], 0.006, loc=(0, 0.04, 0.03), axis='Y', rot=(-1.0, 0, 0))
+
+@model('furn_picnic_table', 'ピクニックテーブル(ベンチ一体)', '屋外の家具', lod=False)
+def furn_picnic_table():
+    W, L, D = 'home_wood', 'home_wood_lt', 'home_wood_dk'
+    for k in range(4):
+        y0 = -0.275 + k * 0.1375; box2(L if k % 2 else W, -0.6, 0.6, y0 + 0.004, y0 + 0.1375 - 0.004, 0.44, 0.47)   # top planks
+    for sy in (-1, 1):
+        for k in range(2):
+            y0, y1 = sorted((sy * (0.4 + k * 0.1 + 0.004), sy * (0.4 + (k + 1) * 0.1 - 0.004))); box2(W if k else L, -0.6, 0.6, y0, y1, 0.26, 0.29)   # benches
+    for sx in (-1, 1):
+        x = sx * 0.45
+        box2(D, x - 0.025, x + 0.025, -0.6, 0.6, 0.215, 0.26)                                                     # bench support
+        box2(D, x - 0.025, x + 0.025, -0.27, 0.27, 0.405, 0.44)                                                   # top cleat
+        for sy in (-1, 1): _h2_beam(D, (x, sy * 0.5, 0.0), (x, sy * 0.13, 0.44), 0.045, 0.06)                     # crossed legs
+    _h2_beam(D, (-0.45, 0, 0.24), (0.0, 0, 0.42), 0.04, 0.04); _h2_beam(D, (0.45, 0, 0.24), (0.0, 0, 0.42), 0.04, 0.04)   # braces
+    with xf((0.22, 0.04, 0.47)):   # picnic basket with a gingham cloth and a lemonade bottle
+        _pv_rbox('home_basket', (0.2, 0.14, 0.1), (0, 0, 0), 0.02)
+        _pv_tube('home_basket', [(-0.08, 0, 0.09), (-0.06, 0, 0.17), (0.0, 0, 0.2), (0.06, 0, 0.17), (0.08, 0, 0.09)], 0.008, 5)
+        _pv_rbox('home_stripe_red', (0.16, 0.16, 0.012), (-0.01, 0.0, 0.095), 0.004, rot=(0, 0, 0.3))
+    _pv_lathe('ac_bottle_glass', [(0.0, 0.47), (0.03, 0.47), (0.032, 0.56), (0.012, 0.6), (0.012, 0.63), (0.0, 0.63)], (-0.15, -0.05, 0), seg=10)
+    _pv_lathe('ac_pansy_yellow', [(0.0, 0.48), (0.031, 0.48), (0.033, 0.54), (0.0, 0.54)], (-0.15, -0.05, 0), seg=10)
+
+@model('furn_campfire', 'たき火(石の輪)', '屋外の家具', lod=False)
+def furn_campfire():
+    _pv_lathe('home_ash', [(0.0, 0.0), (0.25, 0.0), (0.2, 0.015), (0.0, 0.02)], seg=16)
+    for k in range(9):
+        a = k / 9 * math.tau + 0.2
+        ico('home_stone' if k % 2 else 'home_stone_dk', 0.075, (0.31 * math.cos(a), 0.31 * math.sin(a), 0.0), (1.15, 0.9, 0.75), 2, jitter=0.25, seed=k, flat_bottom=0.0)
+    for k in range(5):   # logs leaning into a teepee
+        a = k / 5 * math.tau + 0.5; dr = Vector((math.cos(a), math.sin(a), 0))
+        p0, p1 = dr * 0.2 + Vector((0, 0, 0.02)), dr * 0.03 + Vector((0, 0, 0.27))
+        rod('bark', p0, p1, 0.032, 7)
+        e = (p0 - p1).normalized(); rod('home_log_end', p0, p0 + e * 0.004, 0.031, 7)
+    def flame(mat, c, h, r, tw):
+        _pv_lathe(mat, [(0.0, 0.0), (r * 0.8, h * 0.08), (r, h * 0.3), (r * 0.7, h * 0.6), (r * 0.3, h * 0.85), (0.0, h)], c, seg=8,
+                  f=lambda x, y, z: (x * math.cos(tw * z) - y * math.sin(tw * z) + 0.06 * z * z / h, x * math.sin(tw * z) + y * math.cos(tw * z), z))
+    flame('home_glow_fire', (0, 0, 0.02), 0.42, 0.1, 6.0)
+    flame('home_glow_fire', (0.07, 0.04, 0.02), 0.26, 0.06, -7.0)
+    flame('home_glow_fire', (-0.07, 0.03, 0.02), 0.3, 0.065, 7.0)
+    flame('home_glow_fire_core', (0.0, -0.07, 0.02), 0.22, 0.06, -5.0)                                            # bright inner tongues
+    flame('home_glow_fire_core', (0.04, -0.06, 0.02), 0.14, 0.04, 6.0)
+    flame('home_glow_fire_core', (-0.045, -0.055, 0.02), 0.16, 0.04, -6.0)
+
+@model('furn_hammock', 'ハンモック(2本の柱)', '屋外の家具', lod=False)
+def furn_hammock():
+    W, D = 'home_wood', 'home_wood_dk'
+    hx, hz, ex, ez = 0.92, 0.9, 0.62, 0.58
+    for sx in (-1, 1):
+        _pv_rbox(W, (0.08, 0.08, 1.0), (sx * hx, 0, 0), 0.012)                                                   # posts
+        _pv_rbox(D, (0.1, 0.1, 0.03), (sx * hx, 0, 1.0), 0.01)
+        for sy in (-1, 1): _h2_beam(D, (sx * hx, sy * 0.25, 0.0), (sx * hx, sy * 0.03, 0.42), 0.04, 0.04)          # braces
+        torus('home_iron', 0.02, 0.005, (sx * (hx - 0.045), 0, hz), rot=(math.pi / 2, 0, 0), seg=8, rseg=3)    # hook ring
+        rod(D, (sx * ex, -0.3, ez), (sx * ex, 0.3, ez), 0.016, 8)                                               # spreader bars
+        for y in (-0.26, -0.09, 0.09, 0.26): rod('rope', (sx * ex, y, ez), (sx * (hx - 0.06), 0, hz - 0.01), 0.006, 4)
+    def bed(u, v):
+        s = 2 * v - 1; c = 1 - s * s
+        return ((s * ex), (u - 0.5) * 0.56, ez - 0.25 * c + 0.07 * (2 * u - 1) ** 2 * c + 0.005)
+    _h2_sheet(['home_stripe_red', 'home_paint_white', 'home_stripe_blue', 'home_paint_white', 'home_stripe_blue', 'home_paint_white', 'home_stripe_red'], bed, 7, 10, 0.006)
+    _ac_ball('home_pillow', (-0.43, 0.0, 0.5), (0.09, 0.17, 0.045), 10, 5)                                      # pillow at one end
+
+@model('furn_mailbox_red', '赤い丸ポスト型の郵便受け', '屋外の家具', lod=False)
+def furn_mailbox_red():
+    R_, Wt = 'home_post_red', 'home_paint_white'
+    _hm_slab('home_stone', 0.32, 0.32, 0.0, 0.05, r=0.04, bev=0.012)
+    _pv_lathe(R_, [(0.13, 0.05), (0.137, 0.07), (0.137, 0.6), (0.152, 0.615), (0.152, 0.645), (0.13, 0.655), (0.12, 0.7), (0.08, 0.755), (0.0, 0.775)], seg=20)
+    ico(R_, 0.026, (0, 0, 0.785), sub=2)
+    _pv_lathe('home_post_red', [(0.142, 0.07), (0.146, 0.08), (0.146, 0.1), (0.142, 0.11)], seg=20)                  # base ring
+    with xf((0, -0.13, 0.49)):   # slot hood and a letter peeking out
+        _pv_rbox(R_, (0.15, 0.045, 0.05), (0, -0.01, 0.0), 0.012)
+        box2('home_coal', -0.055, 0.055, -0.037, -0.028, -0.004, 0.006)
+        box('home_cream', (0.075, 0.004, 0.05), (0.008, -0.04, -0.03), rot=(0.4, 0, 0.12))
+        box('home_book_red', (0.012, 0.0045, 0.012), (0.03, -0.042, -0.01), rot=(0.4, 0, 0.12))
+    _pv_rbox(Wt, (0.08, 0.016, 0.06), (0, -0.131, 0.38), 0.005)                                                 # collection-time plate
+    for k in range(3): box('ink', (0.05 - k * 0.01, 0.004, 0.005), (0, -0.14, 0.4 + k * 0.012))
+    _h2_heart(Wt, (0, -0.137, 0.25), 0.04, 0.008)                                                               # white heart emblem
+    for k in range(3): _ac_bloom('ac_pansy_yellow' if k != 1 else 'ac_petal_white', 'ac_flower_eye', (0.12 * math.cos(-1.0 - k * 0.5), 0.12 * math.sin(-1.0 - k * 0.5) - 0.05, 0.06), 0.03, 5, -0.2, 0.0)
+
+# ---- art (picture surface = material home_canvas with 0..1 UVs, facing glTF +Z)
+@model('furn_easel', 'イーゼル(白いキャンバス)', '家具', lod=False)
+def furn_easel():
+    W, D = 'home_wood_lt', 'home_wood'
+    for sx in (-1, 1): _h2_beam(W, (sx * 0.27, -0.06, 0.0), (sx * 0.045, 0.02, 1.2), 0.036, 0.025)              # front legs
+    _h2_beam(W, (0, 0.34, 0.0), (0, 0.035, 1.15), 0.032, 0.024)                                                  # back leg
+    _h2_beam(D, (0, 0.002, 0.28), (0, 0.002, 1.24), 0.03, 0.024)                                                 # mast
+    _pv_rbox(D, (0.13, 0.06, 0.05), (0, 0.012, 1.17), 0.01)                                                      # head block
+    rod('home_brass', (-0.07, 0.012, 1.195), (0.07, 0.012, 1.195), 0.006, 6)
+    box2(D, -0.33, 0.33, -0.12, 0.004, 0.475, 0.5)                                                               # ledge
+    for x in (-0.2, 0.2): box2(D, x - 0.02, x + 0.02, -0.12, -0.1, 0.5, 0.512)                                    # canvas stops
+    box2(D, -0.045, 0.045, -0.09, 0.014, 1.0, 1.035)                                                             # top clamp
+    _h2_canvas(-0.25, 0.25, -0.08, 0.5, 1.0, 0.025)                                                             # 0.5 x 0.5 canvas, centre z 0.75
+    for k, m in enumerate(('home_book_red', 'home_book_blue', 'ac_pansy_yellow')):   # paint tubes on the ledge
+        with xf((0.27 + 0.016 * k, -0.07 + 0.02 * k, 0.5), rz=0.3 * k): rod(m, (0, -0.03, 0.009), (0, 0.03, 0.009), 0.009, 6, r2=0.006)
+    with xf((0.27, -0.13, 0.0), rz=-0.4, rx=math.pi / 2 - 0.25):   # paint palette leaning on the leg
+        pal = [(0.11 * math.cos(t), 0.07 * math.sin(t) + 0.075) for t in (k / 16 * math.tau for k in range(16))]
+        _h2_plate('home_wood_lt', pal, 0.008)
+        for k, (x, y, m) in enumerate(((-0.06, 0.1, 'home_book_red'), (-0.02, 0.125, 'ac_pansy_yellow'), (0.03, 0.12, 'home_book_blue'), (0.07, 0.095, 'home_book_green'), (0.0, 0.06, 'home_paint_white'))):
+            ico(m, 0.014, (x, y, 0.008), (1, 1, 0.4), 1)
+        cyl('home_coal', 0.012, 0.0015, (0.06, 0.04, 0.0075), 10)
+    _pv_lathe('ac_bottle_glass', [(0.0, 0.0), (0.04, 0.0), (0.042, 0.1), (0.035, 0.1), (0.033, 0.09), (0.0, 0.09)], (-0.3, -0.12, 0), seg=10)   # brush jar
+    for k, m in enumerate(('home_book_red', 'home_wood_dk', 'home_book_blue')):
+        a = k * 2.0; p0 = (-0.3 + 0.012 * math.cos(a), -0.12 + 0.012 * math.sin(a), 0.03); p1 = (-0.3 + 0.04 * math.cos(a), -0.12 + 0.04 * math.sin(a), 0.22)
+        rod(m, p0, p1, 0.005, 5); ico('home_wood_dk', 0.008, p1, (1, 1, 1.6), 1)
+
+@model('art_frame', '金の額縁(展示台つき・絵を入れる)', '博物館', lod=False)
+def art_frame():
+    G, D = 'home_gilt', 'home_wood_dk'
+    yp, x0, x1, z0, z1 = -0.04, -0.37, 0.37, 0.405, 0.995      # picture plane; outer edge of the frame (picture 0.6 x 0.45)
+    prof = [(0.0, -0.015), (0.0, 0.022), (0.006, 0.032), (0.02, 0.037), (0.034, 0.031), (0.042, 0.023), (0.05, 0.027), (0.058, 0.019),
+            (0.064, 0.009), (0.07, 0.004), (0.07, -0.015)]
+    rings = [[(x0 + i, yp - d, z0 + i), (x1 - i, yp - d, z0 + i), (x1 - i, yp - d, z1 - i), (x0 + i, yp - d, z1 - i)] for i, d in prof]
+    loft(G, rings + [rings[0]], closed=True, cap=False)                                                        # mitred gilt moulding
+    for x, z in ((x0 + 0.02, z0 + 0.02), (x1 - 0.02, z0 + 0.02), (x1 - 0.02, z1 - 0.02), (x0 + 0.02, z1 - 0.02)):
+        _ac_ball(G, (x, yp - 0.036, z), (0.017, 0.008, 0.017), 8, 4)                                            # corner rosettes
+    _pv_lathe(G, [(0.0, 0.0), (0.05, 0.0), (0.035, 0.018), (0.0, 0.03)], (0, yp - 0.03, z1 - 0.02), seg=8, sy=0.4)   # crest
+    _h2_canvas(-0.3, 0.3, yp, 0.475, 0.925, 0.012)                                                              # picture surface
+    for sx in (-1, 1): _h2_beam(D, (sx * 0.26, 0.0, 0.0), (sx * 0.075, 0.028, 0.96), 0.034, 0.024)                 # display easel legs
+    _h2_beam(D, (0, 0.33, 0.0), (0, 0.04, 0.93), 0.03, 0.022)
+    box2(D, -0.33, 0.33, yp - 0.065, 0.012, 0.375, 0.405)                                                        # ledge
+    box2(D, -0.33, 0.33, yp - 0.075, yp - 0.06, 0.375, 0.415)                                                    # ledge lip
+    _pv_rbox('home_brass', (0.13, 0.006, 0.026), (0, yp - 0.078, 0.382), 0.003)                                   # name plaque
+    rod('home_brass', (-0.08, 0.035, 0.93), (0.08, 0.035, 0.93), 0.006, 6)
+# --- home2 end
+
 @model('fisherman', '漁師(ゴム前掛け・長靴)', '人物', lod=False)
 def fisherman():
     # weathered fisherman: navy work shirt with rolled sleeves, orange rubber apron (前掛け) on a neck strap, white rubber boots,

@@ -4442,6 +4442,1052 @@
   "kb": 59.0
  },
  {
+  "name": "furn_zabuton",
+  "jp": "座布団(房付き)",
+  "category": "家具",
+  "size_m": [
+   0.56,
+   0.09,
+   0.57
+  ],
+  "tris": 740,
+  "lod1_tris": 0,
+  "materials": [
+   "home_zabuton",
+   "home_zabuton_b"
+  ],
+  "parts": [
+   "furn_zabuton_body"
+  ],
+  "kb": 58.6
+ },
+ {
+  "name": "furn_byobu",
+  "jp": "波の屏風(四曲・金箔)",
+  "category": "家具",
+  "size_m": [
+   1.21,
+   0.86,
+   0.19
+  ],
+  "tris": 1324,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_cloud",
+   "home_foam",
+   "home_gold_leaf",
+   "home_lacquer",
+   "home_sun",
+   "home_wave",
+   "home_wave_lt"
+  ],
+  "parts": [
+   "furn_byobu_body"
+  ],
+  "kb": 84.9
+ },
+ {
+  "name": "furn_andon",
+  "jp": "行灯(和紙のあかり)",
+  "category": "家具",
+  "size_m": [
+   0.31,
+   0.75,
+   0.29
+  ],
+  "tris": 468,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_glow_andon",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_andon_body"
+  ],
+  "kb": 36.9
+ },
+ {
+  "name": "furn_chabudai",
+  "jp": "ちゃぶ台(お茶とだんご)",
+  "category": "家具",
+  "size_m": [
+   0.77,
+   0.41,
+   0.77
+  ],
+  "tris": 1486,
+  "lod1_tris": 0,
+  "materials": [
+   "home_matcha",
+   "home_mochi",
+   "home_mochi_pink",
+   "home_tea",
+   "home_teaware",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "white"
+  ],
+  "parts": [
+   "furn_chabudai_body"
+  ],
+  "kb": 97.1
+ },
+ {
+  "name": "furn_bonsai",
+  "jp": "松の盆栽(飾り台つき)",
+  "category": "家具",
+  "size_m": [
+   0.51,
+   0.61,
+   0.32
+  ],
+  "tris": 1444,
+  "lod1_tris": 0,
+  "materials": [
+   "bark_pine",
+   "home_glaze",
+   "home_pine",
+   "home_pine_lt",
+   "home_stone",
+   "home_wood_red",
+   "moss"
+  ],
+  "parts": [
+   "furn_bonsai_body"
+  ],
+  "kb": 111.5
+ },
+ {
+  "name": "furn_hibachi",
+  "jp": "火鉢(鉄瓶つき)",
+  "category": "家具",
+  "size_m": [
+   0.4,
+   0.48,
+   0.41
+  ],
+  "tris": 1378,
+  "lod1_tris": 0,
+  "materials": [
+   "home_ash",
+   "home_brass",
+   "home_coal",
+   "home_glaze",
+   "home_glaze_w",
+   "home_glow_ember",
+   "home_iron"
+  ],
+  "parts": [
+   "furn_hibachi_body"
+  ],
+  "kb": 100.0
+ },
+ {
+  "name": "furn_tatami",
+  "jp": "畳(1畳)",
+  "category": "家具",
+  "size_m": [
+   1.8,
+   0.04,
+   0.9
+  ],
+  "tris": 268,
+  "lod1_tris": 0,
+  "materials": [
+   "home_tatami",
+   "home_tatami_b",
+   "home_tatami_edge"
+  ],
+  "parts": [
+   "furn_tatami_body"
+  ],
+  "kb": 15.9
+ },
+ {
+  "name": "furn_kakejiku",
+  "jp": "掛け軸(木の掛け台つき)",
+  "category": "家具",
+  "size_m": [
+   0.72,
+   1.08,
+   0.3
+  ],
+  "tris": 712,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_cloud",
+   "home_inkwash",
+   "home_scroll_mount",
+   "home_sun",
+   "home_washi",
+   "home_wood_dk",
+   "home_wood_lt",
+   "home_zabuton_b",
+   "ink",
+   "ink_red"
+  ],
+  "parts": [
+   "furn_kakejiku_body"
+  ],
+  "kb": 55.4
+ },
+ {
+  "name": "furn_beach_chair",
+  "jp": "ビーチチェア(しましまの布)",
+  "category": "屋外の家具",
+  "size_m": [
+   0.58,
+   0.71,
+   0.9
+  ],
+  "tris": 776,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_paint_white",
+   "home_stripe_blue",
+   "home_stripe_red",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_beach_chair_body"
+  ],
+  "kb": 55.0
+ },
+ {
+  "name": "furn_ship_wheel",
+  "jp": "船の舵輪(飾り台つき)",
+  "category": "家具",
+  "size_m": [
+   0.72,
+   0.86,
+   0.26
+  ],
+  "tris": 1392,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_wood",
+   "home_wood_dk",
+   "rope"
+  ],
+  "parts": [
+   "furn_ship_wheel_body"
+  ],
+  "kb": 99.2
+ },
+ {
+  "name": "furn_anchor",
+  "jp": "錨のオブジェ(ロープ巻き)",
+  "category": "家具",
+  "size_m": [
+   0.48,
+   0.73,
+   0.24
+  ],
+  "tris": 1038,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_navy",
+   "home_wood",
+   "home_wood_dk",
+   "rope"
+  ],
+  "parts": [
+   "furn_anchor_body"
+  ],
+  "kb": 80.0
+ },
+ {
+  "name": "furn_buoy_lamp",
+  "jp": "ブイのランプ(しましま)",
+  "category": "家具",
+  "size_m": [
+   0.42,
+   0.61,
+   0.42
+  ],
+  "tris": 976,
+  "lod1_tris": 0,
+  "materials": [
+   "home_buoy_red",
+   "home_glow_buoy",
+   "home_iron",
+   "home_paint_white",
+   "rope"
+  ],
+  "parts": [
+   "furn_buoy_lamp_body"
+  ],
+  "kb": 68.2
+ },
+ {
+  "name": "furn_shell_lamp",
+  "jp": "貝がらのテーブルランプ",
+  "category": "家具",
+  "size_m": [
+   0.4,
+   0.43,
+   0.25
+  ],
+  "tris": 1230,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_coral",
+   "home_glow_shell",
+   "home_pearl",
+   "home_sand"
+  ],
+  "parts": [
+   "furn_shell_lamp_body"
+  ],
+  "kb": 90.1
+ },
+ {
+  "name": "furn_lifebuoy",
+  "jp": "浮き輪スタンド",
+  "category": "屋外の家具",
+  "size_m": [
+   0.51,
+   0.93,
+   0.25
+  ],
+  "tris": 1284,
+  "lod1_tris": 0,
+  "materials": [
+   "home_buoy_red",
+   "home_paint_white",
+   "home_wood",
+   "home_wood_dk",
+   "rope"
+  ],
+  "parts": [
+   "furn_lifebuoy_body"
+  ],
+  "kb": 92.4
+ },
+ {
+  "name": "furn_crab_plush",
+  "jp": "カニのクッション",
+  "category": "家具",
+  "size_m": [
+   0.75,
+   0.35,
+   0.49
+  ],
+  "tris": 1448,
+  "lod1_tris": 0,
+  "materials": [
+   "cheek",
+   "eye",
+   "home_crab",
+   "home_crab_belly",
+   "white"
+  ],
+  "parts": [
+   "furn_crab_plush_body"
+  ],
+  "kb": 109.9
+ },
+ {
+  "name": "furn_lighthouse_model",
+  "jp": "灯台の模型(飾り台つき)",
+  "category": "家具",
+  "size_m": [
+   0.33,
+   0.64,
+   0.33
+  ],
+  "tris": 956,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_buoy_red",
+   "home_coal",
+   "home_glow_lighthouse",
+   "home_iron",
+   "home_paint_white",
+   "home_stone",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_lighthouse_model_body"
+  ],
+  "kb": 70.6
+ },
+ {
+  "name": "furn_cafe_table",
+  "jp": "カフェテーブル(大理石)",
+  "category": "家具",
+  "size_m": [
+   0.57,
+   0.64,
+   0.57
+  ],
+  "tris": 1160,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_cosmos_pink",
+   "ac_flower_eye",
+   "ac_leaf",
+   "ac_stem",
+   "home_brass",
+   "home_coffee",
+   "home_glaze",
+   "home_iron",
+   "home_marble",
+   "white"
+  ],
+  "parts": [
+   "furn_cafe_table_body"
+  ],
+  "kb": 81.8
+ },
+ {
+  "name": "furn_cafe_chair",
+  "jp": "カフェチェア(曲げ木風)",
+  "category": "家具",
+  "size_m": [
+   0.35,
+   0.67,
+   0.36
+  ],
+  "tris": 836,
+  "lod1_tris": 0,
+  "materials": [
+   "home_cushion",
+   "home_iron",
+   "home_wood"
+  ],
+  "parts": [
+   "furn_cafe_chair_body"
+  ],
+  "kb": 57.2
+ },
+ {
+  "name": "furn_counter",
+  "jp": "カフェのカウンター(コーヒーマシン)",
+  "category": "家具",
+  "size_m": [
+   1.26,
+   0.9,
+   0.52
+  ],
+  "tris": 1494,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_ring_metal",
+   "home_book_red",
+   "home_brass",
+   "home_clock_face",
+   "home_coal",
+   "home_coffee",
+   "home_croissant",
+   "home_glaze",
+   "home_marble",
+   "home_mint",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "st_chalk_pink",
+   "st_chalk_white",
+   "st_chalk_yellow",
+   "st_chalkboard",
+   "steel_dark",
+   "white"
+  ],
+  "parts": [
+   "furn_counter_body"
+  ],
+  "kb": 111.1
+ },
+ {
+  "name": "furn_cake_stand",
+  "jp": "ケーキスタンド(レースのテーブル)",
+  "category": "家具",
+  "size_m": [
+   0.45,
+   0.77,
+   0.45
+  ],
+  "tris": 1462,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_leaf",
+   "home_berry",
+   "home_brass",
+   "home_cake_pink",
+   "home_cream",
+   "home_macaron_a",
+   "home_macaron_b",
+   "home_mint",
+   "home_sponge",
+   "home_wood"
+  ],
+  "parts": [
+   "furn_cake_stand_body"
+  ],
+  "kb": 102.5
+ },
+ {
+  "name": "furn_monstera",
+  "jp": "モンステラの鉢植え",
+  "category": "家具",
+  "size_m": [
+   0.89,
+   1.0,
+   0.85
+  ],
+  "tris": 1444,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_dig_mid",
+   "home_monstera",
+   "home_monstera_stem",
+   "home_pot_band",
+   "home_pot_white"
+  ],
+  "parts": [
+   "furn_monstera_body"
+  ],
+  "kb": 89.7
+ },
+ {
+  "name": "furn_sofa",
+  "jp": "ふかふかソファ",
+  "category": "家具",
+  "size_m": [
+   1.24,
+   0.64,
+   0.62
+  ],
+  "tris": 1384,
+  "lod1_tris": 0,
+  "materials": [
+   "home_cushion",
+   "home_quilt_b",
+   "home_sofa",
+   "home_sofa_dk",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_sofa_body"
+  ],
+  "kb": 103.8
+ },
+ {
+  "name": "furn_desk",
+  "jp": "書きもの机(ランプと本)",
+  "category": "家具",
+  "size_m": [
+   0.95,
+   0.77,
+   0.48
+  ],
+  "tris": 1140,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_pansy_yellow",
+   "home_book_blue",
+   "home_book_green",
+   "home_book_red",
+   "home_book_yellow",
+   "home_brass",
+   "home_glow_desk",
+   "home_inkwash",
+   "home_lampshade_green",
+   "home_mail_blue",
+   "home_sheet",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_desk_body"
+  ],
+  "kb": 96.6
+ },
+ {
+  "name": "furn_tv_retro",
+  "jp": "レトロなブラウン管テレビ(台つき)",
+  "category": "家具",
+  "size_m": [
+   0.62,
+   0.94,
+   0.48
+  ],
+  "tris": 1020,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_ring_metal",
+   "home_cream",
+   "home_glow_crt",
+   "home_iron",
+   "home_tv",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_tv_retro_body"
+  ],
+  "kb": 80.1
+ },
+ {
+  "name": "furn_piano",
+  "jp": "アップライトピアノ",
+  "category": "家具",
+  "size_m": [
+   1.04,
+   0.98,
+   0.46
+  ],
+  "tris": 1250,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_key_white",
+   "home_piano",
+   "home_sheet",
+   "home_wood_red",
+   "ink"
+  ],
+  "parts": [
+   "furn_piano_body"
+  ],
+  "kb": 90.9
+ },
+ {
+  "name": "furn_wardrobe",
+  "jp": "洋服だんす(両開き)",
+  "category": "家具",
+  "size_m": [
+   0.86,
+   1.32,
+   0.47
+  ],
+  "tris": 1176,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_wardrobe_body"
+  ],
+  "kb": 90.9
+ },
+ {
+  "name": "furn_mirror",
+  "jp": "スタンドミラー(楕円)",
+  "category": "家具",
+  "size_m": [
+   0.53,
+   1.02,
+   0.36
+  ],
+  "tris": 1184,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_foam",
+   "home_mirror",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_mirror_body"
+  ],
+  "kb": 93.9
+ },
+ {
+  "name": "furn_clock_tall",
+  "jp": "のっぽの古時計",
+  "category": "家具",
+  "size_m": [
+   0.42,
+   1.4,
+   0.3
+  ],
+  "tris": 1476,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_clock_face",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "ink"
+  ],
+  "parts": [
+   "furn_clock_tall_body"
+  ],
+  "kb": 106.9
+ },
+ {
+  "name": "furn_toy_box",
+  "jp": "おもちゃ箱(ふたが開いている)",
+  "category": "家具",
+  "size_m": [
+   0.62,
+   0.75,
+   0.55
+  ],
+  "tris": 1276,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_beak",
+   "ac_pansy_yellow",
+   "eye",
+   "home_book_blue",
+   "home_book_green",
+   "home_book_red",
+   "home_book_yellow",
+   "home_brass",
+   "home_cake_pink",
+   "home_duck",
+   "home_mail_blue",
+   "home_paint_white",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_toy_box_body"
+  ],
+  "kb": 100.2
+ },
+ {
+  "name": "furn_teddy",
+  "jp": "大きなくまのぬいぐるみ",
+  "category": "家具",
+  "size_m": [
+   0.41,
+   0.55,
+   0.38
+  ],
+  "tris": 1412,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bear_nose",
+   "ac_bow",
+   "eye",
+   "home_teddy",
+   "home_teddy_lt",
+   "white"
+  ],
+  "parts": [
+   "furn_teddy_body"
+  ],
+  "kb": 114.5
+ },
+ {
+  "name": "furn_guitar",
+  "jp": "アコースティックギター(スタンドつき)",
+  "category": "家具",
+  "size_m": [
+   0.37,
+   0.73,
+   0.41
+  ],
+  "tris": 1102,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_line",
+   "ac_ring_metal",
+   "home_coal",
+   "home_cream",
+   "home_guitar_side",
+   "home_guitar_top",
+   "home_iron",
+   "home_wood_dk",
+   "home_wood_lt",
+   "rubber"
+  ],
+  "parts": [
+   "furn_guitar_body"
+  ],
+  "kb": 86.4
+ },
+ {
+  "name": "furn_well",
+  "jp": "井戸(屋根・つるべ)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.09,
+   1.37,
+   0.94
+  ],
+  "tris": 1484,
+  "lod1_tris": 0,
+  "materials": [
+   "home_iron",
+   "home_roof",
+   "home_stone",
+   "home_water",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "rope"
+  ],
+  "parts": [
+   "furn_well_body"
+  ],
+  "kb": 103.4
+ },
+ {
+  "name": "furn_planter",
+  "jp": "花のプランター(木箱)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.01,
+   0.53,
+   0.33
+  ],
+  "tris": 826,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_cosmos_pink",
+   "ac_cosmos_purple",
+   "ac_dig_mid",
+   "ac_flower_eye",
+   "ac_leaf",
+   "ac_pansy_yellow",
+   "ac_petal_white",
+   "ac_stem",
+   "ac_tulip_red",
+   "home_cake_pink",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_planter_body"
+  ],
+  "kb": 78.8
+ },
+ {
+  "name": "furn_swing",
+  "jp": "庭のブランコ",
+  "category": "屋外の家具",
+  "size_m": [
+   1.56,
+   1.28,
+   0.95
+  ],
+  "tris": 788,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_flower_eye",
+   "ac_leaf",
+   "ac_stem",
+   "ac_tulip_red",
+   "home_cake_pink",
+   "home_iron",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt",
+   "rope"
+  ],
+  "parts": [
+   "furn_swing_body"
+  ],
+  "kb": 69.4
+ },
+ {
+  "name": "furn_birdhouse",
+  "jp": "巣箱(ポールつき・小鳥)",
+  "category": "屋外の家具",
+  "size_m": [
+   0.26,
+   1.25,
+   0.27
+  ],
+  "tris": 694,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_beak",
+   "eye",
+   "home_bird",
+   "home_buoy_red",
+   "home_coal",
+   "home_mint",
+   "home_paint_white",
+   "home_wood",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "furn_birdhouse_body"
+  ],
+  "kb": 54.8
+ },
+ {
+  "name": "furn_picnic_table",
+  "jp": "ピクニックテーブル(ベンチ一体)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.2,
+   0.69,
+   1.2
+  ],
+  "tris": 662,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bottle_glass",
+   "ac_pansy_yellow",
+   "home_basket",
+   "home_stripe_red",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_picnic_table_body"
+  ],
+  "kb": 52.4
+ },
+ {
+  "name": "furn_campfire",
+  "jp": "たき火(石の輪)",
+  "category": "屋外の家具",
+  "size_m": [
+   0.77,
+   0.44,
+   0.74
+  ],
+  "tris": 1408,
+  "lod1_tris": 0,
+  "materials": [
+   "bark",
+   "home_ash",
+   "home_glow_fire",
+   "home_glow_fire_core",
+   "home_log_end",
+   "home_stone",
+   "home_stone_dk"
+  ],
+  "parts": [
+   "furn_campfire_body"
+  ],
+  "kb": 95.8
+ },
+ {
+  "name": "furn_hammock",
+  "jp": "ハンモック(2本の柱)",
+  "category": "屋外の家具",
+  "size_m": [
+   1.94,
+   1.04,
+   0.6
+  ],
+  "tris": 1028,
+  "lod1_tris": 0,
+  "materials": [
+   "home_iron",
+   "home_paint_white",
+   "home_pillow",
+   "home_stripe_blue",
+   "home_stripe_red",
+   "home_wood",
+   "home_wood_dk",
+   "rope"
+  ],
+  "parts": [
+   "furn_hammock_body"
+  ],
+  "kb": 75.5
+ },
+ {
+  "name": "furn_mailbox_red",
+  "jp": "赤い丸ポスト型の郵便受け",
+  "category": "屋外の家具",
+  "size_m": [
+   0.32,
+   0.81,
+   0.36
+  ],
+  "tris": 1016,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_flower_eye",
+   "ac_pansy_yellow",
+   "ac_petal_white",
+   "home_book_red",
+   "home_coal",
+   "home_cream",
+   "home_paint_white",
+   "home_post_red",
+   "home_stone",
+   "ink"
+  ],
+  "parts": [
+   "furn_mailbox_red_body"
+  ],
+  "kb": 81.6
+ },
+ {
+  "name": "furn_easel",
+  "jp": "イーゼル(白いキャンバス)",
+  "category": "家具",
+  "size_m": [
+   0.72,
+   1.24,
+   0.52
+  ],
+  "tris": 744,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bottle_glass",
+   "ac_pansy_yellow",
+   "home_book_blue",
+   "home_book_green",
+   "home_book_red",
+   "home_brass",
+   "home_canvas",
+   "home_canvas_edge",
+   "home_coal",
+   "home_paint_white",
+   "home_wood",
+   "home_wood_dk",
+   "home_wood_lt"
+  ],
+  "parts": [
+   "furn_easel_body"
+  ],
+  "kb": 66.3
+ },
+ {
+  "name": "art_frame",
+  "jp": "金の額縁(展示台つき・絵を入れる)",
+  "category": "博物館",
+  "size_m": [
+   0.74,
+   1.01,
+   0.46
+  ],
+  "tris": 528,
+  "lod1_tris": 0,
+  "materials": [
+   "home_brass",
+   "home_canvas",
+   "home_canvas_edge",
+   "home_gilt",
+   "home_wood_dk"
+  ],
+  "parts": [
+   "art_frame_body"
+  ],
+  "kb": 43.7
+ },
+ {
   "name": "fisherman",
   "jp": "漁師(ゴム前掛け・長靴)",
   "category": "人物",

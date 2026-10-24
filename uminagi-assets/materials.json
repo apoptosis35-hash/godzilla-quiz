@@ -5339,6 +5339,966 @@
   "emit": null,
   "emit_strength": 0.0
  },
+ "home_tatami": {
+  "color": [
+   0.58,
+   0.64,
+   0.3
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_tatami_b": {
+  "color": [
+   0.53,
+   0.59,
+   0.27
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_tatami_edge": {
+  "color": [
+   0.1,
+   0.13,
+   0.24
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_zabuton": {
+  "color": [
+   0.62,
+   0.14,
+   0.2
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_zabuton_b": {
+  "color": [
+   0.95,
+   0.74,
+   0.32
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_washi": {
+  "color": [
+   0.96,
+   0.93,
+   0.84
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_andon": {
+  "color": [
+   1.0,
+   0.9,
+   0.66
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.74,
+   0.4
+  ],
+  "emit_strength": 2.2
+ },
+ "home_lacquer": {
+  "color": [
+   0.14,
+   0.05,
+   0.035
+  ],
+  "rough": 0.3,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_gold_leaf": {
+  "color": [
+   0.88,
+   0.7,
+   0.32
+  ],
+  "rough": 0.4,
+  "metal": 0.55,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_wave": {
+  "color": [
+   0.1,
+   0.27,
+   0.58
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_wave_lt": {
+  "color": [
+   0.36,
+   0.6,
+   0.86
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_foam": {
+  "color": [
+   0.96,
+   0.95,
+   0.9
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_cloud": {
+  "color": [
+   0.97,
+   0.86,
+   0.58
+  ],
+  "rough": 0.5,
+  "metal": 0.3,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_sun": {
+  "color": [
+   0.85,
+   0.16,
+   0.08
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_teaware": {
+  "color": [
+   0.42,
+   0.58,
+   0.52
+  ],
+  "rough": 0.3,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_tea": {
+  "color": [
+   0.45,
+   0.58,
+   0.18
+  ],
+  "rough": 0.15,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_matcha": {
+  "color": [
+   0.5,
+   0.68,
+   0.3
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_mochi_pink": {
+  "color": [
+   0.98,
+   0.7,
+   0.75
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_mochi": {
+  "color": [
+   0.97,
+   0.95,
+   0.9
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_pine": {
+  "color": [
+   0.1,
+   0.33,
+   0.15
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_pine_lt": {
+  "color": [
+   0.24,
+   0.48,
+   0.2
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glaze": {
+  "color": [
+   0.14,
+   0.3,
+   0.56
+  ],
+  "rough": 0.25,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glaze_w": {
+  "color": [
+   0.92,
+   0.92,
+   0.88
+  ],
+  "rough": 0.3,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_ash": {
+  "color": [
+   0.62,
+   0.6,
+   0.56
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_ember": {
+  "color": [
+   1.0,
+   0.35,
+   0.08
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.3,
+   0.05
+  ],
+  "emit_strength": 3.0
+ },
+ "home_scroll_mount": {
+  "color": [
+   0.26,
+   0.4,
+   0.38
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_inkwash": {
+  "color": [
+   0.42,
+   0.45,
+   0.5
+  ],
+  "rough": 0.8,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_stripe_red": {
+  "color": [
+   0.88,
+   0.24,
+   0.2
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_stripe_blue": {
+  "color": [
+   0.18,
+   0.42,
+   0.8
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_navy": {
+  "color": [
+   0.1,
+   0.15,
+   0.3
+  ],
+  "rough": 0.45,
+  "metal": 0.3,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_buoy_red": {
+  "color": [
+   0.86,
+   0.15,
+   0.1
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_buoy": {
+  "color": [
+   1.0,
+   0.92,
+   0.7
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.82,
+   0.5
+  ],
+  "emit_strength": 3.0
+ },
+ "home_glow_shell": {
+  "color": [
+   1.0,
+   0.72,
+   0.62
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.62,
+   0.48
+  ],
+  "emit_strength": 1.3
+ },
+ "home_pearl": {
+  "color": [
+   0.98,
+   0.96,
+   0.93
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_sand": {
+  "color": [
+   0.9,
+   0.8,
+   0.6
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_coral": {
+  "color": [
+   0.95,
+   0.48,
+   0.38
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_crab": {
+  "color": [
+   0.92,
+   0.22,
+   0.1
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_crab_belly": {
+  "color": [
+   0.99,
+   0.84,
+   0.66
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_lighthouse": {
+  "color": [
+   1.0,
+   0.95,
+   0.75
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.9,
+   0.6
+  ],
+  "emit_strength": 4.0
+ },
+ "home_mint": {
+  "color": [
+   0.56,
+   0.82,
+   0.74
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_cream": {
+  "color": [
+   0.98,
+   0.94,
+   0.84
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_cake_pink": {
+  "color": [
+   0.98,
+   0.64,
+   0.72
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_sponge": {
+  "color": [
+   0.98,
+   0.8,
+   0.48
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_berry": {
+  "color": [
+   0.85,
+   0.07,
+   0.12
+  ],
+  "rough": 0.35,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_croissant": {
+  "color": [
+   0.86,
+   0.55,
+   0.2
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_coffee": {
+  "color": [
+   0.2,
+   0.1,
+   0.05
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_macaron_a": {
+  "color": [
+   0.68,
+   0.86,
+   0.62
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_macaron_b": {
+  "color": [
+   0.78,
+   0.66,
+   0.92
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_monstera": {
+  "color": [
+   0.05,
+   0.3,
+   0.1
+  ],
+  "rough": 0.55,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_monstera_stem": {
+  "color": [
+   0.3,
+   0.5,
+   0.2
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_pot_white": {
+  "color": [
+   0.92,
+   0.9,
+   0.85
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_pot_band": {
+  "color": [
+   0.55,
+   0.68,
+   0.55
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_sofa": {
+  "color": [
+   0.3,
+   0.58,
+   0.6
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_sofa_dk": {
+  "color": [
+   0.2,
+   0.42,
+   0.45
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_lampshade_green": {
+  "color": [
+   0.16,
+   0.45,
+   0.3
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_desk": {
+  "color": [
+   1.0,
+   0.94,
+   0.76
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.84,
+   0.55
+  ],
+  "emit_strength": 3.0
+ },
+ "home_tv": {
+  "color": [
+   0.82,
+   0.3,
+   0.07
+  ],
+  "rough": 0.45,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_crt": {
+  "color": [
+   0.55,
+   0.78,
+   0.82
+  ],
+  "rough": 0.15,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   0.55,
+   0.85,
+   0.95
+  ],
+  "emit_strength": 1.0
+ },
+ "home_piano": {
+  "color": [
+   0.05,
+   0.045,
+   0.05
+  ],
+  "rough": 0.2,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_key_white": {
+  "color": [
+   0.96,
+   0.95,
+   0.9
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_mirror": {
+  "color": [
+   0.68,
+   0.86,
+   0.95
+  ],
+  "rough": 0.05,
+  "metal": 0.3,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_clock_face": {
+  "color": [
+   0.97,
+   0.94,
+   0.85
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_teddy": {
+  "color": [
+   0.6,
+   0.34,
+   0.14
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_teddy_lt": {
+  "color": [
+   0.94,
+   0.8,
+   0.62
+  ],
+  "rough": 0.95,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_duck": {
+  "color": [
+   0.98,
+   0.82,
+   0.15
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_guitar_top": {
+  "color": [
+   0.9,
+   0.64,
+   0.33
+  ],
+  "rough": 0.35,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_guitar_side": {
+  "color": [
+   0.45,
+   0.2,
+   0.08
+  ],
+  "rough": 0.35,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_stone": {
+  "color": [
+   0.26,
+   0.25,
+   0.23
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_stone_dk": {
+  "color": [
+   0.17,
+   0.165,
+   0.16
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_roof": {
+  "color": [
+   0.16,
+   0.22,
+   0.32
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_glow_fire": {
+  "color": [
+   1.0,
+   0.42,
+   0.06
+  ],
+  "rough": 0.6,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.36,
+   0.04
+  ],
+  "emit_strength": 3.5
+ },
+ "home_glow_fire_core": {
+  "color": [
+   1.0,
+   0.9,
+   0.5
+  ],
+  "rough": 0.5,
+  "metal": 0.0,
+  "tex": null,
+  "emit": [
+   1.0,
+   0.85,
+   0.4
+  ],
+  "emit_strength": 5.0
+ },
+ "home_bird": {
+  "color": [
+   0.98,
+   0.78,
+   0.2
+  ],
+  "rough": 0.7,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_post_red": {
+  "color": [
+   0.74,
+   0.05,
+   0.035
+  ],
+  "rough": 0.4,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_canvas": {
+  "color": [
+   0.97,
+   0.96,
+   0.93
+  ],
+  "rough": 0.85,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_canvas_edge": {
+  "color": [
+   0.88,
+   0.85,
+   0.78
+  ],
+  "rough": 0.9,
+  "metal": 0.0,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
+ "home_gilt": {
+  "color": [
+   0.86,
+   0.64,
+   0.24
+  ],
+  "rough": 0.3,
+  "metal": 0.85,
+  "tex": null,
+  "emit": null,
+  "emit_strength": 0.0
+ },
  "pv_skin_tan": {
   "color": [
    0.6,
