@@ -14,7 +14,7 @@ import { Market } from './market.js';
 import { Garden } from './garden.js';
 import { WEATHER_TALK, BIRTHDAY, OWL, BOTTLE_RECIPES } from './data2.js';
 import { LifeUI } from './ui.js';
-import { PROJECTS, FIRST_RESIDENTS } from './progress.js';
+import { PROJECTS, FIRST_RESIDENTS, MUSEUM_DONATIONS } from './progress.js';
 import { FISH, BUGS, FOSSILS, SHELLS, VILLAGERS, DIALOGUE, SHOP_LINES, MUSEUM_LINES, SEASON_TALK, TOOLS } from './data.js';
 
 const PI = Math.PI;
@@ -308,6 +308,13 @@ export class Life {
     }
     const reach = this.rocks.filter((rk) => rk.y > 0.2 && rk.rad < 3.5 && [0, 1.6, 3.2, 4.8].some((a) => this.walkable(rk.x + Math.cos(a) * (rk.rad + 0.8), rk.z + Math.sin(a) * (rk.rad + 0.8))));
     this.moneyRock = reach.length ? reach[Math.floor(r() * reach.length)] : null;
+    // fallen branches under trees near the camp (DIY material for the first tools)
+    const near = this.trees.filter((t) => Math.hypot(t.x - 0, t.z - 10) < 90 && !t.fruitTree);
+    for (let n = 0, k2 = 0; n < 10 && k2 < 80 && near.length; k2++) {
+      const t = near[Math.floor(r() * near.length)], a = r() * 6.28, x = t.x + Math.cos(a) * (t.rad + 0.9), z = t.z + Math.sin(a) * (t.rad + 0.9), key = 'branch' + n;
+      if (!this.walkable(x, z)) continue;
+      n++; if (!this.st.daily.picked[key]) this.addPickup('branch', x, z, key);
+    }
     // beach combing: shells and one message bottle on the east beach and the island
     const sand = (x, z) => { const s = this.ground.sample(x, z); return !s.plat && s.h > 0.05 && s.h < 1.6 && !this.blockedAt(x, z, 0.3); };
     let n = 0;
@@ -653,7 +660,7 @@ export class Life {
     this.ui.blip(1800, 0.06, 'square', 0.06); this.craft.use('shovel');
     if (!r || r !== rock) { if (rock) this.craft.rock(rock); return; }
     if (this.st.daily.rock >= 7) { this.ui.toast('カツン!'); return; }
-    const v = [100, 150, 200, 300, 400, 600, 800][this.st.daily.rock++];
+    const v = [100, 200, 400, 800, 1600, 3200, 6400][this.st.daily.rock++];
     const h = this.player.heading, a = h + PI + (Math.random() - 0.5) * 2.5;
     const p = this.near(pp.x + Math.sin(a) * 0.9, pp.z + Math.cos(a) * 0.9, (x, z) => this.walkable(x, z), 3) || [pp.x, pp.z];
     this.addPickup('money', p[0], p[1], null, v);
@@ -677,8 +684,8 @@ export class Life {
     d.shaken[t.id] = 1; this.st.save();
     const u = Math.random(), pp = this.player.pos;
     const p = this.near((t.x + pp.x) / 2, (t.z + pp.z) / 2, (x, z) => this.walkable(x, z), 2) || [pp.x, pp.z];
-    if (u < 0.12) { this.addPickup('money', p[0], p[1], null, 100); this.ui.toast('ナギが おちてきた!'); }
-    else if (u < 0.3) { this.addPickup('branch', p[0], p[1], null); this.ui.toast('木の枝が おちてきた'); }
+    if (u < 0.08) { this.addPickup('money', p[0], p[1], null, 100); this.ui.toast('ナギが おちてきた!'); }
+    else if (u < 0.55) { this.addPickup('branch', p[0], p[1], null); this.ui.toast('木の枝が おちてきた'); }
   }
   async take(p) {
     if (ITEMS[p.id]?.kind === 'material') {
@@ -808,21 +815,30 @@ export class Life {
   }
   // 町づくり: order a district; it is built overnight (js/life/progress.js)
   async townWork(sp) {
-    const st = this.st, ok = (q) => (q.needs === 'owl' ? st.owlHere() || this.has('shrine') : !q.needs || this.has(q.needs));
+    const st = this.st, ok = (q) => !q.auto && (!q.needs || this.has(q.needs));
+    const price = (q) => (q.mats ? this.craft.matText(q.mats) : `${q.cost.toLocaleString()} ナギ`);
     const rows = PROJECTS.map((q) => {
       const done = this.has(q.id), ordered = !!st.town.orders[q.id];
-      return { label: q.name, sub: done ? 'できている' : ordered ? 'あした完成' : !ok(q) ? (q.needs === 'owl' ? 'ほうさくさんが来てから' : '道路ができてから') : `${q.cost.toLocaleString()} ナギ`, ok: !done && !ordered && ok(q) };
+      const sub = done ? 'できている' : ordered ? 'あした完成' : q.auto ? `資料館に ${MUSEUM_DONATIONS}点 寄贈すると` : !ok(q) ? '道路ができてから' : price(q);
+      return { label: q.name, sub, ok: !done && !ordered && ok(q) };
     });
     if (!rows.some((r) => r.ok)) return 'いまは たのめる工事が ないみたい。\nまた こんど 相談してね!';
     const i = await this.ui.list('町づくり', rows);
     if (i < 0) return 'ほかに なにか あるかい?';
     const q = PROJECTS[i];
-    const c = await this.ui.say(sp, [`「${q.name}」だね! ${q.desc}。`, `${q.cost.toLocaleString()} ナギで たのむかい?`], ['たのむ', 'やめる']);
+    const c = await this.ui.say(sp, [`「${q.name}」だね! ${q.desc}。`, q.mats ? `ざいりょうを あつめてくれたら 作れるよ。\n${price(q)} で たのむかい?` : `${price(q)}で たのむかい?`], ['たのむ', 'やめる']);
     if (c !== 0) return 'ほかに なにか あるかい?';
-    if (st.money < q.cost) return `おや、${(q.cost - st.money).toLocaleString()} ナギ たりないみたいだね。\n魚や虫を 売って ためておいで!`;
-    st.money -= q.cost; st.town.orders[q.id] = dayKey(); st.save(); this.ui.jingle([523, 659, 784, 1047]);
+    if (q.mats) {
+      if (!st.hasMats(q.mats)) return `ざいりょうが まだ たりないみたいだね。\n木材は おので、石と鉄は スコップで 岩を たたいて あつめてね!`;
+      st.useMats(q.mats);
+    } else {
+      if (st.money < q.cost) return `おや、${(q.cost - st.money).toLocaleString()} ナギ たりないみたいだね。\n魚や虫を 売って ためておいで!`;
+      st.money -= q.cost;
+    }
+    st.town.orders[q.id] = dayKey(); st.save(); this.ui.jingle([523, 659, 784, 1047]);
     return `まいど! 「${q.name}」は 今夜のうちに つくっておくよ。\nあしたの朝 5時すぎには できあがってるからね!`;
   }
+
   // what changed overnight: finished districts, who moved in, the owl's arrival
   async announce(list, owl) {
     const sp = { name: 'あらた', color: '#4f8a46', pitch: 1.05 }, lines = [];
@@ -864,6 +880,10 @@ export class Life {
         const total = FISH.length + BUGS.length + FOSSILS.length + SEA.length + ART.length, got = Object.keys(st.donated).length;
         lines.push(`これで 展示は ${got} / ${total} 点になったよ。`);
         if (got >= total) lines.push(...L.complete.map((s) => fill(s, V())));
+        if (!this.has('shrine') && !st.town.orders.shrine && got >= MUSEUM_DONATIONS) {
+          st.town.orders.shrine = dayKey();
+          lines.push(`${got}点も あつまったね! これだけあれば りっぱな 資料館が できるよ。`, '神社の となりに 建ててもらうことにしよう。\nあしたの朝には できあがっておるよ、ほうほう。');
+        } else if (!this.has('shrine') && !st.town.orders.shrine) lines.push(`あと ${MUSEUM_DONATIONS - got}点 あつまったら、資料館の 建物を たてようね。`);
         await this.ui.say(sp, lines); line = 'ほかに なにか あるかね?';
       } else if (k === 1) {
         const n2 = st.pocket.filter((id) => id === 'fossil_unknown').length;
@@ -885,13 +905,13 @@ export class Life {
     if (this.st.intro || this.introRunning) return;
     this.introRunning = true;
     const sp = { name: 'あらた', color: '#4f8a46', pitch: 1.05 };
-    await this.ui.say(sp, ['おーい! キミが 港町に来た なぎ だね! まいど!', 'オイラは あらた。この テントで 「海凪商店」を やってるんだ。', 'ここは まだ なんにもない 入り江なんだ。\nいま住んでるのは ツムギと おもちと オイラだけ。', 'でも 海も 山も きれいだろ? みんなで すこしずつ 町を つくっていこう!', 'はい、これ! 引っこし祝いに つりざお と あみ をあげる!']);
-    for (const id of ['rod', 'net']) if (!this.st.has(id)) this.st.add(id);
-    this.equip('rod'); this.ui.jingle();
-    await this.ui.say(null, ['つりざお と あみ を もらった!']);
+    await this.ui.say(sp, ['おーい! キミが 港町に来た なぎ だね! まいど!', 'オイラは あらた。この テントで 「海凪商店」を やってるんだ。', 'ここは まだ なんにもない 入り江なんだ。\nいま住んでるのは ツムギと おもちと オイラだけ。', 'でも 海も 山も きれいだろ? みんなで すこしずつ 町を つくっていこう!', 'まずは 道具づくりから だね。\nつりざお・あみ・おのの 作り方を 教えるよ!']);
+    this.ui.jingle();
+    await this.ui.say(null, ['つりざお・あみ・おの・たき火の DIYレシピを おぼえた!']);
+    await this.ui.say(sp, ['木の下に 落ちている 木の枝を 5本 ひろって、\nオイラの 屋台で 「DIY」を えらんでね。', 'できたての 道具は ちょっと もろいから、\nこわれたら また 作るか、ナギを ためて 店で 買ってね。']);
     this.giveTent();
     await this.ui.say(sp, ['それから、東の 岸壁に キミの テントを はっておいたよ。\n中に 家具を おいて、すきに かざってね。', '道具は 使うと だんだん こわれるんだ。\n木の枝や 木材を あつめて、オイラの 屋台で DIYできるよ。']);
-    await this.ui.say(sp, ['水ぎわで A ボタンを押すと つりができるよ。\n影が浮きをつついて、グッと しずんだ瞬間に もう一度 A!', 'あみは A ボタンを押しっぱなしで そーっと近づいて、はなすと ふれるよ。', 'とれたものは オイラが 買いとるよ。\nナギが たまったら 「町づくり」で 港や お店を たのんでね。ひと晩で つくっちゃうから!', '時間は ほんとうの時計と いっしょ。毎朝5時に 新しい一日が はじまるよ。\nじゃ、よろしくね!']);
+    await this.ui.say(sp, ['つりざおを 持って 水ぎわで A。影が 浮きを つついて、\nグッと しずんだ瞬間に もう一度 A!', 'あみは A ボタンを押しっぱなしで そーっと近づいて、はなすと ふれるよ。', 'とれたものは オイラが 買いとるよ。\n生きものを 5種類 見つけたら、オイラに 教えてね。いいこと あるかも!', 'ナギが たまったら 「町づくり」で 港や 家を たのんでね。\n工事は ひと晩で おわるよ!', '時間は ほんとうの時計と いっしょ。毎朝5時に 新しい一日が はじまるよ。\nじゃ、よろしくね!']);
     this.st.intro = true; this.st.save(); this.introRunning = false;
   }
   giveTent() { const h = this.st.ext.home; if (h.stage < 0) { h.stage = 0; this.st.save(); this.home.buildHouse(); } }

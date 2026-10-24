@@ -43,7 +43,7 @@ check('HUD appears after start', await p.isVisible('#hud'));
 const info = await G(() => { const a = window.__uminagi; return { models: Object.keys(a.town.protos).length, colliders: a.town.colliders.length, trees: a.town.treeCount, npcs: a.town.npcs.length, boats: a.town.boats.length }; });
 check('town is built', info.models >= 80 && info.colliders > 300 && info.boats >= 6 && info.npcs >= 10, JSON.stringify(info));
 
-// --- island life (js/life): the shopkeeper's welcome on a fresh save hands over the rod and the net
+// --- island life (js/life): a fresh save starts with no money and no tools; the welcome teaches the DIY recipes
 const talkThrough = (choices) => G(async (choices) => {
   const L = window.__uminagi.life, said = [];
   for (let i = 0; i < 300 && L.ui.busy(); i++) {
@@ -56,12 +56,22 @@ const talkThrough = (choices) => G(async (choices) => {
 }, choices);
 await G(() => { const L = window.__uminagi.life; L.introStarted = true; L.intro(); });
 await talkThrough([]);
-const life = await G(() => { const L = window.__uminagi.life; return { pocket: L.st.pocket.join(','), villagers: L.villagers.length, busy: L.ui.busy() }; });
-check('welcome talk gives the rod and the net', !life.busy && /rod/.test(life.pocket) && /net/.test(life.pocket) && life.villagers === 8, JSON.stringify(life));
+const life = await G(() => { const L = window.__uminagi.life; return { pocket: L.st.pocket.join(','), money: L.st.money, recipes: ['rod', 'net', 'axe'].every((id) => L.craft.known(id)), branches: L.pickups.filter((p) => p.id === 'branch').length, villagers: L.villagers.length, busy: L.ui.busy() }; });
+check('welcome: no free tools, DIY recipes, branches to pick up', !life.busy && !/rod|net/.test(life.pocket) && life.money === 0 && life.recipes && life.branches >= 6 && life.villagers === 8, JSON.stringify(life));
+// five branches make a flimsy rod at the stall
+const rod = await G(async () => {
+  const L = window.__uminagi.life; L.st.addMat('branch', 5);
+  let done = false; L.craft.menu().then(() => { done = true; });
+  for (let k = 0; k < 50 && !L.ui.panelRes; k++) await new Promise((r) => setTimeout(r, 5));
+  L.ui.closePanel(L.craft.st.ext.recipes.indexOf('rod'));
+  for (let k = 0; k < 300 && !done; k++) { if (L.ui.queue) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
+  return { rod: L.st.has('rod'), dur: L.st.ext.dur.rod };
+});
+check('DIY a flimsy rod from branches', rod.rod && rod.dur === 10, JSON.stringify(rod));
 // fishing: cast from the quay, a fish takes the float, A on the bite lands it
 const fish = await G(() => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
-  a.player.place(-20, 21.3, Math.PI); a.player.heading = 0; L.equip('rod'); step(2); L.press(); step(12);
+  a.player.place(-20, 21.3, Math.PI); a.player.heading = 0; L.equip('rod'); step(2); L.anim = null; L.press(); step(12);
   const c = L.cast; if (!c || c.phase !== 'wait') return { phase: c && c.phase };
   L.fish.length = 0; for (let i = 0; i < 40 && !L.fish.length; i++) L.spawnFish(a.player.pos);
   const f = L.fish[0]; if (!f) return { phase: 'nofish' };

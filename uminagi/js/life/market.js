@@ -49,7 +49,7 @@ export class Market {
   // the shop's buy menu
   async menu(sp) {
     const st = this.st, ui = this.life.ui, m = new Date().getMonth() + 1;
-    const tools = [...TOOLS, { id: 'axe', name: 'おの', price: 500 }];
+    const tools = [...TOOLS, { id: 'axe', name: 'おの' }].map((t) => ({ ...t, price: 2500 }));   // sturdy shop tools (the flimsy ones are DIY)
     const seeds = SEEDS;
     const rows = [], acts = [];
     for (const t of tools) { rows.push({ label: t.name, sub: `${t.price} ナギ`, ok: st.money >= t.price }); acts.push(['tool', t.id, t.price]); }

@@ -30,7 +30,7 @@ export function seeded(str) { let h = 2166136261; for (const c of str) { h ^= c.
 export class LifeState {
   constructor() {
     const s = (() => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } })() || {};
-    this.money = s.money ?? 1000;
+    this.money = s.money ?? 0;   // like a new islander: no money, no tools
     this.pocket = s.pocket || [];          // item ids (tools live here too, so they take a slot like in the original games)
     this.tool = s.tool || null;            // the tool in the paw
     this.caught = s.caught || {};          // encyclopedia: id -> first day it was found

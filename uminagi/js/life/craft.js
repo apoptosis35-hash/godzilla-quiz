@@ -5,7 +5,9 @@ import { ITEMS, dayKey } from './state.js';
 import { RECIPES, MATERIALS } from './items2.js';
 import { RACCOON } from './data2.js';
 
-export const DURABILITY = { net: 30, rod: 30, shovel: 40, axe: 40 };
+// uses before a tool breaks: shop tools, and the flimsy ones made from branches
+export const DURABILITY = { net: 30, rod: 30, shovel: 40, axe: 100 };
+export const FLIMSY = { net: 10, rod: 10, shovel: 40, axe: 40 };
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 export class Craft {
@@ -33,7 +35,7 @@ export class Craft {
     const r = list[i];
     if (st.full()) { ui.toast('ポケットが いっぱい!'); return; }
     st.useMats(r.mat); st.add(r.id);
-    if (DURABILITY[r.id]) st.ext.dur[r.id] = DURABILITY[r.id];
+    if (FLIMSY[r.id]) st.ext.dur[r.id] = FLIMSY[r.id];
     this.life.anim = { kind: 'dig', t: 0, dur: 0.6 }; this.life.splash(0.2, 1800); ui.jingle([523, 659, 784]);
     await ui.say(null, [`トントン カンカン……`, `${ITEMS[r.id].name}が できた!`]);
   }
