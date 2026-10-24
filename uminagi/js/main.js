@@ -19,13 +19,15 @@ THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
   #endif
   gl_FragColor.rgb = mix( gl_FragColor.rgb, fogColor, fogFactor );
 #endif`;
-// "rolling log" world: the ground bends down away from the camera, like the world is drawn on a big log
-// (on by default; 設定 → 地面のカーブ). Shadow-map depth passes stay flat.
+// round horizon: the ground sinks away with the horizontal distance from the camera, like a small planet
+// (on by default; 設定 → 地面のカーブ). The drop is along world up and depends only on that distance, so turning or
+// tilting the camera never moves the ground; only walking does. Shadow-map depth passes stay flat.
 export const CURVE = (() => { try { return localStorage.getItem('uminagi_curve') !== 'off'; } catch { return true; } })();
 export const BEND_GLSL = `
   #if !defined( DEPTH_PACKING ) && !defined( DISTANCE )
-    float cz_ = max( 0.0, -mvPosition.z - 4.0 );
-    mvPosition.y -= 45.0 * ( 1.0 - exp( -cz_ * cz_ * 0.0014 / 45.0 ) );
+    vec3 bw_ = transpose( mat3( viewMatrix ) ) * ( mvPosition.xyz - viewMatrix[ 3 ].xyz );   // view -> world
+    float bd_ = max( 0.0, length( bw_.xz - cameraPosition.xz ) - 4.0 );
+    mvPosition.xyz -= mat3( viewMatrix )[ 1 ] * ( 45.0 * ( 1.0 - exp( -bd_ * bd_ * 0.0014 / 45.0 ) ) );
   #endif`;
 if (CURVE) THREE.ShaderChunk.project_vertex = THREE.ShaderChunk.project_vertex.replace('gl_Position = projectionMatrix * mvPosition;', BEND_GLSL + '\ngl_Position = projectionMatrix * mvPosition;');
 const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neutral: THREE.NeutralToneMapping };
@@ -95,7 +97,9 @@ class App {
     if (Q.post) this.world.setLinearSky(true);
     this.world.seaU.uCurve.value = CURVE ? 1 : 0;
     document.body.classList.toggle('post', !!Q.post);   // the post chain works in linear light
-    this.scene.add(this.ground.buildMeshes(this.mats.mats));
+    const groundMesh = this.ground.buildMeshes(this.mats.mats);
+    if (CURVE) groundMesh.traverse((o) => { o.frustumCulled = false; });   // bent ground is drawn below where its bounds say
+    this.scene.add(groundMesh);
     this.town = new Town(this.scene, this.ground, this.mats, this.world, Q, this.built);
     await this.town.load((k) => prog(0.12 + k * 0.78, '港町の建物を読み込んでいます…'));
     prog(0.92, '町を組み立てています…');

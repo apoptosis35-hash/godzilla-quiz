@@ -191,7 +191,7 @@ export class World {
           vSwell = w;
           vW = p;
           vec4 mvPosition = modelViewMatrix * vec4(p, 1.0);
-          if (uCurve > 0.5) { float cz_ = max(0.0, -mvPosition.z - 4.0); mvPosition.y -= 45.0 * (1.0 - exp(-cz_ * cz_ * 0.0014 / 45.0)); }
+          if (uCurve > 0.5) { vec3 bw_ = transpose(mat3(viewMatrix)) * (mvPosition.xyz - viewMatrix[3].xyz); float bd_ = max(0.0, length(bw_.xz - cameraPosition.xz) - 4.0); mvPosition.xyz -= mat3(viewMatrix)[1] * (45.0 * (1.0 - exp(-bd_ * bd_ * 0.0014 / 45.0))); }   // same bend as BEND_GLSL (main.js)
           gl_Position = projectionMatrix * mvPosition;
         }`,
       fragmentShader: SKY_FN + `
