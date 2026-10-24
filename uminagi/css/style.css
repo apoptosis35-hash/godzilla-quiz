@@ -136,3 +136,17 @@ body.post #vig { display: none; }
   .lside { top: calc(max(8px, env(safe-area-inset-top)) + 110px); }
 }
 #life .btn { backdrop-filter: none; -webkit-backdrop-filter: none; }   /* solid backgrounds; a blur over the WebGL canvas is costly */
+/* phones: the talk box leaves the A and dash buttons free (landscape: beside them, portrait: above them) */
+@media (hover: none) {
+  .talk { left: max(12px, env(safe-area-inset-left)); transform: none; width: calc(100vw - 270px - env(safe-area-inset-right)); max-width: 640px; }
+}
+@media (hover: none) and (orientation: portrait) {
+  .talk { left: 50%; transform: translateX(-50%); width: 94vw; bottom: calc(max(40px, env(safe-area-inset-bottom)) + 108px); }
+}
+/* while talking the HUD steps aside (map, zoom, dash and the life buttons) */
+body.talking #map, body.talking .zoom, body.talking #dash, body.talking .lside { visibility: hidden; }
+#dash { white-space: nowrap; font-size: 15px; letter-spacing: -0.02em; }
+@media (orientation: portrait) and (max-width: 600px) {
+  .rotate-hint { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 168px); left: max(12px, env(safe-area-inset-left)); transform: none; }
+  body.talking .rotate-hint { visibility: hidden; }
+}

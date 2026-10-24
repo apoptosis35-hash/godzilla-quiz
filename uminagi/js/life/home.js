@@ -108,7 +108,7 @@ export class Home {
     // colliders: floor, three walls, the front with a door gap
     const c = (x, z, hw, hd, y0, y1) => ({ type: 'b', x: STAGE.x + x, z: STAGE.z + z, hw, hd, c: 1, s: 0, y0: Y + y0, y1: Y + y1 });
     this.roomCols = [c(0, 0, S + 0.5, S + 0.5, -1, 0), c(0, -S - 0.1, S + 0.3, 0.12, -1, 3), c(-S - 0.1, 0, 0.12, S + 0.3, -1, 3), c(S + 0.1, 0, 0.12, S + 0.3, -1, 3),
-      c(-S / 2 - 0.5, S + 0.15, S / 2 - 0.4, 0.12, -1, 3), c(S / 2 + 0.5, S + 0.15, S / 2 - 0.4, 0.12, -1, 3), c(0, S + 0.6, 0.6, 0.12, -1, 3)];
+      c(-S / 2 - 0.5, S + 0.15, S / 2 - 0.4, 0.12, -1, 3), c(S / 2 + 0.5, S + 0.15, S / 2 - 0.4, 0.12, -1, 3)];
     this.town.colliders.push(...this.roomCols);
     this.S = S;
     return g;

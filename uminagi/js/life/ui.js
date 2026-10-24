@@ -57,7 +57,7 @@ export class LifeUI {
   async say(speaker, lines, choices) {
     // one talk window at a time: a second say() (a catch landing while a chat opens) waits for the first one
     while (this.queue) await new Promise((r) => (this.waiters ||= []).push(r));
-    this.open++;
+    this.open++; document.body.classList.add('talking');
     lines = [].concat(lines).flatMap((l) => String(l).split('\f'));
     const plate = $('tplate');
     plate.hidden = !speaker; if (speaker) { plate.textContent = speaker.name; plate.style.background = speaker.color || '#e8b23a'; }
@@ -99,7 +99,7 @@ export class LifeUI {
   }
   finish(k) {
     clearInterval(this.typing); this.typing = null;
-    const q = this.queue; this.queue = null; $('talk').hidden = true; this.open--;
+    const q = this.queue; this.queue = null; $('talk').hidden = true; this.open--; document.body.classList.remove('talking');
     this.blip(660, 0.05); q.res(k);
     const w = this.waiters; this.waiters = null; if (w) for (const r of w) r();
   }
