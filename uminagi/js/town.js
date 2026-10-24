@@ -34,7 +34,11 @@ export const MODELS = {
   // home life (js/life/home.js): furniture, the room, hats... a missing one falls back to a stand-in
   optional: ['furn_table_wood', 'furn_chair_wood', 'furn_bed', 'furn_bookshelf', 'furn_lamp', 'furn_rug', 'furn_tansu', 'furn_kotatsu', 'furn_radio', 'furn_aquarium',
     'furn_log_stool', 'furn_log_bench', 'furn_fence_bamboo', 'furn_fence_white', 'furn_workbench', 'furn_mailbox', 'furn_pumpkin', 'furn_snowman', 'tool_axe', 'item_daikon',
-    'sapling', 'hat_straw', 'hat_cap', 'hat_beanie', 'room_shell', 'museum_pedestal'],
+    'sapling', 'hat_straw', 'hat_cap', 'hat_beanie', 'room_shell', 'museum_pedestal',
+    'furn_zabuton', 'furn_byobu', 'furn_andon', 'furn_chabudai', 'furn_bonsai', 'furn_hibachi', 'furn_tatami', 'furn_kakejiku', 'furn_beach_chair', 'furn_ship_wheel',
+    'furn_anchor', 'furn_buoy_lamp', 'furn_shell_lamp', 'furn_lifebuoy', 'furn_crab_plush', 'furn_lighthouse_model', 'furn_cafe_table', 'furn_cafe_chair', 'furn_counter',
+    'furn_cake_stand', 'furn_monstera', 'furn_sofa', 'furn_desk', 'furn_tv_retro', 'furn_piano', 'furn_wardrobe', 'furn_mirror', 'furn_clock_tall', 'furn_toy_box', 'furn_teddy',
+    'furn_guitar', 'furn_well', 'furn_planter', 'furn_swing', 'furn_birdhouse', 'furn_picnic_table', 'furn_campfire', 'furn_hammock', 'furn_mailbox_red', 'furn_easel', 'art_frame'],
 };
 // building footprints (model-local, before rotation): [w, d, cx, cz] boxes the player can't enter
 const FOOT = {

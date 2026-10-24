@@ -8,6 +8,7 @@ import { FURNITURE, CLOTHES } from './items2.js';
 import { VILLAGERS, FISH, BUGS, FOSSILS } from './data.js';
 import { SEA } from './items2.js';
 import { RACCOON, OWL, LETTERS } from './data2.js';
+import { ART, hangPainting } from './art.js';
 
 const PI = Math.PI;
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -68,6 +69,7 @@ export class Home {
   // ---------------------------------------------------------------- furniture objects
   furnObject(id) {
     const it = ITEMS[id], name = it.model || id;
+    if (it.kind === 'art' && this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, false); o.parent.remove(o); return hangPainting(o, id); }   // painting on the easel
     if (this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, true); o.parent.remove(o); return o; }
     // stand-in until the model exists: a soft coloured block of the right footprint
     const m = new THREE.Mesh(new THREE.BoxGeometry(it.w || 0.6, it.flat ? 0.03 : 0.6, it.d || 0.6), new THREE.MeshStandardMaterial({ color: 0xc8a070, roughness: 0.8 }));
@@ -153,7 +155,16 @@ export class Home {
   // the owl's exhibition room: a pedestal per donated item, its icon floating above
   gallery() {
     const st = this.st, all = [...FISH, ...BUGS, ...SEA, ...FOSSILS].filter((it) => st.donated[it.id]).slice(0, 49);
-    const n = Math.max(1, Math.ceil(Math.sqrt(all.length))), sp = Math.min(1.1, 6.2 / n);
+    // paintings in frames along the back and side walls
+    const arts = ART.filter((a) => st.donated[a.id]).slice(0, 18);
+    arts.forEach((a, i) => {
+      if (!this.town.protos.art_frame) return;
+      const wall = Math.floor(i / 6), k = i % 6, t = (k - 2.5) * 0.95, S = this.S - 0.35;
+      const [x, z, ry] = wall === 0 ? [t, -S, 0] : wall === 1 ? [-S, t + 0.2, PI / 2] : [S, t + 0.2, -PI / 2];
+      const o = hangPainting(this.town.clone('art_frame', 0, 0, 0, 0, false), a.id); o.parent.remove(o);
+      o.position.set(STAGE.x + x, STAGE.y, STAGE.z + z); o.rotation.y = ry; this.room.add(o);
+    });
+    const n = Math.max(1, Math.ceil(Math.sqrt(all.length))), sp = Math.min(1.0, 4.2 / n);   // pedestals in the middle, paintings on the walls
     all.forEach((it, i) => {
       const x = (i % n - (n - 1) / 2) * sp, z = (Math.floor(i / n) - (n - 1) / 2) * sp - 0.4;
       if (this.town.protos.museum_pedestal) { const p = this.town.clone('museum_pedestal', 0, 0, 0, 0, true); p.parent.remove(p); p.position.set(STAGE.x + x, STAGE.y, STAGE.z + z); p.scale.setScalar(Math.min(1, sp / 0.9)); const glass = p.getObjectByName('museum_pedestal_glass'); if (glass) glass.visible = false; this.room.add(p); }

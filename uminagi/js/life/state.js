@@ -20,7 +20,7 @@ export const ICON = { fish: '🐟', bug: '🦋', fossil: '🦴', 'fossil?': '�
 export const TOOL_ICON = { net: '🥅', rod: '🎣', shovel: '⛏️', axe: '🪓' };
 export const ICON_BY_ID = {};   // per-item icons (items2.js)
 export const icon = (id) => ICON_BY_ID[id] || (ITEMS[id]?.kind === 'tool' ? TOOL_ICON[id] : ICON[ITEMS[id]?.kind]) || '❔';
-export const donatable = (id) => ['fish', 'bug', 'fossil', 'sea'].includes(ITEMS[id]?.kind);
+export const donatable = (id) => ['fish', 'bug', 'fossil', 'sea'].includes(ITEMS[id]?.kind) || (ITEMS[id]?.kind === 'art' && !ITEMS[id].fake);
 
 // the game day starts at 5:00, like the villagers' morning
 export function dayKey(d = new Date()) { const t = new Date(d.getTime() - 5 * 3600e3); return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; }
@@ -72,7 +72,7 @@ export class LifeState {
     if (this.full()) return false;
     this.pocket.push(id);
     const k = ITEMS[id]?.kind;
-    if ((k === 'fish' || k === 'bug' || k === 'fossil') && !this.caught[id]) this.caught[id] = dayKey();
+    if (['fish', 'bug', 'fossil', 'sea', 'art'].includes(k) && !this.caught[id]) this.caught[id] = dayKey();
     this.save(); return true;
   }
   remove(i) { const id = this.pocket.splice(i, 1)[0]; if (id === this.tool && !this.pocket.includes(id)) this.tool = null; this.save(); return id; }

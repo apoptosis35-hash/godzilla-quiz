@@ -7,6 +7,8 @@ import { TOOLS } from './data.js';
 import { FURNITURE, CLOTHES, SEEDS } from './items2.js';
 import { RACCOON } from './data2.js';
 import { DURABILITY } from './craft.js';
+import { ART } from './art.js';
+import { ART_LINES } from './data3.js';
 
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const sunday = (d = new Date()) => { const t = new Date(d.getTime() - 5 * 3600e3); t.setDate(t.getDate() - t.getDay()); return `${t.getFullYear()}-${t.getMonth() + 1}-${t.getDate()}`; };
@@ -25,7 +27,8 @@ export class Market {
     // the merchant cat comes on about one day in four (never on Sunday)
     const d = new Date(Date.now() - 5 * 3600e3);
     this.merchantDay = d.getDay() !== 0 && r() < 0.28;
-    this.merchantStock = take(FURNITURE.filter((f) => f.price >= 2000), 2).concat(take(CLOTHES.filter((c) => c.hat), 1));
+    // two paintings (some of them forgeries), a rare piece of furniture and a hat
+    this.merchantStock = take(ART, 2).map((id) => (r() < 0.35 ? id + '_fake' : id)).concat(take(FURNITURE.filter((f) => f.price >= 2000), 1), take(CLOTHES.filter((c) => c.hat), 1));
     // daikon spoil once a new week starts
     const dk = this.st.ext.daikon;
     if (dk.n && dk.week !== sunday()) { this.rotten = dk.n; dk.n = 0; dk.paid = 0; this.st.save(); }
@@ -99,11 +102,13 @@ export class Market {
   }
   async merchantTalk() {
     const st = this.st, ui = this.life.ui, sp = { name: '旅ねこ ミケ', color: '#b07ad8', pitch: 1.2 };
-    await ui.say(sp, ['にゃ。旅の 商人の ミケだよ。', 'めずらしい品を 少しだけ 持ってきたにゃ。']);
-    const rows = this.merchantStock.map((id) => ({ label: ITEMS[id].name, sub: `${Math.round(ITEMS[id].price * 1.3)} ナギ`, ok: st.money >= Math.round(ITEMS[id].price * 1.3) }));
+    const first = this.merchantStock.find((id) => ITEMS[id].kind === 'art');
+    await ui.say(sp, ['にゃ。旅の 商人の ミケだよ。', pick(ART_LINES.merchant).replace(/\{price\}/g, first ? Math.round(ITEMS[ITEMS[first].real || first].price * 1.3).toLocaleString() : '----').replace(/\{name\}/g, 'なぎ')]);
+    const cost = (id) => Math.round((ITEMS[id].kind === 'art' ? ITEMS[ITEMS[id].real || id].price : ITEMS[id].price) * 1.3);   // a forgery costs the same as the real one
+    const rows = this.merchantStock.map((id) => ({ label: ITEMS[id].name, sub: `${cost(id)} ナギ`, ok: st.money >= cost(id) }));
     const i = await ui.list('ミケの品', rows);
     if (i < 0) { await ui.say(sp, 'また どこかで 会おうにゃ。'); return; }
-    const id = this.merchantStock[i], price = Math.round(ITEMS[id].price * 1.3);
+    const id = this.merchantStock[i], price = cost(id);
     if (st.full()) { ui.toast('ポケットが いっぱい!'); return; }
     st.money -= price; st.add(id); this.merchantStock.splice(i, 1); st.save(); ui.jingle([784, 988]);
     await ui.say(sp, `まいどあり にゃ! ${ITEMS[id].name}、大事にしてにゃ。`);

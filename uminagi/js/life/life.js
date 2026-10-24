@@ -4,6 +4,8 @@
 import * as THREE from 'three';
 import { LifeState, ITEMS, dayKey, seeded, donatable, icon } from './state.js';
 import { SEA } from './items2.js';
+import { ART, isFake, paintingURL } from './art.js';
+import { ART_LINES } from './data3.js';
 import { Season } from './season.js';
 import { Home } from './home.js';
 import { Craft } from './craft.js';
@@ -821,6 +823,10 @@ export class Life {
       const k = await this.ui.say(sp, line, ['寄贈する', '化石の鑑定', '展示室を見る', '図鑑を見る', 'またね']);
       if (k === 2) { await this.ui.say(sp, pick(OWL.gallery_intro)); this.home.enter('gallery'); return; }
       if (k === 0) {
+        const fakes = st.pocket.filter((id) => isFake(id));
+        if (fakes.length) {   // the owl only takes genuine paintings
+          await this.ui.say(sp, [`「${ITEMS[fakes[0]].name}」……ふむ。`, fill(pick(ART_LINES.owl_fake), V({ what: '色が ちがうし、左右が あべこべ', item: ITEMS[fakes[0]].name }))]);
+        }
         const fresh = [];
         st.pocket.forEach((id, i) => { if (donatable(id) && !st.donated[id] && !fresh.some(([x]) => x === id)) fresh.push([id, i]); });
         if (!fresh.length) {
@@ -831,7 +837,8 @@ export class Life {
         for (const [, i] of fresh.sort((a, b) => b[1] - a[1])) { const id = st.remove(i); st.donated[id] = dayKey(); }
         this.ui.jingle([523, 659, 784, 1047]);
         const lines = [fill(pick(L.donate), V({ item: names.slice(0, 3).join('、') + (names.length > 3 ? ` ほか${names.length - 3}点` : '') }))];
-        const total = FISH.length + BUGS.length + FOSSILS.length + SEA.length, got = Object.keys(st.donated).length;
+        const art = fresh.find(([id]) => ITEMS[id].kind === 'art'); if (art) lines.push(fill(pick(ART_LINES.owl_real), V({ item: ITEMS[art[0]].name })));
+        const total = FISH.length + BUGS.length + FOSSILS.length + SEA.length + ART.length, got = Object.keys(st.donated).length;
         lines.push(`これで 展示は ${got} / ${total} 点になったよ。`);
         if (got >= total) lines.push(...L.complete.map((s) => fill(s, V())));
         await this.ui.say(sp, lines); line = 'ほかに なにか あるかね?';
@@ -910,7 +917,8 @@ export class Life {
     if (it.kind === 'tool') { this.equip(this.st.tool === id ? null : id); return; }
     const live = it.kind === 'fish' || it.kind === 'bug' || it.kind === 'sea';
     const rows = [
-      ...(it.kind === 'furniture' ? [['置く', () => this.home.place(i)]] : []),
+      ...(it.kind === 'furniture' || it.kind === 'art' ? [['置く', () => this.home.place(i)]] : []),
+      ...(it.kind === 'art' ? [['見る', () => this.ui.picture(it.name, paintingURL(id))]] : []),
       ...(it.kind === 'seed' || id === 'mikan' ? [['植える', () => this.garden.plant(i)]] : []),
       ...(it.kind === 'clothes' ? [['身につける', () => this.home.wearItem(i)]] : []),
       [live ? 'にがす' : 'すてる', () => { this.st.remove(i); this.ui.toast(`${it.name}を ${live ? 'にがした' : 'すてた'}`); }],

@@ -3,6 +3,7 @@
 import { ITEMS, POCKET, icon, TOOL_ICON } from './state.js';
 import { FISH, BUGS, FOSSILS } from './data.js';
 import { SEA } from './items2.js';
+import { ART, paintingURL } from './art.js';
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
@@ -166,7 +167,7 @@ export class LifeUI {
     const tabs = el('div', 'row'); wrap.appendChild(tabs);
     const grid = el('div', 'bgrid'); wrap.appendChild(grid);
     const info = el('p', 'pnote', ''); wrap.appendChild(info);
-    const sets = [['さかな', FISH], ['むし', BUGS], ['うみ', SEA], ['化石', FOSSILS]];
+    const sets = [['さかな', FISH], ['むし', BUGS], ['うみ', SEA], ['化石', FOSSILS], ['びじゅつ', ART]];
     const show = (k) => {
       [...tabs.children].forEach((b, j) => b.classList.toggle('on', j === k));
       grid.innerHTML = ''; const [, list] = sets[k];
@@ -176,6 +177,7 @@ export class LifeUI {
         const cell = el('button', 'bcell' + (c ? '' : ' unknown') + (d ? ' don' : ''), c ? `<span>${icon(it.id)}</span><small>${it.name}</small>` : '<span>？</span><small>？？？</small>');
         cell.onclick = () => {
           if (!c) { info.textContent = 'まだ見つけていない。'; return; }
+          if (it.style) { info.innerHTML = `<img src="${paintingURL(it.id)}" style="width:100%;max-width:320px;border-radius:8px;display:block;margin:0 auto 6px">「${it.name}」 ${it.painter} ${it.year}年${d ? '　(資料館に展示中)' : ''}`; return; }
           const when = it.months ? `　${it.months.length === 12 ? '一年中' : it.months[0] + '〜' + it.months[it.months.length - 1] + '月'}` : '';
           info.textContent = `${it.name}　${it.price} ナギ${when}${d ? '　(資料館に展示中)' : ''}`;
         };
@@ -186,6 +188,10 @@ export class LifeUI {
     sets.forEach(([n], k) => { const b = el('button', 'btn', n); b.onclick = () => show(k); tabs.appendChild(b); });
     show(0);
     return this.panel('なぎの図鑑', wrap);
+  }
+  picture(title, url) {
+    const wrap = el('div', 'book'); wrap.innerHTML = `<img src="${url}" style="width:100%;max-width:420px;border-radius:10px;display:block;margin:0 auto">`;
+    return this.panel(title, wrap);
   }
   busy() { return this.open > 0; }
 }
