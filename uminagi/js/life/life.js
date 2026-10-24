@@ -151,13 +151,36 @@ export class Life {
     const p = PROJECTS.find((q) => q.moves === id); return !!p && this.has(p.id);
   }
   // a simple canvas tent (camp, なぎ's first home, the merchant)
+  // a canvas ridge tent (camp, なぎ's first home, the merchant): two sloping roof panels on a ridge pole, the front
+  // flaps tied back from a dark doorway, a closed back, guy ropes to pegs, a trim band and a little pennant
   tent(x, z, ry, col, scale = 1) {
-    const g = new THREE.Group(), y = this.ground.height(x, z);
-    const cloth = new THREE.Mesh(new THREE.ConeGeometry(1.45, 1.9, 4, 1), new THREE.MeshStandardMaterial({ color: col, roughness: 0.85, flatShading: true }));
-    cloth.rotation.y = PI / 4; cloth.position.y = 0.95; cloth.castShadow = cloth.receiveShadow = true; g.add(cloth);
-    const door = new THREE.Mesh(new THREE.ConeGeometry(0.5, 1.1, 3, 1, true, 0, PI), new THREE.MeshStandardMaterial({ color: 0x3a2c22, roughness: 1, side: THREE.DoubleSide }));
-    door.position.set(0, 0.55, 0.9); door.rotation.y = PI; door.scale.set(1, 1, 0.25); g.add(door);
-    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.5, 5), new THREE.MeshStandardMaterial({ color: 0x6a4a2a })); pole.position.y = 2.05; g.add(pole);
+    const g = new THREE.Group(), y = this.ground.height(x, z), H = 1.55, W = 1.05, L = 1.25;
+    const base = new THREE.Color(col), trim = base.clone().offsetHSL(0, 0, -0.18), light = base.clone().offsetHSL(0, -0.05, 0.12);
+    const mat = (c, side = THREE.DoubleSide) => new THREE.MeshStandardMaterial({ color: c, roughness: 0.9, side });
+    const tri = (pts, m) => { const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(pts.flat(), 3)); geo.computeVertexNormals(); const o = new THREE.Mesh(geo, m); o.castShadow = o.receiveShadow = true; g.add(o); return o; };
+    const quad = (a, b, c, d, m) => tri([a, b, c, a, c, d], m);
+    const cloth = mat(base), dark = mat(0x2a2018), flap = mat(light);
+    // roof panels with a slight sag along the ridge, and a darker band along the eaves
+    for (const s of [-1, 1]) {
+      quad([0, H, -L], [0, H, L], [s * W, 0.04, L + 0.06], [s * W, 0.04, -L - 0.06], cloth);
+      quad([s * W * 0.86, H * 0.14, -L - 0.05], [s * W * 0.86, H * 0.14, L + 0.05], [s * W * 1.0, 0.04, L + 0.06], [s * W * 1.0, 0.04, -L - 0.06], mat(trim));
+    }
+    tri([[0, H, -L], [-W, 0.04, -L], [W, 0.04, -L]], cloth);                                        // back wall
+    tri([[0, H * 0.96, L - 0.25], [-W * 0.9, 0.02, L - 0.25], [W * 0.9, 0.02, L - 0.25]], dark);    // the shadowy inside
+    quad([-W, 0.02, -L], [W, 0.02, -L], [W, 0.02, L - 0.25], [-W, 0.02, L - 0.25], dark);           // groundsheet
+    for (const s of [-1, 1]) {   // the front flaps, tied back against the roof
+      tri([[0, H, L], [s * W, 0.04, L + 0.06], [s * W * 0.72, 0.05, L + 0.32]], flap);
+      const tie = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.015, 5, 8), mat(trim)); tie.position.set(s * W * 0.62, H * 0.42, L + 0.12); g.add(tie);
+    }
+    const wood = mat(0x7a5634, THREE.FrontSide);
+    const pole = (x0, y0, z0, x1, y1, z1, r = 0.028) => { const a = new THREE.Vector3(x0, y0, z0), b = new THREE.Vector3(x1, y1, z1), m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, a.distanceTo(b), 6), wood); m.position.copy(a).lerp(b, 0.5); m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), b.clone().sub(a).normalize()); m.castShadow = true; g.add(m); return m; };
+    pole(0, 0, L + 0.02, 0, H + 0.18, L + 0.02); pole(0, 0, -L - 0.02, 0, H + 0.18, -L - 0.02); pole(0, H + 0.02, -L - 0.12, 0, H + 0.02, L + 0.12, 0.022);
+    // guy ropes to pegs, front and back
+    const rope = new THREE.LineBasicMaterial({ color: 0xe8dcc0 }), ropes = [];
+    for (const zz of [1, -1]) for (const s of [-0.5, 0.5]) { ropes.push(0, H + 0.12, zz * (L + 0.02), s * 1.1, 0.05, zz * (L + 0.95)); pole(s * 1.1, -0.02, zz * (L + 0.95), s * 1.1, 0.14, zz * (L + 0.95), 0.02); }
+    const rg = new THREE.BufferGeometry(); rg.setAttribute('position', new THREE.Float32BufferAttribute(ropes, 3)); g.add(new THREE.LineSegments(rg, rope));
+    // a pennant on the front pole
+    tri([[0, H + 0.18, L + 0.02], [0, H + 0.06, L + 0.02], [0.24, H + 0.12, L + 0.02]], mat(0xf4e3b0));
     g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(scale); this.root.add(g);
     return g;
   }
