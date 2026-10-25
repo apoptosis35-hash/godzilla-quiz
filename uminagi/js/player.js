@@ -3,7 +3,7 @@
 import * as THREE from 'three';
 
 const R = 0.34, MAX_UP = 0.6, MAX_SLOPE = 1.05, WALK = 3.4, RUN = 7.0, GRAV = 22;
-const SIZE = 0.5;   // the Shiba model is 1.3 m tall; なぎ stands about 0.65 m, as tall as the animal villagers (half a grown-up)
+const SIZE = 0.5;   // the player model is about 1.25 m tall; ぽっけ stands about 0.63 m, as tall as the animal villagers
 
 export class Player {
   constructor(town, ground) {
@@ -11,10 +11,12 @@ export class Player {
     this.pos = new THREE.Vector3(0, 1.6, 19);
     this.vy = 0; this.heading = Math.PI; this.speed = 0; this.t = 0;
     this.yaw = Math.PI; this.pitch = 0.28; this.dist = 7; this.camDist = 7;
-    // なぎ: the chibi Shiba Inu the player controls (../uminagi-assets shiba.glb). The parts come as siblings; nest them
-    // into a little skeleton: body (hips) > head > ears, body > arms, body > tail; the legs hang from the root.
-    this.model = town.clone('shiba', 0, 0, 0, 0, true); this.model.rotation.order = 'YXZ';
-    this.limbs = {}; for (const s of ['body', 'head', 'ear_l', 'ear_r', 'arm_l', 'arm_r', 'leg_l', 'leg_r', 'tail']) this.limbs[s] = this.model.getObjectByName('shiba_' + s);
+    // ぽっけ: the round hippo the player controls (../uminagi-assets pc_hippo.glb; the older Shiba model if it is missing).
+    // The parts come as siblings; nest them into a little skeleton: body (hips) > head > ears, body > arms, body > tail;
+    // the legs hang from the root.
+    const M = town.protos.pc_hippo ? 'pc_hippo' : 'shiba';
+    this.model = town.clone(M, 0, 0, 0, 0, true); this.model.rotation.order = 'YXZ';
+    this.limbs = {}; for (const s of ['body', 'head', 'ear_l', 'ear_r', 'arm_l', 'arm_r', 'leg_l', 'leg_r', 'tail']) this.limbs[s] = this.model.getObjectByName(M + '_' + s);
     const L = this.limbs;
     // the part nodes carry the mesh quantisation scale (body 0.25): keep it, never reset it to 1
     this.bodyScale = L.body.scale.x;

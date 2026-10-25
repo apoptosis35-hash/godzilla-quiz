@@ -26,8 +26,8 @@ const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const fill = (s, v) => String(s).replace(/\{(\w+)\}/g, (m, k) => v[k] ?? m);
 const inHours = (hours, h) => hours.some(([a, b]) => (a <= b ? h >= a && h < b : h >= a || h < b));
 const wrapA = (a) => Math.atan2(Math.sin(a), Math.cos(a));
-const VS = 0.6;   // villagers stand about 0.64 m: a head taller than なぎ
-const PLAYER = 'なぎ';
+const VS = 0.6;   // villagers stand about 0.64 m: a head taller than ぽっけ
+const PLAYER = 'ぽっけ';
 const LOOK = {   // name plate colour and voice pitch per personality
   kiza: ['#8a7fd8', 1.0], genki: ['#ef7fa0', 1.35], nonbiri: ['#7fb85a', 0.72], futsuu: ['#4fa8d6', 1.12], kowai: ['#d07a34', 0.62], otona: ['#c0903c', 0.9],
 };
@@ -35,6 +35,7 @@ const LOOK = {   // name plate colour and voice pitch per personality
 const HOMES = {
   vil_cat: [[-44, 16, 18, 21]], vil_rabbit: [[35.2, 36.2, -88, -14], [43.8, 44.8, -88, -14]], vil_bear: [[-48, 12, -37, -35]],
   vil_penguin: [[28.6, 31.4, 21, 46]], vil_frog: [[78, 108, 62, 92]], vil_squirrel: [[29, 51, -119, -100]],
+  vil_kai: [[-112, -96, -18, -2]], vil_picco: [[37, 43, -90, -20]],
 };
 const FIXED = { vil_raccoon: [35.4, -42, PI / 2], vil_owl: [-13, -121.5, 0.5] };
 // the camp on the empty quay before the districts are built: the raccoon's stall, tents for the first residents
@@ -174,8 +175,8 @@ export class Life {
     if (FIRST_RESIDENTS.includes(id) || !this.app.built) return true;
     const p = PROJECTS.find((q) => q.moves === id); return !!p && this.has(p.id);
   }
-  // a simple canvas tent (camp, なぎ's first home, the merchant)
-  // a canvas ridge tent (camp, なぎ's first home, the merchant): two sloping roof panels on a ridge pole, the front
+  // a simple canvas tent (camp, ぽっけ's first home, the merchant)
+  // a canvas ridge tent (camp, ぽっけ's first home, the merchant): two sloping roof panels on a ridge pole, the front
   // flaps tied back from a dark doorway, a closed back, guy ropes to pegs, a trim band and a little pennant
   tent(x, z, ry, col, scale = 1) {
     const g = new THREE.Group(), y = this.ground.height(x, z), H = 1.55, W = 1.05, L = 1.25;
@@ -257,7 +258,7 @@ export class Life {
       v.o.rotation.y += wrapA(v.ry0 - v.o.rotation.y) * Math.min(1, dt * 2);
     } else if (v.wait > 0) {
       v.wait -= dt;
-      // say hello with a wave when なぎ comes by for the first time today
+      // say hello with a wave when ぽっけ comes by for the first time today
       if (d < 4 && !v.waved) { v.waved = true; v.wave = 1.6; }
       if (v.wave > 0 || d < 3) { const want = Math.atan2(pp.x - p.x, pp.z - p.z); v.o.rotation.y += wrapA(want - v.o.rotation.y) * Math.min(1, dt * 4); }
     } else {
@@ -815,7 +816,7 @@ export class Life {
       const menu = ['売る', '買う', 'DIY', '町づくり', 'スタンプ', 'またね'], k = menu[await this.ui.say(sp, line, menu)];
       if (k === 'スタンプ') { line = await this.goals.exchange(sp); continue; }
       if (k === '町づくり') {
-        const c = await this.ui.list('町づくり', [{ label: '町の工事を たのむ', sub: '漁港・商店街・電車…(場所は決まっている)' }, { label: 'しせつを たてる', sub: '家の土地・ベンチ・街灯… すきな場所に' }, { label: 'なぎの 家', sub: this.st.ext.home.stage >= 1 ? 'できている' : '' }, { label: '町の評判', sub: '★' + this.goals.rating().n }]);
+        const c = await this.ui.list('町づくり', [{ label: '町の工事を たのむ', sub: '漁港・商店街・電車…(場所は決まっている)' }, { label: 'しせつを たてる', sub: '家の土地・ベンチ・街灯… すきな場所に' }, { label: 'ぽっけの 家', sub: this.st.ext.home.stage >= 1 ? 'できている' : '' }, { label: '町の評判', sub: '★' + this.goals.rating().n }]);
         if (c === 3) { await this.goals.ratingTalk(sp); line = again; continue; }
         line = c === 0 ? await this.townWork(sp) : c === 1 ? await this.build.menu(sp) : c === 2 ? await this.home.houseMenu(sp) : again; continue;
       }
@@ -940,7 +941,7 @@ export class Life {
     if (this.st.intro || this.introRunning) return;
     this.introRunning = true;
     const sp = { name: 'あらた', color: '#4f8a46', pitch: 1.05 };
-    await this.ui.say(sp, ['おーい! キミが 港町に来た なぎ だね! まいど!', 'オイラは あらた。この テントで 「海凪商店」を やってるんだ。', 'ここは まだ なんにもない 入り江なんだ。\nいま住んでるのは ツムギと おもちと オイラだけ。', 'でも 海も 山も きれいだろ? みんなで すこしずつ 町を つくっていこう!', 'まずは 道具づくりから だね。\nつりざお・あみ・おのの 作り方を 教えるよ!']);
+    await this.ui.say(sp, ['おーい! キミが 港町に来た ぽっけ だね! まいど!', 'オイラは あらた。この テントで 「海凪商店」を やってるんだ。', 'ここは まだ なんにもない 入り江なんだ。\nいま住んでるのは ノリと モアイと オイラだけ。', 'でも 海も 山も きれいだろ? みんなで すこしずつ 町を つくっていこう!', 'まずは 道具づくりから だね。\nつりざお・あみ・おのの 作り方を 教えるよ!']);
     this.ui.jingle();
     await this.ui.say(null, ['つりざお・あみ・おの・たき火の DIYレシピを おぼえた!']);
     await this.ui.say(sp, ['木の下に 落ちている 木の枝を 5本 ひろって、\nオイラの 屋台で 「DIY」を えらんでね。', 'できたての 道具は ちょっと もろいから、\nこわれたら また 作るか、ナギを ためて 店で 買ってね。']);
@@ -1008,7 +1009,7 @@ export class Life {
     const k = await this.ui.list(`${it.name}　(お店で ${this.sellValue(id)} ナギ)`, rows.map(([label]) => ({ label })));
     if (k >= 0 && rows[k][1]) rows[k][1]();
   }
-  // the thing in front of なぎ that A would act on
+  // the thing in front of ぽっけ that A would act on
   target() {
     const pl = this.player, pp = pl.pos, h = pl.heading, fx = Math.sin(h), fz = Math.cos(h);
     const front = (x, z, R) => { const dx = x - pp.x, dz = z - pp.z, d = Math.hypot(dx, dz); return d < R && (d < 0.45 || (dx * fx + dz * fz) / d > 0.35) ? d : 0; };
@@ -1109,7 +1110,7 @@ export class Life {
   start() {
     this.equip(this.st.tool);
     this.goals.place(); setTimeout(() => this.goals.loginBonus(), 3000);
-    if (this.st.intro && this.st.ext.home.stage < 0) { this.giveTent(); setTimeout(() => this.ui.say({ name: 'あらた', color: '#4f8a46', pitch: 1.05 }, ['あ、なぎ! 東の 岸壁に キミの テントを はっておいたよ。', '家具を おいたり、DIYしたり、くらしが もっと 楽しくなるよ。まいど!']), 1500); }
+    if (this.st.intro && this.st.ext.home.stage < 0) { this.giveTent(); setTimeout(() => this.ui.say({ name: 'あらた', color: '#4f8a46', pitch: 1.05 }, ['あ、ぽっけ! 東の 岸壁に キミの テントを はっておいたよ。', '家具を おいたり、DIYしたり、くらしが もっと 楽しくなるよ。まいど!']), 1500); }
     const owlNew = this.st.owlHere() && !this.st.met.owlArrived;
     if (this.st.intro && (this.news.length || owlNew)) {
       if (owlNew) this.st.met.owlArrived = 1;

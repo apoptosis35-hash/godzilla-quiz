@@ -30,7 +30,9 @@ export const MODELS = {
   // animated (cloned)
   dynamic: ['fishing_boat', 'fishing_boat_b', 'sea_candle', 'lighthouse_red', 'shiba', 'yacht', 'yacht_sail', 'tonbi', 'enoden', 'eno_station', 'cat', 'seagull',
     // island life (js/life): animal villagers, tools, fruit trees, dig spots, message bottles
-    'vil_cat', 'vil_rabbit', 'vil_bear', 'vil_penguin', 'vil_frog', 'vil_squirrel', 'vil_owl', 'vil_raccoon', 'tool_net', 'tool_rod', 'tool_shovel', 'fruit_tree', 'dig_spot', 'bottle_msg'],
+    'vil_cat', 'vil_rabbit', 'vil_bear', 'vil_penguin', 'vil_frog', 'vil_squirrel', 'vil_owl', 'vil_raccoon',
+    // the harbour folk: ぽっけ (the player) and the residents
+    'pc_hippo', 'vil_nori', 'vil_shione', 'vil_moai', 'vil_kotetsu', 'vil_gabuta', 'vil_minato', 'vil_kai', 'vil_picco', 'tool_net', 'tool_rod', 'tool_shovel', 'fruit_tree', 'dig_spot', 'bottle_msg'],
   // home life (js/life/home.js): furniture, the room, hats... a missing one falls back to a stand-in
   optional: ['furn_table_wood', 'furn_chair_wood', 'furn_bed', 'furn_bookshelf', 'furn_lamp', 'furn_rug', 'furn_tansu', 'furn_kotatsu', 'furn_radio', 'furn_aquarium',
     'furn_log_stool', 'furn_log_bench', 'furn_fence_bamboo', 'furn_fence_white', 'furn_workbench', 'furn_mailbox', 'furn_pumpkin', 'furn_snowman', 'tool_axe', 'item_daikon',

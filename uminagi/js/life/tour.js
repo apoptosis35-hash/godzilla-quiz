@@ -1,4 +1,4 @@
-// Island tours: with a ticket (from the stamp exchange) the boat captain at the harbour takes なぎ out to 凪ノ島,
+// Island tours: with a ticket (from the stamp exchange) the boat captain at the harbour takes ぽっけ out to 凪ノ島,
 // which is a different island every trip: a theme decides what lies about (peaches, iron and gold, buried
 // treasure, or flowers), and rare fish and bugs, big fish and golden bugs are all more common while there.
 // The captain waits at the landing to take you back.

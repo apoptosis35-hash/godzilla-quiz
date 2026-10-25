@@ -38,7 +38,7 @@ export class Garden {
     const sprout = new THREE.Mesh(new THREE.ConeGeometry(0.06, 0.16, 5), new THREE.MeshStandardMaterial({ color: 0x6ab84a })); sprout.position.y = 0.08; g.add(sprout);
     return g;
   }
-  // plant the pocket item at index i in front of なぎ
+  // plant the pocket item at index i in front of ぽっけ
   plant(i) {
     const L = this.life, st = this.st, id = st.pocket[i], pl = L.player;
     if (L.home.inside) { L.ui.toast('家の中には 植えられないよ'); return; }

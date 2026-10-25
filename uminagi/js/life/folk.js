@@ -53,7 +53,7 @@ export class Folk {
         f.list.splice(f.list.indexOf(def), 1);
         for (const b of B.list) if (b.who === def.id) b.who = null;
         if (v) L.removeVillager(v);
-        lines.push(`${def.name}は けさ はやくに 旅立っていったよ。\nなぎに よろしくって 言ってた。`);
+        lines.push(`${def.name}は けさ はやくに 旅立っていったよ。\nぽっけに よろしくって 言ってた。`);
       }
       f.leaving = null;
     } else if (lv && lv.week !== this.week()) f.leaving = null;
@@ -82,13 +82,13 @@ export class Folk {
     const lv = this.f.leaving; if (!lv || lv.id !== v.def.id || lv.asked) return;
     lv.asked = true; this.st.save();
     const ph = v.def.catchphrase;
-    const k = await this.life.ui.say(v.speaker, [`ねえ、なぎ…… ちょっと 相談が あるんだ、${ph}。`, 'じつは、どこか 新しい ところで くらしてみようかなって 思ってて……', 'なぎは どう思う?'], ['ここに いてほしい', 'げんきでね']);
+    const k = await this.life.ui.say(v.speaker, [`ねえ、ぽっけ…… ちょっと 相談が あるんだ、${ph}。`, 'じつは、どこか 新しい ところで くらしてみようかなって 思ってて……', 'ぽっけは どう思う?'], ['ここに いてほしい', 'げんきでね']);
     if (k === 0) {
       lv.decided = 'stay'; this.st.friend[v.def.id] = (this.st.friend[v.def.id] || 0) + 2;
       await this.life.ui.say(v.speaker, [`……そっか。そう 言ってもらえると うれしいな、${ph}。`, 'もうすこし ここで がんばってみるよ!']);
     } else {
       lv.decided = 'go'; lv.day = dayKey();
-      await this.life.ui.say(v.speaker, [`うん…… ありがとう、なぎ。`, `あしたの朝、出発するね。いままで ほんとうに たのしかった、${ph}!`]);
+      await this.life.ui.say(v.speaker, [`うん…… ありがとう、ぽっけ。`, `あしたの朝、出発するね。いままで ほんとうに たのしかった、${ph}!`]);
     }
     this.st.save();
   }

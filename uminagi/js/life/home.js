@@ -1,4 +1,4 @@
-// Home life: なぎ's tent on the east quay that becomes a house (ordered from the raccoon, built overnight), the
+// Home life: ぽっけ's tent on the east quay that becomes a house (ordered from the raccoon, built overnight), the
 // room inside it, furniture placed and turned anywhere indoors or out, the mailbox and its letters, clothes
 // (bandana colour and a hat), visiting a villager's home and the owl's exhibition room.
 // Interiors are a stage high above the lighthouse hill: entering hides the outside world and shows the room.
@@ -13,7 +13,7 @@ import { ART, hangPainting } from './art.js';
 const PI = Math.PI;
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const STAGE = { x: -122, z: -40, y: 140 };          // where interiors are drawn
-const PLOT = { x: 49, z: 11, ry: 0 };               // なぎ's home on the east quay (front faces the sea, +z)
+const PLOT = { x: 49, z: 11, ry: 0 };               // ぽっけ's home on the east quay (front faces the sea, +z)
 // the house grows like in the slow-life games: a loan per step (no interest, paid back at the raccoon's whenever),
 // the next step only once the last loan is paid. Each step changes the outside and adds space inside.
 export const HOUSE = [
@@ -232,7 +232,7 @@ export class Home {
     if (this.inside && !inHome) { this.life.ui.toast('ここには 置けないよ'); return; }
     if (inHome && it.where === 'out') { this.life.ui.toast('これは 外に置くものだよ'); return; }
     if (!this.inside && it.where === 'in') { this.life.ui.toast('これは 家の中に置くものだよ'); return; }
-    const ry = Math.round(pl.heading / (PI / 2)) * (PI / 2) + PI;   // facing なぎ
+    const ry = Math.round(pl.heading / (PI / 2)) * (PI / 2) + PI;   // facing ぽっけ
     const d = 0.6 + Math.max(it.w || 0.6, it.d || 0.6) / 2;
     let x = pl.pos.x + Math.sin(pl.heading) * d, z = pl.pos.z + Math.cos(pl.heading) * d;
     x = Math.round(x * 4) / 4; z = Math.round(z * 4) / 4;
@@ -288,7 +288,7 @@ export class Home {
     if (st.full()) { this.life.ui.toast('ポケットが いっぱい!'); return; }
     st.pocket.push(st.ext.wear.hat); st.ext.wear.hat = null; st.save(); this.wear();
   }
-  // recolour the bandana in なぎ's vertex colours and put the hat on the head
+  // recolour the bandana in ぽっけ's vertex colours and put the hat on the head
   wear() {
     const w = this.st.ext.wear, L = this.player.limbs, c = CLOTHES.find((x) => x.id === w.bandana) || CLOTHES[0];
     if (!this.bandana) {   // find the bandana vertices once: the navy colour on the body part
@@ -355,8 +355,8 @@ export class Home {
       return h.loan ? `まいど! のこりは ${h.loan.toLocaleString()} ナギだよ。` : 'ローン 完済! おめでとう!\nつぎの 増築も いつでも 相談してね。';
     }
     const next = HOUSE[h.stage + 1];
-    if (!next) return 'なぎの 家は もう これ以上 ない 立派な 家だよ!';
-    const fill = (x) => x.replace(/\{name\}/g, 'なぎ').replace(/\{phrase\}/g, 'まいど').replace(/\{price\}/g, next.cost.toLocaleString());
+    if (!next) return 'ぽっけの 家は もう これ以上 ない 立派な 家だよ!';
+    const fill = (x) => x.replace(/\{name\}/g, 'ぽっけ').replace(/\{phrase\}/g, 'まいど').replace(/\{price\}/g, next.cost.toLocaleString());
     const intro = h.stage < 1 ? RACCOON.house_offer.map(fill) : RACCOON.upgrade_offer.map(fill);
     const k = await ui.say(sp, [...intro, `「${next.name}」は ${next.cost.toLocaleString()} ナギ。\nお金は ローンで あとから 返してくれれば いいよ。`], ['たのむ', 'やめる']);
     if (k !== 0) return 'ほかに なにか あるかい?';
@@ -365,7 +365,7 @@ export class Home {
   }
   // villagers' letters (called by Social each morning)
   letterFrom(v) {
-    const lines = LETTERS[v.def.personality] || LETTERS.futsuu, text = pick(lines).replace(/\{name\}/g, 'なぎ').replace(/\{phrase\}/g, v.def.catchphrase);
+    const lines = LETTERS[v.def.personality] || LETTERS.futsuu, text = pick(lines).replace(/\{name\}/g, 'ぽっけ').replace(/\{phrase\}/g, v.def.catchphrase);
     const gifts = [...FURNITURE.filter((f) => f.price && f.price <= 2400 && !f.season), ...CLOTHES.filter((c) => c.price)];
     const gift = Math.random() < 0.7 ? pick(gifts).id : null;
     this.st.ext.mail.push({ from: v.def.name, text: text + (gift ? '\f' + pick(LETTERS.gift) : ''), gift }); this.st.save();

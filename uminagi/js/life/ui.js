@@ -60,7 +60,7 @@ export class LifeUI {
     while (this.queue) await new Promise((r) => (this.waiters ||= []).push(r));
     this.open++; document.body.classList.add('talking');
     // a placeholder a caller forgot to fill never reaches the screen
-    const LEFT = { name: 'なぎ', item: 'それ', other: 'あの子', price: 'その', phrase: '' };
+    const LEFT = { name: 'ぽっけ', item: 'それ', other: 'あの子', price: 'その', phrase: '' };
     lines = [].concat(lines).flatMap((l) => String(l).replace(/[、,]?\s?\{(\w+)\}/g, (m, k) => { console.warn('unfilled placeholder', k, l); return k === 'phrase' ? '' : m.replace(/\{\w+\}/, LEFT[k] ?? ''); }).split('\f'));
     const plate = $('tplate');
     plate.hidden = !speaker; if (speaker) { plate.textContent = speaker.name; plate.style.background = speaker.color || '#e8b23a'; }
@@ -190,7 +190,7 @@ export class LifeUI {
     };
     sets.forEach(([n], k) => { const b = el('button', 'btn', n); b.onclick = () => show(k); tabs.appendChild(b); });
     show(0);
-    return this.panel('なぎの図鑑', wrap);
+    return this.panel('ぽっけの図鑑', wrap);
   }
   picture(title, url) {
     const wrap = el('div', 'book'); wrap.innerHTML = `<img src="${url}" style="width:100%;max-width:420px;border-radius:10px;display:block;margin:0 auto">`;

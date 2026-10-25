@@ -6697,6 +6697,301 @@ def bottle_msg():
         torus('ac_bobber_red', 0.0135, 0.003, (0, 0, 0.268), seg=8, rseg=3)                                     # string
     with xf((0.17, -0.06, 0.016), rz=0.6, ry=math.pi / 2):   # the cork, popped out beside it
         cyl('ac_cork', 0.016, 0.03, (0, 0, -0.015), 8, r2=0.019)
+
+# ---- the harbour folk: ぽっけ (the player, a hippo) and eight residents. Original designs for this town: every one
+# has their own colours, outfit and job (lighthouse keeper, fisher's apprentice, sailor, carpenter, postie...).
+PALETTE.update({
+    'hf_hippo': P((0.5, 0.44, 0.56), 0.85), 'hf_hippo_lt': P((0.78, 0.66, 0.72), 0.85), 'hf_hippo_dk': P((0.3, 0.24, 0.34), 0.85),
+    'hf_apron': P((0.05, 0.1, 0.32), 0.8),     # navy: recoloured by the bandana/apron clothes (js/life/home.js)
+    'hf_nori_blk': P((0.05, 0.05, 0.06), 0.8), 'hf_nori_wht': P((0.88, 0.87, 0.84), 0.85), 'hf_stripe_navy': P((0.08, 0.14, 0.38), 0.85),
+    'hf_rabbit': P((0.52, 0.33, 0.18), 0.9), 'hf_rabbit_lt': P((0.9, 0.84, 0.74), 0.9), 'hf_straw': P((0.86, 0.7, 0.36), 0.9), 'hf_straw_band': P((0.75, 0.15, 0.12), 0.7),
+    'hf_eleph': P((0.48, 0.49, 0.52), 0.9), 'hf_eleph_lt': P((0.66, 0.66, 0.68), 0.9), 'hf_dot_bandana': P((0.1, 0.45, 0.25), 0.8), 'hf_overall': P((0.55, 0.36, 0.18), 0.9),
+    'hf_monkey': P((0.28, 0.16, 0.08), 0.9), 'hf_monkey_face': P((0.92, 0.72, 0.6), 0.85), 'hf_hachimaki_r': P((0.8, 0.1, 0.08), 0.7), 'hf_boot_blk': P((0.06, 0.06, 0.07), 0.35),
+    'hf_jacket_orange': P((0.95, 0.5, 0.08), 0.8),
+    'hf_croc': P((0.12, 0.3, 0.12), 0.75), 'hf_croc_belly': P((0.82, 0.78, 0.48), 0.8), 'hf_lens': P((0.03, 0.03, 0.04), 0.1, 0.3), 'hf_sailor': P((0.05, 0.08, 0.22), 0.85),
+    'hf_giraffe': P((0.86, 0.72, 0.48), 0.9), 'hf_giraffe_patch': P((0.45, 0.25, 0.1), 0.9), 'hf_cap_navy': P((0.06, 0.08, 0.2), 0.8), 'hf_coat_white': P((0.9, 0.9, 0.88), 0.85),
+    'hf_lion': P((0.84, 0.62, 0.36), 0.9), 'hf_mane': P((0.55, 0.2, 0.08), 0.95), 'hf_lion_lt': P((0.95, 0.86, 0.7), 0.9), 'hf_tee': P((0.92, 0.92, 0.9), 0.9),
+    'hf_neckerchief': P((0.12, 0.35, 0.75), 0.75), 'hf_shorts': P((0.35, 0.3, 0.2), 0.9),
+    'hf_chick': P((0.96, 0.86, 0.55), 0.9), 'hf_chick_beak': P((0.95, 0.55, 0.15), 0.5), 'hf_post_green': P((0.1, 0.38, 0.22), 0.8), 'hf_bag': P((0.45, 0.28, 0.14), 0.8),
+    'hf_boot_red': P((0.75, 0.1, 0.08), 0.35),
+})
+
+@model('pc_hippo', 'ぽっけ(操作キャラ・カバ)', '人物', lod=False)
+def pc_hippo():
+    # The player: a round, cheerful hippo (about 1.25 m before the game scales it), lilac-grey with a pale muzzle,
+    # small round ears, tiny eyes high on the head and a navy apron with a white pocket. Same parts as the old player
+    # model: <n>_body (hips) > head > ears, arms, legs, tail.
+    n, F, L, D = 'pc_hippo', 'hf_hippo', 'hf_hippo_lt', 'hf_hippo_dk'
+    part(n + '_body', (0, 0, 0.3))
+    ico(F, 0.25, (0, 0.01, 0.47), (1.0, 0.9, 1.06), 3)                                # round tummy
+    ico(L, 0.19, (0, -0.1, 0.45), (0.85, 0.5, 1.0), 3)                                 # pale belly
+    ico(F, 0.2, (0, 0.05, 0.32), (1.05, 0.95, 0.6), 2)                                 # hips
+    apron = [(0.262, 0.3, 0.95), (0.262, 0.44, 0.85), (0.23, 0.58, 0.62)]
+    _pv_shell('hf_apron', apron, seg=8, t=0.016, sy=0.92)                               # front apron
+    _pv_rbox('white', (0.11, 0.012, 0.07), (0, -0.252, 0.4), 0.008)                    # pocket
+    for sx in (-1, 1): _pv_tube('hf_apron', [(sx * 0.1, -0.16, 0.6), (sx * 0.14, 0.0, 0.66), (0, 0.17, 0.64)], 0.012, 4)   # neck strap
+    torus('hf_apron', 0.255, 0.014, (0, 0.01, 0.5), seg=20, rseg=4)                      # waist tie
+    part(None)
+    part(n + '_head', (0, 0, 0.66))
+    hc, R = (0, 0.02, 0.95), (0.3, 0.27, 0.27)
+    _ac_ball(F, hc, R, 18, 10)
+    mc, mr = (0, -0.2, 0.86), (0.25, 0.17, 0.15)                                       # the wide muzzle
+    _ac_ball(L, mc, mr, 18, 10)
+    for sx in (-1, 1):
+        _ac_decal(D, mc, mr, sx * 0.08, 0.1, 0.026, 0.018, 0.012)                       # nostrils on top
+        _ac_decal('eye', hc, R, sx * 0.12, 0.1, 0.03, 0.036, 0.014)                     # small eyes high up
+        _ac_decal('white', hc, R, sx * 0.12 + 0.01, 0.113, 0.01, 0.01, 0.008, 0.007, sub=1)
+        _ac_decal('cheek', mc, mr, sx * 0.17, 0.0, 0.04, 0.024, 0.01, sub=1)
+        ico(F, 0.03, (sx * 0.16, -0.2, 0.84), (0.8, 0.8, 0.6), 1)
+    _ac_curve('ink', mc, mr, [(-0.12, -0.04), (-0.06, -0.075), (0.0, -0.08), (0.06, -0.075), (0.12, -0.04)], 0.006, 0.0)   # big smile
+    ico('white', 0.022, (-0.04, -0.33, 0.8), (1.0, 0.5, 1.2), 1); ico('white', 0.022, (0.04, -0.33, 0.8), (1.0, 0.5, 1.2), 1)   # two little teeth
+    part(None)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        part(f'{n}_ear_{sd}', (sx * 0.19, 0.05, 1.17))
+        ico(F, 0.06, (sx * 0.19, 0.05, 1.19), (1.0, 0.55, 1.0), 2)
+        ico(L, 0.035, (sx * 0.19, 0.02, 1.19), (1.0, 0.35, 1.0), 2)
+        part(None)
+        part(f'{n}_arm_{sd}', (sx * 0.22, 0, 0.6))
+        _pv_tube(F, [(sx * 0.22, 0, 0.6), (sx * 0.27, -0.02, 0.5), (sx * 0.29, -0.035, 0.42)], [0.075, 0.068, 0.062], 10)
+        ico(F, 0.066, (sx * 0.295, -0.04, 0.385), (1.0, 1.05, 0.95), 2)
+        part(None)
+        part(f'{n}_leg_{sd}', (sx * 0.11, 0, 0.3))
+        _pv_tube(F, [(sx * 0.11, 0.0, 0.3), (sx * 0.11, -0.005, 0.18), (sx * 0.11, 0.0, 0.1)], [0.095, 0.085, 0.078], 10)
+        _ac_foot(F, sx * 0.11, 0.084)
+        for k in (-1, 0, 1): ico(L, 0.018, (sx * 0.11 + k * 0.03, -0.1, 0.03), (1, 0.6, 0.8), 1)   # toenails
+        part(None)
+    part(n + '_tail', (0, 0.2, 0.36))
+    _pv_tube(F, [(0, 0.2, 0.36), (0, 0.28, 0.33), (0, 0.32, 0.27)], [0.035, 0.025, 0.015], 6)
+    ico(D, 0.025, (0, 0.33, 0.25), sub=1)
+    part(None)
+
+def _hf_body(n, shirt, prof=None, sy=0.88):
+    part(n + '_body', (0, 0, 0.3))
+    prof = prof or _AC_TORSO
+    _pv_lathe(shirt, prof, seg=14, sy=sy)
+    return prof
+
+@model('vil_nori', 'ねこの住民ノリ(ハチワレ・ボーダー)', '人物', lod=False)
+def vil_nori():
+    n, K, W = 'vil_nori', 'hf_nori_blk', 'hf_nori_wht'
+    prof = _hf_body(n, W)
+    _ac_bands(['hf_stripe_navy', 'white'], [(0.17, 0.2), (0.172, 0.25), (0.168, 0.3), (0.158, 0.35), (0.148, 0.4), (0.136, 0.45), (0.12, 0.5)], seg=14, sy=0.88)   # border shirt
+    _pv_tube(K, [(0, 0.14, 0.27), (0.04, 0.27, 0.27), (0.08, 0.33, 0.4), (0.06, 0.33, 0.52)], [0.03, 0.03, 0.028, 0.024], 8)   # tail
+    ico(W, 0.026, (0.06, 0.33, 0.53), sub=1)
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = _AC_HC, _AC_HR
+    _ac_ball(K, hc, R, 18, 10)
+    _ac_decal(W, hc, R, 0, -0.1, 0.17, 0.13, 0.03)                                     # white lower face (hachiware)
+    _ac_decal(W, hc, R, 0, 0.0, 0.05, 0.12, 0.02, roll=0.0)                             # the split up the middle
+    _ac_decal('ac_ear_pink', hc, R, 0, -0.05, 0.02, 0.014, 0.02, 0.03)
+    _ac_curve('ink', hc, R, [(-0.03, -0.085), (-0.015, -0.095), (0.0, -0.082), (0.015, -0.095), (0.03, -0.085)], 0.004, 0.032)
+    _ac_eyes(hc, R, 0.1, 0.01, 0.028, 0.038, mat='ac_flower_eye')                       # amber eyes
+    for sx in (-1, 1): _ac_decal('ink', hc, R, sx * 0.1, 0.01, 0.01, 0.03, 0.022, 0.006, sub=1)   # slit pupils
+    _ac_whiskers(hc, R, 0.09, -0.07, 0.03)
+    _ac_ear(K, 'ac_ear_pink', (-0.15, 0.0, 0.92), 0.085, 0.15, ry=-0.35, rx=0.05)
+    with xf((0.15, 0.0, 0.92), ry=0.35, rx=0.05):                                       # the right ear has a nick: flat top
+        o = cyl(K, 0.085, 0.1, (0, 0, 0), 8, r2=0.03); o.scale = (1, 0.5, 1)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, K, paw=W, sleeve='hf_stripe_navy', slen=0.5)
+        _ac_leg(n, sd, sx, K, W, pant='ac_denim', plen=0.8)
+    part(None)
+
+@model('vil_shione', 'うさぎの住民シオネ(麦わら帽子)', '人物', lod=False)
+def vil_shione():
+    n, F, L = 'vil_shione', 'hf_rabbit', 'hf_rabbit_lt'
+    prof = _hf_body(n, 'ac_shirt_cream')
+    _pv_lathe('ac_tee_blue', [(0.0, 0.15), (0.2, 0.15), (0.21, 0.17), (0.18, 0.27), (0.0, 0.27)], seg=16, sy=0.9)   # skirt
+    ico(L, 0.05, (0, 0.17, 0.25), sub=2, jitter=0.15, seed=4)                            # cotton tail
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = (0, 0, 0.765), (0.265, 0.235, 0.225)
+    _ac_ball(F, hc, R, 18, 10)
+    _ac_decal(L, hc, R, 0, -0.09, 0.12, 0.08, 0.03)                                     # pale muzzle
+    _ac_decal('ac_ear_pink', hc, R, 0, -0.045, 0.022, 0.015, 0.02, 0.03)
+    _ac_curve('ink', hc, R, [(-0.03, -0.082), (-0.015, -0.095), (0.0, -0.08), (0.015, -0.095), (0.03, -0.082)], 0.0042, 0.03)
+    _ac_eyes(hc, R, 0.1, 0.0, 0.026, 0.04)
+    _ac_blush(hc, R, 0.155, -0.06)
+    for sx in (-1, 1):   # long ears, tipped back
+        b = Vector((sx * 0.08, 0.04, 0.95))
+        pts = [b, b + Vector((sx * 0.02, 0.04, 0.14)), b + Vector((sx * 0.035, 0.09, 0.27)), b + Vector((sx * 0.04, 0.12, 0.33))]
+        _pv_sweep(F, pts, [(0.03, 0.04), (0.032, 0.055), (0.028, 0.05), (0.016, 0.022)], 10, side=(0, 1, 0))
+    with xf((0, 0, 0.93), rx=-0.12):                                                      # straw hat
+        cyl('hf_straw', 0.33, 0.015, (0, 0, 0), 24)
+        cyl('hf_straw', 0.18, 0.1, (0, 0, 0.055), 20, r2=0.16)
+        cyl('hf_straw_band', 0.183, 0.03, (0, 0, 0.03), 20)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, paw=L, sleeve='ac_shirt_cream', slen=0.45)
+        _ac_leg(n, sd, sx, F, L)
+    part(None)
+
+@model('vil_moai', 'ゾウの住民モアイ(大工・水玉バンダナ)', '人物', lod=False)
+def vil_moai():
+    n, F, L = 'vil_moai', 'hf_eleph', 'hf_eleph_lt'
+    hood = [(0.0, 0.15), (0.2, 0.155), (0.215, 0.22), (0.21, 0.31), (0.19, 0.41), (0.16, 0.49), (0.1, 0.55), (0.0, 0.565)]
+    _hf_body(n, 'hf_overall', hood, 0.92)
+    _pv_shell('ac_shirt_cream', [(0.2, 0.42, 0.5), (0.17, 0.5, 0.42)], seg=6, t=0.01, sy=0.92)   # shirt at the bib
+    _pv_rbox('hf_bag', (0.08, 0.02, 0.06), (0.11, -0.2, 0.25), 0.01)                     # tool pocket
+    rod('ac_wood_handle', (0.13, -0.21, 0.28), (0.15, -0.22, 0.38), 0.008, 5)             # a pencil
+    part(n + '_head', (0, 0, 0.565))
+    hc, R = (0, 0, 0.79), (0.29, 0.26, 0.25)
+    _ac_ball(F, hc, R, 18, 10)
+    trunk = [(0, -0.21, 0.76), (0, -0.29, 0.69), (0, -0.33, 0.6), (0, -0.37, 0.55), (0, -0.4, 0.57)]
+    _pv_tube(F, trunk, [0.07, 0.058, 0.048, 0.042, 0.04], 10)
+    ico(L, 0.035, trunk[-1], (1, 0.6, 1), 1)
+    _ac_eyes(hc, R, 0.11, 0.03, 0.026, 0.034)
+    _ac_blush(hc, R, 0.17, -0.04)
+    _ac_curve('ink', hc, R, [(-0.06, -0.1), (0.0, -0.13), (0.06, -0.1)], 0.005, 0.0)
+    for sx in (-1, 1):   # small ears
+        ico(F, 0.11, (sx * 0.27, 0.04, 0.8), (0.35, 0.9, 1.0), 2)
+        ico(L, 0.07, (sx * 0.265, 0.0, 0.8), (0.25, 0.6, 0.8), 2)
+    _pv_lathe('hf_dot_bandana', [(0.0, 0.88), (0.25, 0.9), (0.27, 0.95), (0.22, 1.02), (0.0, 1.05)], seg=18, sy=0.95)   # bandana cap
+    for k in range(10): a = k * 0.63; ico('white', 0.016, (math.sin(a) * 0.255, -math.cos(a) * 0.24, 0.93 + (k % 2) * 0.04), (1, 0.5, 1), 1)   # polka dots
+    ico('hf_dot_bandana', 0.04, (0, 0.24, 0.93), (1.2, 0.7, 0.8), 1)                     # the knot
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, sleeve='ac_shirt_cream', slen=0.4, sh=(0.16, 0.0, 0.5), hand=(0.245, -0.03, 0.3), r=0.058)
+        _ac_leg(n, sd, sx, F, L, x=0.09, r=0.075, foot_r=0.08, pant='hf_overall', plen=0.9)
+    part(None)
+
+@model('vil_kotetsu', 'おさるの住民コテツ(漁師見習い)', '人物', lod=False)
+def vil_kotetsu():
+    n, F, P2 = 'vil_kotetsu', 'hf_monkey', 'hf_monkey_face'
+    _hf_body(n, 'hf_jacket_orange')
+    _pv_tube('hf_jacket_orange', [_ac_on(_AC_TORSO, 0.2, 0.0, 0.88, 0.004), _ac_on(_AC_TORSO, 0.5, 0.0, 0.88, 0.004)], 0.006, 4)
+    _pv_tube(F, [(0, 0.15, 0.3), (0.05, 0.28, 0.33), (0.1, 0.33, 0.47), (0.04, 0.33, 0.6), (-0.04, 0.3, 0.6)], [0.025, 0.024, 0.022, 0.02, 0.018], 8)   # curly tail
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = _AC_HC, _AC_HR
+    _ac_ball(F, hc, R, 18, 10)
+    _ac_decal(P2, hc, R, -0.055, 0.0, 0.09, 0.1, 0.03)                                   # heart-shaped face
+    _ac_decal(P2, hc, R, 0.055, 0.0, 0.09, 0.1, 0.03)
+    _ac_decal(P2, hc, R, 0, -0.08, 0.13, 0.08, 0.035)
+    _ac_eyes(hc, R, 0.065, 0.02, 0.024, 0.034, out=0.02)
+    for sx in (-1, 1): ico('ink', 0.006, _ac_surf(hc, R, sx * 0.018, -0.05, 0.035)[0], sub=1)
+    _ac_curve('ink', hc, R, [(-0.05, -0.1), (0.0, -0.12), (0.05, -0.1)], 0.005, 0.035)
+    _ac_blush(hc, R, 0.12, -0.06, out=0.02)
+    for sx in (-1, 1):   # round ears at the sides
+        ico(F, 0.07, (sx * 0.28, 0.0, 0.78), (0.5, 1, 1), 2); ico(P2, 0.045, (sx * 0.29, -0.01, 0.78), (0.4, 0.8, 0.8), 2)
+    _pv_tube('white', [(math.sin(a) * 0.243, -math.cos(a) * 0.216, 0.88) for a in [i * 0.4 for i in range(17)]], 0.02, 6)   # twisted hachimaki
+    _pv_tube('hf_hachimaki_r', [(math.sin(a) * 0.245, -math.cos(a) * 0.218, 0.9) for a in [i * 0.4 + 0.2 for i in range(16)]], 0.012, 5)
+    ico('white', 0.03, (0.08, 0.21, 0.89), (1.3, 0.7, 0.8), 1)                           # the knot
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, paw=P2, sleeve='hf_jacket_orange', slen=0.6)
+        _ac_leg(n, sd, sx, F, 'hf_boot_blk', pant='hf_boot_blk', plen=0.75)               # rubber boots
+    part(None)
+
+@model('vil_gabuta', 'ワニの住民ガブ太(船乗り・サングラス)', '人物', lod=False)
+def vil_gabuta():
+    n, F, B = 'vil_gabuta', 'hf_croc', 'hf_croc_belly'
+    _hf_body(n, 'hf_sailor')
+    torus('white', 0.13, 0.012, (0, 0.0, 0.545), seg=16, rseg=4)
+    prism('white', [(-0.13, 0.0), (0.13, 0.0), (0, -0.12)], 0.02, loc=(0, -0.1, 0.53), axis='Y')   # sailor collar tip
+    _pv_tube(F, [(0, 0.14, 0.27), (0, 0.3, 0.2), (0, 0.45, 0.08), (0, 0.55, 0.03)], [0.07, 0.06, 0.045, 0.02], 10)   # long tail
+    for k in range(5): ico('hf_croc', 0.018, (0, 0.18 + k * 0.08, 0.3 - k * 0.055), (0.6, 1, 1.2), 1)   # tail ridges
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = (0, 0.03, 0.77), (0.24, 0.22, 0.2)
+    _ac_ball(F, hc, R, 18, 10)
+    sc, sr = (0, -0.24, 0.72), (0.15, 0.2, 0.08)                                         # the long snout
+    _ac_ball(F, sc, sr, 16, 8)
+    _ac_ball(B, (0, -0.22, 0.68), (0.135, 0.18, 0.04), 16, 6)                             # pale underjaw
+    for k in range(6):
+        for sx in (-1, 1): cyl('white', 0.012, 0.025, (sx * (0.11 - k * 0.006), -0.12 - k * 0.05, 0.69), 4, r2=0.0, rot=(math.pi, 0, 0))   # teeth
+    for sx in (-1, 1): ico('ink', 0.01, (sx * 0.04, -0.42, 0.77), sub=1)                   # nostrils
+    for sx in (-1, 1):   # eye bumps with round sunglasses
+        ico(F, 0.06, (sx * 0.09, -0.09, 0.93), (1, 0.9, 0.8), 2)
+        cyl('hf_lens', 0.05, 0.012, (sx * 0.09, -0.15, 0.92), 16, rot=(math.pi / 2, 0, 0))
+    rod('ac_rim_dark', (-0.04, -0.155, 0.925), (0.04, -0.155, 0.925), 0.006, 4)
+    _ac_curve('ink', sc, sr, [(-0.12, -0.04), (0.0, -0.05), (0.12, -0.04)], 0.005, 0.0)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, sleeve='hf_sailor', slen=0.5, cuff='white')
+        _ac_leg(n, sd, sx, F, F, pant='hf_sailor', plen=0.9)
+    part(None)
+
+@model('vil_minato', 'キリンの住民ミナト(灯台守)', '人物', lod=False)
+def vil_minato():
+    n, F, S = 'vil_minato', 'hf_giraffe', 'hf_giraffe_patch'
+    coat = [(0.0, 0.15), (0.19, 0.15), (0.2, 0.2), (0.18, 0.3), (0.16, 0.41), (0.135, 0.49), (0.09, 0.55), (0.0, 0.56)]
+    _hf_body(n, 'hf_coat_white', coat, 0.9)
+    for k, z in enumerate((0.25, 0.35, 0.45)): ico('hf_cap_navy', 0.013, _ac_on(coat, z, 0.0, 0.9, 0.01), sub=1)
+    neck = [(0, 0.0, 0.52), (0, -0.01, 0.7), (0, -0.02, 0.88), (0, -0.02, 1.02)]
+    _pv_tube(F, neck, [0.09, 0.08, 0.075, 0.075], 12)                                     # the long neck
+    for k in range(6): ico(S, 0.032, (math.sin(k * 2.4) * 0.07, -0.04 - abs(math.cos(k * 2.4)) * 0.03, 0.62 + k * 0.07), (1, 0.4, 0.8), 1)   # network patches
+    for k in range(5): ico(S, 0.02, (0, 0.06, 0.62 + k * 0.08), (0.6, 0.8, 1.6), 1)          # short mane
+    part(n + '_head', (0, -0.02, 1.0))
+    hc, R = (0, -0.03, 1.12), (0.2, 0.2, 0.17)
+    _ac_ball(F, hc, R, 18, 10)
+    mc, mr = (0, -0.18, 1.06), (0.13, 0.12, 0.09)
+    _ac_ball('hf_lion_lt', mc, mr, 14, 8)
+    for sx in (-1, 1): ico('ink', 0.008, _ac_surf(mc, mr, sx * 0.04, 0.03, 0.0)[0], sub=1)
+    _ac_curve('ink', mc, mr, [(-0.05, -0.04), (0.0, -0.055), (0.05, -0.04)], 0.004, 0.0)
+    _ac_eyes(hc, R, 0.09, 0.02, 0.024, 0.032)
+    for k, (x, z) in enumerate([(-0.12, 0.08), (0.13, 0.05), (0.0, 0.13)]): _ac_decal(S, hc, R, x, z, 0.03, 0.025, 0.01)
+    for sx in (-1, 1):
+        rod(F, (sx * 0.06, 0.0, 1.24), (sx * 0.07, 0.0, 1.34), 0.016, 6); ico(S, 0.026, (sx * 0.07, 0.0, 1.35), sub=1)   # ossicones
+        _ac_ear(F, 'ac_ear_pink', (sx * 0.17, 0.02, 1.2), 0.04, 0.1, rz=-sx * 1.1, flat=0.5)
+    with xf((0, 0.0, 1.26), rx=-0.1):                                                    # navy keeper's cap
+        cyl('hf_cap_navy', 0.13, 0.07, (0, 0, 0), 18, r2=0.15)
+        cyl('ac_rim_dark', 0.11, 0.012, (0, -0.1, -0.005), 14, rot=(0.25, 0, 0))
+        ico('ac_rim_gold', 0.018, (0, -0.135, 0.03), (1, 0.4, 1), 1)
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, paw=S, sleeve='hf_coat_white', slen=0.85)
+        _ac_leg(n, sd, sx, F, S, pant='hf_cap_navy', plen=0.85)
+    part(None)
+
+@model('vil_kai', 'ライオンの住民カイ(Tシャツとネッカチーフ)', '人物', lod=False)
+def vil_kai():
+    n, F, M, L = 'vil_kai', 'hf_lion', 'hf_mane', 'hf_lion_lt'
+    _hf_body(n, 'hf_tee')
+    torus('hf_neckerchief', 0.115, 0.022, (0, 0.0, 0.545), seg=16, rseg=5)
+    prism('hf_neckerchief', [(-0.09, 0.0), (0.09, 0.0), (0, -0.11)], 0.02, loc=(0, -0.11, 0.54), axis='Y')
+    _pv_tube(F, [(0, 0.15, 0.28), (0, 0.3, 0.24), (0, 0.42, 0.3), (0, 0.48, 0.4)], [0.025, 0.022, 0.02, 0.018], 8)   # tail with a tuft
+    ico(M, 0.05, (0, 0.49, 0.43), sub=2, jitter=0.2, seed=7)
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = _AC_HC, _AC_HR
+    for k in range(14):   # the mane: tufts round the face
+        a = k / 14 * math.tau
+        ico(M, 0.1, (math.sin(a) * 0.25, 0.04, 0.775 + math.cos(a) * 0.23), (1, 0.9, 1), 2, jitter=0.12, seed=k)
+    _ac_ball(F, hc, R, 18, 10)
+    _ac_decal(L, hc, R, 0, -0.08, 0.12, 0.08, 0.035)
+    _ac_decal('ac_bear_nose', hc, R, 0, -0.035, 0.032, 0.022, 0.02, 0.045)
+    _ac_curve('ink', hc, R, [(-0.04, -0.085), (-0.02, -0.1), (0.0, -0.085), (0.02, -0.1), (0.04, -0.085)], 0.0045, 0.042)
+    _ac_eyes(hc, R, 0.1, 0.02, 0.028, 0.04)
+    _ac_blush(hc, R, 0.16, -0.06)
+    for sx in (-1, 1): ico(F, 0.05, (sx * 0.17, 0.02, 0.98), (1, 0.6, 1), 2)               # round ears in the mane
+    for sx, sd in ((-1, 'l'), (1, 'r')):
+        _ac_arm(n, sd, sx, F, sleeve='hf_tee', slen=0.4)
+        _ac_leg(n, sd, sx, F, F, pant='hf_shorts', plen=0.45)
+    part(None)
+
+@model('vil_picco', 'ひよこの住民ピッコ(郵便屋さん)', '人物', lod=False)
+def vil_picco():
+    n, F = 'vil_picco', 'hf_chick'
+    part(n + '_body', (0, 0, 0.3))
+    ico(F, 0.2, (0, 0, 0.42), (1, 0.95, 1.05), 3)
+    _pv_tube('hf_bag', [(-0.17, -0.1, 0.56), (0.0, -0.19, 0.45), (0.16, -0.08, 0.3)], 0.012, 4)   # satchel strap
+    _pv_rbox('hf_bag', (0.12, 0.06, 0.1), (0.17, -0.06, 0.29), 0.015)
+    _pv_rbox('white', (0.06, 0.005, 0.04), (0.17, -0.092, 0.3), 0.004)                  # a letter peeking out
+    for k in range(3): ico(F, 0.03, (0.0 + (k - 1) * 0.03, 0.2, 0.35), (0.6, 1, 1.4), 1)  # tail feathers
+    part(n + '_head', (0, 0, 0.55))
+    hc, R = (0, 0, 0.74), (0.22, 0.2, 0.2)
+    _ac_ball(F, hc, R, 18, 10)
+    with xf((0, -0.21, 0.72), rx=0.2):
+        cyl('hf_chick_beak', 0.05, 0.08, (0, 0, 0), 4, r2=0.0, rot=(math.pi / 2, 0, 0))
+    _ac_eyes(hc, R, 0.085, 0.03, 0.024, 0.032)
+    _ac_blush(hc, R, 0.13, -0.03)
+    for k in range(3): ico(F, 0.025, (0.0 + (k - 1) * 0.025, 0.0, 0.95), (0.5, 0.8, 1.6), 1)   # a tuft on top
+    with xf((0, 0.0, 0.9), rx=-0.1):                                                    # green postie's cap
+        cyl('hf_post_green', 0.15, 0.08, (0, 0, 0), 18, r2=0.16)
+        cyl('hf_post_green', 0.12, 0.012, (0, -0.11, -0.01), 14, rot=(0.25, 0, 0))
+        ico('hf_boot_red', 0.02, (0, -0.15, 0.04), (1, 0.4, 1), 1)
+    for sx, sd in ((-1, 'l'), (1, 'r')):   # little wings for arms
+        part(f'{n}_arm_{sd}', (sx * 0.18, 0, 0.5))
+        ico(F, 0.08, (sx * 0.2, 0.0, 0.43), (0.45, 0.8, 1.1), 2)
+        part(None)
+        part(f'{n}_leg_{sd}', (sx * 0.07, 0, 0.3))
+        rod('hf_chick_beak', (sx * 0.07, 0, 0.3), (sx * 0.07, 0, 0.12), 0.018, 6)
+        _ac_foot('hf_boot_red', sx * 0.07, 0.06)                                          # red boots
+        _pv_tube('hf_boot_red', [(sx * 0.07, 0, 0.16), (sx * 0.07, 0, 0.06)], 0.04, 10)
+        part(None)
+    part(None)
+
 # --- ac end
 
 # --- home begin (cozy player-house furniture, outdoor DIY pieces, hats, room shell; original designs)

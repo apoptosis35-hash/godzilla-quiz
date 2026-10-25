@@ -57,7 +57,7 @@ const talkThrough = (choices) => G(async (choices) => {
 await G(() => { const L = window.__uminagi.life; L.introStarted = true; L.intro(); });
 await talkThrough([]);
 const life = await G(() => { const L = window.__uminagi.life; return { pocket: L.st.pocket.join(','), money: L.st.money, recipes: ['rod', 'net', 'axe'].every((id) => L.craft.known(id)), branches: L.pickups.filter((p) => p.id === 'branch').length, villagers: L.villagers.length, busy: L.ui.busy() }; });
-check('welcome: no free tools, DIY recipes, branches to pick up', !life.busy && !/rod|net/.test(life.pocket) && life.money === 0 && life.recipes && life.branches >= 6 && life.villagers === 8, JSON.stringify(life));
+check('welcome: no free tools, DIY recipes, branches to pick up', !life.busy && !/rod|net/.test(life.pocket) && life.money === 0 && life.recipes && life.branches >= 6 && life.villagers === 10, JSON.stringify(life));
 // five branches make a flimsy rod at the stall
 const rod = await G(async () => {
   const L = window.__uminagi.life; L.st.addMat('branch', 5);

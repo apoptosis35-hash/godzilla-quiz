@@ -216,13 +216,13 @@ export class Goals {
     if (f < 12 || this.g.photos[id] || !ITEMS[item]) return;
     if (this.st.full()) return;
     this.g.photos[id] = dayKey(); this.st.add(item); this.st.save(); this.life.ui.jingle([659, 784, 988, 1319]);
-    await this.life.ui.say(v.speaker, [`ねえ、なぎ。いつも ありがとう。`, `これ……ボクの 写真。もらってくれる?`.replace('ボク', v.def.personality === 'genki' || v.def.personality === 'futsuu' ? 'わたし' : 'ボク'), `${v.def.name}の 写真を もらった!`]);
+    await this.life.ui.say(v.speaker, [`ねえ、ぽっけ。いつも ありがとう。`, `これ……ボクの 写真。もらってくれる?`.replace('ボク', v.def.personality === 'genki' || v.def.personality === 'futsuu' ? 'わたし' : 'ボク'), `${v.def.name}の 写真を もらった!`]);
   }
   photoTexture(id) {
     const v = VILLAGERS.find((x) => x.id === id), cv = document.createElement('canvas'); cv.width = 320; cv.height = 240;
     const g = cv.getContext('2d'), sp = this.life.villagers.find((x) => x.def.id === id)?.speaker, col = sp?.color || '#8ac';
     const gr = g.createLinearGradient(0, 0, 0, 240); gr.addColorStop(0, col); gr.addColorStop(1, '#fff6e0'); g.fillStyle = gr; g.fillRect(0, 0, 320, 240);
-    g.font = '120px serif'; g.textAlign = 'center'; g.fillText({ ねこ: '🐱', うさぎ: '🐰', くま: '🐻', ペンギン: '🐧', かえる: '🐸', りす: '🐿️' }[v?.species] || '😊', 160, 150);
+    g.font = '120px serif'; g.textAlign = 'center'; g.fillText({ ねこ: '🐱', うさぎ: '🐰', くま: '🐻', ペンギン: '🐧', かえる: '🐸', りす: '🐿️', ライオン: '🦁', キリン: '🦒', おさる: '🐵', ワニ: '🐊', ゾウ: '🐘', ひよこ: '🐤', カバ: '🦛' }[v?.species] || '😊', 160, 150);
     g.fillStyle = '#4a3a22'; g.font = 'bold 26px sans-serif'; g.fillText(`${v?.name || ''}より`, 160, 210);
     g.strokeStyle = '#fff'; g.lineWidth = 10; g.strokeRect(5, 5, 310, 230);
     const t = new THREE.CanvasTexture(cv); t.colorSpace = THREE.SRGBColorSpace; return t;

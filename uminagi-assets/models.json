@@ -3812,6 +3812,300 @@
   "kb": 31.2
  },
  {
+  "name": "pc_hippo",
+  "jp": "ぽっけ(操作キャラ・カバ)",
+  "category": "人物",
+  "size_m": [
+   0.72,
+   1.25,
+   0.72
+  ],
+  "tris": 3332,
+  "lod1_tris": 0,
+  "materials": [
+   "cheek",
+   "eye",
+   "hf_apron",
+   "hf_hippo",
+   "hf_hippo_dk",
+   "hf_hippo_lt",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "pc_hippo_body",
+   "pc_hippo_head",
+   "pc_hippo_ear_l",
+   "pc_hippo_arm_l",
+   "pc_hippo_leg_l",
+   "pc_hippo_ear_r",
+   "pc_hippo_arm_r",
+   "pc_hippo_leg_r",
+   "pc_hippo_tail"
+  ],
+  "kb": 291.3
+ },
+ {
+  "name": "vil_nori",
+  "jp": "ねこの住民ノリ(ハチワレ・ボーダー)",
+  "category": "人物",
+  "size_m": [
+   0.53,
+   1.06,
+   0.63
+  ],
+  "tris": 2392,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_denim",
+   "ac_ear_pink",
+   "ac_flower_eye",
+   "hf_nori_blk",
+   "hf_nori_wht",
+   "hf_stripe_navy",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_nori_body",
+   "vil_nori_head",
+   "vil_nori_arm_l",
+   "vil_nori_leg_l",
+   "vil_nori_arm_r",
+   "vil_nori_leg_r"
+  ],
+  "kb": 193.9
+ },
+ {
+  "name": "vil_shione",
+  "jp": "うさぎの住民シオネ(麦わら帽子)",
+  "category": "人物",
+  "size_m": [
+   0.66,
+   1.28,
+   0.66
+  ],
+  "tris": 2476,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_ear_pink",
+   "ac_shirt_cream",
+   "ac_tee_blue",
+   "cheek",
+   "eye",
+   "hf_rabbit",
+   "hf_rabbit_lt",
+   "hf_straw",
+   "hf_straw_band",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_shione_body",
+   "vil_shione_head",
+   "vil_shione_arm_l",
+   "vil_shione_leg_l",
+   "vil_shione_arm_r",
+   "vil_shione_leg_r"
+  ],
+  "kb": 195.7
+ },
+ {
+  "name": "vil_moai",
+  "jp": "ゾウの住民モアイ(大工・水玉バンダナ)",
+  "category": "人物",
+  "size_m": [
+   0.61,
+   1.05,
+   0.69
+  ],
+  "tris": 2660,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_shirt_cream",
+   "ac_wood_handle",
+   "cheek",
+   "eye",
+   "hf_bag",
+   "hf_dot_bandana",
+   "hf_eleph",
+   "hf_eleph_lt",
+   "hf_overall",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_moai_body",
+   "vil_moai_head",
+   "vil_moai_arm_l",
+   "vil_moai_leg_l",
+   "vil_moai_arm_r",
+   "vil_moai_leg_r"
+  ],
+  "kb": 220.6
+ },
+ {
+  "name": "vil_kotetsu",
+  "jp": "おさるの住民コテツ(漁師見習い)",
+  "category": "人物",
+  "size_m": [
+   0.63,
+   1.0,
+   0.62
+  ],
+  "tris": 2864,
+  "lod1_tris": 0,
+  "materials": [
+   "cheek",
+   "eye",
+   "hf_boot_blk",
+   "hf_hachimaki_r",
+   "hf_jacket_orange",
+   "hf_monkey",
+   "hf_monkey_face",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_kotetsu_body",
+   "vil_kotetsu_head",
+   "vil_kotetsu_arm_l",
+   "vil_kotetsu_leg_l",
+   "vil_kotetsu_arm_r",
+   "vil_kotetsu_leg_r"
+  ],
+  "kb": 235.0
+ },
+ {
+  "name": "vil_gabuta",
+  "jp": "ワニの住民ガブ太(船乗り・サングラス)",
+  "category": "人物",
+  "size_m": [
+   0.5,
+   0.97,
+   1.0
+  ],
+  "tris": 2692,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_rim_dark",
+   "hf_croc",
+   "hf_croc_belly",
+   "hf_lens",
+   "hf_sailor",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_gabuta_body",
+   "vil_gabuta_head",
+   "vil_gabuta_arm_l",
+   "vil_gabuta_leg_l",
+   "vil_gabuta_arm_r",
+   "vil_gabuta_leg_r"
+  ],
+  "kb": 195.4
+ },
+ {
+  "name": "vil_minato",
+  "jp": "キリンの住民ミナト(灯台守)",
+  "category": "人物",
+  "size_m": [
+   0.5,
+   1.37,
+   0.48
+  ],
+  "tris": 2884,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_ear_pink",
+   "ac_rim_dark",
+   "ac_rim_gold",
+   "eye",
+   "hf_cap_navy",
+   "hf_coat_white",
+   "hf_giraffe",
+   "hf_giraffe_patch",
+   "hf_lion_lt",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_minato_body",
+   "vil_minato_head",
+   "vil_minato_arm_l",
+   "vil_minato_leg_l",
+   "vil_minato_arm_r",
+   "vil_minato_leg_r"
+  ],
+  "kb": 238.8
+ },
+ {
+  "name": "vil_kai",
+  "jp": "ライオンの住民カイ(Tシャツとネッカチーフ)",
+  "category": "人物",
+  "size_m": [
+   0.69,
+   1.1,
+   0.84
+  ],
+  "tris": 3564,
+  "lod1_tris": 0,
+  "materials": [
+   "ac_bear_nose",
+   "cheek",
+   "eye",
+   "hf_lion",
+   "hf_lion_lt",
+   "hf_mane",
+   "hf_neckerchief",
+   "hf_shorts",
+   "hf_tee",
+   "ink",
+   "white"
+  ],
+  "parts": [
+   "vil_kai_body",
+   "vil_kai_head",
+   "vil_kai_arm_l",
+   "vil_kai_leg_l",
+   "vil_kai_arm_r",
+   "vil_kai_leg_r"
+  ],
+  "kb": 305.8
+ },
+ {
+  "name": "vil_picco",
+  "jp": "ひよこの住民ピッコ(郵便屋さん)",
+  "category": "人物",
+  "size_m": [
+   0.47,
+   0.99,
+   0.51
+  ],
+  "tris": 1794,
+  "lod1_tris": 0,
+  "materials": [
+   "cheek",
+   "eye",
+   "hf_bag",
+   "hf_boot_red",
+   "hf_chick",
+   "hf_chick_beak",
+   "hf_post_green",
+   "white"
+  ],
+  "parts": [
+   "vil_picco_body",
+   "vil_picco_head",
+   "vil_picco_arm_l",
+   "vil_picco_leg_l",
+   "vil_picco_arm_r",
+   "vil_picco_leg_r"
+  ],
+  "kb": 159.0
+ },
+ {
   "name": "furn_table_wood",
   "jp": "丸い木のテーブル",
   "category": "家具",

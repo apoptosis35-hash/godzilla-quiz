@@ -124,7 +124,7 @@ export const RECIPES = [
 ];
 ITEMS.axe = { id: 'axe', name: 'おの', kind: 'tool', price: 500 };
 
-// clothes: bandana colours (recolour なぎ's bandana) and hats (models from the home block)
+// clothes: bandana colours (recolour ぽっけ's bandana) and hats (models from the home block)
 export const CLOTHES = [
   { id: 'bandana_navy', name: '紺のバンダナ', price: 0, bandana: [0.12, 0.2, 0.42] },
   { id: 'bandana_red', name: '赤いバンダナ', price: 600, bandana: [0.78, 0.16, 0.14] },

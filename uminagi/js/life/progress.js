@@ -10,10 +10,10 @@ export const PROJECTS = [
   { id: 'harbour', name: '漁港', desc: '岸壁の小物・桟橋・魚市場・漁船', cost: 98000, moves: 'vil_penguin' },
   { id: 'beach', name: '東の浜', desc: 'パラソルとサーフボードの海水浴場', cost: 69800, moves: 'vil_frog' },
   { id: 'street', name: '商店街', desc: 'お店が並ぶ坂道(海凪商店もここへ)', cost: 0, mats: { wood: 30, stone: 20, iron: 10 }, moves: 'vil_rabbit' },
-  { id: 'roads', name: '道路と電柱', desc: '舗装・白線・標識・信号・車', cost: 128000 },
+  { id: 'roads', name: '道路と電柱', desc: '舗装・白線・標識・信号・車', cost: 128000, moves: 'vil_picco' },
   { id: 'houses', name: '丘の住宅街', desc: '石垣の段々に家が建つ', cost: 148000, moves: 'vil_squirrel' },
   { id: 'shrine', name: '海凪神社と資料館', desc: 'ほうさくさんの資料館も神社へ', cost: 0, auto: 'museum' },
-  { id: 'hill', name: '灯台の丘', desc: '展望灯台と遊歩道の柵', cost: 98000 },
+  { id: 'hill', name: '灯台の丘', desc: '展望灯台と遊歩道の柵', cost: 98000, moves: 'vil_kai' },
   { id: 'tram', name: '海辺の電車', desc: '線路と駅と電車', cost: 228000, needs: 'roads' },
   { id: 'island', name: '弁天橋と凪ノ島', desc: '島へ渡る橋と島の神社', cost: 228000 },
 ];

@@ -68,7 +68,7 @@ export class Market {
   }
   // daikon at the shop
   async daikon(sp) {
-    const st = this.st, ui = this.life.ui, dk = st.ext.daikon, f = (s, p) => s.replace(/\{price\}/g, p).replace(/\{name\}/g, 'なぎ').replace(/\{phrase\}/g, 'まいど');
+    const st = this.st, ui = this.life.ui, dk = st.ext.daikon, f = (s, p) => s.replace(/\{price\}/g, p).replace(/\{name\}/g, 'ぽっけ').replace(/\{phrase\}/g, 'まいど');
     if (this.rotten) { const n = this.rotten; this.rotten = 0; await ui.say(sp, [f(pick(RACCOON.daikon_rotten), 0), `(だいこん ${n}本が だめになった)`]); }
     const now = new Date(Date.now() - 5 * 3600e3);
     if (now.getDay() === 0) {
@@ -103,7 +103,7 @@ export class Market {
   async merchantTalk() {
     const st = this.st, ui = this.life.ui, sp = { name: '旅ねこ ミケ', color: '#b07ad8', pitch: 1.2 };
     const first = this.merchantStock.find((id) => ITEMS[id].kind === 'art');
-    await ui.say(sp, ['にゃ。旅の 商人の ミケだよ。', pick(ART_LINES.merchant).replace(/\{price\}/g, first ? Math.round(ITEMS[ITEMS[first].real || first].price * 1.3).toLocaleString() : '----').replace(/\{name\}/g, 'なぎ')]);
+    await ui.say(sp, ['にゃ。旅の 商人の ミケだよ。', pick(ART_LINES.merchant).replace(/\{price\}/g, first ? Math.round(ITEMS[ITEMS[first].real || first].price * 1.3).toLocaleString() : '----').replace(/\{name\}/g, 'ぽっけ')]);
     const cost = (id) => Math.round((ITEMS[id].kind === 'art' ? ITEMS[ITEMS[id].real || id].price : ITEMS[id].price) * 1.3);   // a forgery costs the same as the real one
     const rows = this.merchantStock.map((id) => ({ label: ITEMS[id].name, sub: `${cost(id)} ナギ`, ok: st.money >= cost(id) }));
     const i = await ui.list('ミケの品', rows);

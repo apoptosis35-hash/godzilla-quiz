@@ -1,5 +1,5 @@
 // Building freely: the raccoon sells construction kits (a plot for a resident's house, benches, street lights, a
-// gazebo, a torii...). From the pocket a kit is set down in front of なぎ on open, level ground; the site is roped
+// gazebo, a torii...). From the pocket a kit is set down in front of ぽっけ on open, level ground; the site is roped
 // off for the day and the work is done overnight (after 5:00 it stands). Built things can be moved (back into the
 // pocket as a kit) or taken down. A resident with a plot moves into the house built on it.
 import * as THREE from 'three';
@@ -115,7 +115,7 @@ export class Build {
     st.money -= f.cost; st.add('kit_' + f.id); ui.jingle([523, 659, 784]);
     return `まいど! 「${f.name}キット」だよ。\nポケットから 「建てる」を えらぶと、キミの 前に 建てる場所を きめられるよ。\n工事は ひと晩で おわるからね!`;
   }
-  // set a kit down in front of なぎ (the front faces なぎ, turned to the nearest quarter)
+  // set a kit down in front of ぽっけ (the front faces ぽっけ, turned to the nearest quarter)
   place(i) {
     const st = this.st, id = st.pocket[i], fid = ITEMS[id].fac, ui = this.life.ui, pl = this.life.player;
     if (this.life.home.inside) { ui.toast('外で 建てよう'); return; }
@@ -144,7 +144,7 @@ export class Build {
     const door = this.door(b);
     if (!L.walkable(door.x, door.z) && this.fac(b).house) return '入口の前が ふさがっているよ';
     for (const o of this.list) if (o !== b && Math.hypot(o.x - b.x, o.z - b.z) < Math.max(hw, hd) + 1.5) return 'ほかの しせつに 近すぎるよ';
-    const h = L.home.door; if (h && Math.hypot(h.x - b.x, h.z - b.z) < Math.max(hw, hd) + 2) return 'なぎの家に 近すぎるよ';
+    const h = L.home.door; if (h && Math.hypot(h.x - b.x, h.z - b.z) < Math.max(hw, hd) + 2) return 'ぽっけの家に 近すぎるよ';
     return null;
   }
   target(front) {

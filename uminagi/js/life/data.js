@@ -1,5 +1,5 @@
 // 海凪(うみなぎ)のくらしデータ
-// 小さな海辺の町で、柴犬の「なぎ」がのんびり暮らすためのデータ集。
+// 小さな海辺の町で、カバの「ぽっけ」がのんびり暮らすためのデータ集。
 // すべてオリジナルの内容です。通貨は「ナギ」。
 
 const ALL_YEAR = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
@@ -189,27 +189,34 @@ export const SHELLS = [
 export const FRUIT = { id: 'mikan', name: 'みかん', price: 100 };
 
 // ---------------------------------------------------------------------------
-// 住民 (8)
+// 住民 (10)
 // ---------------------------------------------------------------------------
 export const VILLAGERS = [
-  { id: 'vil_cat', name: 'ツムギ', species: 'ねこ', personality: 'kiza', catchphrase: 'しゃなり',
-    birthday: '10-08', likes: '夕暮れの海と、おしゃれなスカーフ', role: 'resident',
-    greeting: 'やあ、キミが新しい住人? ボクはツムギ。\nこの町の夕日は、ボク並みに美しいよ、しゃなり。' },
-  { id: 'vil_rabbit', name: 'ももか', species: 'うさぎ', personality: 'genki', catchphrase: 'ぴょっし',
-    birthday: '04-17', likes: '砂浜ダッシュと、朝のラジオ体操', role: 'resident',
-    greeting: 'はじめまして! ももかだよ!\nいっしょに、浜辺を走ろうね、ぴょっし!' },
-  { id: 'vil_bear', name: 'おもち', species: 'くま', personality: 'nonbiri', catchphrase: 'もっちり',
-    birthday: '01-11', likes: 'しらすパンと、ひなたぼっこ', role: 'resident',
-    greeting: 'ふわぁ……あ、こんにちは〜。おもちだよ。\nおなか、すいてない? もっちり。' },
-  { id: 'vil_penguin', name: 'しおん', species: 'ペンギン', personality: 'futsuu', catchphrase: 'ぺたん',
-    birthday: '07-23', likes: '貝がら集めと、お手紙', role: 'resident',
-    greeting: 'こんにちは、しおんです。\n海凪へようこそ。なかよくしてね、ぺたん。' },
-  { id: 'vil_frog', name: 'ガンテツ', species: 'かえる', personality: 'kowai', catchphrase: 'げっこう',
-    birthday: '06-06', likes: '雨の音と、港のそうじ', role: 'resident',
-    greeting: 'おう、新入りか。オレはガンテツだ。\n……困ったら言え。それだけだ、げっこう。' },
-  { id: 'vil_squirrel', name: 'ことは', species: 'りす', personality: 'otona', catchphrase: 'くるりん',
-    birthday: '11-03', likes: '手作りのお菓子と、みかんの木', role: 'resident',
-    greeting: 'まあ、かわいい柴犬さん。ことはよ。\n困ったことがあったら、いつでもね、くるりん。' },
+  // the residents (ids kept from earlier versions so saved friendships carry over; model = the 3D model)
+  { id: 'vil_cat', model: 'vil_nori', name: 'ノリ', species: 'ねこ', personality: 'kiza', catchphrase: 'ふっ',
+    birthday: '02-22', likes: '魚市場の 朝のせり と、日なたの 屋根', role: 'resident',
+    greeting: 'よう、新顔か。オレはノリ。魚市場の 常連さ。\n……迷子になったら 言いな、案内してやる、ふっ。' },
+  { id: 'vil_rabbit', model: 'vil_shione', name: 'シオネ', species: 'うさぎ', personality: 'genki', catchphrase: 'ぴょこん',
+    birthday: '04-17', likes: '浜辺の 貝がら集め と、麦わら帽子', role: 'resident',
+    greeting: 'はじめまして! シオネだよ!\nいっしょに 浜で 貝がら さがそうね、ぴょこん!' },
+  { id: 'vil_bear', model: 'vil_moai', name: 'モアイ', species: 'ゾウ', personality: 'nonbiri', catchphrase: 'どっしり',
+    birthday: '01-11', likes: '木の いいにおい と、大きな おにぎり', role: 'resident',
+    greeting: 'やあ〜、モアイだよ。大工を やってるんだ〜。\n町づくりなら まかせてね、どっしり。' },
+  { id: 'vil_penguin', model: 'vil_kotetsu', name: 'コテツ', species: 'おさる', personality: 'genki', catchphrase: 'うっきー',
+    birthday: '07-23', likes: '朝の 漁 と、はやおき', role: 'resident',
+    greeting: 'おっす! 漁師見習いの コテツだ!\nいつか でっかい マグロを つるんだ、うっきー!' },
+  { id: 'vil_frog', model: 'vil_gabuta', name: 'ガブ太', species: 'ワニ', personality: 'kowai', catchphrase: 'がぶっ',
+    birthday: '06-06', likes: '海の 地図 と、あまい プリン', role: 'resident',
+    greeting: '……オレは ガブ太。船乗りだ。\nこわく見えるか? ……かまわんさ。困ったら 言え、がぶっ。' },
+  { id: 'vil_squirrel', model: 'vil_minato', name: 'ミナト', species: 'キリン', personality: 'otona', catchphrase: 'ゆらり',
+    birthday: '11-03', likes: '灯台の あかり と、星を 見ること', role: 'resident',
+    greeting: 'あら、新しい 住人さん。灯台守の ミナトよ。\n高いところから、いつも 町を 見守っているわ、ゆらり。' },
+  { id: 'vil_kai', name: 'カイ', species: 'ライオン', personality: 'futsuu', catchphrase: 'がおっ',
+    birthday: '08-08', likes: '丘の 上の 風 と、走ること', role: 'resident',
+    greeting: 'やあ! カイだよ。ぼくも この町に 来たばかりなんだ。\nいっしょに がんばろうね、がおっ!' },
+  { id: 'vil_picco', name: 'ピッコ', species: 'ひよこ', personality: 'genki', catchphrase: 'ぴよっ',
+    birthday: '05-05', likes: '手紙を とどけること と、赤い 長ぐつ', role: 'resident',
+    greeting: 'こんにちは! 郵便屋さんの ピッコです!\nお手紙 とどけに いくからね、ぴよっ!' },
   { id: 'vil_owl', name: 'ほうさく', species: 'ふくろう', personality: 'otona', catchphrase: 'ほうほう',
     birthday: '02-22', likes: '古い本と、静かな夜', role: 'museum',
     greeting: 'ほっほう、ようこそ。わしはほうさく、資料館の館長じゃ。\n見つけたものは、ここに持ってきておくれ、ほうほう。' },

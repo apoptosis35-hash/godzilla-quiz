@@ -271,7 +271,7 @@ class App {
   area() {
     const p = this.player.pos;
     const inside = this.life?.home.inside;   // interiors (js/life/home.js)
-    const a = inside ? { name: { home: 'なぎの家', visit: 'おとなりさんの家', gallery: '海凪資料館' }[inside], sub: { home: 'なぎのいえ', visit: 'おじゃまします', gallery: 'てんじしつ' }[inside] }
+    const a = inside ? { name: { home: 'ぽっけの家', visit: 'おとなりさんの家', gallery: '海凪資料館' }[inside], sub: { home: 'ぽっけのいえ', visit: 'おじゃまします', gallery: 'てんじしつ' }[inside] }
       : AREAS.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && (!r.test || r.test(p.x, p.z)));
     $('map').style.visibility = inside ? 'hidden' : '';
     const name = a ? a.name : '海凪の港町';
