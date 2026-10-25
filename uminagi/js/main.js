@@ -49,25 +49,26 @@ const saved = load();
 const qName = new URLSearchParams(location.search).get('q') || saved?.quality || (isMobile ? 'medium' : 'ultra');
 const Q = QUALITY[qName] || QUALITY.medium;
 
-// areas shown on entry (first match wins)
+// areas shown on entry (first match wins). An area whose district (need) isn't built yet goes by its natural name
+// (wild), or is skipped so the next match names the place
 const AREAS = [
-  { name: '凪ノ島', sub: 'なぎのしま', x0: 70, x1: 126, z0: 176, z1: 230 },
-  { name: '弁天橋', sub: 'べんてんばし', x0: 92, x1: 102, z0: 92, z1: 178 },
-  { name: '海辺の駅', sub: 'うみべのえき', x0: 64, x1: 126, z0: 2, z1: 16 },
-  { name: '魚市場', sub: 'うおいちば', x0: -18, x1: 14, z0: -3, z1: 16 },
-  { name: '展望台', sub: 'てんぼうだい', x0: -106, x1: -94, z0: -4, z1: 10 },
-  { name: '灯台の丘', sub: 'とうだいのおか', x0: -142, x1: -94, z0: -42, z1: 10 },
-  { name: '崖の遊歩道', sub: 'がけのゆうほどう', x0: -88, x1: -28, z0: -128, z1: -118 },
-  { name: '崖の遊歩道', sub: 'がけのゆうほどう', x0: -98, x1: -78, z0: -128, z1: -18 },
-  { name: '海凪神社', sub: 'うみなぎじんじゃ', x0: -30, x1: 10, z0: -134, z1: -103 },
-  { name: '赤灯台', sub: 'ぼうはていのさき', x0: -28, x1: -8, z0: 98, z1: 114 },
+  { name: '凪ノ島', sub: 'なぎのしま', need: 'island', wild: ['沖の小島', 'おきのこじま'], x0: 70, x1: 126, z0: 176, z1: 230 },
+  { name: '弁天橋', sub: 'べんてんばし', need: 'island', x0: 92, x1: 102, z0: 92, z1: 178 },
+  { name: '海辺の駅', sub: 'うみべのえき', need: 'tram', x0: 64, x1: 126, z0: 2, z1: 16 },
+  { name: '魚市場', sub: 'うおいちば', need: 'harbour', wild: ['キャンプ', 'いりえのキャンプ'], x0: -18, x1: 14, z0: -3, z1: 16 },
+  { name: '展望台', sub: 'てんぼうだい', need: 'hill', x0: -106, x1: -94, z0: -4, z1: 10 },
+  { name: '灯台の丘', sub: 'とうだいのおか', need: 'hill', wild: ['西の岬', 'にしのみさき'], x0: -142, x1: -94, z0: -42, z1: 10 },
+  { name: '崖の遊歩道', sub: 'がけのゆうほどう', need: 'hill', wild: ['西の崖', 'にしのがけ'], x0: -88, x1: -28, z0: -128, z1: -118 },
+  { name: '崖の遊歩道', sub: 'がけのゆうほどう', need: 'hill', wild: ['西の崖', 'にしのがけ'], x0: -98, x1: -78, z0: -128, z1: -18 },
+  { name: '海凪神社', sub: 'うみなぎじんじゃ', need: 'shrine', wild: ['北の森', 'きたのもり'], x0: -30, x1: 10, z0: -134, z1: -103 },
+  { name: '赤灯台', sub: 'ぼうはていのさき', need: 'harbour', x0: -28, x1: -8, z0: 98, z1: 114 },
   { name: '防波堤', sub: 'ぼうはてい', x0: -86, x1: 66, z0: 22, z1: 114, test: (x, z) => x < -74 || z > 97 },
-  { name: '桟橋', sub: 'さんばし', x0: -50, x1: 37, z0: 22, z1: 50 },
-  { name: '漁港', sub: 'ぎょこう', x0: -80, x1: 66, z0: -14, z1: 96 },
-  { name: '商店街', sub: 'しょうてんがい', x0: 24, x1: 56, z0: -96, z1: -6 },
-  { name: '坂の上の広場', sub: 'さかのうえ', x0: 24, x1: 56, z0: -122, z1: -96 },
-  { name: '丘の住宅街', sub: 'おかのじゅうたくがい', x0: -76, x1: 24, z0: -104, z1: -14 },
-  { name: '東の浜', sub: 'ひがしのはま', x0: 64, x1: 130, z0: 40, z1: 120 },
+  { name: '桟橋', sub: 'さんばし', need: 'harbour', x0: -50, x1: 37, z0: 22, z1: 50 },
+  { name: '漁港', sub: 'ぎょこう', need: 'harbour', wild: ['入り江', 'いりえ'], x0: -80, x1: 66, z0: -14, z1: 96 },
+  { name: '商店街', sub: 'しょうてんがい', need: 'street', wild: ['坂道', 'さかみち'], x0: 24, x1: 56, z0: -96, z1: -6 },
+  { name: '坂の上の広場', sub: 'さかのうえ', need: 'street', wild: ['坂の上', 'さかのうえ'], x0: 24, x1: 56, z0: -122, z1: -96 },
+  { name: '丘の住宅街', sub: 'おかのじゅうたくがい', need: 'houses', wild: ['段々の丘', 'だんだんのおか'], x0: -76, x1: 24, z0: -104, z1: -14 },
+  { name: '東の浜', sub: 'ひがしのはま', need: 'beach', wild: ['東の砂浜', 'ひがしのすなはま'], x0: 64, x1: 130, z0: 40, z1: 120 },
   { name: '東の高台', sub: 'ひがしのたかだい', x0: 56, x1: 90, z0: -90, z1: -10 },
 ];
 const SPOTS = {  // fast travel (map buttons)
@@ -197,6 +198,8 @@ class App {
     $('curve').onclick = () => { try { localStorage.setItem('uminagi_curve', CURVE ? 'off' : 'on'); } catch { /* ignore */ } this.save(); location.reload(); };
     for (const b of document.querySelectorAll('[data-tod]')) b.onclick = () => { if (b.dataset.tod === 'real') this.world.setClock(true); else this.world.setTimeOfDay(b.dataset.tod); this.save(); this.syncButtons(); };
     for (const b of document.querySelectorAll('[data-q]')) b.onclick = () => { this.save(b.dataset.q); location.search = '?q=' + b.dataset.q; };
+    const NEED = { street: 'street', houses: 'houses', shrine: 'shrine', hill: 'hill' };
+    for (const b of document.querySelectorAll('[data-go]')) { b.hidden = !!NEED[b.dataset.go] && !this.has(NEED[b.dataset.go]); if (b.dataset.go === 'harbour' && !this.has('harbour')) b.textContent = 'キャンプ'; }
     for (const b of document.querySelectorAll('[data-go]')) b.onclick = () => { const [x, z, yaw] = SPOTS[b.dataset.go]; this.player.place(x, z, yaw); this.player.heading = yaw + Math.PI; this.toggleMap(false); this.save(); };
     $('zin').onclick = () => { this.player.dist = Math.max(2.5, this.player.dist * 0.8); };
     $('zout').onclick = () => { this.player.dist = Math.min(30, this.player.dist * 1.25); };
@@ -247,7 +250,7 @@ class App {
       const s = Math.min(W / (G.x1 - G.x0), H / (G.z1 - G.z0)); g.save(); g.scale(s, s); g.drawImage(this.mapBase, 0, 0);
       this.marker(g, p.x - G.x0, p.z - G.z0, this.player.heading, 7);
       g.font = 'bold 9px sans-serif'; g.fillStyle = '#123'; g.textAlign = 'center';
-      for (const a of AREAS.slice(0, 13)) if (!a.test) g.fillText(a.name, (a.x0 + a.x1) / 2 - G.x0, (a.z0 + a.z1) / 2 - G.z0);
+      for (const a of this.areas().slice(0, 13)) if (!a.test) g.fillText(a.name, (a.x0 + a.x1) / 2 - G.x0, (a.z0 + a.z1) / 2 - G.z0);
       g.restore(); return;
     }
     const S = 1.6;  // px per metre, centred on the player, north up
@@ -268,16 +271,22 @@ class App {
     g.fillStyle = '#ffd23a'; g.strokeStyle = '#3a2a00'; g.lineWidth = 1.5;
     g.beginPath(); g.moveTo(0, -s); g.lineTo(s * 0.7, s * 0.8); g.lineTo(0, s * 0.35); g.lineTo(-s * 0.7, s * 0.8); g.closePath(); g.fill(); g.stroke(); g.restore();
   }
+  has(k) { return !this.built || this.built.has(k); }
+  // the area list as the town stands now: built districts by name, the rest by their natural names
+  areas() {
+    return this._areas ||= AREAS.flatMap((r) => (!r.need || this.has(r.need) ? [r] : r.wild ? [{ ...r, name: r.wild[0], sub: r.wild[1] }] : []));
+  }
   area() {
     const p = this.player.pos;
     const inside = this.life?.home.inside;   // interiors (js/life/home.js)
     const a = inside ? { name: { home: 'ぽっけの家', visit: 'おとなりさんの家', gallery: '海凪資料館' }[inside], sub: { home: 'ぽっけのいえ', visit: 'おじゃまします', gallery: 'てんじしつ' }[inside] }
-      : AREAS.find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && (!r.test || r.test(p.x, p.z)));
+      : this.areas().find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && (!r.test || r.test(p.x, p.z)));
     $('map').style.visibility = inside ? 'hidden' : '';
-    const name = a ? a.name : '海凪の港町';
+    const town = this.has('harbour') ? ['海凪の港町', 'うみなぎのみなとまち'] : ['海凪の入り江', 'うみなぎのいりえ'];
+    const name = a ? a.name : town[0];
     if (name !== this.areaShown) {
       this.areaShown = name;
-      const el = $('area'); el.innerHTML = `<b>${name}</b><small>${a ? a.sub : 'うみなぎのみなとまち'}</small>`;
+      const el = $('area'); el.innerHTML = `<b>${name}</b><small>${a ? a.sub : town[1]}</small>`;
       el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
       $('place').textContent = name;
     }
