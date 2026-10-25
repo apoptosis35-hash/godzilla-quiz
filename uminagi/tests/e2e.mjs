@@ -134,6 +134,15 @@ const extra = await G(async () => {
 });
 await p.waitForTimeout(2500); await talkThrough([]);
 check('stamp goals, a newcomer moving in, an island tour', extra.goals && extra.folk && extra.island, JSON.stringify(extra));
+// skills (all learnt with ?town=all): jump, then hold in the air to swing on a line
+const moves = await G(() => {
+  const a = window.__uminagi, I = a.input, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  P.place(0, 19, Math.PI); step(2); I.keys.add('KeyW'); I.jumpEdge = true; step(3); const jump = P.state;
+  I.keys.add('Space'); const seen = []; for (let i = 0; i < 30; i++) { step(1); if (!seen.includes(P.state)) seen.push(P.state); }
+  I.keys.delete('Space'); I.keys.delete('KeyW'); for (let i = 0; i < 120 && P.state !== 'ground'; i++) step(1);
+  return { jump, seen, back: P.state, skills: P.skills };
+});
+check('skills: jump and swing on a line', moves.jump === 'air' && moves.seen.includes('swing') && moves.back === 'ground', JSON.stringify(moves));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

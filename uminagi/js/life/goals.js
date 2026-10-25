@@ -158,6 +158,7 @@ export class Goals {
     h += `<p class="pnote">町の評判 <span class="stars">${'★'.repeat(stars.n)}${'☆'.repeat(5 - stars.n)}</span>　${stars.hint}</p>`;
     h += '<h4>きょうの目標</h4>' + g.daily.map((d) => row(`${d.done ? '✅' : '⬜'} ${d.text}`, `${d.got}/${d.n}　+${d.s}`, d.done)).join('') + row(`${g.allDone ? '✅' : '⬜'} ぜんぶ たっせい`, `+${ALL_BONUS}`, g.allDone);
     if (this.contest) h += `<p class="pnote">🏁 大会ちゅう: あと ${Math.max(0, Math.ceil(this.contest.t))}秒 / ${this.contest.n}匹</p>`;
+    if (this.life.skills) h += '<h4>おぼえた わざ</h4>' + this.life.skills.rows().map((k) => row(`${k.have ? '✅' : '🔒'} ${k.name}`, k.have ? 'おぼえた' : k.how, k.have)).join('');
     h += '<h4>たっせいメダル</h4>' + ACHIEVE.map((a) => { const t = g.tier[a.ev] || 0, have = g.total[a.ev] || 0, next = a.tiers[t]; return row(`${a.name} ${'★'.repeat(t)}${'☆'.repeat(a.tiers.length - t)}`, next ? `${have}/${next}${a.unit}` : 'コンプリート!', !next); }).join('');
     const rec = Object.entries(g.records).sort((a, b) => b[1] - a[1]).slice(0, 5);
     if (rec.length) h += '<h4>魚の大きさ きろく</h4>' + rec.map(([id, cm]) => row(ITEMS[id]?.name || id, `${cm}cm`)).join('');

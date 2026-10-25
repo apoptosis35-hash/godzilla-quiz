@@ -13,6 +13,7 @@ import { Build } from './build.js';
 import { Goals } from './goals.js';
 import { Folk, registerFolk } from './folk.js';
 import { Tour } from './tour.js';
+import { Skills } from './skills.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
 import { Market } from './market.js';
@@ -77,8 +78,8 @@ export class Life {
     this.day = null; this.refreshDay();
     this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
-    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this);
-    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour];
+    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this);
+    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills];
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries

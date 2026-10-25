@@ -107,7 +107,7 @@ class App {
     this.town.build();
     this.world.setupReflection([this.scene.getObjectByName('ground'), ...this.town.boats.map((b) => b.o), this.town.lighthouse, this.town.redLighthouse].filter(Boolean));
     this.player = new Player(this.town, this.ground);
-    this.input = new Input($('stick'), $('knob'), $('dash'));
+    this.input = new Input($('stick'), $('knob'), $('dash'), $('web'));
     this.sound = new Sound();
     this.life = new Life(this);
     this.drawMapBase();

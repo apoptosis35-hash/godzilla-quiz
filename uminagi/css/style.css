@@ -66,7 +66,7 @@ h1 small { display: block; font-size: 13px; letter-spacing: .6em; opacity: .85; 
 .pc-only { display: none; }
 @media (hover: hover) and (pointer: fine) {
   .pc-only { display: block; }
-  .touch-only, #dash, .zoom { display: none; }
+  .touch-only, #dash, #web, .zoom { display: none !important; }
   #gl { cursor: grab; }
 }
 
@@ -148,6 +148,13 @@ body.post #vig { display: none; }
 /* while talking the HUD steps aside (map, zoom, dash and the life buttons) */
 body.talking #map, body.talking .zoom, body.talking #dash, body.talking .lside { visibility: hidden; }
 #dash { white-space: nowrap; font-size: 15px; letter-spacing: -0.02em; }
+#dash[hidden], #web[hidden] { display: none; }
+/* jump (and, once learnt, hold in the air for the line): above the A button, clear of the zoom buttons */
+#web { position: absolute; right: calc(max(28px, env(safe-area-inset-right)) + 110px); bottom: calc(max(40px, env(safe-area-inset-bottom)) + 104px); width: 76px; height: 76px; border-radius: 50%; padding: 0; line-height: 1; }
+#web .ico { display: block; font-size: 24px; }
+#web small { display: block; font-size: 10px; line-height: 1.2; margin-top: 2px; font-weight: bold; white-space: nowrap; }
+#web.on { background: rgba(255, 255, 255, .45); }
+body.talking #web { visibility: hidden; }
 @media (orientation: portrait) and (max-width: 600px) {
   .rotate-hint { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 168px); left: max(12px, env(safe-area-inset-left)); transform: none; }
   body.talking .rotate-hint { visibility: hidden; }
