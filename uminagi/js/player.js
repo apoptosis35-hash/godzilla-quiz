@@ -1,6 +1,7 @@
 // The traveller: walking on the ground grid (stairs, ramps, terraces), collisions with buildings and props,
 // and the third-person camera that stays out of walls and above the ground.
 import * as THREE from 'three';
+import { toonify } from './toon.js';
 
 const R = 0.34, MAX_UP = 0.6, MAX_SLOPE = 1.05, WALK = 3.4, RUN = 7.0, GRAV = 22;
 const SIZE = 0.5;   // the player model is about 1.25 m tall; ぽっけ stands about 0.63 m, as tall as the animal villagers
@@ -15,7 +16,7 @@ export class Player {
     // The parts come as siblings; nest them into a little skeleton: body (hips) > head > ears, body > arms, body > tail;
     // the legs hang from the root.
     const M = town.protos.pc_hippo ? 'pc_hippo' : 'shiba';
-    this.model = town.clone(M, 0, 0, 0, 0, true); this.model.rotation.order = 'YXZ';
+    this.model = toonify(town.clone(M, 0, 0, 0, 0, true)); this.model.rotation.order = 'YXZ';
     this.limbs = {}; for (const s of ['body', 'head', 'ear_l', 'ear_r', 'arm_l', 'arm_r', 'leg_l', 'leg_r', 'tail']) this.limbs[s] = this.model.getObjectByName(M + '_' + s);
     const L = this.limbs;
     // the part nodes carry the mesh quantisation scale (body 0.25): keep it, never reset it to 1

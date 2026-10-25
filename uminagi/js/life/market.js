@@ -2,6 +2,7 @@
 // trade (bought on Sunday mornings, the price changes every morning and afternoon, spoils after a week); and a
 // travelling merchant cat who turns up on some days with rare goods.
 import * as THREE from 'three';
+import { toonify } from '../toon.js';
 import { ITEMS, dayKey, seeded } from './state.js';
 import { TOOLS } from './data.js';
 import { FURNITURE, CLOTHES, SEEDS } from './items2.js';
@@ -93,7 +94,7 @@ export class Market {
     if (!this.merchantDay || !this.life.town.protos.cat) return;
     const p = this.life.near(-14, 8, (x, z) => this.life.walkable(x, z) && !this.life.blockedAt(x, z, 1.5), 12); if (!p) return;
     const tent = this.life.tent(p[0] - 1.6, p[1] - 1.2, 0.3, 0x9a6ad0, 0.8);
-    const o = this.life.town.clone('cat', p[0], this.life.ground.height(p[0], p[1]), p[1], 0, true); this.life.root.attach(o); o.scale.setScalar(1.5);
+    const o = this.life.town.clone('cat', p[0], this.life.ground.height(p[0], p[1]), p[1], 0, true); this.life.root.attach(o); toonify(o); o.scale.setScalar(1.5);
     this.merchant = { o, tent, x: p[0], z: p[1] };
   }
   target(front) {

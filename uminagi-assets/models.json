@@ -3820,15 +3820,16 @@
    1.25,
    0.72
   ],
-  "tris": 3332,
+  "tris": 3856,
   "lod1_tris": 0,
   "materials": [
-   "cheek",
-   "eye",
    "hf_apron",
+   "hf_cheek",
    "hf_hippo",
    "hf_hippo_dk",
    "hf_hippo_lt",
+   "hf_mouth",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -3843,7 +3844,7 @@
    "pc_hippo_leg_r",
    "pc_hippo_tail"
   ],
-  "kb": 291.3
+  "kb": 322.7
  },
  {
   "name": "vil_nori",
@@ -3854,15 +3855,17 @@
    1.06,
    0.63
   ],
-  "tris": 2392,
+  "tris": 2916,
   "lod1_tris": 0,
   "materials": [
    "ac_denim",
    "ac_ear_pink",
-   "ac_flower_eye",
+   "hf_cheek",
+   "hf_mouth",
    "hf_nori_blk",
    "hf_nori_wht",
    "hf_stripe_navy",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -3874,7 +3877,7 @@
    "vil_nori_arm_r",
    "vil_nori_leg_r"
   ],
-  "kb": 193.9
+  "kb": 225.4
  },
  {
   "name": "vil_shione",
@@ -3885,18 +3888,19 @@
    1.28,
    0.66
   ],
-  "tris": 2476,
+  "tris": 3000,
   "lod1_tris": 0,
   "materials": [
    "ac_ear_pink",
    "ac_shirt_cream",
    "ac_tee_blue",
-   "cheek",
-   "eye",
+   "hf_cheek",
+   "hf_mouth",
    "hf_rabbit",
    "hf_rabbit_lt",
    "hf_straw",
    "hf_straw_band",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -3908,7 +3912,7 @@
    "vil_shione_arm_r",
    "vil_shione_leg_r"
   ],
-  "kb": 195.7
+  "kb": 226.3
  },
  {
   "name": "vil_moai",
@@ -3919,18 +3923,19 @@
    1.05,
    0.69
   ],
-  "tris": 2660,
+  "tris": 3200,
   "lod1_tris": 0,
   "materials": [
    "ac_shirt_cream",
    "ac_wood_handle",
-   "cheek",
-   "eye",
    "hf_bag",
+   "hf_cheek",
    "hf_dot_bandana",
    "hf_eleph",
    "hf_eleph_lt",
+   "hf_mouth",
    "hf_overall",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -3942,7 +3947,7 @@
    "vil_moai_arm_r",
    "vil_moai_leg_r"
   ],
-  "kb": 220.6
+  "kb": 252.7
  },
  {
   "name": "vil_kotetsu",
@@ -3953,16 +3958,17 @@
    1.0,
    0.62
   ],
-  "tris": 2864,
+  "tris": 3404,
   "lod1_tris": 0,
   "materials": [
-   "cheek",
-   "eye",
    "hf_boot_blk",
+   "hf_cheek",
    "hf_hachimaki_r",
    "hf_jacket_orange",
    "hf_monkey",
    "hf_monkey_face",
+   "hf_mouth",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -3974,7 +3980,7 @@
    "vil_kotetsu_arm_r",
    "vil_kotetsu_leg_r"
   ],
-  "kb": 235.0
+  "kb": 266.7
  },
  {
   "name": "vil_gabuta",
@@ -3985,14 +3991,17 @@
    0.97,
    1.0
   ],
-  "tris": 2692,
+  "tris": 3312,
   "lod1_tris": 0,
   "materials": [
    "ac_rim_dark",
+   "hf_cheek",
    "hf_croc",
    "hf_croc_belly",
    "hf_lens",
+   "hf_mouth",
    "hf_sailor",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -4004,7 +4013,7 @@
    "vil_gabuta_arm_r",
    "vil_gabuta_leg_r"
   ],
-  "kb": 195.4
+  "kb": 236.1
  },
  {
   "name": "vil_minato",
@@ -4015,18 +4024,20 @@
    1.37,
    0.48
   ],
-  "tris": 2884,
+  "tris": 3464,
   "lod1_tris": 0,
   "materials": [
    "ac_ear_pink",
    "ac_rim_dark",
    "ac_rim_gold",
-   "eye",
    "hf_cap_navy",
+   "hf_cheek",
    "hf_coat_white",
    "hf_giraffe",
    "hf_giraffe_patch",
    "hf_lion_lt",
+   "hf_mouth",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -4038,7 +4049,7 @@
    "vil_minato_arm_r",
    "vil_minato_leg_r"
   ],
-  "kb": 238.8
+  "kb": 275.5
  },
  {
   "name": "vil_kai",
@@ -4049,18 +4060,19 @@
    1.1,
    0.84
   ],
-  "tris": 3564,
+  "tris": 4088,
   "lod1_tris": 0,
   "materials": [
    "ac_bear_nose",
-   "cheek",
-   "eye",
+   "hf_cheek",
    "hf_lion",
    "hf_lion_lt",
    "hf_mane",
+   "hf_mouth",
    "hf_neckerchief",
    "hf_shorts",
    "hf_tee",
+   "hf_tongue",
    "ink",
    "white"
   ],
@@ -4072,7 +4084,7 @@
    "vil_kai_arm_r",
    "vil_kai_leg_r"
   ],
-  "kb": 305.8
+  "kb": 336.4
  },
  {
   "name": "vil_picco",
@@ -4083,16 +4095,16 @@
    0.99,
    0.51
   ],
-  "tris": 1794,
+  "tris": 1874,
   "lod1_tris": 0,
   "materials": [
-   "cheek",
-   "eye",
    "hf_bag",
    "hf_boot_red",
+   "hf_cheek",
    "hf_chick",
    "hf_chick_beak",
    "hf_post_green",
+   "ink",
    "white"
   ],
   "parts": [
@@ -4103,7 +4115,7 @@
    "vil_picco_arm_r",
    "vil_picco_leg_r"
   ],
-  "kb": 159.0
+  "kb": 167.0
  },
  {
   "name": "furn_table_wood",

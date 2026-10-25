@@ -3,6 +3,7 @@
 // treasure, or flowers), and rare fish and bugs, big fish and golden bugs are all more common while there.
 // The captain waits at the landing to take you back.
 import * as THREE from 'three';
+import { toonify } from '../toon.js';
 import { ITEMS, ICON_BY_ID } from './state.js';
 import { ISLAND } from '../terrain.js';
 
@@ -33,8 +34,8 @@ export class Tour {
     const at = this.on ? this.on.landing : HARBOUR;
     const p = L.near(at[0], at[1], (a, b) => L.walkable(a, b) && !L.blockedAt(a, b, 0.9) && L.nearWater(a, b, 2.5), 8) || L.near(at[0], at[1], (a, b) => L.walkable(a, b), 8);
     if (!p) return;
-    const o = L.town.clone('cat', p[0], L.ground.height(p[0], p[1]), p[1], 0, true); L.root.attach(o); o.scale.setScalar(1.5);
-    o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color.multiply(new THREE.Color(0xb8c4d8)); } });
+    const o = L.town.clone('cat', p[0], L.ground.height(p[0], p[1]), p[1], 0, true); L.root.attach(o); toonify(o); o.scale.setScalar(1.5);
+    o.traverse((m) => { if (m.isMesh && !m.userData.outline) { m.material = m.material.clone(); m.material.color.multiply(new THREE.Color(0xb8c4d8)); } });
     let boat = null;
     const w = L.near(p[0], p[1] + 3, (a, b) => L.water(a, b) && L.water(a + 1.5, b) && L.water(a - 1.5, b), 6);
     if (w && L.town.protos.skiff) { boat = L.town.clone('skiff', w[0], 0.05, w[1], Math.PI / 2, true); L.root.attach(boat); }

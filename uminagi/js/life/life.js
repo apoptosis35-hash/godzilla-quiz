@@ -2,6 +2,7 @@
 // shadows in the sea, catching bugs with a net, digging fossils, shaking fruit trees, the money rock, beach
 // combing, the raccoon's shop and the owl's museum. Everything follows the real clock and resets at 5:00.
 import * as THREE from 'three';
+import { toonify } from '../toon.js';
 import { LifeState, ITEMS, dayKey, seeded, donatable, icon } from './state.js';
 import { SEA } from './items2.js';
 import { ART, isFake, paintingURL } from './art.js';
@@ -154,6 +155,7 @@ export class Life {
     else { const h = home[0]; const p = this.near((h[0] + h[1]) / 2, (h[2] + h[3]) / 2, (a, b) => this.walkable(a, b)) || [(h[0] + h[1]) / 2, (h[2] + h[3]) / 2]; [x, z] = p; }
     const o = this.town.clone(model, x, this.ground.height(x, z), z, ry, true); o.scale.setScalar(VS);
     if (def.tint) { const c = new THREE.Color(def.tint); o.traverse((m) => { if (m.isMesh) { m.material = m.material.clone(); m.material.color.multiply(c); } }); }
+    toonify(o);   // picture-book shading and outline (js/toon.js)
     const L = {}; for (const s of ['body', 'head', 'arm_l', 'arm_r', 'leg_l', 'leg_r']) L[s] = o.getObjectByName(`${model}_${s}`);
     const look = def.role === 'shop' ? ['#4f8a46', 1.05] : def.role === 'museum' ? ['#7a5a32', 0.8] : LOOK[def.personality] || ['#e8b23a', 1];
     const v = { def, o, L, home, fixed: !!fx, ry0: ry, target: null, wait: Math.random() * 4, t: Math.random() * 9, r: 0.26, life: true, walkT: 0,

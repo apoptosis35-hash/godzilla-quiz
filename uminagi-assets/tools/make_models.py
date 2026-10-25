@@ -6714,7 +6714,26 @@ PALETTE.update({
     'hf_neckerchief': P((0.12, 0.35, 0.75), 0.75), 'hf_shorts': P((0.35, 0.3, 0.2), 0.9),
     'hf_chick': P((0.96, 0.86, 0.55), 0.9), 'hf_chick_beak': P((0.95, 0.55, 0.15), 0.5), 'hf_post_green': P((0.1, 0.38, 0.22), 0.8), 'hf_bag': P((0.45, 0.28, 0.14), 0.8),
     'hf_boot_red': P((0.75, 0.1, 0.08), 0.35),
+    'hf_mouth': P((0.62, 0.03, 0.05), 0.6), 'hf_tongue': P((0.95, 0.42, 0.45), 0.6), 'hf_cheek': P((0.98, 0.5, 0.56), 0.8),
 })
+
+# picture-book faces for the harbour folk: round dot eyes, a wide-open smile and big round cheeks
+def _hf_eyes(c, R, ex, ez, s=0.032, out=0.0):
+    for sx in (-1, 1):
+        _ac_decal('ink', c, R, sx * ex, ez, s, s * 1.12, 0.014, out)
+        _ac_decal('white', c, R, sx * ex + s * 0.3, ez + s * 0.38, s * 0.33, s * 0.33, 0.008, out + 0.007, sub=1)
+
+def _hf_mouth(c, R, x, z, w, h, skin, out=0.0):
+    # a wide-open D-shaped smile: a half disc (flat on top) of red mouth, a pink tongue and an upturned line on top
+    p, n = _ac_surf(c, R, x, z, out)
+    _ac_ball('hf_mouth', tuple(p), (w, 0.012, h), 18, 10, f=lambda a, b, zz: (a, b, min(zz, 0.0)))
+    q, _ = _ac_surf(c, R, x, z - h * 0.55, out + 0.004)
+    _ac_ball('hf_tongue', tuple(q), (w * 0.5, 0.012, h * 0.32), 12, 6)
+    _ac_curve('ink', c, R, [(x - w * 1.2, z + h * 0.28), (x - w * 0.85, z + h * 0.02), (x, z), (x + w * 0.85, z + h * 0.02), (x + w * 1.2, z + h * 0.28)], 0.0045, out + 0.004)
+
+def _hf_cheeks(c, R, x, z, w=0.055, out=0.0):
+    for sx in (-1, 1): _ac_decal('hf_cheek', c, R, sx * x, z, w, w * 0.66, 0.006, out)
+
 
 @model('pc_hippo', 'ぽっけ(操作キャラ・カバ)', '人物', lod=False)
 def pc_hippo():
@@ -6739,12 +6758,10 @@ def pc_hippo():
     _ac_ball(L, mc, mr, 18, 10)
     for sx in (-1, 1):
         _ac_decal(D, mc, mr, sx * 0.08, 0.1, 0.026, 0.018, 0.012)                       # nostrils on top
-        _ac_decal('eye', hc, R, sx * 0.12, 0.1, 0.03, 0.036, 0.014)                     # small eyes high up
-        _ac_decal('white', hc, R, sx * 0.12 + 0.01, 0.113, 0.01, 0.01, 0.008, 0.007, sub=1)
-        _ac_decal('cheek', mc, mr, sx * 0.17, 0.0, 0.04, 0.024, 0.01, sub=1)
         ico(F, 0.03, (sx * 0.16, -0.2, 0.84), (0.8, 0.8, 0.6), 1)
-    _ac_curve('ink', mc, mr, [(-0.12, -0.04), (-0.06, -0.075), (0.0, -0.08), (0.06, -0.075), (0.12, -0.04)], 0.006, 0.0)   # big smile
-    ico('white', 0.022, (-0.04, -0.33, 0.8), (1.0, 0.5, 1.2), 1); ico('white', 0.022, (0.04, -0.33, 0.8), (1.0, 0.5, 1.2), 1)   # two little teeth
+    _hf_eyes(hc, R, 0.12, 0.1, 0.034)                                                   # dot eyes high up
+    _hf_mouth(mc, mr, 0.0, -0.06, 0.1, 0.055, L)                                           # a wide open smile
+    _hf_cheeks(mc, mr, 0.175, 0.0, 0.05)
     part(None)
     for sx, sd in ((-1, 'l'), (1, 'r')):
         part(f'{n}_ear_{sd}', (sx * 0.19, 0.05, 1.17))
@@ -6784,9 +6801,9 @@ def vil_nori():
     _ac_decal(W, hc, R, 0, -0.1, 0.17, 0.13, 0.03)                                     # white lower face (hachiware)
     _ac_decal(W, hc, R, 0, 0.0, 0.05, 0.12, 0.02, roll=0.0)                             # the split up the middle
     _ac_decal('ac_ear_pink', hc, R, 0, -0.05, 0.02, 0.014, 0.02, 0.03)
-    _ac_curve('ink', hc, R, [(-0.03, -0.085), (-0.015, -0.095), (0.0, -0.082), (0.015, -0.095), (0.03, -0.085)], 0.004, 0.032)
-    _ac_eyes(hc, R, 0.1, 0.01, 0.028, 0.038, mat='ac_flower_eye')                       # amber eyes
-    for sx in (-1, 1): _ac_decal('ink', hc, R, sx * 0.1, 0.01, 0.01, 0.03, 0.022, 0.006, sub=1)   # slit pupils
+    _hf_mouth(hc, R, 0.0, -0.1, 0.042, 0.03, W, 0.03)
+    _hf_eyes(hc, R, 0.1, 0.01, 0.032)
+    _hf_cheeks(hc, R, 0.16, -0.06)
     _ac_whiskers(hc, R, 0.09, -0.07, 0.03)
     _ac_ear(K, 'ac_ear_pink', (-0.15, 0.0, 0.92), 0.085, 0.15, ry=-0.35, rx=0.05)
     with xf((0.15, 0.0, 0.92), ry=0.35, rx=0.05):                                       # the right ear has a nick: flat top
@@ -6807,9 +6824,9 @@ def vil_shione():
     _ac_ball(F, hc, R, 18, 10)
     _ac_decal(L, hc, R, 0, -0.09, 0.12, 0.08, 0.03)                                     # pale muzzle
     _ac_decal('ac_ear_pink', hc, R, 0, -0.045, 0.022, 0.015, 0.02, 0.03)
-    _ac_curve('ink', hc, R, [(-0.03, -0.082), (-0.015, -0.095), (0.0, -0.08), (0.015, -0.095), (0.03, -0.082)], 0.0042, 0.03)
-    _ac_eyes(hc, R, 0.1, 0.0, 0.026, 0.04)
-    _ac_blush(hc, R, 0.155, -0.06)
+    _hf_mouth(hc, R, 0.0, -0.1, 0.04, 0.03, L, 0.03)
+    _hf_eyes(hc, R, 0.1, 0.0, 0.03)
+    _hf_cheeks(hc, R, 0.155, -0.06)
     for sx in (-1, 1):   # long ears, tipped back
         b = Vector((sx * 0.08, 0.04, 0.95))
         pts = [b, b + Vector((sx * 0.02, 0.04, 0.14)), b + Vector((sx * 0.035, 0.09, 0.27)), b + Vector((sx * 0.04, 0.12, 0.33))]
@@ -6837,9 +6854,9 @@ def vil_moai():
     trunk = [(0, -0.21, 0.76), (0, -0.29, 0.69), (0, -0.33, 0.6), (0, -0.37, 0.55), (0, -0.4, 0.57)]
     _pv_tube(F, trunk, [0.07, 0.058, 0.048, 0.042, 0.04], 10)
     ico(L, 0.035, trunk[-1], (1, 0.6, 1), 1)
-    _ac_eyes(hc, R, 0.11, 0.03, 0.026, 0.034)
-    _ac_blush(hc, R, 0.17, -0.04)
-    _ac_curve('ink', hc, R, [(-0.06, -0.1), (0.0, -0.13), (0.06, -0.1)], 0.005, 0.0)
+    _hf_eyes(hc, R, 0.11, 0.03, 0.032)
+    _hf_cheeks(hc, R, 0.17, -0.04, 0.06)
+    _hf_mouth(hc, R, 0.0, -0.15, 0.06, 0.035, F)
     for sx in (-1, 1):   # small ears
         ico(F, 0.11, (sx * 0.27, 0.04, 0.8), (0.35, 0.9, 1.0), 2)
         ico(L, 0.07, (sx * 0.265, 0.0, 0.8), (0.25, 0.6, 0.8), 2)
@@ -6863,10 +6880,10 @@ def vil_kotetsu():
     _ac_decal(P2, hc, R, -0.055, 0.0, 0.09, 0.1, 0.03)                                   # heart-shaped face
     _ac_decal(P2, hc, R, 0.055, 0.0, 0.09, 0.1, 0.03)
     _ac_decal(P2, hc, R, 0, -0.08, 0.13, 0.08, 0.035)
-    _ac_eyes(hc, R, 0.065, 0.02, 0.024, 0.034, out=0.02)
+    _hf_eyes(hc, R, 0.065, 0.02, 0.028, out=0.02)
     for sx in (-1, 1): ico('ink', 0.006, _ac_surf(hc, R, sx * 0.018, -0.05, 0.035)[0], sub=1)
-    _ac_curve('ink', hc, R, [(-0.05, -0.1), (0.0, -0.12), (0.05, -0.1)], 0.005, 0.035)
-    _ac_blush(hc, R, 0.12, -0.06, out=0.02)
+    _hf_mouth(hc, R, 0.0, -0.115, 0.05, 0.032, P2, 0.035)
+    _hf_cheeks(hc, R, 0.12, -0.06, 0.045, out=0.02)
     for sx in (-1, 1):   # round ears at the sides
         ico(F, 0.07, (sx * 0.28, 0.0, 0.78), (0.5, 1, 1), 2); ico(P2, 0.045, (sx * 0.29, -0.01, 0.78), (0.4, 0.8, 0.8), 2)
     _pv_tube('white', [(math.sin(a) * 0.243, -math.cos(a) * 0.216, 0.88) for a in [i * 0.4 for i in range(17)]], 0.02, 6)   # twisted hachimaki
@@ -6898,7 +6915,8 @@ def vil_gabuta():
         ico(F, 0.06, (sx * 0.09, -0.09, 0.93), (1, 0.9, 0.8), 2)
         cyl('hf_lens', 0.05, 0.012, (sx * 0.09, -0.15, 0.92), 16, rot=(math.pi / 2, 0, 0))
     rod('ac_rim_dark', (-0.04, -0.155, 0.925), (0.04, -0.155, 0.925), 0.006, 4)
-    _ac_curve('ink', sc, sr, [(-0.12, -0.04), (0.0, -0.05), (0.12, -0.04)], 0.005, 0.0)
+    _hf_mouth(sc, sr, 0.0, -0.035, 0.1, 0.03, F)
+    _hf_cheeks(hc, R, 0.17, -0.05)
     for sx, sd in ((-1, 'l'), (1, 'r')):
         _ac_arm(n, sd, sx, F, sleeve='hf_sailor', slen=0.5, cuff='white')
         _ac_leg(n, sd, sx, F, F, pant='hf_sailor', plen=0.9)
@@ -6920,8 +6938,9 @@ def vil_minato():
     mc, mr = (0, -0.18, 1.06), (0.13, 0.12, 0.09)
     _ac_ball('hf_lion_lt', mc, mr, 14, 8)
     for sx in (-1, 1): ico('ink', 0.008, _ac_surf(mc, mr, sx * 0.04, 0.03, 0.0)[0], sub=1)
-    _ac_curve('ink', mc, mr, [(-0.05, -0.04), (0.0, -0.055), (0.05, -0.04)], 0.004, 0.0)
-    _ac_eyes(hc, R, 0.09, 0.02, 0.024, 0.032)
+    _hf_mouth(mc, mr, 0.0, -0.045, 0.05, 0.03, 'hf_lion_lt')
+    _hf_eyes(hc, R, 0.09, 0.02, 0.03)
+    _hf_cheeks(hc, R, 0.13, -0.04, 0.045)
     for k, (x, z) in enumerate([(-0.12, 0.08), (0.13, 0.05), (0.0, 0.13)]): _ac_decal(S, hc, R, x, z, 0.03, 0.025, 0.01)
     for sx in (-1, 1):
         rod(F, (sx * 0.06, 0.0, 1.24), (sx * 0.07, 0.0, 1.34), 0.016, 6); ico(S, 0.026, (sx * 0.07, 0.0, 1.35), sub=1)   # ossicones
@@ -6951,9 +6970,9 @@ def vil_kai():
     _ac_ball(F, hc, R, 18, 10)
     _ac_decal(L, hc, R, 0, -0.08, 0.12, 0.08, 0.035)
     _ac_decal('ac_bear_nose', hc, R, 0, -0.035, 0.032, 0.022, 0.02, 0.045)
-    _ac_curve('ink', hc, R, [(-0.04, -0.085), (-0.02, -0.1), (0.0, -0.085), (0.02, -0.1), (0.04, -0.085)], 0.0045, 0.042)
-    _ac_eyes(hc, R, 0.1, 0.02, 0.028, 0.04)
-    _ac_blush(hc, R, 0.16, -0.06)
+    _hf_mouth(hc, R, 0.0, -0.11, 0.045, 0.032, L, 0.04)
+    _hf_eyes(hc, R, 0.1, 0.02, 0.032)
+    _hf_cheeks(hc, R, 0.16, -0.06)
     for sx in (-1, 1): ico(F, 0.05, (sx * 0.17, 0.02, 0.98), (1, 0.6, 1), 2)               # round ears in the mane
     for sx, sd in ((-1, 'l'), (1, 'r')):
         _ac_arm(n, sd, sx, F, sleeve='hf_tee', slen=0.4)
@@ -6974,8 +6993,8 @@ def vil_picco():
     _ac_ball(F, hc, R, 18, 10)
     with xf((0, -0.21, 0.72), rx=0.2):
         cyl('hf_chick_beak', 0.05, 0.08, (0, 0, 0), 4, r2=0.0, rot=(math.pi / 2, 0, 0))
-    _ac_eyes(hc, R, 0.085, 0.03, 0.024, 0.032)
-    _ac_blush(hc, R, 0.13, -0.03)
+    _hf_eyes(hc, R, 0.085, 0.03, 0.028)
+    _hf_cheeks(hc, R, 0.13, -0.03, 0.045)
     for k in range(3): ico(F, 0.025, (0.0 + (k - 1) * 0.025, 0.0, 0.95), (0.5, 0.8, 1.6), 1)   # a tuft on top
     with xf((0, 0.0, 0.9), rx=-0.1):                                                    # green postie's cap
         cyl('hf_post_green', 0.15, 0.08, (0, 0, 0), 18, r2=0.16)

@@ -8,6 +8,7 @@
 //   - weekly tournaments on Saturdays (fishing in odd months, bugs in even ones) with trophies
 //   - the bay's phantom fish on one day a month, record sizes, big fish and golden bugs
 import * as THREE from 'three';
+import { toonify } from '../toon.js';
 import { ITEMS, ICON_BY_ID, dayKey, seeded } from './state.js';
 import { FISH, VILLAGERS } from './data.js';
 import { FURNITURE, RECIPES } from './items2.js';
@@ -247,7 +248,7 @@ export class Goals {
     for (const o of this.npcs || []) L.root.remove(o.o);
     this.npcs = [];
     if (!L.town.protos.cat) return;
-    const put = (x, z, sp, kind, scale) => { const p = L.near(x, z, (a, b) => L.walkable(a, b) && !L.blockedAt(a, b, 1.2), 10); if (!p) return; const o = L.town.clone('cat', p[0], L.ground.height(p[0], p[1]), p[1], 0, true); L.root.attach(o); o.scale.setScalar(scale); this.npcs.push({ o, x: p[0], z: p[1], sp, kind }); };
+    const put = (x, z, sp, kind, scale) => { const p = L.near(x, z, (a, b) => L.walkable(a, b) && !L.blockedAt(a, b, 1.2), 10); if (!p) return; const o = L.town.clone('cat', p[0], L.ground.height(p[0], p[1]), p[1], 0, true); L.root.attach(o); toonify(o); o.scale.setScalar(scale); this.npcs.push({ o, x: p[0], z: p[1], sp, kind }); };
     if (this.tourneyToday()) put(10, 15, SP_HOST, 'host', 1.6);
     const d = new Date(), sat = new Date(Date.now() - 5 * 3600e3).getDay() === 6;
     if (this.g.five && sat && (d.getHours() >= 18 || d.getHours() < 2)) put(-4, 15, SP_SINGER, 'singer', 1.7);
