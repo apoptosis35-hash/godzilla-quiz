@@ -91,6 +91,7 @@ await G(() => window.__uminagi.life.equip(null));
 // home: into the tent, place a table, back out
 const home = await G(() => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  L.season.target = () => null;   // no shooting-star wish in the way, whatever the real clock says
   L.giveTent(); L.st.add('furn_table_wood');
   const d = L.home.door; a.player.place(d.x, d.z + 0.8, 0); a.player.heading = Math.PI; step(2);
   const label = L.target()?.label; L.anim = null; L.press(); step(3);
@@ -116,6 +117,23 @@ const plot = await G(() => {
 });
 await talkThrough([]);
 check('build a resident\'s house on a plot of your choice', plot.placed && plot.site && plot.who && plot.door, JSON.stringify(plot));
+// daily goals pay stamps; an empty plot gets a newcomer; a ticket takes なぎ to the island and back
+const extra = await G(async () => {
+  const a = window.__uminagi, L = a.life, g = L.goals.g, s0 = g.stamps;
+  for (const d of g.daily) L.emit(d.ev, d.n);
+  const goals = g.allDone && g.stamps > s0;
+  const B = L.build, empty = B.list.find((q) => B.fac(q).house); empty.who = null;   // the plot from the test above, vacated
+  B.render(); L.folk.f.day = 'x'; L.folk.morning(false, true);
+  const folk = L.villagers.some((v) => v.def.id.startsWith('nv_'));
+  for (let k = 0; k < 400 && L.ui.busy(); k++) { const q = L.ui.queue; if (q) { if (L.ui.typing) L.ui.endLine(); if (q.choices && q.i === q.lines.length - 1) L.ui.finish(0); else L.ui.advance(); } else L.ui.closePanel(-1); await new Promise((r) => setTimeout(r, 5)); }
+  let gone = false; L.tour.go().then(() => { gone = true; });
+  for (let k = 0; k < 600 && !gone; k++) { const q = L.ui.queue; if (q) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
+  const island = !!L.tour.on && Math.hypot(a.player.pos.x - 97, a.player.pos.z - 200) < 30;
+  L.tour.clear();
+  return { goals, folk, island };
+});
+await p.waitForTimeout(2500); await talkThrough([]);
+check('stamp goals, a newcomer moving in, an island tour', extra.goals && extra.folk && extra.island, JSON.stringify(extra));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

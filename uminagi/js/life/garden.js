@@ -46,7 +46,7 @@ export class Garden {
     const tree = id === 'mikan';
     if (!this.soil(x, z, tree ? 1.2 : 0.3) || this.st.ext.plants.some((p) => Math.hypot(p.x - x, p.z - z) < (tree ? 2.5 : 0.6))) { L.ui.toast('ここには 植えられないみたい'); return; }
     const p = { type: tree ? 'tree' : 'flower', seed: tree ? null : id, x, z, ry: Math.random() * 6.28, day: dayKey() };
-    st.pocket.splice(i, 1); st.ext.plants.push(p); st.save();
+    st.pocket.splice(i, 1); st.ext.plants.push(p); st.save(); L.emit('plant');
     L.anim = { kind: 'dig', t: 0, dur: 0.6 }; L.splash(0.12, 300);
     this.objs.push({ p, o: this.plantObject(p) });
     L.ui.toast(tree ? 'みかんを 植えた。3日で 木になるよ' : `${ITEMS[id].name}を まいた`);

@@ -70,6 +70,9 @@ export const FISH = [
     comment: 'タツノオトシゴをつった! 海のちいさな、竜の子ども!' },
   { id: 'maguro', name: 'クロマグロ', size: 6, where: 'sea', months: [6, 7, 8, 9], hours: [[4, 8]], rarity: 5, price: 15000,
     comment: 'クロマグロをつった!! 海凪の伝説になっちゃう!' },
+  // the bay's phantom: only on one day a month (js/life/goals.js picks the day), out at sea in the evening
+  { id: 'nushi', name: '凪のヌシ', size: 6, where: 'sea', months: ALL_YEAR, hours: [[16, 24]], rarity: 5, price: 30000, phantom: true,
+    comment: '凪のヌシをつった!!! 月に一度の 幻の大物だ!' },
 ];
 
 // ---------------------------------------------------------------------------

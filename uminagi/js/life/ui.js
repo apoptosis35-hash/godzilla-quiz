@@ -1,6 +1,6 @@
 // Life UI (DOM): talk window with name plate, typewriter text and animal-speak babble, choice buttons,
 // the pocket (20 slots), the encyclopedia, the clock + money HUD, the context action button and toasts.
-import { ITEMS, POCKET, icon, TOOL_ICON } from './state.js';
+import { ITEMS, icon, TOOL_ICON } from './state.js';
 import { FISH, BUGS, FOSSILS } from './data.js';
 import { SEA } from './items2.js';
 import { ART, paintingURL } from './art.js';
@@ -20,6 +20,7 @@ export class LifeUI {
         <button class="btn round lbtn" id="ltool" aria-label="道具">✋</button>
         <button class="btn round lbtn" id="lpocket" aria-label="ポケット">🎒</button>
         <button class="btn round lbtn" id="lbook" aria-label="図鑑">📖</button>
+        <button class="btn round lbtn" id="lstamp" aria-label="スタンプ帳">📒</button>
         <button class="btn round lbtn" id="lhat" aria-label="ぼうしを とる" hidden>👒</button>
       </div>
       <button class="btn" id="act" aria-label="アクション"><b>A</b><small id="actlbl"></small></button>
@@ -150,13 +151,13 @@ export class LifeUI {
     const wrap = el('div', 'pocket');
     if (note) wrap.appendChild(el('p', 'pnote', note));
     const grid = el('div', 'pgrid'); wrap.appendChild(grid);
-    for (let i = 0; i < POCKET; i++) {
+    for (let i = 0; i < st.cap(); i++) {
       const id = st.pocket[i], it = ITEMS[id], ok = id && (!filter || filter(id));
       const c = el('button', 'slot' + (id ? '' : ' empty') + (ok ? '' : ' off') + (id && id === st.tool ? ' held' : ''), id ? `<span>${icon(id)}</span><small>${it.name}</small>` : '');
       if (ok) c.onclick = () => this.closePanel(i);
       grid.appendChild(c);
     }
-    wrap.appendChild(el('p', 'pnote', `${st.pocket.length} / ${POCKET}　所持金 ${st.money.toLocaleString()} ナギ`));
+    wrap.appendChild(el('p', 'pnote', `${st.pocket.length} / ${st.cap()}　所持金 ${st.money.toLocaleString()} ナギ`));
     return this.panel(title, wrap);
   }
   list(title, rows) {   // rows: [{ label, sub, ok }] -> index

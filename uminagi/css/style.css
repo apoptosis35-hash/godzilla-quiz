@@ -152,3 +152,11 @@ body.talking #map, body.talking .zoom, body.talking #dash, body.talking .lside {
   .rotate-hint { bottom: auto; top: calc(max(10px, env(safe-area-inset-top)) + 168px); left: max(12px, env(safe-area-inset-left)); transform: none; }
   body.talking .rotate-hint { visibility: hidden; }
 }
+/* the stamp book (js/life/goals.js) */
+.stampbook h4 { margin: 10px 0 4px; font-size: 14px; color: #6a4a22; }
+.stampbook .srow { display: flex; justify-content: space-between; gap: 8px; padding: 4px 8px; border-radius: 8px; font-size: 13px; background: rgba(120, 90, 40, .08); margin: 2px 0; }
+.stampbook .srow.done { background: rgba(80, 170, 110, .18); }
+.stampbook .srow b { white-space: nowrap; font-weight: normal; }
+.stampbook .stars { color: #e8a820; letter-spacing: 1px; }
+.tourfade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .6s; z-index: 50; }
+.tourfade.on { opacity: 1; }

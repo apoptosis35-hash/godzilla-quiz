@@ -85,6 +85,8 @@ export class Home {
   // ---------------------------------------------------------------- furniture objects
   furnObject(id) {
     const it = ITEMS[id], name = it.model || id;
+    if (it.trophy) return this.life.goals.trophyObject(it.trophy);
+    if (it.photo && this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, false); o.parent.remove(o); const tex = this.life.goals.photoTexture(it.photo); o.traverse((m) => { if (m.isMesh && m.material?.name === 'home_canvas') m.material = new THREE.MeshStandardMaterial({ name: 'home_canvas', map: tex, roughness: 0.85 }); }); return o; }
     if (it.kind === 'art' && this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, false); o.parent.remove(o); return hangPainting(o, id); }   // painting on the easel
     if (this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, true); o.parent.remove(o); return o; }
     // stand-in until the model exists: a soft coloured block of the right footprint
@@ -246,7 +248,7 @@ export class Home {
       st.pocket.splice(i, 1); st.ext.furn.push(f); st.save();
       this.outside.push(this.makeFurn(f, this.life.root, { x: 0, z: 0, y: (a, b) => this.life.ground.height(a, b) }));
     }
-    this.life.ui.blip(700, 0.08, 'triangle', 0.14);
+    this.life.ui.blip(700, 0.08, 'triangle', 0.14); this.life.emit('place');
   }
   async furnMenu(rec, list) {
     const it = ITEMS[rec.f.id], rows = [{ label: 'まわす' }, { label: 'しまう' }];

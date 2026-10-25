@@ -34,7 +34,7 @@ export class Craft {
     if (i < 0 || i >= list.length) return;
     const r = list[i];
     if (st.full()) { ui.toast('ポケットが いっぱい!'); return; }
-    st.useMats(r.mat); st.add(r.id);
+    st.useMats(r.mat); st.add(r.id); this.life.emit('craft');
     if (FLIMSY[r.id]) st.ext.dur[r.id] = FLIMSY[r.id];
     this.life.anim = { kind: 'dig', t: 0, dur: 0.6 }; this.life.splash(0.2, 1800); ui.jingle([523, 659, 784]);
     await ui.say(null, [`トントン カンカン……`, `${ITEMS[r.id].name}が できた!`]);
@@ -57,7 +57,7 @@ export class Craft {
     if (t.fruitTree) return;
     this.use('axe');
     if ((d[t.id] || 0) >= 3) { life.ui.toast('もう 木材は とれないみたい'); return; }
-    d[t.id] = (d[t.id] || 0) + 1; life.st.addMat('wood'); life.ui.toast(`木材を 手に入れた (${life.st.mat.wood})`, 1400);
+    d[t.id] = (d[t.id] || 0) + 1; life.st.addMat('wood'); life.emit('wood'); life.ui.toast(`木材を 手に入れた (${life.st.mat.wood})`, 1400);
   }
   // shovel on an ordinary rock: a stone, sometimes iron (once per rock a day)
   rock(r) {

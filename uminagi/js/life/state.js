@@ -67,7 +67,8 @@ export class LifeState {
         met: this.met, intro: this.intro, daily: this.daily, stats: this.stats, lastCatch: this.lastCatch, town: this.town, owlCalled: this.owlCalled, mat: this.mat, ext: this.ext }));
     } catch { /* private mode */ }
   }
-  full() { return this.pocket.length >= POCKET; }
+  cap() { return POCKET + 10 * (this.ext.pocketUp || 0); }   // the pocket grows with stamp exchanges
+  full() { return this.pocket.length >= this.cap(); }
   add(id) {
     if (this.full()) return false;
     this.pocket.push(id);
