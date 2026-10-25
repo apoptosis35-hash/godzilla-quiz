@@ -99,6 +99,23 @@ const home = await G(() => {
   return { label, inside, placed, out: !L.home.inside, y: +a.player.pos.y.toFixed(1) };
 });
 check('house: enter, place furniture, leave', home.label === 'はいる' && home.inside === 'home' && home.placed === 1 && home.out && home.y < 20, JSON.stringify(home));
+// building freely: a plot kit set down on open ground is a site today and a resident's house tomorrow
+const plot = await G(() => {
+  const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  const spots = [[-10, 18], [100, 70], [90, 80], [-30, 0], [10, -60]];
+  for (const [x, z] of spots) {
+    L.st.add('kit_plot'); a.player.place(x, z, Math.PI); a.player.heading = Math.PI; step(2);
+    const n = L.build.list.length; L.build.place(L.st.pocket.indexOf('kit_plot'));
+    if (L.build.list.length > n) break;
+    L.st.pocket.splice(L.st.pocket.indexOf('kit_plot'), 1);
+  }
+  const b = L.build.list.at(-1); if (!b) return { placed: false };
+  const site = !L.build.done(b); b.day = '2000-1-1'; L.build.newDay();
+  const v = L.villagers.find((q) => q.def.id === b.who);
+  return { placed: true, site, who: b.who, door: !!v && !!v.door && Math.hypot(v.door.x - L.build.door(b).x, v.door.z - L.build.door(b).z) < 0.01 };
+});
+await talkThrough([]);
+check('build a resident\'s house on a plot of your choice', plot.placed && plot.site && plot.who && plot.door, JSON.stringify(plot));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

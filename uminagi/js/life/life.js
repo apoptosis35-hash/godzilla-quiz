@@ -8,6 +8,7 @@ import { ART, isFake, paintingURL } from './art.js';
 import { ART_LINES } from './data3.js';
 import { Season } from './season.js';
 import { Home } from './home.js';
+import { Build } from './build.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
 import { Market } from './market.js';
@@ -60,15 +61,17 @@ export class Life {
     this.villagers = []; this.fish = []; this.bugs = []; this.pickups = []; this.spots = []; this.fruitTrees = [];
     this.anim = null; this.cast = null; this.ready = false; this.t = 0; this.spawnT = 0; this.hudT = 0;
     this.collectNature();
+    this.build = new Build(this);
     this.buildCamp();
     this.buildVillagers();
+    this.build.start();
     this.buildProps();
     this.buildTools();
     this.buildFishing();
     this.day = null; this.refreshDay();
     this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
-    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden];
+    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build];
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries
@@ -142,6 +145,11 @@ export class Life {
       }
     }
   }
+  // a resident moves into the house on their plot: the door, and a patch of ground in front to potter about on
+  moveIn(v, b) {
+    const d = this.build.door(b); v.door = d;
+    v.home = [...(v.home0 ||= v.home), [d.x - 4, d.x + 4, d.z - 1, d.z + 5]];
+  }
   has(k) { return !this.app.built || this.app.built.has(k); }
   // who lives here today: the first residents, the ones whose district stands, the owl once sent for
   present(id) {
@@ -213,7 +221,7 @@ export class Life {
       this.town.colliders.push({ type: 'b', x, z: z - 2.6, hw: 1.9, hd: 0.5, c: 1, s: 0, y0: -50, y1: this.ground.height(x, z) + 2.5 });
     }
     for (const [id, [x0, z0, ry, col]] of Object.entries(TENTS)) {
-      if (!this.present(id) || (id === 'vil_owl' ? this.has('shrine') : id !== 'vil_frog' && this.has('houses'))) continue;
+      if (!this.present(id) || this.build.homeOf(id) || (id === 'vil_owl' ? this.has('shrine') : id !== 'vil_frog' && this.has('houses'))) continue;
       const p = this.near(x0, z0, (a, b) => this.walkable(a, b) && !this.blockedAt(a, b, 1.6), 10); if (!p) continue;
       const y = this.ground.height(p[0], p[1]); this.tent(p[0], p[1], ry, col);
       this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 1.2, y0: y - 1, y1: y + 1.9 });
@@ -782,8 +790,8 @@ export class Life {
     for (let n = 0; n < 14; n++) {
       const k = ['売る', '買う', 'DIY', '町づくり', 'またね'][await this.ui.say(sp, line, ['売る', '買う', 'DIY', '町づくり', 'またね'])];
       if (k === '町づくり') {
-        const c = await this.ui.list('町づくり', [{ label: '町の工事を たのむ' }, { label: 'なぎの 家', sub: this.st.ext.home.stage >= 1 ? 'できている' : '' }]);
-        line = c === 0 ? await this.townWork(sp) : c === 1 ? await this.home.houseMenu(sp) : again; continue;
+        const c = await this.ui.list('町づくり', [{ label: '町の工事を たのむ', sub: '漁港・商店街・電車…(場所は決まっている)' }, { label: 'しせつを たてる', sub: '家の土地・ベンチ・街灯… すきな場所に' }, { label: 'なぎの 家', sub: this.st.ext.home.stage >= 1 ? 'できている' : '' }]);
+        line = c === 0 ? await this.townWork(sp) : c === 1 ? await this.build.menu(sp) : c === 2 ? await this.home.houseMenu(sp) : again; continue;
       }
       if (k === 'DIY') { await this.ui.say(sp, this.craft.hint()); await this.craft.menu(); line = again; continue; }
       if (k === '買う') {
@@ -794,7 +802,7 @@ export class Life {
         const dk = st.ext.daikon;
         const c = await this.ui.list('売る', [{ label: 'ひとつずつ 売る' }, { label: 'まとめて 売る', sub: '魚・虫・貝・果物・海の幸' }, ...(dk.n ? [{ label: 'だいこんを 売る', sub: `${dk.n}本` }] : [])]);
         if (c === 0) {
-          const i = await this.ui.pocket(st, { title: '売る', filter: (id) => !['tool', 'recipe'].includes(ITEMS[id].kind), note: '売るものを えらんでね' });
+          const i = await this.ui.pocket(st, { title: '売る', filter: (id) => !['tool', 'recipe', 'kit'].includes(ITEMS[id].kind), note: '売るものを えらんでね' });
           if (i < 0) { line = again; continue; }
           const it = ITEMS[st.pocket[i]], price = this.sellValue(st.pocket[i]);
           const ok = await this.ui.say(sp, fill(pick(L.buyPrompt), V({ item: it.name, price: price.toLocaleString() })), ['売る', 'やめる']);
@@ -961,6 +969,7 @@ export class Life {
     const live = it.kind === 'fish' || it.kind === 'bug' || it.kind === 'sea';
     const rows = [
       ...(it.kind === 'furniture' || it.kind === 'art' ? [['置く', () => this.home.place(i)]] : []),
+      ...(it.kind === 'kit' ? [['建てる', () => this.build.place(i)]] : []),
       ...(it.kind === 'art' ? [['見る', () => this.ui.picture(it.name, paintingURL(id))]] : []),
       ...(it.kind === 'seed' || id === 'mikan' ? [['植える', () => this.garden.plant(i)]] : []),
       ...(it.kind === 'clothes' ? [['身につける', () => this.home.wearItem(i)]] : []),
@@ -980,7 +989,7 @@ export class Life {
       return this.home.target(front);
     }
     for (const v of this.villagers) if (v.o.visible && front(v.o.position.x, v.o.position.z, 1.7)) return { kind: 'talk', v, label: '話す' };
-    for (const m of [this.season, this.home, this.market, this.garden]) { const t = m.target(front); if (t) return t; }
+    for (const m of [this.season, this.home, this.market, this.garden, this.build]) { const t = m.target(front); if (t) return t; }
     for (const p of this.pickups) if (front(p.x, p.z, 1.0)) return { kind: 'take', p, label: 'ひろう' };
     const tool = this.st.tool;
     if (tool === 'axe') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + 1.0)) return { label: 'きる', run: () => this.craft.chop(t) };
