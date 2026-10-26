@@ -4,6 +4,7 @@
 // pocket as a kit) or taken down. A resident with a plot moves into the house built on it.
 import * as THREE from 'three';
 import { ITEMS, ICON_BY_ID, dayKey } from './state.js';
+import { LAMPS } from '../town.js';
 
 const PI = Math.PI;
 // prices follow the slow-life games' public works where they have one (a housing plot 10,000; bridges and slopes
@@ -12,6 +13,7 @@ export const FACILITIES = [
   { id: 'plot', name: '住人の家の土地', cost: 10000, desc: '住人が 家を建てて 引っこしてくる', house: true },
   { id: 'bench', name: 'ベンチ', cost: 6800, model: 'bench' },
   { id: 'street_light', name: '街灯', cost: 9800, model: 'street_light' },
+  { id: 'street_lantern', name: '和風の街灯', cost: 7800, model: 'street_lantern' },
   { id: 'info_board', name: '案内板', cost: 8800, model: 'info_board' },
   { id: 'vending_machine', name: '自動販売機', cost: 12800, model: 'vending_machine' },
   { id: 'ishidoro', name: '石灯籠', cost: 14800, model: 'ishidoro' },
@@ -31,7 +33,7 @@ for (const f of FACILITIES) {
 export class Build {
   constructor(life) {
     this.life = life; this.st = life.st; this.town = life.town;
-    this.st.ext.builds ||= [];
+    this.st.ext.builds = (this.st.ext.builds || []).filter((b) => FACILITIES.some((f) => f.id === b.id));   // drop kinds that no longer exist
     this.objs = []; this.cols = [];
   }
   // after the villagers exist: hand out the plots, draw everything, residents with a finished house live there
@@ -72,11 +74,14 @@ export class Build {
     for (const o of this.objs) this.life.root.remove(o);
     for (const c of this.cols) { const i = this.town.colliders.indexOf(c); if (i >= 0) this.town.colliders.splice(i, 1); }
     this.objs = []; this.cols = []; this.sites = new Set(this.list.filter((b) => !this.done(b)));
+    const spots = this.town.lampSpots; for (let i = spots.length - 1; i >= 0; i--) if (spots[i].built) spots.splice(i, 1);
     for (const b of this.list) {
       const y = this.life.ground.height(b.x, b.z), f = this.foot(b);
       if (!this.done(b)) { this.site(b, y, f); continue; }
       const name = this.model(b); if (!this.town.protos[name]) continue;
       const o = this.town.clone(name, b.x, y, b.z, b.ry, false); o.scale.setScalar(this.scale(b)); this.life.root.attach(o); this.objs.push(o);
+      // lamps light up at night like the town's own (the nearest few get one of the shared point lights)
+      const L = LAMPS[name]; if (L) { o.updateMatrixWorld(true); this.town.lampSpots.push({ p: new THREE.Vector3(...L[0]).applyMatrix4(o.matrixWorld), col: L[1], k: L[2], built: true }); }
       const c = Math.cos(b.ry), s = Math.sin(b.ry);
       const col = { type: 'b', x: b.x + s * f.cz, z: b.z + c * f.cz, hw: Math.max(0.25, f.hw * 0.92), hd: Math.max(0.25, f.hd * 0.92), c, s, y0: y - 1, y1: y + 6 };
       this.town.colliders.push(col); this.cols.push(col);

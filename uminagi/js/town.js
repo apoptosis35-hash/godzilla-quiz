@@ -10,7 +10,7 @@ import { QY, streetY, TIERS, STAIRS, TIER_X1, SHRINE, PLATEAU, PLATFORMS, platfo
 const loader = new GLTFLoader(); loader.setMeshoptDecoder(MeshoptDecoder);
 const H = Math.PI / 2, PI = Math.PI;
 // where light comes from at night (model-local position, colour, strength)
-const LAMPS = {
+export const LAMPS = {
   street_light: [[0, 5.0, 0.65], 0xffd9a0, 1.0], ishidoro: [[0, 1.65, 0], 0xffb060, 0.45], street_lantern: [[0, 1.8, 0], 0xffc070, 0.6],
   shop: [[0, 2.4, 5.4], 0xffb46a, 0.9], fish_market: [[0, 4.5, 6], 0xfff0d0, 1.4], vending_machine: [[0, 1.2, 0.8], 0xd8e8ff, 0.5], torii: [[0, 1.5, 1.5], 0xffb060, 0.3],
 };
