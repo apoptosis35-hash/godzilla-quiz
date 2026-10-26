@@ -115,6 +115,18 @@ export class Life {
     const sl = Math.abs(this.ground.height(x + 0.7, z) - s.h) + Math.abs(this.ground.height(x, z + 0.7) - s.h);
     return sl < 0.35 && !this.blockedAt(x, z, r);
   }
+  // a tree as the instancing pool draws it close up (its detailed level only: the model file also holds the far one)
+  natureClone(name, x, y, z, ry, s) {
+    const g = new THREE.Group();
+    for (const pr of this.town.protos[name].lod0) { const m = new THREE.Mesh(pr.geometry, pr.material); m.matrixAutoUpdate = false; m.matrix.copy(pr.matrix); m.castShadow = true; m.receiveShadow = true; g.add(m); }
+    g.position.set(x, y, z); g.rotation.y = ry; g.scale.setScalar(s); this.root.add(g); return g;
+  }
+  // open, level, grassy ground: natural ground or the grass apron before the harbour is paved
+  wildGround(x, z, r) {
+    const s = this.ground.sample(x, z); if (s.h < 0.3 || (s.plat && s.plat.mat !== 'grass')) return false;
+    const sl = Math.abs(this.ground.height(x + 0.8, z) - s.h) + Math.abs(this.ground.height(x, z + 0.8) - s.h);
+    return sl < 0.4 && !this.blockedAt(x, z, r) && !this.water(x, z);
+  }
   walkable(x, z) { const s = this.ground.sample(x, z); return (s.plat || s.h > -0.2) && !this.blockedAt(x, z, 0.35); }
   // a free spot near (x, z), spiralling out
   near(x, z, test, R = 12) {
@@ -305,6 +317,23 @@ export class Life {
       this.fruitTrees.push({ o, x: p[0], z: p[1], id, fruit: o.getObjectByName('fruit_tree_fruit') });
       this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 0.3, y0: -50, y1: this.ground.height(p[0], p[1]) + 3 });
       this.trees.push({ x: p[0], y: 0, z: p[1], rad: 0.3, id, fruitTree: true });
+    }
+    // a grove and a few rocks around the camp, so wood, branches, stone and iron are a short walk away from the start
+    // (the hills' own woods are far off). Fixed spots on open natural ground; a district built over one clears it.
+    const r = seeded('camp-grove'), CX = 0, CZ = 8, kinds = ['tree_broadleaf', 'tree_broadleaf', 'tree_pine', 'tree_cedar'];
+    const spot = (r0, r1, clear) => { for (let k = 0; k < 60; k++) { const a = r() * 6.28, d = r0 + r() * (r1 - r0), x = CX + Math.cos(a) * d, z = CZ + Math.sin(a) * d * 0.8; if (this.wildGround(x, z, clear) && !this.onRoad(x, z) && Math.hypot(x - 49, z - 11) > 9) return [x, z]; } return null; };
+    for (let i = 0; i < 14; i++) {
+      const name = kinds[i % kinds.length], p = spot(16, 48, 1.6); if (!p || !this.town.protos[name]) continue;
+      const y = this.ground.height(p[0], p[1]), s = 0.8 + r() * 0.3, o = this.natureClone(name, p[0], y - 0.1, p[1], r() * 6.28, s);
+      this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 0.35 * s, y0: -50, y1: y + 4 });
+      this.trees.push({ x: p[0], y, z: p[1], rad: 0.4 * s, id: `grove${i}` });
+    }
+    for (let i = 0; i < 6; i++) {
+      const name = ['rock_a', 'rock_b', 'rock_c'][i % 3], p = spot(14, 52, 1.4); if (!p || !this.town.protos[name]) continue;
+      const pr = this.town.protos[name], b = pr.box, s = 0.9 / Math.max(0.5, b.max.x - b.min.x, b.max.z - b.min.z), y = this.ground.height(p[0], p[1]);
+      this.natureClone(name, p[0], y - 0.05, p[1], r() * 6.28, s);
+      this.town.colliders.push({ type: 'c', x: p[0], z: p[1], r: 0.45, y0: -50, y1: y + 1 });
+      this.rocks.push({ x: p[0], y: y + 0.3, z: p[1], rad: 0.45, id: `camprock${i}` });
     }
     // dig spot / shell / bottle meshes are cloned per day in refreshDay()
     const sg = new THREE.ConeGeometry(0.07, 0.06, 9); sg.rotateX(-PI / 2 + 0.3); sg.translate(0, 0.025, 0);

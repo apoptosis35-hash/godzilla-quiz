@@ -8,6 +8,7 @@ import { RACCOON } from './data2.js';
 // uses before a tool breaks: shop tools, and the flimsy ones made from branches
 export const DURABILITY = { net: 30, rod: 30, shovel: 40, axe: 100 };
 export const FLIMSY = { net: 10, rod: 10, shovel: 40, axe: 40 };
+const ROCK_PER_DAY = 6;
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 
 export class Craft {
@@ -59,12 +60,14 @@ export class Craft {
     if ((d[t.id] || 0) >= 3) { life.ui.toast('もう 木材は とれないみたい'); return; }
     d[t.id] = (d[t.id] || 0) + 1; life.st.addMat('wood'); life.emit('wood'); life.ui.toast(`木材を 手に入れた (${life.st.mat.wood})`, 1400);
   }
-  // shovel on an ordinary rock: a stone, sometimes iron (once per rock a day)
+  // shovel on an ordinary rock: up to six pieces a rock a day, mostly stone, a quarter iron, now and then gold
   rock(r) {
-    const life = this.life, d = (life.st.daily.stones ||= {});
-    if (d[r.id]) { life.ui.toast('カツン!'); return; }
-    d[r.id] = 1; const iron = Math.random() < 0.2;
-    life.st.addMat(iron ? 'iron' : 'stone'); life.ui.toast(iron ? '鉄のかけらを 手に入れた!' : '石を 手に入れた', 1400);
+    const life = this.life, d = (life.st.daily.stones ||= {}), n = d[r.id] || 0;
+    if (n >= ROCK_PER_DAY) { life.ui.toast('カツン! もう なにも 出ないみたい'); return; }
+    d[r.id] = n + 1; const u = Math.random();
+    if (u < 0.02 && !life.st.full()) { life.st.add('gold_nugget'); life.ui.toast(`金のかけらが 出た!! (${n + 1}/${ROCK_PER_DAY})`, 1800); life.ui.jingle([988, 1319]); return; }
+    const iron = u < 0.27;
+    life.st.addMat(iron ? 'iron' : 'stone'); life.ui.toast(`${iron ? '鉄のかけら' : '石'}を 手に入れた (${n + 1}/${ROCK_PER_DAY})`, 1400);
   }
   hint() { return pick(RACCOON.craft_hint); }
   today() { return dayKey(); }
