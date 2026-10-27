@@ -12,9 +12,12 @@ const URL = process.argv[2] || 'http://localhost:8123/uminagi/';
 const OUT = process.argv[3] || path.join(path.dirname(fileURLToPath(import.meta.url)), '../../uminagi-assets/scene');
 const browser = await chromium.launch({ args: ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
 const p = await (await browser.newContext({ viewport: { width: 640, height: 360 } })).newPage();
-await p.goto(URL + '?q=high');
-await p.waitForSelector('#start:not([hidden])', { timeout: 240000 });
-await p.evaluate(() => window.__uminagi.renderer.setAnimationLoop(null));
+// the finished town (?town=all) with its villagers out and about, ぽっけ on the harbour
+await p.goto(URL + '?q=high&town=all');
+await p.waitForSelector('#startbtn', { state: 'visible', timeout: 240000 });
+await p.evaluate(() => { localStorage.setItem('uminagi_life_v1', JSON.stringify({ intro: true, ext: { goals: { day: 'x', bonusShown: true } } })); document.getElementById('startbtn').click(); });
+await p.waitForFunction(() => window.__uminagi?.life?.villagers?.length, null, { timeout: 240000 });
+await p.evaluate(() => { const a = window.__uminagi; a.renderer.setAnimationLoop(null); a.player.place(-6, 19.5, Math.PI); a.player.heading = Math.PI; for (let i = 0; i < 40; i++) a.frame(0.1, false); });
 const r = await p.evaluate(() => window.__uminagi.exportScene());
 writeFileSync(path.join(OUT, 'placements.json'), JSON.stringify({ units: 'metres, +X east, +Z south, +Y up (three.js / glTF)', count: r.placements.length, areas: r.areas, placements: r.placements }, null, 0).replace(/},{/g, '},\n{'));
 writeFileSync(path.join(OUT, 'ground.glb'), Buffer.from(r.groundGLB, 'base64'));

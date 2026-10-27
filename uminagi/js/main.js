@@ -337,7 +337,7 @@ class App {
     }
     this.town.root.traverse((o) => {
       const name = o.name;
-      if (o.parent === this.town.root && this.town.protos[name] && name !== 'shiba') out.push({ model: name, p: [r4(o.position.x), r4(o.position.y), r4(o.position.z)], r: [0, r4(o.rotation.y), 0], s: 1, animated: true });
+      if (o.parent === this.town.root && this.town.protos[name] && name !== 'shiba') out.push({ model: name, p: [r4(o.position.x), r4(o.position.y), r4(o.position.z)], r: [0, r4(o.rotation.y), 0], s: r4(o.scale.x), animated: true });   // incl. the villagers, ぽっけ and the fruit trees
     });
     const ground = this.scene.getObjectByName('ground');
     const glb = await new GLTFExporter().parseAsync(ground, { binary: true, onlyVisible: true });
