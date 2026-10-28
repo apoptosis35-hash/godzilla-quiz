@@ -11,6 +11,7 @@ args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]
 def opt(name, default): return args[args.index(name) + 1] if name in args else default
 W, H = map(int, opt('--size', '1280x720').split('x')); SAMPLES = int(opt('--samples', '40'))
 FPS = int(opt('--fps', '12')); SECONDS = float(opt('--seconds', '16')); TEST = opt('--test', None)
+SHOT = opt('--shot', 'fly')   # fly: the fly-through / cast: the residents lined up on the quay / sunset: the harbour at dusk
 import bpy
 from mathutils import Vector
 
@@ -53,7 +54,7 @@ sc.view_settings.exposure = -0.35
 sc.render.fps = FPS; sc.frame_start = 1; sc.frame_end = int(FPS * SECONDS)
 
 # ---------------------------------------------------------------- sky, sun and clouds
-SUN_ELEV, SUN_AZ = 30, 215   # a clear early afternoon, light from the south-west
+SUN_ELEV, SUN_AZ = {'sunset': (4, 262), 'cast': (24, 160)}.get(SHOT, (30, 215))   # early afternoon from the south-west; dusk low in the west
 world = bpy.data.worlds.new('sky'); sc.world = world; world.use_nodes = True
 nt = world.node_tree; N, Lk = nt.nodes, nt.links
 bg = N['Background']; bg.inputs['Strength'].default_value = 0.14
@@ -81,6 +82,7 @@ mix = N.new('ShaderNodeMix'); mix.data_type = 'RGBA'; Lk.new(mask.outputs[0], mi
 Lk.new(sky.outputs['Color'], mix.inputs['A']); Lk.new(cloud.outputs[0], mix.inputs['B']); Lk.new(mix.outputs['Result'], bg.inputs['Color'])
 sun = bpy.data.objects.new('sun', bpy.data.lights.new('sun', 'SUN')); sc.collection.objects.link(sun)
 sun.data.angle = math.radians(0.8); sun.data.energy = 3.4; sun.data.color = (1.0, 0.95, 0.88)
+if SHOT == 'sunset': sun.data.energy = 2.4; sun.data.color = (1.0, 0.58, 0.32)
 sun.rotation_euler = (math.radians(90 - SUN_ELEV), 0, math.radians(SUN_AZ + 90))
 
 # ---------------------------------------------------------------- the sea: Ocean modifier waves + a calm far plane
@@ -190,6 +192,21 @@ PATH = [
     (0.92, (40, ('g', 16), -103), (-30, ('g', 10), -110)),   # up clear of the poles and wires
     (1.00, (-20, 60, -40), (-115, 30, -30)),           # rising out to the lighthouse hill and the sea
 ]
+if SHOT == 'cast':
+    # everyone in a row on the quay, facing the water, ぽっけ in the middle; the camera drifts past at eye level
+    ORDER = ['vil_raccoon', 'vil_nori', 'vil_shione', 'vil_moai', 'vil_kotetsu', 'pc_hippo', 'vil_gabuta', 'vil_minato', 'vil_kai', 'vil_picco', 'vil_owl']
+    insts = {o.instance_collection.name: o for o in bpy.data.collections['town'].objects if o.instance_type == 'COLLECTION' and o.instance_collection and o.instance_collection.name in ORDER}
+    from mathutils import Matrix, Euler
+    for i, name in enumerate(ORDER):
+        o = insts.get(name)
+        if not o: continue
+        x, z = -14 + i * 1.15, 19.2 + (0.25 if i % 2 else 0)
+        sc_ = o.matrix_world.to_scale()[0]
+        o.matrix_world = Matrix.Translation(g2b((x, ground(x, z), z))) @ Euler((0, 0, 0)).to_matrix().to_4x4() @ Matrix.Scale(sc_, 4)
+    cam.data.lens = 30
+    PATH = [(0.0, (-12.6, 2.35, 21.7), (-10.0, 2.0, 19.3)), (1.0, (-4.4, 2.35, 21.7), (-6.4, 2.0, 19.3))]   # on the quay edge, eye level
+elif SHOT == 'sunset':
+    PATH = [(0.0, (58, ('g', 7), 32), (-30, ('g', 5), 5)), (1.0, (44, ('g', 9), 48), (-40, ('g', 6), 12))]
 for t, c, l in PATH:
     f = 1 + round(t * (sc.frame_end - 1))
     cam.location = g2b(pt(c)); cam.keyframe_insert('location', frame=f)
