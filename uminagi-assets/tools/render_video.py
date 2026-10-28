@@ -2,11 +2,12 @@
 #   Nishita sky with a procedural cloud deck, an animated Ocean-modifier sea, aerial haze from the mist pass,
 #   slight colour / roughness / bump variation on every material, motion blur and a soft bloom.
 #   python3 tools/assemble_town.py                      (once: scene/uminagi_town.blend)
-#   python3 tools/render_video.py [--size 1280x720] [--samples 40] [--fps 12] [--seconds 16] [--frames a-b] [--test N]
+#   python3 tools/render_video.py [--size 1280x720] [--samples 40] [--fps 12] [--seconds 16] [--frames a-b] [--test N] [--gpu] [--check]
+#   or inside Blender:  blender -b -P tools/render_video.py -- [the same options]   (Colab: tools/render_colab.ipynb)
 # Frames go to scene/film/####.png; ffmpeg turns them into scene/uminagi_film.mp4 (see the end of the script).
 import math, os, sys
 HERE = os.path.dirname(os.path.abspath(__file__)); ROOT = os.path.dirname(HERE); SCENE = os.path.join(ROOT, 'scene')
-args = sys.argv[1:]
+args = sys.argv[sys.argv.index('--') + 1:] if '--' in sys.argv else sys.argv[1:]   # `blender -b -P script -- opts` or python3
 def opt(name, default): return args[args.index(name) + 1] if name in args else default
 W, H = map(int, opt('--size', '1280x720').split('x')); SAMPLES = int(opt('--samples', '40'))
 FPS = int(opt('--fps', '12')); SECONDS = float(opt('--seconds', '16')); TEST = opt('--test', None)
@@ -24,6 +25,17 @@ def fcurves(ob):   # Blender 4 (action.fcurves) and 5 (layered actions)
 
 # ---------------------------------------------------------------- render settings
 sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = SAMPLES
+if '--gpu' in args:   # an NVIDIA GPU (OptiX, else CUDA): tens of times faster than the CPU
+    cp = bpy.context.preferences.addons['cycles'].preferences
+    for kind in ('OPTIX', 'CUDA', 'HIP', 'ONEAPI', 'METAL'):
+        try:
+            cp.compute_device_type = kind; cp.get_devices()
+            gpus = [d for d in cp.devices if d.type == kind]
+            if gpus:
+                for d in cp.devices: d.use = d.type == kind
+                sc.cycles.device = 'GPU'; print('rendering on', kind, [d.name for d in gpus], flush=True); break
+        except Exception as e: print('no', kind, e)
+    else: print('no GPU found: rendering on the CPU', flush=True)
 sc.cycles.use_adaptive_sampling = True; sc.cycles.adaptive_threshold = 0.025
 sc.cycles.use_denoising = True
 try: sc.cycles.denoiser = 'OPENIMAGEDENOISE'
@@ -173,8 +185,9 @@ PATH = [
     (0.48, (30, ('g', 1.9), 20), (40, ('g', 3), -30)), # along the quay towards the foot of the street
     (0.58, (40, ('g', 2.2), -10), (40, ('g', 2.6), -60)),    # into the street, above the road
     (0.70, (40, ('g', 2.2), -52), (40, ('g', 3.2), -95)),    # up the street
-    (0.78, (40, ('g', 2.4), -78), (40, ('g', 3.6), -110)),
-    (0.86, (40, ('g', 3.0), -95), (10, ('g', 8), -120)),     # the plaza at the top
+    (0.78, (41.5, ('g', 2.4), -78), (41, ('g', 3.6), -110)),
+    (0.86, (42.6, ('g', 4.0), -97), (10, ('g', 8), -120)),   # the plaza at the top, past the parked car
+    (0.92, (40, ('g', 16), -103), (-30, ('g', 10), -110)),   # up clear of the poles and wires
     (1.00, (-20, 60, -40), (-115, 30, -30)),           # rising out to the lighthouse hill and the sea
 ]
 for t, c, l in PATH:
