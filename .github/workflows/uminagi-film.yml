@@ -62,7 +62,9 @@ jobs:
           ffmpeg -y -loglevel error -framerate ${{ inputs.fps }} -i frames/%04d.png -c:v libx264 -crf 20 -preset slow -pix_fmt yuv420p -movflags +faststart uminagi/docs/film/uminagi_${{ inputs.shot }}.mp4
           ls -la uminagi/docs/film
       - uses: actions/upload-artifact@v4
-        with: { name: uminagi_film, path: uminagi/docs/film/uminagi_${{ inputs.shot }}.mp4 }
+        with:
+          name: uminagi_film
+          path: uminagi/docs/film/uminagi_${{ inputs.shot }}.mp4
       - name: Commit the film
         run: |
           git config user.name 'github-actions[bot]'; git config user.email 'github-actions[bot]@users.noreply.github.com'
