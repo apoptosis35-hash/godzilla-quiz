@@ -88,7 +88,13 @@ t = 0.0; k = 0
 for si, s in enumerate(cfg['shots']):
     fade_in = s.get('fade_in', 0); fade_out = s.get('fade_out', 0); n = round(s['dur'] * FPS)
     for i, fr in enumerate(shot_frames(s)):
+        if s.get('zoom'):   # a slow push-in (also hides a held last frame)
+            z = 1 + (s['zoom'] - 1) * (i / max(1, n - 1)) ** 0.8; cw, ch = int(W / z), int(H / z)
+            x0, y0 = (W - cw) // 2, int((H - ch) * s.get('zoom_y', 0.5))
+            fr = np.asarray(Image.fromarray(fr[y0:y0 + ch, x0:x0 + cw]).resize((W, H), Image.BICUBIC))
         fr = fr.astype(np.float32)
+        if s.get('dim_from') is not None and i >= s['dim_from'] * FPS:   # darken under the end card
+            fr *= 1 - s.get('dim', 0.3) * min(1, (i - s['dim_from'] * FPS) / (0.6 * FPS))
         if fade_in and i < fade_in * FPS: fr *= i / (fade_in * FPS)
         if fade_out and i > n - fade_out * FPS: fr *= max(0, (n - i) / (fade_out * FPS))
         if s.get('white_in') and i < s['white_in'] * FPS:   # a bright flash into the shot
