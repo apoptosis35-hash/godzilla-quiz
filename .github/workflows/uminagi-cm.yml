@@ -6,9 +6,11 @@ name: uminagi cm
 on:
   workflow_dispatch:
     inputs:
-      clips: { description: 'clips to capture (space separated)', default: 'fish bug diy furn before after' }
+      clips: { description: 'clips to capture (space separated); empty = only re-cut', default: 'fish bug diy furn before after' }
+      reuse_run: { description: 'run id whose captured clips to re-cut (when clips is empty)', default: '' }
 permissions:
   contents: write
+  actions: read
 concurrency:
   group: uminagi-cm
   cancel-in-progress: true
@@ -57,6 +59,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ github.ref_name }}   # the latest cut settings, not the commit the run started on
           sparse-checkout: |
             uminagi/docs/film
             uminagi-assets/tools
@@ -65,12 +68,14 @@ jobs:
           pattern: 'cm-*'
           path: frames
           merge-multiple: true
+          run-id: ${{ inputs.reuse_run || github.run_id }}
+          github-token: ${{ github.token }}
       - name: Tools and font
         run: |
           sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
           pip install -q numpy pillow
           mkdir -p font && curl -sSL -o font/rounded.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/mplusrounded1c/MPLUSRounded1c-ExtraBold.ttf
-          ls frames
+          for d in frames/*; do echo "$d $(ls $d | wc -l)"; done
       - name: Jingle and cut
         run: |
           python3 uminagi-assets/tools/cm_music.py music.wav
@@ -83,5 +88,5 @@ jobs:
         run: |
           git config user.name 'github-actions[bot]'; git config user.email 'github-actions[bot]@users.noreply.github.com'
           git add uminagi/docs/film/uminagi_cm.mp4
-          git commit -m "uminagi: 30 s commercial"
+          git commit -m "uminagi: 30 s commercial" || exit 0
           for i in 1 2 3; do git pull -q --rebase origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done
