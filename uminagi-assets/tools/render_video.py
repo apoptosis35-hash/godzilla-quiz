@@ -229,11 +229,18 @@ if '--check' in args:
     print('check done'); sys.exit(0)
 
 # ---------------------------------------------------------------- render
-OUT = os.path.join(SCENE, 'film'); os.makedirs(OUT, exist_ok=True)
+OUT = opt('--out', os.path.join(SCENE, 'film')); os.makedirs(OUT, exist_ok=True)
 if TEST:
     sc.frame_set(int(TEST)); sc.render.filepath = os.path.join(SCENE, f'film_test_{TEST}.png'); bpy.ops.render.render(write_still=True)
 else:
+    # one frame at a time, skipping frames already in OUT: a run that stops (a closed Colab tab) carries on where
+    # it left off when started again. Each frame is written under a temporary name and renamed when complete.
     a, b = map(int, opt('--frames', f'{sc.frame_start}-{sc.frame_end}').split('-'))
-    sc.frame_start, sc.frame_end = a, b; sc.render.filepath = os.path.join(OUT, '')
-    bpy.ops.render.render(animation=True)
+    done = lambda f: os.path.exists(os.path.join(OUT, f'{f:04d}.png')) and os.path.getsize(os.path.join(OUT, f'{f:04d}.png')) > 0
+    todo = [f for f in range(a, b + 1) if not done(f)]
+    print(f'{b - a + 1 - len(todo)} frames already done, {len(todo)} to render', flush=True)
+    for f in todo:
+        sc.frame_set(f); tmp = os.path.join(OUT, f'_{f:04d}.png'); sc.render.filepath = tmp
+        bpy.ops.render.render(write_still=True); os.replace(tmp, os.path.join(OUT, f'{f:04d}.png'))
+        print(f'frame {f} done ({todo.index(f) + 1}/{len(todo)})', flush=True)
 # then: ffmpeg -framerate 12 -i scene/film/%04d.png -vf "minterpolate=fps=30:mi_mode=mci:mc_mode=aobmc:vsbmc=1" -c:v libx264 -crf 18 -pix_fmt yuv420p scene/uminagi_film.mp4
