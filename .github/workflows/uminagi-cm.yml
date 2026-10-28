@@ -1,0 +1,87 @@
+# The 30 s commercial for Uminagi: gameplay clips are captured in parallel (uminagi/tools/cm_capture.mjs,
+# one job per clip, the game stepped frame by frame in headless Chromium), then one job writes the jingle
+# (cm_music.py), cuts the clips together with the rendered films in uminagi/docs/film and the captions
+# (cm_edit.py, cm_config.json) and commits uminagi/docs/film/uminagi_cm.mp4.
+name: uminagi cm
+on:
+  workflow_dispatch:
+    inputs:
+      clips: { description: 'clips to capture (space separated)', default: 'fish bug diy furn before after' }
+permissions:
+  contents: write
+concurrency:
+  group: uminagi-cm
+  cancel-in-progress: true
+jobs:
+  capture:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        clip: [fish, bug, diy, furn, before, after]
+    steps:
+      - uses: actions/checkout@v4
+        if: contains(inputs.clips, matrix.clip)
+        with:
+          sparse-checkout: |
+            uminagi
+            uminagi-assets/glb
+            uminagi-assets/materials
+            uminagi-assets/textures
+      - uses: actions/setup-node@v4
+        if: contains(inputs.clips, matrix.clip)
+        with:
+          node-version: '22'
+      - name: Playwright + Chromium
+        if: contains(inputs.clips, matrix.clip)
+        run: |
+          npm i -s --no-save playwright@1.56.1
+          npx playwright install --with-deps chromium >/dev/null
+      - name: Capture the clip
+        if: contains(inputs.clips, matrix.clip)
+        run: |
+          (python3 -m http.server 8123 >/dev/null 2>&1 &)
+          sleep 2
+          PREVIEW= node uminagi/tools/cm_capture.mjs frames ${{ matrix.clip }}
+          ls frames/${{ matrix.clip }} | wc -l
+      - uses: actions/upload-artifact@v4
+        if: contains(inputs.clips, matrix.clip)
+        with:
+          name: cm-${{ matrix.clip }}
+          path: frames/
+          retention-days: 7
+  edit:
+    needs: capture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            uminagi/docs/film
+            uminagi-assets/tools
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: 'cm-*'
+          path: frames
+          merge-multiple: true
+      - name: Tools and font
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          pip install -q numpy pillow
+          mkdir -p font && curl -sSL -o font/rounded.ttf https://raw.githubusercontent.com/google/fonts/main/ofl/mplusrounded1c/MPLUSRounded1c-ExtraBold.ttf
+          ls frames
+      - name: Jingle and cut
+        run: |
+          python3 uminagi-assets/tools/cm_music.py music.wav
+          python3 uminagi-assets/tools/cm_edit.py uminagi-assets/tools/cm_config.json uminagi/docs/film/uminagi_cm.mp4
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uminagi_cm
+          path: uminagi/docs/film/uminagi_cm.mp4
+      - name: Commit the commercial
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add uminagi/docs/film/uminagi_cm.mp4
+          git commit -m "uminagi: 30 s commercial"
+          for i in 1 2 3; do git pull -q --rebase origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done
