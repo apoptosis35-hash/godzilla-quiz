@@ -1,6 +1,6 @@
 // Offline cache. Pages, scripts and styles come from the network first (so a new page never runs
 // with old scripts) and fall back to the cache offline; images are served from the cache.
-const CACHE = 'obento-pon-v16';
+const CACHE = 'obento-pon-v17';
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'vendor/matter.min.js', 'vendor/peerjs.min.js',
   'icons/icon-180.png', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/icon-maskable-512.png', 'img/cameo.jpg', 'img/rare.png',
