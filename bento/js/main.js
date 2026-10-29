@@ -4,7 +4,7 @@ import { Game } from './game.js';
 import { Renderer } from './render.js';
 import { FX } from './fx.js';
 import { Sound, Haptics } from './audio.js';
-import { Sprites, renderSprite, EXPRESSIONS, onRareReady } from './chars.js';
+import { Sprites, renderSprite, EXPRESSIONS, setRareImage, onRareReady } from './chars.js';
 import { store } from './save.js';
 
 const $ = (id) => document.getElementById(id);
@@ -127,9 +127,9 @@ function startGame(snapshot, seed) {
 $('t-play').addEventListener('click', () => { sound.unlock(); sound.click(); startGame(); });
 $('t-resume').addEventListener('click', () => { const s = store.loadResume(); sound.unlock(); sound.click(); startGame(s); });
 $('t-zukan').addEventListener('click', () => openModal('s-zukan'));
-$('t-settings').addEventListener('click', () => openModal('s-settings'));
+$('t-settings').addEventListener('click', () => { refreshRareUI(); openModal('s-settings'); });
 $('b-zukan').addEventListener('click', () => { if (!vs.on) openModal('s-zukan'); });
-$('b-settings').addEventListener('click', () => { if (!vs.on) openModal('s-settings'); });
+$('b-settings').addEventListener('click', () => { if (!vs.on) { refreshRareUI(); openModal('s-settings'); } });
 $('o-retry').addEventListener('click', () => { sound.click(); startGame(); });
 $('o-title').addEventListener('click', () => toTitle());
 $('o-zukan').addEventListener('click', () => openModal('s-zukan'));
@@ -416,6 +416,46 @@ $('cameo-file').addEventListener('change', async (e) => {
 $('cameo-test').addEventListener('click', () => { sound.click(); closeModal('s-settings'); setTimeout(showCameo, 200); });
 $('cameo-del').addEventListener('click', () => confirmBox('元の写真にもどしますか？', () => { store.saveCameo(null); customCameo = null; refreshCameoUI(); }));
 refreshCameoUI();
+
+// ---------------------------------------------------------------- rare piece picture (device-only)
+let customRare = store.loadRareImg();
+setRareImage(customRare);
+function refreshRareUI() {
+  const known = store.data.rareFound > 0 || !!customRare;
+  $('rare-thumb').src = customRare || 'img/rare.png';
+  $('rare-thumb').classList.toggle('secret', !known);
+  $('rare-del').hidden = !customRare;
+  $('rare-pick').textContent = customRare ? 'かえる' : '画像をえらぶ';
+}
+// a centred square, 320px: the piece is round, so the middle of the picture is what shows
+function squareImage(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      const s = Math.min(img.naturalWidth, img.naturalHeight), out = Math.min(320, s);
+      const c = document.createElement('canvas'); c.width = c.height = out;
+      c.getContext('2d').drawImage(img, (img.naturalWidth - s) / 2, (img.naturalHeight - s) / 2, s, s, 0, 0, out, out);
+      URL.revokeObjectURL(url);
+      resolve(c.toDataURL('image/jpeg', 0.88));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('image')); };
+    img.src = url;
+  });
+}
+$('rare-pick').addEventListener('click', () => { sound.click(); $('rare-file').click(); });
+$('rare-file').addEventListener('change', async (e) => {
+  const f = e.target.files && e.target.files[0];
+  e.target.value = '';
+  if (!f) return;
+  try {
+    const data = await squareImage(f);
+    if (!store.saveRareImg(data)) { toast('保存できませんでした'); return; }
+    customRare = data; setRareImage(data); refreshRareUI(); toast('レアキャラの画像をかえました');
+  } catch (err) { toast('この画像は読みこめませんでした'); }
+});
+$('rare-del').addEventListener('click', () => confirmBox('レアキャラを元の画像にもどしますか？', () => { store.saveRareImg(null); customRare = null; setRareImage(null); refreshRareUI(); }));
+refreshRareUI();
 
 game.on('king', (e) => {
   fx.burst(e.x, e.y, 110, '#ffd84a', 8, 10);
