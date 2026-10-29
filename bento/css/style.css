@@ -262,6 +262,8 @@ svg { width: 1em; height: 1em; }
 .cameo-set { flex-wrap: nowrap; gap: 10px; min-height: 64px; padding-top: 8px; padding-bottom: 8px; margin-top: 4px; }
 .cameo-txt { display: flex; flex-direction: column; gap: 2px; }
 .cameo-txt small { font-size: 10.5px; line-height: 1.5; }
+#rare-thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 3px #ffd84a; flex: none; }
+#rare-thumb.secret { filter: brightness(0) opacity(0.25); }   /* not met yet: keep it a surprise */
 #cameo-thumb { width: 48px; height: 64px; object-fit: cover; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 0 2px #ffd84a; flex: none; }
 .cameo-btns { margin-top: 6px; }
 .cameo-btns .btn { min-height: 42px; font-size: 14px; padding: 0 8px; }

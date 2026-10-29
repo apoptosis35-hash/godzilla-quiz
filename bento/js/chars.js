@@ -538,14 +538,18 @@ DRAW.ume = (ctx, r, e, T) => {
 };
 
 // レアキャラ: the family photo in a shining gold frame
+// the picture can be replaced in settings (kept on this device); null goes back to the built-in one
 let rareImg = null, rareReady = false;
 const rareWaiters = [];
-if (typeof Image !== 'undefined') {
-  rareImg = new Image();
-  rareImg.onload = () => { rareReady = true; rareWaiters.splice(0).forEach((f) => f()); };
-  rareImg.src = new URL('../img/rare.png', import.meta.url).href;
+const RARE_DEFAULT = typeof Image !== 'undefined' ? new URL('../img/rare.png', import.meta.url).href : '';
+export function setRareImage(src) {
+  if (typeof Image === 'undefined') return;
+  const im = new Image();
+  im.onload = () => { rareImg = im; rareReady = true; rareWaiters.forEach((f) => f()); };
+  im.onerror = () => { if (src) setRareImage(null); };
+  im.src = src || RARE_DEFAULT;
 }
-export function onRareReady(f) { if (rareReady) f(); else rareWaiters.push(f); }
+export function onRareReady(f) { rareWaiters.push(f); if (rareReady) f(); }
 DRAW.rare = (ctx, r, e, T) => {
   // soft golden glow behind
   const glow = ctx.createRadialGradient(0, 0, r * 0.8, 0, 0, r * 1.28);
@@ -554,7 +558,11 @@ DRAW.rare = (ctx, r, e, T) => {
   // the photo
   ctx.save();
   ctx.beginPath(); ctx.arc(0, 0, r * 0.88, 0, Math.PI * 2); ctx.clip();
-  if (rareReady) ctx.drawImage(rareImg, -r * 0.88, -r * 0.88, r * 1.76, r * 1.76);
+  if (rareReady) {
+    // cover the circle with the middle of the picture, whatever its shape
+    const k = (r * 1.76) / Math.min(rareImg.width, rareImg.height);
+    ctx.drawImage(rareImg, -rareImg.width * k / 2, -rareImg.height * k / 2, rareImg.width * k, rareImg.height * k);
+  }
   else { ctx.fillStyle = '#ffe9a0'; ctx.fillRect(-r, -r, 2 * r, 2 * r); }
   if (e === 'sad') { ctx.fillStyle = 'rgba(90,100,130,0.35)'; ctx.fillRect(-r, -r, 2 * r, 2 * r); }
   ctx.restore();
