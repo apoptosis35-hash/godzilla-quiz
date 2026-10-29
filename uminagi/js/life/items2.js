@@ -92,6 +92,7 @@ for (const f of FURNITURE) ITEMS[f.id] = { ...f, kind: 'furniture', model: f.mod
 export const MATERIALS = [
   { id: 'branch', name: '木の枝', price: 5 }, { id: 'wood', name: '木材', price: 60 }, { id: 'stone', name: '石', price: 75 },
   { id: 'iron', name: '鉄のかけら', price: 375 }, { id: 'star_frag', name: '星のかけら', price: 500 }, { id: 'snowflake', name: 'ゆきのけっしょう', price: 200 },
+  { id: 'crystal', name: '水晶', price: 600 }, { id: 'glow_moss', name: 'ひかりごけ', price: 150 },   // from the cave (cave.js)
 ];
 for (const m of MATERIALS) ITEMS[m.id] = { ...m, kind: 'material' };
 
@@ -121,6 +122,40 @@ export const RECIPES = [
   { id: 'furn_easel', mat: { wood: 5 } },
   { id: 'furn_shell_lamp', mat: { iron: 1, star_frag: 2 } },
   { id: 'furn_zabuton', mat: { branch: 4 } },
+  // more to learn (bottles, villagers, streaks, the stamp exchange)
+  { id: 'furn_bed', mat: { wood: 10, branch: 6 } },
+  { id: 'furn_rug', mat: { branch: 8 } },
+  { id: 'furn_tatami', mat: { branch: 10 } },
+  { id: 'furn_chabudai', mat: { wood: 6 } },
+  { id: 'furn_desk', mat: { wood: 8 } },
+  { id: 'furn_tansu', mat: { wood: 12, iron: 1 } },
+  { id: 'furn_wardrobe', mat: { wood: 12, iron: 1 } },
+  { id: 'furn_kotatsu', mat: { wood: 8, iron: 1 } },
+  { id: 'furn_toy_box', mat: { wood: 5, branch: 3 } },
+  { id: 'furn_radio', mat: { iron: 3, wood: 2 } },
+  { id: 'furn_hibachi', mat: { stone: 6, iron: 1 } },
+  { id: 'furn_cafe_table', mat: { wood: 4, iron: 1 } },
+  { id: 'furn_cafe_chair', mat: { wood: 3, iron: 1 } },
+  { id: 'furn_ship_wheel', mat: { wood: 8, iron: 1 } },
+  { id: 'furn_anchor', mat: { iron: 6 } },
+  { id: 'furn_lifebuoy', mat: { branch: 6, wood: 2 } },
+  { id: 'furn_beach_chair', mat: { wood: 4, branch: 4 } },
+  { id: 'furn_hammock', mat: { branch: 10, wood: 4 } },
+  { id: 'furn_mailbox_red', mat: { iron: 3, wood: 1 } },
+  { id: 'bench', mat: { wood: 8, iron: 1 } },
+  { id: 'ishidoro', mat: { stone: 12 } },
+  { id: 'furn_clock_tall', mat: { wood: 10, iron: 2, crystal: 1 } },
+  { id: 'furn_mirror', mat: { crystal: 2, wood: 3 } },
+  { id: 'furn_aquarium', mat: { crystal: 3, stone: 4, wood: 2 } },
+  { id: 'furn_lighthouse_model', mat: { stone: 4, wood: 2, crystal: 1 } },
+  { id: 'furn_andon', mat: { wood: 3, branch: 4, glow_moss: 1 } },
+  { id: 'furn_buoy_lamp', mat: { iron: 2, glow_moss: 2 } },
+  { id: 'street_lantern', mat: { iron: 4, glow_moss: 2 } },
+  // found in the cave's treasure chests (cave.js makes the models)
+  { id: 'furn_crystal_lamp', mat: { crystal: 3, iron: 1 }, cave: true },
+  { id: 'furn_glow_pot', mat: { glow_moss: 3, stone: 2 }, cave: true },
+  { id: 'furn_geode', mat: { crystal: 6, stone: 6 }, cave: true },
+  { id: 'furn_stalagmite', mat: { stone: 8, crystal: 1 }, cave: true },
 ];
 ITEMS.axe = { id: 'axe', name: 'おの', kind: 'tool', price: 500 };
 
@@ -148,6 +183,6 @@ ITEMS.daikon = { id: 'daikon', name: 'だいこん', kind: 'daikon', price: 0 };
 ITEMS.recipe = { id: 'recipe', name: 'DIYレシピ', kind: 'recipe', price: 0 };
 
 Object.assign(ICON, { furniture: '🪑', material: '🪵', seed: '🌱', clothes: '🎀', sea: '🦀', daikon: '🥬', recipe: '📜' });
-Object.assign(ICON_BY_ID, { axe: '🪓', hat_straw: '👒', hat_cap: '🧢', hat_beanie: '🧶', furn_lamp: '💡', furn_bed: '🛏️', furn_pumpkin: '🎃', furn_snowman: '⛄', furn_aquarium: '🐠',
+Object.assign(ICON_BY_ID, { crystal: '💎', glow_moss: '🌿', axe: '🪓', hat_straw: '👒', hat_cap: '🧢', hat_beanie: '🧶', furn_lamp: '💡', furn_bed: '🛏️', furn_pumpkin: '🎃', furn_snowman: '⛄', furn_aquarium: '🐠',
   furn_radio: '📻', furn_bookshelf: '📚', furn_rug: '🟠', bicycle: '🚲', telescope: '🔭', parasol: '⛱️', plant_pots: '🪴', chochin_hanging: '🏮', ishidoro: '🏮', street_lantern: '💡',
   furn_fence_bamboo: '🎋', furn_fence_white: '🚧', furn_workbench: '🛠️', furn_kotatsu: '🫖', furn_tansu: '🗄️', wood: '🪵', stone: '🪨', iron: '⛓️', star_frag: '⭐', branch: '🌿', snowflake: '❄️' });

@@ -85,6 +85,7 @@ export class Home {
   // ---------------------------------------------------------------- furniture objects
   furnObject(id) {
     const it = ITEMS[id], name = it.model || id;
+    if (it.make) return it.make();   // made in code (cave furniture)
     if (it.trophy) return this.life.goals.trophyObject(it.trophy);
     if (it.photo && this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, false); o.parent.remove(o); const tex = this.life.goals.photoTexture(it.photo); o.traverse((m) => { if (m.isMesh && m.material?.name === 'home_canvas') m.material = new THREE.MeshStandardMaterial({ name: 'home_canvas', map: tex, roughness: 0.85 }); }); return o; }
     if (it.kind === 'art' && this.town.protos[name]) { const o = this.town.clone(name, 0, 0, 0, 0, false); o.parent.remove(o); return hangPainting(o, id); }   // painting on the easel

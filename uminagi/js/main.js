@@ -218,7 +218,8 @@ class App {
     for (const b of document.querySelectorAll('[data-q]')) b.classList.toggle('on', QUALITY[b.dataset.q] === Q);
   }
   save(quality) {
-    const p = this.player;
+    const b = this.life?.cave?.on ? this.life.cave.back : this.life?.home.inside ? this.life.home.back : null;   // indoors: where the door is
+    const p = b ? { pos: { x: b.x, z: b.z }, yaw: b.yaw, dist: b.dist } : this.player;
     store({ x: +p.pos.x.toFixed(2), z: +p.pos.z.toFixed(2), yaw: +p.yaw.toFixed(3), dist: +p.dist.toFixed(2), tod: this.world.clockMode ? 'real' : this.world.todName, quality: quality || qName, t: Date.now() });
   }
   toggleMap(show = $('bigmap').hidden) { $('bigmap').hidden = !show; if (show) this.drawMap($('bigmapcv'), 1); }
@@ -279,7 +280,7 @@ class App {
   area() {
     const p = this.player.pos;
     const inside = this.life?.home.inside;   // interiors (js/life/home.js)
-    const a = inside ? { name: { home: 'ぽっけの家', visit: 'おとなりさんの家', gallery: '海凪資料館' }[inside], sub: { home: 'ぽっけのいえ', visit: 'おじゃまします', gallery: 'てんじしつ' }[inside] }
+    const a = inside === 'cave' ? this.life.cave.area() : inside ? { name: { home: 'ぽっけの家', visit: 'おとなりさんの家', gallery: '海凪資料館' }[inside], sub: { home: 'ぽっけのいえ', visit: 'おじゃまします', gallery: 'てんじしつ' }[inside] }
       : this.areas().find((r) => p.x >= r.x0 && p.x <= r.x1 && p.z >= r.z0 && p.z <= r.z1 && (!r.test || r.test(p.x, p.z)));
     $('map').style.visibility = inside ? 'hidden' : '';
     const town = this.has('harbour') ? ['海凪の港町', 'うみなぎのみなとまち'] : ['海凪の入り江', 'うみなぎのいりえ'];

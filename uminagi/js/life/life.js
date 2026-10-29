@@ -14,6 +14,7 @@ import { Goals } from './goals.js';
 import { Folk, registerFolk } from './folk.js';
 import { Tour } from './tour.js';
 import { Skills } from './skills.js';
+import { Cave } from './cave.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
 import { Market } from './market.js';
@@ -78,8 +79,8 @@ export class Life {
     this.day = null; this.refreshDay();
     this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
-    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this);
-    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills];
+    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this);
+    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave];
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries
@@ -1046,12 +1047,13 @@ export class Life {
     const pl = this.player, pp = pl.pos, h = pl.heading, fx = Math.sin(h), fz = Math.cos(h);
     const front = (x, z, R) => { const dx = x - pp.x, dz = z - pp.z, d = Math.hypot(dx, dz); return d < R && (d < 0.45 || (dx * fx + dz * fz) / d > 0.35) ? d : 0; };
     if (this.cast) return { kind: 'reel', label: 'ひく' };
+    if (this.home.inside === 'cave') return this.cave.target(front);
     if (this.home.inside) {
       const g = this.home.guest?.v; if (g && front(g.o.position.x, g.o.position.z, 1.7)) return { kind: 'talk', v: g, label: '話す' };
       return this.home.target(front);
     }
     for (const v of this.villagers) if (v.o.visible && front(v.o.position.x, v.o.position.z, 1.7)) return { kind: 'talk', v, label: '話す' };
-    for (const m of [this.season, this.home, this.market, this.garden, this.build, this.goals, this.tour]) { const t = m?.target(front); if (t) return t; }
+    for (const m of [this.season, this.home, this.market, this.garden, this.build, this.goals, this.tour, this.cave]) { const t = m?.target(front); if (t) return t; }
     for (const p of this.pickups) if (front(p.x, p.z, 1.0)) return { kind: 'take', p, label: 'ひろう' };
     const tool = this.st.tool;
     if (tool === 'axe') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + 1.0)) return { label: 'きる', run: () => this.craft.chop(t) };
@@ -1138,7 +1140,7 @@ export class Life {
   }
   // something worth a stamp happened (daily goals, achievements, tournaments)
   emit(ev, n = 1) { this.goals?.on(ev, n); }
-  afterWorld() { this.season?.overcast(); }
+  afterWorld() { this.season?.overcast(); this.cave?.mood(); }
   start() {
     this.equip(this.st.tool);
     this.goals.place(); setTimeout(() => this.goals.loginBonus(), 3000);

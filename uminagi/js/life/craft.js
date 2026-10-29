@@ -22,13 +22,14 @@ export class Craft {
   // an unknown recipe for this season (bottles, villagers)
   newRecipe() {
     const m = new Date().getMonth() + 1;
-    const pool = RECIPES.filter((r) => !this.known(r.id) && (!r.season || r.season.includes(m)));
+    const pool = RECIPES.filter((r) => !r.cave && !this.known(r.id) && (!r.season || r.season.includes(m)));
     return pool.length ? pick(pool).id : null;
   }
   matText(req) { return Object.entries(req).map(([k, n]) => `${ITEMS[k].name}${n}`).join('・'); }
   async menu() {
     const st = this.st, ui = this.life.ui, m = new Date().getMonth() + 1;
     const list = RECIPES.filter((r) => this.known(r.id) && (!r.season || r.season.includes(m)));
+    list.sort((a, b) => st.hasMats(b.mat) - st.hasMats(a.mat));   // what can be made now first
     const rows = list.map((r) => ({ label: ITEMS[r.id].name, sub: this.matText(r.mat), ok: st.hasMats(r.mat) }));
     rows.push({ label: 'ざいりょうを見る', sub: MATERIALS.filter((x) => st.mat[x.id]).map((x) => `${x.name}×${st.mat[x.id]}`).join(' ') || 'なし' });
     const i = await ui.list('DIY', rows);

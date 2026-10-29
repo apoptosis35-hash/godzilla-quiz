@@ -63,7 +63,7 @@ const rod = await G(async () => {
   const L = window.__uminagi.life; L.st.addMat('branch', 5);
   let done = false; L.craft.menu().then(() => { done = true; });
   for (let k = 0; k < 50 && !L.ui.panelRes; k++) await new Promise((r) => setTimeout(r, 5));
-  L.ui.closePanel(L.craft.st.ext.recipes.indexOf('rod'));
+  L.ui.closePanel([...document.querySelectorAll('.plist .btn')].findIndex((b) => b.textContent.startsWith('つりざお')));
   for (let k = 0; k < 300 && !done; k++) { if (L.ui.queue) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
   return { rod: L.st.has('rod'), dur: L.st.ext.dur.rod };
 });
@@ -143,6 +143,33 @@ const moves = await G(() => {
   return { jump, seen, back: P.state, skills: P.skills };
 });
 check('skills: jump and swing on a line', moves.jump === 'air' && moves.seen.includes('swing') && moves.back === 'ground', JSON.stringify(moves));
+// more DIY recipes: every one makes a real item, the cave ones have models made in code
+const recipes = await G(async () => {
+  const { RECIPES } = await import('/uminagi/js/life/items2.js'), { ITEMS } = await import('/uminagi/js/life/state.js');
+  const L = window.__uminagi.life, missing = RECIPES.filter((r) => !ITEMS[r.id] || Object.keys(r.mat).some((m) => !ITEMS[m])).map((r) => r.id);
+  const made = RECIPES.filter((r) => r.cave).every((r) => L.home.furnObject(r.id).isObject3D);
+  return { n: RECIPES.length, missing, made };
+});
+check('56 DIY recipes, all real items; cave furniture builds', recipes.n >= 56 && !recipes.missing.length && recipes.made, JSON.stringify(recipes));
+// the cave in the west cliff: in, take a find, down a floor, the walls hold ぽっけ in, back out
+const cave = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  P.place(C.door.x + 1, C.door.z, Math.PI / 2); P.heading = -Math.PI / 2; step(2);
+  const label = L.target()?.label;
+  await C.enter(1); step(2);
+  const inside = L.home.inside, y = P.pos.y, kinds = C.things.map((t) => t.label());
+  const find = C.things.find((t) => /ひろう|とる|あける/.test(t.label())), mats = JSON.stringify(L.st.mat);
+  if (find) { P.place(find.x, find.z + 0.9, 0); P.pos.y = 100; P.heading = Math.PI; step(1); const t = L.target(); if (t) await Promise.race([t.run(), new Promise((r) => setTimeout(r, 300))]); }
+  while (L.ui.busy()) { const q = L.ui.queue; if (q) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
+  const got = JSON.stringify(L.st.mat) !== mats || L.st.money > 0;
+  const hole = C.things.find((t) => t.label() === 'おりる'); await C.enter(2); step(2);
+  const floor = C.floor, deep = L.st.ext.cave.deep;
+  // walk into the maze for 4 s: still on the cave floor
+  a.input.keys.add('KeyW'); step(80); a.input.keys.delete('KeyW'); const stillIn = Math.abs(P.pos.y - 100) < 0.5;
+  await C.leave(); step(2);
+  return { label, inside, y, kinds: kinds.length, find: !!find, got, hole: !!hole, floor, deep, stillIn, out: !L.home.inside && !C.on, oy: +P.pos.y.toFixed(1) };
+});
+check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.out && cave.oy < 20, JSON.stringify(cave));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
@@ -151,7 +178,7 @@ const diy = await G(async () => {
   const before = { busy: L.ui.busy(), open: L.ui.open, q: !!L.ui.queue, panel: !!L.ui.panelRes, full: L.st.full() };
   let done = false; L.craft.menu().then(() => { done = true; });
   for (let k = 0; k < 50 && !L.ui.panelRes; k++) await new Promise((r) => setTimeout(r, 5));
-  L.ui.closePanel(2);   // net, rod, axe ...
+  L.ui.closePanel([...document.querySelectorAll('.plist .btn')].findIndex((b) => b.textContent.startsWith('おの')));   // makeable recipes come first
   for (let k = 0; k < 300 && !done; k++) { if (L.ui.queue) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
   if (!done) return { stuck: true, before, open: L.ui.open, q: L.ui.queue && L.ui.queue.lines, panel: !!L.ui.panelRes };
   const axe = L.st.has('axe'); L.equip('axe');

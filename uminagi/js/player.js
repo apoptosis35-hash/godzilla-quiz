@@ -379,7 +379,7 @@ export class Player {
   }
   blocked(x, y, z) {
     for (const c of this.town.colliders) {
-      if (c.type !== 'b' || c.hw * c.hd < 4) continue;
+      if (c.type !== 'b' || (c.hw * c.hd < 4 && !c.cam)) continue;
       if (Math.abs(c.x - x) > 25 || Math.abs(c.z - z) > 25 || y < c.y0 || y > c.y1) continue;
       const dx = x - c.x, dz = z - c.z, lx = dx * c.c - dz * c.s, lz = dx * c.s + dz * c.c;
       const m = this.state === 'ground' ? 0.2 : 0.9;   // eaves and facades stick out past the footprint

@@ -41,6 +41,7 @@ const GOALS = [
   { ev: 'gift', n: 1, text: '住人に プレゼントする', s: 100 }, { ev: 'wood', n: 3, text: '木材を {n}つ あつめる', s: 80 },
   { ev: 'rock', n: 3, text: '岩を {n}回 たたく', s: 60 }, { ev: 'place', n: 1, text: '家具を {n}つ 置く', s: 60 },
   { ev: 'plant', n: 1, text: 'なにかを 植える', s: 80 }, { ev: 'sea', n: 1, text: '磯で 海の生きものを とる', s: 80 },
+  { ev: 'cave', n: 2, text: '洞窟で {n}フロア たんけんする', s: 100 },
 ];
 const DAILY_N = 5, ALL_BONUS = 300;
 const ACHIEVE = [
@@ -49,6 +50,7 @@ const ACHIEVE = [
   { ev: 'craft', name: 'DIY職人', unit: 'こ', tiers: [5, 20, 100, 300] }, { ev: 'donate', name: '資料館の友', unit: '点', tiers: [5, 20, 60, 120] },
   { ev: 'big', name: '大物ハンター', unit: '匹', tiers: [1, 5, 20, 50] }, { ev: 'login', name: '海凪の常連', unit: '日', tiers: [3, 7, 30, 100, 365] },
   { ev: 'goalsDone', name: 'がんばりや', unit: '回', tiers: [5, 30, 100, 300] }, { ev: 'tour', name: '島めぐり', unit: '回', tiers: [1, 5, 20, 50] },
+  { ev: 'cave', name: '洞窟たんけん家', unit: 'フロア', tiers: [3, 20, 100, 300] },
 ];
 const TIER_STAMPS = [100, 300, 500, 1000, 2000];
 const LOGIN = [50, 100, 150, 200, 250, 300, 500];

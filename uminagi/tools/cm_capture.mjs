@@ -111,7 +111,7 @@ if (want('fish') || want('bug') || want('diy') || want('furn')) {
       window.__diy = false; L.craft.menu().then(() => { window.__diy = true; });
     });
     let f = await rec(p, 'diy', 24);
-    await p.evaluate(() => { const L = window.__uminagi.life, r = L.craft.st.ext.recipes; L.ui.closePanel(Math.max(0, r.indexOf('axe'))); });
+    await p.evaluate(() => { const L = window.__uminagi.life, r = L.craft.st.ext.recipes; L.ui.closePanel(Math.max(0, [...document.querySelectorAll('.plist .btn')].findIndex((b) => b.textContent.startsWith('おの')))); });
     f = await rec(p, 'diy', 6, null, f); await fullText(p);
     f = await rec(p, 'diy', 44, null, f);
     await p.evaluate(async () => { const ui = window.__uminagi.life.ui; for (let i = 0; i < 80 && (ui.busy() || !window.__diy); i++) { if (ui.queue) { if (ui.typing) ui.endLine(); ui.advance(); } else if (ui.panelRes) ui.closePanel(-1); await new Promise((r) => setTimeout(r, 5)); } });
