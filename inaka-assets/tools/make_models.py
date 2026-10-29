@@ -1,15 +1,19 @@
 # Low-poly countryside (田舎) model stock, built with Blender's Python API.
 #   pip install bpy   (Blender 5.2 as a module; or: blender -b -P make_models.py -- --render)
-#   python3 tools/make_models.py [--render] [names...]
+#   python3 tools/make_models.py [--render] [--hi] [names...]
+#   --hi builds the high-poly set: bevelled edges, subdivided curved surfaces, smooth shading, thatch/foliage relief,
+#        corrugated tile and tin roofs (writes glb_hi/, preview_hi/, models_hi.json, inaka_hi.blend instead).
 # Conventions: 1 unit = 1 m, Y-up glTF, origin at the centre of the footprint on the ground, front faces +Z (glTF).
 # Writes glb/<name>.glb, models.json, inaka.blend and (with --render) preview/<name>.jpg.
-import json, math, os, random, sys
+import json, math, os, random, sys, zlib
 import bpy, bmesh
-from mathutils import Vector, Matrix
+from mathutils import Vector, Matrix, noise
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.normpath(os.path.join(HERE, '..'))
-GLB, PREVIEW = os.path.join(ROOT, 'glb'), os.path.join(ROOT, 'preview')
+HI = '--hi' in sys.argv
+SUFFIX = '_hi' if HI else ''
+GLB, PREVIEW = os.path.join(ROOT, 'glb' + SUFFIX), os.path.join(ROOT, 'preview' + SUFFIX)
 
 # ---------------------------------------------------------------- shared palette (one material per colour, reused by every model)
 PALETTE = {
@@ -54,25 +58,92 @@ def part(name, pivot=(0, 0, 0)):
     """Following primitives go into a separate node `name` whose origin is `pivot` (for animated limbs, wheels...)."""
     PART['name'] = name; PART['pivots'][name] = Vector(pivot)
 
-def _take(o, mat):
-    o.data.materials.clear(); o.data.materials.append(M(mat)); o['part'] = PART['name'] or ''; CUR.append(o); return o
+def _take(o, mat, kind='mesh'):
+    o.data.materials.clear(); o.data.materials.append(M(mat)); o['part'] = PART['name'] or ''; o['kind'] = kind
+    if HI: hi_detail(o, mat, kind)
+    CUR.append(o); return o
 
-def mesh(mat, verts, faces, name='part'):
+def mesh(mat, verts, faces, name='part', kind='mesh'):
     me = bpy.data.meshes.new(name); me.from_pydata([tuple(v) for v in verts], [], faces); me.update()
+    bm = bmesh.new(); bm.from_mesh(me); bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(me); bm.free()
     o = bpy.data.objects.new(name, me); bpy.context.scene.collection.objects.link(o)
-    return _take(o, mat)
+    return _take(o, mat, kind)
+
+# ---------------------------------------------------------------- high-poly detailing (only with --hi)
+LEAFY = {'leaf', 'leaf_dark', 'leaf_light', 'sakura', 'bamboo', 'moss', 'rice'}
+ROCKY = {'stone', 'stone_dark'}
+TEX = {}
+def _tex(kind, size):
+    key = (kind, round(size, 3))
+    if key not in TEX:
+        t = bpy.data.textures.new(f'{kind}{size}', kind); t.noise_scale = size
+        if kind == 'STUCCI': t.turbulence = 5
+        TEX[key] = t
+    return TEX[key]
+
+def _subdivide(o, step):
+    """Cut long edges so displacement / corrugation has vertices to move."""
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    for _ in range(6):
+        long = [e for e in bm.edges if e.calc_length() > step]
+        if not long: break
+        bmesh.ops.subdivide_edges(bm, edges=long, cuts=1, use_grid_fill=True)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    bm.to_mesh(o.data); bm.free()
+
+def _corrugate(o, axis, period, amp):
+    """Sine waves across a sheet roof (tile channels / corrugated tin), along local axis 0=X 1=Y."""
+    bm = bmesh.new(); bm.from_mesh(o.data)
+    step = period / 4
+    for _ in range(8):  # only cut edges that run along the wave axis
+        cut = [e for e in bm.edges if abs((e.verts[1].co - e.verts[0].co)[axis]) > step]
+        if not cut: break
+        bmesh.ops.subdivide_edges(bm, edges=cut, cuts=1, use_grid_fill=True)
+    bmesh.ops.triangulate(bm, faces=[f for f in bm.faces if len(f.verts) > 4])
+    for v in bm.verts: v.co.z += amp * math.sin(v.co[axis] / period * math.tau)
+    bm.to_mesh(o.data); bm.free()
+
+def hi_detail(o, mat, kind):
+    bb = [Vector(b) for b in o.bound_box]; size = (bb[6] - bb[0])
+    small = min(x for x in size if x > 1e-4) if any(x > 1e-4 for x in size) else 0.1
+    if mat in ('thatch', 'thatch_dark') and kind in ('mesh', 'prism'):
+        _subdivide(o, 0.22)
+        d = o.modifiers.new('relief', 'DISPLACE'); d.texture = _tex('STUCCI', 0.18); d.strength = 0.12; d.mid_level = 0.5
+        d2 = o.modifiers.new('wave', 'DISPLACE'); d2.texture = _tex('CLOUDS', 0.9); d2.strength = 0.18
+        return
+    if mat == 'tile' and kind == 'prism':
+        _corrugate(o, 0 if size.x > size.y else 1, 0.32, 0.035); return
+    if mat in ('tin', 'tin_blue') and kind == 'prism':
+        _corrugate(o, 0 if size.x > size.y else 1, 0.12, 0.015); return
+    if kind in ('box', 'prism', 'mesh'):
+        b = o.modifiers.new('bevel', 'BEVEL'); b.width = min(0.035, small * 0.22); b.segments = 3
+        b.limit_method = 'ANGLE'; b.angle_limit = math.radians(35); b.harden_normals = False
+    elif kind == 'cyl' and mat in LEAFY and min(size.x, size.y) > 0.6:  # conifer tiers: clumpy needles
+        _subdivide(o, 0.18)
+        d = o.modifiers.new('needles', 'DISPLACE'); d.texture = _tex('CLOUDS', 0.22); d.strength = 0.35
+        d2 = o.modifiers.new('tufts', 'DISPLACE'); d2.texture = _tex('STUCCI', 0.08); d2.strength = 0.1
+    elif kind == 'cyl':
+        b = o.modifiers.new('bevel', 'BEVEL'); b.width = min(0.025, small * 0.18); b.segments = 2
+        b.limit_method = 'ANGLE'; b.angle_limit = math.radians(50)
+    elif kind == 'ico':
+        r = max(size) / 2
+        if mat in LEAFY:  # billowy canopy
+            d = o.modifiers.new('leaves', 'DISPLACE'); d.texture = _tex('CLOUDS', max(0.04, r * 0.35)); d.strength = r * 0.28
+        elif mat in ROCKY:
+            d = o.modifiers.new('rock', 'DISPLACE'); d.texture = _tex('CLOUDS', max(0.05, r * 0.45)); d.strength = r * 0.14
 
 def box(mat, size, loc, rot=(0, 0, 0)):
     """size (x, y, z), loc = centre of the bottom face."""
     sx, sy, sz = size
     v = [(x * sx / 2, y * sy / 2, z * sz) for z in (0, 1) for y in (-1, 1) for x in (-1, 1)]
-    o = mesh(mat, v, [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)])
+    o = mesh(mat, v, [(0, 1, 3, 2), (4, 6, 7, 5), (0, 4, 5, 1), (2, 3, 7, 6), (0, 2, 6, 4), (1, 5, 7, 3)], kind='box')
     o.location = loc; o.rotation_euler = rot
     return o
 
 def cyl(mat, r, h, loc, verts=8, r2=None, rot=(0, 0, 0), cap=True):
     """Cylinder/frustum standing on loc (bottom centre). r2 = top radius."""
     r2 = r if r2 is None else r2
+    if HI: verts = max(verts * 3, 24 if max(r, r2) > 0.05 else 12)
     v, f = [], []
     for i in range(verts):
         a = i / verts * math.tau
@@ -86,18 +157,22 @@ def cyl(mat, r, h, loc, verts=8, r2=None, rot=(0, 0, 0), cap=True):
     if cap:
         f.append(tuple(2 * i for i in reversed(range(verts))) if r2 >= 1e-4 else tuple(reversed(range(verts))))
         if r2 >= 1e-4: f.append(tuple(2 * i + 1 for i in range(verts)))
-    o = mesh(mat, v, f); o.location = loc; o.rotation_euler = rot
+    o = mesh(mat, v, f, kind='cyl'); o.location = loc; o.rotation_euler = rot
     return o
 
 def ico(mat, r, loc, scale=(1, 1, 1), sub=1, jitter=0.0, seed=0):
+    if HI: sub = min(4, sub + (3 if r > 0.4 else 2))  # finer sphere instead of subsurf: keeps the exact size
     bm = bmesh.new(); bmesh.ops.create_icosphere(bm, subdivisions=sub, radius=r)
     rnd = random.Random(seed)
+    off = Vector((rnd.uniform(0, 50), rnd.uniform(0, 50), rnd.uniform(0, 50)))
     for vt in bm.verts:
-        if jitter: vt.co *= 1 + rnd.uniform(-jitter, jitter)
+        if jitter and HI:  # smooth, low-frequency lumps instead of per-vertex randomness
+            vt.co *= 1 + jitter * 1.6 * noise.noise(vt.co.normalized() * 1.3 + off)
+        elif jitter: vt.co *= 1 + rnd.uniform(-jitter, jitter)
         vt.co.x *= scale[0]; vt.co.y *= scale[1]; vt.co.z *= scale[2]
     me = bpy.data.meshes.new('ico'); bm.to_mesh(me); bm.free()
     o = bpy.data.objects.new('ico', me); bpy.context.scene.collection.objects.link(o); o.location = loc
-    return _take(o, mat)
+    return _take(o, mat, 'ico')
 
 def prism(mat, profile, length, loc=(0, 0, 0), axis='X', rot=(0, 0, 0)):
     """Extrude a 2D profile [(u, z)] along `axis` (X: u is Y; Y: u is X), centred on loc."""
@@ -107,8 +182,7 @@ def prism(mat, profile, length, loc=(0, 0, 0), axis='X', rot=(0, 0, 0)):
             v.append((s * length, u, z) if axis == 'X' else (u, s * length, z))
     f = [tuple(range(n)), tuple(range(2 * n - 1, n - 1, -1))]
     f += [(i, (i + 1) % n, n + (i + 1) % n, n + i) for i in range(n)]
-    o = mesh(mat, v, f); o.location = loc; o.rotation_euler = rot
-    bm = bmesh.new(); bm.from_mesh(o.data); bmesh.ops.recalc_face_normals(bm, faces=bm.faces); bm.to_mesh(o.data); bm.free()
+    o = mesh(mat, v, f, kind='prism'); o.location = loc; o.rotation_euler = rot
     return o
 
 def gable(mat, w, d, h, t=0.25, z=0, over=0.5, loc=(0, 0)):
@@ -135,6 +209,10 @@ def model(name, jp, cat):
     return deco
 
 def _join(objs, name):
+    for o in objs:
+        for m in list(o.modifiers):
+            with bpy.context.temp_override(object=o, active_object=o, selected_objects=[o]):
+                bpy.ops.object.modifier_apply(modifier=m.name)
     for o in bpy.context.view_layer.objects.selected: o.select_set(False)
     for o in objs: o.select_set(True)
     bpy.context.view_layer.objects.active = objs[0]
@@ -144,14 +222,15 @@ def _join(objs, name):
     bm = bmesh.new(); bm.from_mesh(o.data)
     bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.to_mesh(o.data); bm.free()
-    bpy.ops.object.shade_flat()
+    if HI: bpy.ops.object.shade_smooth_by_angle(angle=math.radians(32))
+    else: bpy.ops.object.shade_flat()
     return o
 
 def build(name):
     """Returns (node to export, [mesh objects]). Single-part models are one mesh; multi-part ones an empty with mesh children."""
     CUR.clear(); PART['name'] = None; PART['pivots'] = {}
     fn, jp, cat = MODELS[name]
-    random.seed(hash(name) & 0xffff)
+    random.seed(zlib.crc32(name.encode()))
     fn()
     col = bpy.data.collections.new(name); bpy.context.scene.collection.children.link(col)
     groups = {}
@@ -284,8 +363,8 @@ def ido():
     for i in range(12):
         a = i / 12 * math.tau
         box('stone', (0.42, 0.25, 0.75), (math.cos(a) * 0.55, math.sin(a) * 0.55, 0), rot=(0, 0, a + math.pi / 2))
-    cyl('stone', 0.72, 0.74, (0, 0, 0), verts=12)
-    cyl('black', 0.38, 0.02, (0, 0, 0.74), verts=12)
+    cyl('stone', 0.66, 0.75, (0, 0, 0), verts=12)  # fills the gaps between the rim stones
+    cyl('black', 0.38, 0.02, (0, 0, 0.75), verts=12)
     for x in (-0.85, 0.85): box('wood', (0.12, 0.12, 2.0), (x, 0, 0))
     box('wood', (1.9, 0.12, 0.12), (0, 0, 1.85))
     gable('wood_dark', 2.1, 1.0, 0.35, t=0.06, z=2.0, over=0.15)
@@ -676,9 +755,10 @@ def monohoshi():
 @model('jitensha', '自転車', '乗り物')
 def jitensha():
     for y in (-0.55, 0.55):
-        for i in range(14):
-            a = i / 14 * math.tau
-            box('rubber', (0.04, 0.17, 0.05), (0, y + 0.33 * math.sin(a), 0.36 + 0.33 * math.cos(a) - 0.025), rot=(-a, 0, 0))
+        n = 48 if HI else 14  # tyre made of segments; a round one in the high-poly set
+        for i in range(n):
+            a = i / n * math.tau
+            box('rubber', (0.04, 2.4 / n, 0.05), (0, y + 0.33 * math.sin(a), 0.36 + 0.33 * math.cos(a) - 0.025), rot=(-a, 0, 0))
         cyl('metal', 0.04, 0.06, (-0.03, y, 0.36), verts=8, rot=(0, math.pi / 2, 0))
     def bar(a, b, r=0.02, m='red'):
         a, b = Vector(a), Vector(b); d = b - a
@@ -778,7 +858,7 @@ def kabuto():
 @model('ushi', '牛', '動物')
 def ushi():
     ico('white', 0.6, (0, 0, 1.15), scale=(0.75, 1.5, 0.7), sub=1)
-    for i, (x, y, z) in enumerate([(0.42, -0.3, 1.2), (-0.4, 0.4, 1.25), (0.38, 0.55, 1.0), (-0.3, -0.5, 1.0), (0.0, 0.2, 1.62)]):
+    for i, (x, y, z) in enumerate([(0.42, -0.3, 1.2), (-0.4, 0.4, 1.25), (0.38, 0.55, 1.0), (-0.3, -0.5, 1.0), (0.0, 0.2, 1.58)]):
         ico('black', 0.25, (x, y, z), scale=(0.5 if x else 1.2, 1, 0.8 if x else 0.25), sub=1, seed=i)
     ico('white', 0.3, (0, -1.05, 1.4), scale=(0.8, 1.1, 0.9), sub=1)
     ico('pink', 0.17, (0, -1.32, 1.3), scale=(1.2, 0.8, 0.8), sub=1)
@@ -883,7 +963,7 @@ def export(top, meshes, path):
 def setup_render():
     sc = bpy.context.scene
     sc.render.engine = 'CYCLES'; sc.cycles.device = 'CPU'; sc.cycles.samples = 32; sc.cycles.use_denoising = True
-    sc.render.resolution_x = sc.render.resolution_y = 384
+    sc.render.resolution_x = sc.render.resolution_y = 512 if HI else 384
     sc.render.image_settings.file_format = 'JPEG'; sc.render.image_settings.quality = 88
     w = bpy.data.worlds.new('w'); sc.world = w; w.color = (0.55, 0.65, 0.75)
     cam = bpy.data.objects.new('cam', bpy.data.cameras.new('cam')); cam.data.lens = 50
@@ -917,7 +997,7 @@ if __name__ == '__main__':
     names = [a for a in argv if not a.startswith('--')] or list(MODELS)
     bpy.ops.wm.read_factory_settings(use_empty=True)
     os.makedirs(GLB, exist_ok=True)
-    meta_path = os.path.join(ROOT, 'models.json')
+    meta_path = os.path.join(ROOT, f'models{SUFFIX}.json')
     meta = {m['name']: m for m in json.load(open(meta_path))} if os.path.exists(meta_path) else {}
     objs = {}
     for n in names:
@@ -935,4 +1015,4 @@ if __name__ == '__main__':
     if '--render' in argv:
         os.makedirs(PREVIEW, exist_ok=True); setup_render()
         for n, (top, meshes) in objs.items(): render(n, meshes, os.path.join(PREVIEW, n + '.jpg'))
-    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, 'inaka.blend'), compress=True)
+    bpy.ops.wm.save_as_mainfile(filepath=os.path.join(HERE, f'inaka{SUFFIX}.blend'), compress=True)

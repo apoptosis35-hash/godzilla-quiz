@@ -6,6 +6,18 @@
   - カードを押すと、モデルを3Dで回して見られます。GLBのダウンロードもできます。
   - 「村に並べてみる」で、全モデルを実寸で並べたサンプルの村を表示します。
 
+## ローポリ版とハイポリ版
+
+同じ54種を、2つの細かさで用意しています。大きさ・向き・原点・部品の名前は共通なので、ファイルを差し替えるだけで切り替えられます。
+
+| | ローポリ版 | ハイポリ版 |
+|---|---|---|
+| ファイル | `glb/` `preview/` `models.json` | `glb_hi/` `preview_hi/` `models_hi.json` |
+| 見た目 | 角ばった単色の面(フラットシェーディング) | 角の面取り、なめらかな曲面と陰影、茅葺き・葉・岩の凹凸、瓦とトタンの波形 |
+| 向いている用途 | スマホのゲーム、たくさん並べる場面 | 近くで見せる場面、静止画やムービー、PC向け |
+
+カタログの「ローポリ / ハイポリ」ボタンで見比べられます(`index.html#hi` でハイポリ版を開きます)。
+
 ## 決まりごと(ゲームで使うとき)
 
 - 形式: glTF バイナリ(`glb/*.glb`)。three.js なら `GLTFLoader` でそのまま読み込めます(`vendor/` に three.js r169 一式があります)。
@@ -85,6 +97,7 @@ Blender 5.2 で、次のどちらかを実行します。
 pip install bpy
 python3 tools/make_models.py --render          # 全部作り直す(プレビュー画像も)
 python3 tools/make_models.py --render kura ido # 指定したモデルだけ
+python3 tools/make_models.py --hi --render     # ハイポリ版を全部作り直す
 # または: blender -b -P tools/make_models.py -- --render
 ```
 

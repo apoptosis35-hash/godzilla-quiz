@@ -1,0 +1,73 @@
+# Renders the fly-through film of the finished Uminagi town (uminagi-assets/tools/render_video.py) on GitHub's
+# runners: the frames are split over 20 parallel jobs, then one job joins them into an mp4 and commits it to
+# uminagi/docs/film/ so it can be watched on GitHub Pages.
+name: uminagi film
+on:
+  workflow_dispatch:
+    inputs:
+      size: { description: 'frame size', default: '1280x720' }
+      fps: { description: 'frames per second', default: '24' }
+      seconds: { description: 'length in seconds', default: '12' }
+      samples: { description: 'path-tracing samples', default: '32' }
+      shot: { description: 'fly / cast / sunset', default: 'fly' }
+permissions:
+  contents: write
+concurrency: { group: 'uminagi-film-${{ inputs.shot }}', cancel-in-progress: true }
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        part: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19]
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            uminagi-assets/tools
+            uminagi-assets/scene
+            uminagi-assets/textures
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.13' }
+      - name: Blender as a Python module
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq libxi6 libxxf86vm1 libxfixes3 libxrender1 libxkbcommon0 libsm6 libgl1 libegl1 >/dev/null
+          pip install -q bpy==5.2.2
+      - name: Render this part's frames
+        run: |
+          TOTAL=$(python3 -c "print(int(${{ inputs.fps }} * ${{ inputs.seconds }}))")
+          PER=$(( (TOTAL + 19) / 20 )); A=$(( ${{ matrix.part }} * PER + 1 )); B=$(( A + PER - 1 )); [ $B -gt $TOTAL ] && B=$TOTAL
+          echo "frames $A-$B of $TOTAL"
+          if [ $A -le $TOTAL ]; then
+            python3 uminagi-assets/tools/render_video.py --size ${{ inputs.size }} --fps ${{ inputs.fps }} --seconds ${{ inputs.seconds }} \
+              --samples ${{ inputs.samples }} --shot ${{ inputs.shot }} --frames $A-$B --out frames 2>&1 | grep -E 'already done|done \(|Error|Traceback'
+          fi
+          mkdir -p frames
+      - uses: actions/upload-artifact@v4
+        with: { name: 'frames-${{ matrix.part }}', path: frames/, retention-days: 3 }
+  film:
+    needs: render
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { sparse-checkout: uminagi/docs }
+      - uses: actions/download-artifact@v4
+        with: { pattern: 'frames-*', path: frames, merge-multiple: true }
+      - name: Join the frames into an mp4
+        run: |
+          sudo apt-get update -qq && sudo apt-get install -y -qq ffmpeg >/dev/null
+          ls frames | wc -l
+          mkdir -p uminagi/docs/film
+          ffmpeg -y -loglevel error -framerate ${{ inputs.fps }} -i frames/%04d.png -c:v libx264 -crf 20 -preset slow -pix_fmt yuv420p -movflags +faststart uminagi/docs/film/uminagi_${{ inputs.shot }}.mp4
+          ls -la uminagi/docs/film
+      - uses: actions/upload-artifact@v4
+        with:
+          name: uminagi_film
+          path: uminagi/docs/film/uminagi_${{ inputs.shot }}.mp4
+      - name: Commit the film
+        run: |
+          git config user.name 'github-actions[bot]'; git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git add uminagi/docs/film/uminagi_${{ inputs.shot }}.mp4
+          git commit -m "uminagi: rendered ${{ inputs.shot }} shot (${{ inputs.size }}, ${{ inputs.fps }} fps, ${{ inputs.seconds }} s)"
+          for i in 1 2 3; do git pull -q --rebase origin "$GITHUB_REF_NAME" && git push -q origin "HEAD:$GITHUB_REF_NAME" && break; sleep 5; done

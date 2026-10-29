@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>海凪の港町</title>
+<meta name="description" content="どうぶつたちが暮らす小さな港町で、釣り・虫とり・化石ほり・住人との会話を楽しむ、のんびり3Dスローライフゲーム。">
+<meta property="og:type" content="website">
+<meta property="og:title" content="海凪の港町">
+<meta property="og:description" content="日本の小さな漁港の町を自由に歩いて探索する3Dゲーム。">
+<meta property="og:image" content="https://apoptosis35-hash.github.io/godzilla-quiz/uminagi/icons/icon-512.png">
+<meta name="theme-color" content="#1d4f7a">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="海凪の港町">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, noimageindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="vig" aria-hidden="true"></div>
+
+<div id="hud" hidden>
+  <div class="top">
+    <div class="chip" id="place">海凪の港町</div>
+    <button class="chip btn" id="mapbtn" aria-label="地図">🗺️</button>
+    <button class="chip btn" id="setbtn" aria-label="設定">⚙️</button>
+    <button class="chip btn" id="mute" aria-label="サウンド">🔊</button>
+    <span class="chip small" id="fps"></span>
+  </div>
+  <canvas id="map" width="150" height="150"></canvas>
+  <div class="zoom"><button class="btn round" id="zin" aria-label="カメラを近づける">＋</button><button class="btn round" id="zout" aria-label="カメラを離す">－</button></div>
+  <button id="dash" class="btn" aria-label="ダッシュ" hidden>ダッシュ</button>
+  <button id="web" class="btn" aria-label="ジャンプ・いと" hidden><span class="ico">⤴️</span><small id="weblbl">ジャンプ</small></button>
+  <div id="area"></div>
+  <div class="rotate-hint">横向きがおすすめです</div>
+</div>
+<div id="stick"><div id="knob"></div></div>
+
+<div id="bigmap" hidden>
+  <div class="panel mapbox">
+    <canvas id="bigmapcv" width="600" height="772"></canvas>
+    <div class="go">
+      <b>移動する</b>
+      <button class="btn" data-go="harbour">漁港</button>
+      <button class="btn" data-go="street">商店街</button>
+      <button class="btn" data-go="houses">住宅街</button>
+      <button class="btn" data-go="shrine">神社</button>
+      <button class="btn" data-go="hill">灯台の丘</button>
+      <button class="btn" data-go="breakwater">防波堤</button>
+    </div>
+  </div>
+</div>
+
+<div id="settings" class="panel" hidden>
+  <h3>設定</h3>
+  <p>時間帯</p>
+  <div class="row"><button class="btn" data-tod="real">今の時間</button><button class="btn" data-tod="day">昼</button><button class="btn" data-tod="evening">夕方</button><button class="btn" data-tod="night">夜</button></div>
+  <div class="row"><button class="btn" id="curve">地面のカーブ</button></div>
+  <p>描画品質 <small>(変えると再読み込みします)</small></p>
+  <div class="row"><button class="btn" data-q="low">軽量</button><button class="btn" data-q="medium">標準</button><button class="btn" data-q="high">高画質</button><button class="btn" data-q="ultra">最高(PC)</button></div>
+  <p class="help">左半分をドラッグ: 歩く / 右半分をドラッグ: 見まわす / 2本指: ズーム<br>PC: WASD・矢印で歩く、Shiftでダッシュ、マウスドラッグで見まわす、ホイールでズーム<br>E / Enter: 話す・つる・ふる・ほる(A ボタン)　1〜3 / Tab: 道具　I: ポケット　B: 図鑑</p>
+  <div class="row"><button class="btn" id="reset">はじめからやり直す</button><button class="btn" id="setclose">閉じる</button></div>
+</div>
+
+<div id="loading" class="screen">
+  <h1>海凪の港町<small>UMINAGI PORT TOWN</small></h1>
+  <div class="bar"><div id="loadbar"></div></div>
+  <p id="loadmsg">読み込んでいます…</p>
+</div>
+
+<div id="start" class="screen title" hidden>
+  <h1>海凪の港町<small>UMINAGI PORT TOWN</small></h1>
+  <p class="lead">どうぶつたちが暮らす、小さな港町。<br>カバの「ぽっけ」になって、魚をつったり、虫をとったり、化石をほったり。<br>住人とおしゃべりして、ほんとうの時計といっしょに、のんびり暮らそう。</p>
+  <div class="row"><button id="continue" class="big alt" hidden>つづきから</button><button id="startbtn" class="big">港から歩きはじめる</button></div>
+  <p class="small touch-only">Aボタンで話す・つる・あみ・ほる・ゆする / 左半分で歩く・右半分で見まわす・🗺️で地図</p>
+  <p class="small pc-only">E(Enter)で話す・つる・あみ・ほる・ゆする / 1〜3・Tabで道具 / Iでポケット・Bで図鑑 / WASDで歩く・Shiftで走る・クリックでマウス操作・ホイールでズーム・Mで地図</p>
+</div>
+
+<script type="module" src="js/main.js"></script>
+</body>
+</html>
