@@ -402,7 +402,7 @@ function shrinkImage(file) {
     img.src = url;
   });
 }
-$('cameo-pick').addEventListener('click', () => { sound.click(); $('cameo-file').click(); });
+$('cameo-pick').addEventListener('click', () => sound.click());   // a <label>: the browser opens the picker
 $('cameo-file').addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -443,7 +443,7 @@ function squareImage(file) {
     img.src = url;
   });
 }
-$('rare-pick').addEventListener('click', () => { sound.click(); $('rare-file').click(); });
+$('rare-pick').addEventListener('click', () => sound.click());
 $('rare-file').addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
