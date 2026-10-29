@@ -14,7 +14,7 @@ const PI = Math.PI;
 const STAGE = { x: -118, z: -12, y: 100 };   // floors are drawn here (land below, away from the house stage)
 const C = 5;                                 // passage cell size (m)
 const H = 2.9;                               // wall height
-const MOUTH = { x: -83, z: -2 };             // in front of the mouth: the cliff rises to the west
+const MOUTH = { x: -83, z: -10 };             // in front of the mouth: the cliff rises to the west
 const SP = { name: 'ぽっけ', color: '#6a7a8a', pitch: 1.1 };
 const pick = (a, r = Math.random) => a[Math.floor(r() * a.length)];
 // smooth-ish noise from a position: coincident vertices of the rock walls move together, so no cracks
@@ -71,11 +71,11 @@ export class Cave {
     this.buildMouth();
   }
   // ---------------------------------------------------------------- the mouth in the cliff
-  buildMouth() {
-    const L = this.life, G = L.ground, h0 = G.height(MOUTH.x, MOUTH.z);
-    let fx = MOUTH.x; for (let k = 0; k < 40 && G.height(fx - 0.25, MOUTH.z) - h0 < 0.35; k++) fx -= 0.25;   // the foot of the cliff
+  buildMouth(at = MOUTH) {
+    const L = this.life, G = L.ground, h0 = G.height(at.x, at.z);
+    let fx = at.x; for (let k = 0; k < 40 && G.height(fx - 0.25, at.z) - h0 < 0.35; k++) fx -= 0.25;   // the foot of the cliff
     const g = new THREE.Group(), y = h0;
-    g.position.set(fx, y, MOUTH.z); g.rotation.y = PI / 2;   // facing east (+x)
+    g.position.set(fx, y, at.z); g.rotation.y = PI / 2;   // facing east (+x)
     const sh = new THREE.Shape(); sh.moveTo(-1.15, -0.2); sh.lineTo(-1.15, 1.4); sh.absarc(0, 1.4, 1.15, PI, 0, true); sh.lineTo(1.15, -0.2); sh.lineTo(-1.15, -0.2);
     const hole = new THREE.Mesh(new THREE.ShapeGeometry(sh, 16), new THREE.MeshBasicMaterial({ color: 0x060504 })); hole.position.z = -0.05; g.add(hole);
     // a darker floor running in, and old mine timbers round the opening
@@ -91,10 +91,10 @@ export class Cave {
     const rk = ['rock_a', 'rock_b', 'rock_c'], r = seeded('cave-mouth');
     for (let i = 0; i < 6; i++) {
       const name = rk[i % 3]; if (!L.town.protos[name]) continue;
-      const side = i % 2 ? 1 : -1, zz = MOUTH.z + side * (2.0 + r() * 1.2), xx = fx + r() * 0.6;
+      const side = i % 2 ? 1 : -1, zz = at.z + side * (2.0 + r() * 1.2), xx = fx + r() * 0.6;
       L.natureClone(name, xx, G.height(xx, zz) - 0.1, zz, r() * 6.28, 0.22 + r() * 0.18);
     }
-    this.door = { x: fx + 1.3, z: MOUTH.z };
+    this.door = { x: fx + 1.3, z: at.z };
   }
   // ---------------------------------------------------------------- A in front of things
   target(front) {
