@@ -126,6 +126,7 @@ export class Cave {
         this.bg = this.scene.background; this.scene.background = new THREE.Color(0x020203);
         this.on = true; L.home.inside = 'cave'; this.group.visible = true; this.st.ext.cave.trips++;
         pl.skills.climb = false; pl.skills.web = false;   // no climbing over the maze walls
+        pl.camLimits = { pitch: [0.85, 1.25], dist: [5.5, 11] };   // from above: never down among the walls, never so far out the maze shows whole
         this.light0 = { pos: this.lantern.position.clone(), distance: this.lantern.distance, color: this.lantern.color.clone() };
         this.lantern.distance = 24; this.lantern.color.set(0xffd6a0);
       }
@@ -146,7 +147,7 @@ export class Cave {
       this.on = false; L.home.inside = null;
       L.world.apply(true);   // the sky, sun and fog of the time of day again
       pl.place(this.door.x + 0.6, this.door.z, PI / 2); pl.heading = PI / 2; pl.pitch = this.back.pitch; pl.dist = this.back.dist;
-      pl.lastSafe.copy(pl.pos);
+      pl.lastSafe.copy(pl.pos); pl.camLimits = null;
       L.skills.apply();
     }); } finally { this.busy = false; }
     L.ui.toast('地上に もどった', 1400);
@@ -178,18 +179,21 @@ export class Cave {
     for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) { if (i < N - 1 && r() < 0.1) vE[i][j] = false; if (j < N - 1 && r() < 0.1) hS[i][j] = false; }   // a few loops
     const open = (i, j) => [[i < N - 1 && !vE[i][j], i + 1, j], [i > 0 && !vE[i - 1]?.[j], i - 1, j], [j < N - 1 && !hS[i][j], i, j + 1], [j > 0 && !hS[i][j - 1], i, j - 1]].filter((e) => e[0]).map((e) => [e[1], e[2]]);
     // distances from the rope: the hole down is in the farthest cell, treasure in the dead ends
-    const dist = new Map([[start.join(), 0]]), q = [start];
-    while (q.length) { const [i, j] = q.shift(), d = dist.get(i + ',' + j); for (const [a, b] of open(i, j)) if (!dist.has(a + ',' + b)) { dist.set(a + ',' + b, d + 1); q.push([a, b]); } }
+    const dist = new Map([[start.join(), 0]]), from = new Map(), q = [start];
+    while (q.length) { const [i, j] = q.shift(), d = dist.get(i + ',' + j); for (const [a, b] of open(i, j)) if (!dist.has(a + ',' + b)) { dist.set(a + ',' + b, d + 1); from.set(a + ',' + b, [i, j]); q.push([a, b]); } }
     let far = start; for (const [k, d] of dist) if (d > dist.get(far.join())) far = k.split(',').map(Number);
+    const path = [far]; while (from.has(path[0].join())) path.unshift(from.get(path[0].join()));
+    this.maze = { N, path: path.map(([i, j]) => [cx(i), cz(j)]), deadEnds: 0 };   // the way to the hole (tests, the difficulty numbers)
     const cells = [...dist.keys()].map((k) => k.split(',').map(Number)).filter(([i, j]) => !(i === start[0] && j === start[1]) && !(i === far[0] && j === far[1]));
-    const deadEnds = cells.filter(([i, j]) => open(i, j).length === 1), others = cells.filter(([i, j]) => open(i, j).length > 1);
+    const deadEnds = cells.filter(([i, j]) => open(i, j).length === 1); this.maze.deadEnds = deadEnds.length;
+    const others = cells.filter(([i, j]) => open(i, j).length > 1);
 
     // ---- rock: walls (segments + pillars), the floor, rubble and stalagmites, all merged into a few meshes
     const segGeo = [], tint = [0x6e6258, 0x5e6470, 0x6a5a6e, 0x5a6a64][f % 4];
     const seg = (x, z, len, alongX) => {
       const g = new THREE.BoxGeometry(alongX ? len : 0.95, H, alongX ? 0.95 : len, Math.ceil(len * 1.6), 4, 2).toNonIndexed();
       g.translate(x, Y + H / 2 - 0.05, z); this.rough(g, 0.32, Y); segGeo.push({ g, x, z, hw: (alongX ? len : 0.95) / 2 + 0.3, hd: (alongX ? 0.95 : len) / 2 + 0.3 });
-      const c = { type: 'b', x, z, hw: (alongX ? len : 0.95) / 2, hd: (alongX ? 0.95 : len) / 2, c: 1, s: 0, y0: Y - 1, y1: Y + H, cam: true }; this.cols.push(c);   // cam: the camera pulls in rather than look through
+      const c = { type: 'b', x, z, hw: (alongX ? len : 0.95) / 2, hd: (alongX ? 0.95 : len) / 2, c: 1, s: 0, y0: Y - 1, y1: Y + H, wall: true }; this.cols.push(c);   // the camera looks over them (the near ones fade, update)
     };
     for (let i = 0; i < N; i++) for (let j = 0; j < N; j++) {
       if (j === 0) seg(cx(i), cz(0) - C / 2, C + 0.95, true);

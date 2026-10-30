@@ -354,14 +354,15 @@ export class Player {
   }
   // third-person camera; returns the camera position
   updateCamera(dt, camera, look, zoom) {
-    this.yaw -= look.x; this.pitch = Math.max(-0.25, Math.min(1.25, this.pitch + look.y));
+    const lim = this.camLimits;   // set while in the cave (life/cave.js)
+    this.yaw -= look.x; this.pitch = Math.max(lim ? lim.pitch[0] : -0.25, Math.min(lim ? lim.pitch[1] : 1.25, this.pitch + look.y));
     // while swinging / flying fast, the camera swings round behind the direction of travel (unless the player is looking around)
     const hs = Math.hypot(this.vel.x, this.vel.z);
     if ((this.state === 'swing' || this.state === 'air') && hs > 5 && Math.abs(look.x) < 1e-4) {
       let da = (Math.atan2(this.vel.x, this.vel.z) + Math.PI) - this.yaw; da = Math.atan2(Math.sin(da), Math.cos(da));
       this.yaw += da * Math.min(1, dt * 1.3);
     }
-    this.dist = Math.max(2.5, Math.min(30, this.dist * Math.exp(zoom)));
+    this.dist = Math.max(lim ? lim.dist[0] : 2.5, Math.min(lim ? lim.dist[1] : 30, this.dist * Math.exp(zoom)));
     this.heroCam = (this.heroCam || 0) + ((this.state === 'swing' || this.state === 'air' ? 3.5 : 0) - (this.heroCam || 0)) * Math.min(1, dt * 2);
     const tgt = this.camTarget.set(this.pos.x, this.pos.y + 0.5, this.pos.z);
     const dir = new THREE.Vector3(Math.sin(this.yaw) * Math.cos(this.pitch), Math.sin(this.pitch), Math.cos(this.yaw) * Math.cos(this.pitch));
@@ -379,7 +380,7 @@ export class Player {
   }
   blocked(x, y, z) {
     for (const c of this.town.colliders) {
-      if (c.type !== 'b' || (c.hw * c.hd < 4 && !c.cam)) continue;
+      if (c.type !== 'b' || c.hw * c.hd < 4) continue;
       if (Math.abs(c.x - x) > 25 || Math.abs(c.z - z) > 25 || y < c.y0 || y > c.y1) continue;
       const dx = x - c.x, dz = z - c.z, lx = dx * c.c - dz * c.s, lz = dx * c.s + dz * c.c;
       const m = this.state === 'ground' ? 0.2 : 0.9;   // eaves and facades stick out past the footprint

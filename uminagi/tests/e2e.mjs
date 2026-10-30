@@ -165,9 +165,10 @@ const cave = await G(async () => {
   const hole = C.things.find((t) => t.label() === 'おりる'); await C.enter(2); step(2);
   const floor = C.floor, deep = L.st.ext.cave.deep;
   // walk into the maze for 4 s: still on the cave floor
-  a.input.keys.add('KeyW'); step(80); a.input.keys.delete('KeyW'); const stillIn = Math.abs(P.pos.y - 100) < 0.5;
+  let camMin = 99; a.input.keys.add('KeyW'); for (let i = 0; i < 80; i++) { step(1); camMin = Math.min(camMin, P.camDist); } a.input.keys.delete('KeyW'); const stillIn = Math.abs(P.pos.y - 100) < 0.5;
+  a.input.look.y = -5; a.input.zoom = 9; step(3); const lim = [+P.pitch.toFixed(2), +P.dist.toFixed(1)];   // the camera stays above the walls
   await C.leave(); step(2);
-  return { label, inside, y, kinds: kinds.length, find: !!find, got, hole: !!hole, floor, deep, stillIn, out: !L.home.inside && !C.on, oy: +P.pos.y.toFixed(1) };
+  return { label, inside, y, kinds: kinds.length, find: !!find, got, hole: !!hole, floor, deep, stillIn, camMin: +camMin.toFixed(1), lim, out: !L.home.inside && !C.on, oy: +P.pos.y.toFixed(1) };
 });
 // regressions: the day turning over inside, A pressed twice on the rope, the map's fast travel indoors
 const caveEdge = await G(async () => {
@@ -180,7 +181,7 @@ const caveEdge = await G(async () => {
   return { dayOk, mapShut, out: !C.on && !L.home.inside && L.root.visible, light: L.home.light.intensity };
 });
 check('cave edge cases: day turnover, map indoors, double A', caveEdge.dayOk && caveEdge.mapShut && caveEdge.out && caveEdge.light === 0, JSON.stringify(caveEdge));
-check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.out && cave.oy < 20, JSON.stringify(cave));
+check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.camMin >= 5 && cave.lim[0] >= 0.85 && cave.lim[1] <= 11 && cave.out && cave.oy < 20, JSON.stringify(cave));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
