@@ -18,6 +18,7 @@ const fx = new FX();
 const renderer = new Renderer($('cv'));
 
 let mode = 'title';          // title | play | over
+let swReload = false;          // a new version took over: reload at the next title screen
 let paused = false;
 let alpha = 0;
 let shownScore = 0;
@@ -86,6 +87,7 @@ function toTitle() {
 }
 
 function updateTitle() {
+  if (swReload) { location.reload(); return; }
   const d = store.data;
   $('title-rec').innerHTML = d.plays ? `ハイスコア <b>${d.best.toLocaleString()}</b>　最大れんさ <b>${d.maxCombo}</b>` : 'はじめまして！';
   $('t-resume').hidden = !store.loadResume();
@@ -402,7 +404,7 @@ function shrinkImage(file) {
     img.src = url;
   });
 }
-$('cameo-pick').addEventListener('click', () => { sound.click(); $('cameo-file').click(); });
+$('cameo-pick').addEventListener('click', () => sound.click());   // a <label>: the browser opens the picker
 $('cameo-file').addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -443,7 +445,7 @@ function squareImage(file) {
     img.src = url;
   });
 }
-$('rare-pick').addEventListener('click', () => { sound.click(); $('rare-file').click(); });
+$('rare-pick').addEventListener('click', () => sound.click());
 $('rare-file').addEventListener('change', async (e) => {
   const f = e.target.files && e.target.files[0];
   e.target.value = '';
@@ -1124,6 +1126,17 @@ updateTitle();
 show('s-title');
 requestAnimationFrame(frame);
 
+// Updates: a home-screen app is often resumed rather than reopened, so look for a new version
+// whenever it comes back to the front, and reload once the new version has taken over
+// (right away on the title screen, otherwise the next time the title screen shows).
 if ('serviceWorker' in navigator && location.protocol !== 'file:' && !/[?&]nosw/.test(location.search)) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (!hadController || swReload) return;
+    swReload = true;
+    if (mode === 'title' && !vs.on && !modals.some((m) => $(m).classList.contains('show'))) location.reload();
+  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).then((reg) => {
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') reg.update().catch(() => {}); });
+  }).catch(() => {}));
 }

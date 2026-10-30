@@ -266,6 +266,9 @@ svg { width: 1em; height: 1em; }
 #rare-thumb.secret { filter: brightness(0) opacity(0.25); }   /* not met yet: keep it a surprise */
 #cameo-thumb { width: 48px; height: 64px; object-fit: cover; border-radius: 10px; border: 2px solid #fff; box-shadow: 0 0 0 2px #ffd84a; flex: none; }
 .cameo-btns { margin-top: 6px; }
+.cameo-btns label.btn { cursor: pointer; }
+/* picker inputs stay in the page (not display:none) so their labels always open them */
+.file-in { position: absolute; width: 1px; height: 1px; opacity: 0; overflow: hidden; pointer-events: none; }
 .cameo-btns .btn { min-height: 42px; font-size: 14px; padding: 0 8px; }
 
 /* ---------------------------------------------------------- online battle */
