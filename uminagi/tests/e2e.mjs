@@ -169,6 +169,17 @@ const cave = await G(async () => {
   await C.leave(); step(2);
   return { label, inside, y, kinds: kinds.length, find: !!find, got, hole: !!hole, floor, deep, stillIn, out: !L.home.inside && !C.on, oy: +P.pos.y.toFixed(1) };
 });
+// regressions: the day turning over inside, A pressed twice on the rope, the map's fast travel indoors
+const caveEdge = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  await C.enter(1); step(1);
+  L.st.daily = { day: 'x', talked: {}, gift: {}, shaken: {}, dug: {}, picked: {}, rock: 0, fruit: {}, bottle: false };
+  let dayOk = true; const t = C.things.find((x) => !x.gone && /ひろう|とる/.test(x.label())); try { if (t) t.run(t); } catch { dayOk = false; }
+  document.getElementById('mapbtn').click(); const mapShut = document.getElementById('bigmap').hidden;
+  const r = C.things.find((x) => x.label() === 'のぼる'); await Promise.all([r.run(r), r.run(r)]); step(1);
+  return { dayOk, mapShut, out: !C.on && !L.home.inside && L.root.visible, light: L.home.light.intensity };
+});
+check('cave edge cases: day turnover, map indoors, double A', caveEdge.dayOk && caveEdge.mapShut && caveEdge.out && caveEdge.light === 0, JSON.stringify(caveEdge));
 check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.out && cave.oy < 20, JSON.stringify(cave));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {

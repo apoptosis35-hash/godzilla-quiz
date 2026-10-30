@@ -67,7 +67,7 @@ export class Cave {
     this.st.ext.cave ||= { deep: 0, trips: 0 };
     this.on = false; this.floor = 0; this.things = []; this.cols = []; this.bats = [];
     this.group = new THREE.Group(); this.group.name = 'cave'; this.group.visible = false; this.scene.add(this.group);
-    this.lantern = new THREE.PointLight(0xffd6a0, 0, 24, 1.1); this.scene.add(this.lantern);   // always in the scene: no shader rebuild on entering
+    this.lantern = life.home.light;   // the house's room light doubles as the lantern (never both in use): no extra light in every shader
     this.buildMouth();
   }
   // ---------------------------------------------------------------- the mouth in the cliff
@@ -94,14 +94,15 @@ export class Cave {
       const side = i % 2 ? 1 : -1, zz = at.z + side * (2.0 + r() * 1.2), xx = fx + r() * 0.6;
       L.natureClone(name, xx, G.height(xx, zz) - 0.1, zz, r() * 6.28, 0.22 + r() * 0.18);
     }
-    this.door = { x: fx + 1.3, z: at.z };
+    this.door = { x: fx + 1.3, z: at.z }; this.door.y = G.height(this.door.x, this.door.z);   // where ぽっけ stands to go in
   }
   // ---------------------------------------------------------------- A in front of things
   target(front) {
     if (!this.on) {
-      if (this.life.home.inside || !this.door) return null;
+      if (this.life.home.inside || !this.door || Math.abs(this.player.pos.y - this.door.y) > 2.5) return null;   // not from the cliff above
       return front(this.door.x, this.door.z, 2.0) ? { label: 'はいる', run: () => this.ask() } : null;
     }
+    if (this.busy) return null;   // during the fade
     for (const t of this.things) if (!t.gone && front(t.x, t.z, t.r)) return { label: t.label(), run: () => t.run(t) };
     return null;
   }
@@ -115,7 +116,8 @@ export class Cave {
   // ---------------------------------------------------------------- in and out
   async enter(f) {
     const L = this.life, pl = this.player;
-    await L.tour.blackout(() => {
+    if (this.busy) return; this.busy = true;
+    try { await L.tour.blackout(() => {
       if (!this.on) {
         this.back = { x: pl.pos.x, z: pl.pos.z, yaw: pl.yaw, pitch: pl.pitch, dist: pl.dist };
         this.hidden = [];
@@ -124,30 +126,35 @@ export class Cave {
         this.bg = this.scene.background; this.scene.background = new THREE.Color(0x020203);
         this.on = true; L.home.inside = 'cave'; this.group.visible = true; this.st.ext.cave.trips++;
         pl.skills.climb = false; pl.skills.web = false;   // no climbing over the maze walls
+        this.light0 = { pos: this.lantern.position.clone(), distance: this.lantern.distance, color: this.lantern.color.clone() };
+        this.lantern.distance = 24; this.lantern.color.set(0xffd6a0);
       }
       this.build(f);
-    });
+    }); } finally { this.busy = false; }
     if (f > this.st.ext.cave.deep) { this.st.ext.cave.deep = f; this.st.save(); if (f > 1) L.ui.toast(`しんきろく! 地下${f}かい`, 2000); }
-    L.emit('cave');
+    const seen = this.daily('floors'); if (!seen[f]) { seen[f] = 1; L.emit('cave'); }   // goals and the medal: each floor once a day
     L.ui.toast(`うみなぎ洞窟 地下${f}かい`, 1600);
   }
   async leave() {
     const L = this.life, pl = this.player;
-    await L.tour.blackout(() => {
+    if (this.busy || !this.on) return; this.busy = true;
+    try { await L.tour.blackout(() => {
       this.clear();
       for (const o of this.hidden) o.visible = true;
-      this.scene.background = this.bg; this.group.visible = false; this.lantern.intensity = 0;
+      this.scene.background = this.bg; this.group.visible = false;
+      this.lantern.intensity = 0; this.lantern.position.copy(this.light0.pos); this.lantern.distance = this.light0.distance; this.lantern.color.copy(this.light0.color);
       this.on = false; L.home.inside = null;
       L.world.apply(true);   // the sky, sun and fog of the time of day again
       pl.place(this.door.x + 0.6, this.door.z, PI / 2); pl.heading = PI / 2; pl.pitch = this.back.pitch; pl.dist = this.back.dist;
       pl.lastSafe.copy(pl.pos);
       L.skills.apply();
-    });
+    }); } finally { this.busy = false; }
     L.ui.toast('地上に もどった', 1400);
   }
   clear() {
     for (const c of this.cols) { const i = this.town.colliders.indexOf(c); if (i >= 0) this.town.colliders.splice(i, 1); }
     this.cols = []; this.things = []; this.bats = []; this.segs = [];
+    for (const o of [...this.group.children]) if (o.userData.shared) this.group.remove(o);   // town models: shared geometry
     this.group.traverse((o) => { if (o.isMesh || o.isSprite) { o.geometry.dispose(); o.material.map?.dispose(); o.material.dispose(); } });
     this.wallMat?.dispose(); this.fadeMat?.dispose();
     this.group.clear();
@@ -241,7 +248,7 @@ export class Cave {
     this.things.push({ x: cx(fi), z: cz(fj), r: 1.7, label: () => 'おりる', run: () => this.enter(f + 1) });
 
     // ---- finds: chests in dead ends, then crystals, ore, cracks and moss through the rest
-    const taken = (this.st.daily.cave ||= {}), key = (k) => `${f}:${k}`;
+    const taken = this.daily('taken'), key = (k) => `${f}:${k}`;
     const spots = [...deadEnds, ...others.sort(() => r() - 0.5)];
     const nChest = Math.min(deadEnds.length, 1 + Math.floor(f / 2)), plan = [];
     for (let k = 0; k < spots.length; k++) plan.push(k < nChest ? 'chest' : pick(['crystal', 'crystal', 'ore', 'ore', 'crack', 'moss', 'moss', null], r));
@@ -269,6 +276,8 @@ export class Cave {
     }
     g.computeVertexNormals();
   }
+  // today's cave record (st.daily is replaced when the game day turns over at 5:00, even while inside)
+  daily(k) { const d = (this.st.daily.cave ||= {}); return (d[k] ||= {}); }
   label(text, x, y, z) { const s = this.life.textSprite(text, 0.5, 360); s.position.set(x, y, z); this.group.add(s); return s; }
   // ---------------------------------------------------------------- the finds
   chest(x, z, id, open) {
@@ -284,12 +293,12 @@ export class Cave {
     const col = { type: 'b', x, z, hw: 0.42, hd: 0.42, c: 1, s: 0, y0: STAGE.y - 1, y1: STAGE.y + 0.5 }; this.cols.push(col); this.town.colliders.push(col);
     if (open) return;
     this.things.push({ x, z, r: 1.4, label: () => 'あける', run: async (t) => {
-      t.gone = true; this.st.daily.cave[id] = 1; this.st.save();
+      t.gone = true; this.daily('taken')[id] = 1; this.st.save();
       const L = this.life, f = this.floor, lines = [];
       for (let k = 0; k <= 12; k++) setTimeout(() => { lid.rotation.x = -1.9 * k / 12; }, k * 25);
       if (sparkle) this.group.remove(sparkle);
       L.ui.jingle([523, 659, 784, 1047, 1319]);
-      const money = 300 * (f + 1) + Math.floor(Math.random() * 5) * 100; L.st.money += money; lines.push(`たからばこを あけた!`, `${money.toLocaleString()} ナギ 入っていた!`);
+      const money = 300 * (Math.min(f, 10) + 1) + Math.floor(Math.random() * 5) * 100; L.st.money += money; lines.push(`たからばこを あけた!`, `${money.toLocaleString()} ナギ 入っていた!`);
       const u = Math.random();
       const unknown = CAVE_RECIPES.filter((rid) => !L.craft.known(rid));
       if (unknown.length && u < 0.5) { const rid = pick(unknown); L.craft.learn(rid); lines.push(`それから、ふるい 紙きれ……「${ITEMS[rid].name}」の DIYレシピだ!`); }
@@ -303,7 +312,7 @@ export class Cave {
     const color = [0x8fdcff, 0xc68cff, 0x8affc0, 0xffa8e0][this.floor % 4], g = crystals(new THREE.Group(), 7, color, 0.25, 0.25, 0.75, 0, Math.floor(r() * 1e6));
     g.position.set(x, STAGE.y, z); this.group.add(g);
     this.things.push({ x, z, r: 1.2, label: () => 'とる', run: (t) => {
-      t.gone = true; this.group.remove(g); this.st.daily.cave[id] = 1;
+      t.gone = true; this.group.remove(g); this.daily('taken')[id] = 1;
       const n = this.floor >= 3 ? 2 : 1; this.st.addMat('crystal', n); this.life.emit('pick');
       this.life.ui.blip(1568, 0.1, 'triangle', 0.14); this.life.ui.toast(`水晶を ${n}こ 手に入れた (${this.st.mat.crystal})`);
     } });
@@ -317,7 +326,7 @@ export class Cave {
     this.things.push({ x, z, r: 1.4, label: () => (this.st.tool === 'shovel' ? 'ほる' : 'しらべる'), run: (t) => {
       const L = this.life;
       if (this.st.tool !== 'shovel') { L.ui.toast('きらきらした 岩だ。スコップで ほれそう'); return; }
-      const n = (this.st.daily.cave[id] || 0) + 1; this.st.daily.cave[id] = n;
+      const n = (this.daily('taken')[id] || 0) + 1; this.daily('taken')[id] = n;
       L.anim = { kind: 'dig', t: 0, dur: 0.45 }; L.ui.blip(1800, 0.06, 'square', 0.06); L.craft.use('shovel'); L.emit('rock');
       const u = Math.random();
       if (u < 0.05 + 0.02 * this.floor && !this.st.full()) { this.st.add('gold_nugget'); L.ui.jingle([988, 1319]); L.ui.toast('金のかけらが 出た!!', 1800); }
@@ -328,13 +337,13 @@ export class Cave {
   }
   crack(x, z, id) {
     const o = this.town.protos.dig_spot ? this.town.clone('dig_spot', x, STAGE.y + 0.01, z, Math.random() * 6.28, true) : new THREE.Mesh(new THREE.CircleGeometry(0.3, 8), new THREE.MeshBasicMaterial({ color: 0x2a2018 }));
-    if (o.parent) o.parent.remove(o); if (!o.isMesh) o.position.set(x, STAGE.y + 0.01, z); else { o.rotation.x = -PI / 2; o.position.set(x, STAGE.y + 0.02, z); }
+    if (o.parent) o.parent.remove(o); o.userData.shared = !o.isMesh; if (!o.isMesh) o.position.set(x, STAGE.y + 0.01, z); else { o.rotation.x = -PI / 2; o.position.set(x, STAGE.y + 0.02, z); }
     this.group.add(o);
     this.things.push({ x, z, r: 1.2, label: () => (this.st.tool === 'shovel' ? 'ほる' : 'しらべる'), run: async (t) => {
       const L = this.life;
       if (this.st.tool !== 'shovel') { L.ui.toast('何か うまっているみたい。スコップが ほしいな'); return; }
       if (this.st.full()) { L.ui.toast('ポケットが いっぱい! 何か 売ってからにしよう'); return; }
-      t.gone = true; this.st.daily.cave[id] = 1; this.group.remove(o);
+      t.gone = true; this.daily('taken')[id] = 1; this.group.remove(o);
       L.anim = { kind: 'dig', t: 0, dur: 0.7 }; L.craft.use('shovel'); this.st.stats.dig = (this.st.stats.dig || 0) + 1; L.emit('dig');
       await new Promise((res) => setTimeout(res, 600));
       L.ui.jingle([523, 659, 784]);
@@ -346,7 +355,7 @@ export class Cave {
   moss(x, z, id) {
     const m = new THREE.Mesh(new THREE.CircleGeometry(0.42, 10), glow(0x7cf09a, 0.8)); m.rotation.x = -PI / 2; m.position.set(x, STAGE.y + 0.02, z); m.scale.y = 0.7; this.group.add(m);
     this.things.push({ x, z, r: 1.1, label: () => 'ひろう', run: (t) => {
-      t.gone = true; this.group.remove(m); this.st.daily.cave[id] = 1; this.st.addMat('glow_moss'); this.life.emit('pick');
+      t.gone = true; this.group.remove(m); this.daily('taken')[id] = 1; this.st.addMat('glow_moss'); this.life.emit('pick');
       this.life.ui.blip(990, 0.08, 'triangle', 0.14); this.life.ui.toast(`ひかりごけを ひろった (${this.st.mat.glow_moss})`);
     } });
   }
@@ -381,7 +390,7 @@ export class Cave {
     if (!this.on) return;
     const W = this.life.world, s = this.scene;
     W.sun.intensity = 0; W.hemi.intensity = 0.55; W.hemi.color.setRGB(0.42, 0.48, 0.62); W.hemi.groundColor.setRGB(0.16, 0.12, 0.1);
-    s.environmentIntensity = 0.08; s.fog.color.setRGB(0.012, 0.012, 0.018); s.fog.near = 7; s.fog.far = 30;
+    W.renderer.toneMappingExposure = 1; s.environmentIntensity = 0.08; s.fog.color.setRGB(0.012, 0.012, 0.018); s.fog.near = 7; s.fog.far = 30;
   }
   area() { return { name: 'うみなぎ洞窟', sub: `ちか ${this.floor} かい` }; }
 }
