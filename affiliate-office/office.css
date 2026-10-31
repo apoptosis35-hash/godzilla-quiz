@@ -59,6 +59,21 @@ body{margin:0;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;ba
 #log{list-style:none;padding:0;margin:0;font-size:.72rem}#log li{padding:5px 0;border-bottom:1px dashed #2c2f44;animation:in .3s}
 #log time{color:#6b7090;margin-right:4px}#log b{font-weight:700}
 @keyframes in{from{opacity:0;transform:translateX(8px)}}
+/* ───── 放置ゲーム: 事務所レベル・内装・トースト ───── */
+.office-level{display:flex;flex-direction:column;gap:3px;min-width:170px;max-width:240px}
+.ol-main{display:flex;align-items:center;gap:6px;line-height:1}
+.ol-lv{background:#3b2f6b;color:#d6c9ff;font-weight:800;font-size:.78rem;padding:2px 8px;border-radius:99px;white-space:nowrap}
+.ol-name{font-size:.78rem;color:#cdd1ea;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ol-bar{height:6px;background:#22253a;border-radius:99px;overflow:hidden}
+.ol-bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#7c5cff,#3ecf8e);transition:width .6s ease}
+.ol-next{font-size:.6rem;color:#9aa0c0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.decor{position:absolute;transform:translate(-50%,-50%);font-size:1.6rem;z-index:2;pointer-events:none;filter:drop-shadow(0 2px 2px #0006);animation:pop .45s ease}
+@keyframes pop{from{transform:translate(-50%,-50%) scale(0)}}
+.agent.assistant{width:4.8%;opacity:.92;z-index:4}
+.agent.assistant .name{font-size:.5rem;bottom:-34%;opacity:.85}
+.toasts{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);display:flex;flex-direction:column;gap:8px;z-index:60;width:max-content;max-width:92vw;pointer-events:none}
+.toast{background:#1c1f30;border:1px solid #7c5cff;color:#f3f0ff;padding:10px 16px;border-radius:12px;font-size:.88rem;font-weight:700;box-shadow:0 10px 28px #000a;opacity:0;transform:translateY(14px);transition:.35s}
+.toast.show{opacity:1;transform:none}
 /* ───── スマホ ───── */
 @media (max-width:640px){
   .topbar{padding:8px 10px;gap:8px}
@@ -80,4 +95,9 @@ body{margin:0;font-family:system-ui,"Hiragino Sans","Noto Sans JP",sans-serif;ba
   .plant{font-size:1.6rem}.p2{top:11%}.coffee{font-size:1.3rem}
   .side{max-height:none;padding:10px}
   #staff .task{max-width:52vw}
+  .office-level{width:100%;min-width:0;max-width:none}
+  .ol-name{font-size:.72rem}.ol-next{font-size:.55rem}
+  .decor{font-size:1.15rem}
+  .agent.assistant{width:9%}
+  .toast{font-size:.78rem;padding:9px 13px}
 }
