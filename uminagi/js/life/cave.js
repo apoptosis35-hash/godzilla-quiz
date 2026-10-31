@@ -2,7 +2,8 @@
 // rocky passages laid out anew every day (a maze from the day's seed, bigger the deeper you go), lit only by
 // ぽっけ's lantern and glowing crystals. On each floor: crystal clusters to pick, ore veins and cracks for the
 // shovel, glowing moss, a treasure chest or two in the dead ends (money, gold, recipes the surface never teaches),
-// a hole down to the next floor in the cell farthest from the rope back up. Mischief lives down there too: bats
+// a hole down to the next floor in the cell farthest from the rope back up, down to B10 where the cave master's
+// chest waits (once a day). Mischief lives down there too: bats
 // that swoop, rolling rock critters (ゴロン, from B2) and a shadow wisp (カゲボウズ, from B4) that drifts through
 // the walls. ぽっけ has three hearts; a bump costs one, none left and ぽっけ is carried back up, dropping half of
 // what this trip picked up. A (たたく) or a jump on top calms a critter; the light under the rope heals.
@@ -16,6 +17,7 @@ import { RECIPES } from './items2.js';
 const PI = Math.PI;
 const STAGE = { x: -118, z: -12, y: 100 };   // floors are drawn here (land below, away from the house stage)
 const C = 5;                                 // passage cell size (m)
+const LAST = 10;                             // the bottom floor: no hole, the cave master's chest instead
 const H = 2.9;                               // wall height
 const MOUTH = { x: -82, z: -10 };             // the mound's centre: flat ground to the east, the hill behind
 const SP = { name: 'ぽっけ', color: '#6a7a8a', pitch: 1.1 };
@@ -138,7 +140,7 @@ export class Cave {
   }
   // ---------------------------------------------------------------- in and out
   async enter(f) {
-    const L = this.life, pl = this.player;
+    const L = this.life, pl = this.player; f = Math.min(f, LAST);
     if (this.busy) return; this.busy = true;
     try { await L.tour.blackout(() => {
       if (!this.on) {
@@ -148,7 +150,7 @@ export class Cave {
         for (const o of this.town.root.children) if (o !== pl.model && o.visible) { o.visible = false; this.hidden.push(o); }
         this.bg = this.scene.background; this.scene.background = new THREE.Color(0x020203);
         this.on = true; L.home.inside = 'cave'; this.group.visible = true; this.st.ext.cave.trips++;
-        this.hp = this.maxHp; this.trip = { ...this.st.mat }; this.hud.hidden = false;
+        this.hp = this.maxHp; this.trip = { ...this.st.mat }; this.tripMoney = this.st.money; this.hud.hidden = false;
         pl.skills.climb = false; pl.skills.web = false;   // no climbing over the maze walls
         pl.camLimits = { pitch: [0.85, 1.25], dist: [5.5, 11] };   // from above: never down among the walls, never so far out the maze shows whole
         this.light0 = { pos: this.lantern.position.clone(), distance: this.lantern.distance, color: this.lantern.color.clone() };
@@ -158,7 +160,7 @@ export class Cave {
     }); } finally { this.busy = false; }
     if (f > this.st.ext.cave.deep) { this.st.ext.cave.deep = f; this.st.save(); if (f > 1) L.ui.toast(`しんきろく! 地下${f}かい`, 2000); }
     const seen = this.daily('floors'); if (!seen[f]) { seen[f] = 1; L.emit('cave'); }   // goals and the medal: each floor once a day
-    L.ui.toast(`うみなぎ洞窟 地下${f}かい`, 1600);
+    L.ui.toast(f >= LAST ? `うみなぎ洞窟 地下${f}かい(さいかそう)` : `うみなぎ洞窟 地下${f}かい`, 1600);
   }
   async leave() {
     const L = this.life, pl = this.player;
@@ -269,25 +271,33 @@ export class Cave {
     const rope = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 14, 5), new THREE.MeshStandardMaterial({ color: 0xc8a06a, roughness: 0.9 })); rope.position.set(cx(si) + 0.5, Y + 7, cz(sj) - 0.4); this.group.add(rope);
     this.label('⬆ 地上へ', cx(si) + 0.5, Y + 2.2, cz(sj) - 0.4);
     this.things.push({ x: cx(si) + 0.5, z: cz(sj) - 0.4, r: 1.4, label: () => 'のぼる', run: () => this.leave() });
-    const hole = new THREE.Mesh(new THREE.CircleGeometry(0.95, 20), new THREE.MeshBasicMaterial({ color: 0x000000 })); hole.rotation.x = -PI / 2; hole.position.set(cx(fi), Y + 0.02, cz(fj)); this.group.add(hole);
-    const rim = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.16, 6, 18), rock(new THREE.Color(tint).offsetHSL(0, 0, 0.1).getHex())); rim.rotation.x = PI / 2; rim.position.copy(hole.position); this.group.add(rim);
-    for (const s of [-1, 1]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.06), new THREE.MeshStandardMaterial({ color: 0x7a5634, roughness: 0.9 })); rail.position.set(cx(fi) + s * 0.25, Y + 0.25, cz(fj) - 0.75); rail.rotation.x = -0.3; this.group.add(rail); }
-    this.label(`⬇ 地下${f + 1}かいへ`, cx(fi), Y + 1.6, cz(fj));
-    this.things.push({ x: cx(fi), z: cz(fj), r: 1.7, label: () => 'おりる', run: () => this.enter(f + 1) });
+    if (f < LAST) {
+      const hole = new THREE.Mesh(new THREE.CircleGeometry(0.95, 20), new THREE.MeshBasicMaterial({ color: 0x000000 })); hole.rotation.x = -PI / 2; hole.position.set(cx(fi), Y + 0.02, cz(fj)); this.group.add(hole);
+      const rim = new THREE.Mesh(new THREE.TorusGeometry(1.0, 0.16, 6, 18), rock(new THREE.Color(tint).offsetHSL(0, 0, 0.1).getHex())); rim.rotation.x = PI / 2; rim.position.copy(hole.position); this.group.add(rim);
+      for (const s of [-1, 1]) { const rail = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.9, 0.06), new THREE.MeshStandardMaterial({ color: 0x7a5634, roughness: 0.9 })); rail.position.set(cx(fi) + s * 0.25, Y + 0.25, cz(fj) - 0.75); rail.rotation.x = -0.3; this.group.add(rail); }
+      this.label(`⬇ 地下${f + 1}かいへ`, cx(fi), Y + 1.6, cz(fj));
+      this.things.push({ x: cx(fi), z: cz(fj), r: 1.7, label: () => 'おりる', run: () => this.enter(f + 1) });
+    }
 
     // ---- finds: chests in dead ends, then crystals, ore, cracks and moss through the rest
     const taken = this.daily('taken'), key = (k) => `${f}:${k}`;
-    const spots = [...deadEnds, ...others.sort(() => r() - 0.5)];
-    const nChest = Math.min(deadEnds.length, 1 + Math.floor(f / 2)), plan = [];
-    for (let k = 0; k < spots.length; k++) plan.push(k < nChest ? 'chest' : pick(['crystal', 'crystal', 'ore', 'ore', 'crack', 'moss', 'moss', null], r));
+    // a handful of finds a floor (5 on B1 up to 12), however big the maze: the cave is a good day out, not a mine
+    const nChest = Math.min(deadEnds.length, 1 + Math.floor(f / 3)), rest = [...deadEnds.slice(nChest), ...others].sort(() => r() - 0.5);
+    const spots = [...deadEnds.slice(0, nChest), ...rest.slice(0, Math.min(12, 4 + f))], plan = [];
+    for (let k = 0; k < spots.length; k++) plan.push(k < nChest ? 'chest' : pick(['crystal', 'crystal', 'crystal', 'ore', 'ore', 'ore', 'moss', 'moss', 'crack', 'crack'], r));
     spots.forEach(([i, j], k) => {
       const kind = plan[k]; if (!kind) return;
       const id = key(`${kind}${i}_${j}`), a = r() * PI * 2, d = kind === 'chest' ? 0 : r() * 1.2;
       const x = cx(i) + Math.cos(a) * d, z = cz(j) + Math.sin(a) * d;
-      if (kind === 'chest') { const [[a2, b2]] = open(i, j); this.chestFace = Math.atan2(cx(a2) - cx(i), cz(b2) - cz(j)); }
+      if (kind === 'chest') { const [[a2, b2]] = open(i, j).length ? open(i, j) : [[i, j + 1]]; this.chestFace = Math.atan2(cx(a2) - cx(i), cz(b2) - cz(j)); }
       if (kind === 'chest' ? taken[id] : kind === 'ore' ? (taken[id] || 0) >= 3 : taken[id]) { if (kind === 'chest') this.chest(x, z, id, true); return; }
-      this[kind](x, z, id, false, r);
+      if (kind === 'chest') this.chest(x, z, id, false); else this[kind](x, z, id, false, r);
     });
+    if (f >= LAST) {
+      const id = key('nushi'), [[a2, b2]] = open(fi, fj); this.chestFace = Math.atan2(cx(a2) - cx(fi), cz(b2) - cz(fj));
+      this.chest(cx(fi), cz(fj), id, !!taken[id], true);
+      this.label(taken[id] ? 'きょうは もう からっぽ' : '⭐ 洞窟のヌシの たからばこ', cx(fi), Y + 2.1, cz(fj));
+    }
     // the floor's critters, away from the rope: more and quicker the deeper
     const away = [...dist].filter(([, d]) => d >= 2).map(([k]) => k.split(',').map(Number));
     const at = () => { const [i, j] = pick(away.length ? away : cells, r); return [cx(i) + (r() - 0.5) * 2, cz(j) + (r() - 0.5) * 2]; };
@@ -312,7 +322,7 @@ export class Cave {
   daily(k) { const d = (this.st.daily.cave ||= {}); return (d[k] ||= {}); }
   label(text, x, y, z) { const s = this.life.textSprite(text, 0.5, 360); s.position.set(x, y, z); this.group.add(s); return s; }
   // ---------------------------------------------------------------- the finds
-  chest(x, z, id, open) {
+  chest(x, z, id, open, big = false) {
     const g = new THREE.Group(), wood = new THREE.MeshStandardMaterial({ color: 0x8a5a2a, roughness: 0.8 }), gold = new THREE.MeshStandardMaterial({ color: 0xe8b830, metalness: 0.8, roughness: 0.35 });
     const box = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.45, 0.52), wood); box.position.y = 0.225; g.add(box);
     for (const s of [-1, 1]) { const band = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.47, 0.54), gold); band.position.set(s * 0.3, 0.225, 0); g.add(band); }
@@ -320,22 +330,30 @@ export class Cave {
     const top = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.8, 12, 1, false, 0, PI), wood); top.rotation.z = PI / 2; top.position.z = 0.26; lid.add(top);
     const lock = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.14, 0.04), gold); lock.position.set(0, 0.4, 0.27); g.add(lock);
     if (open) lid.rotation.x = -1.9;
-    g.position.set(x, STAGE.y, z); g.rotation.y = this.chestFace ?? 0; g.traverse((m) => { if (m.isMesh) m.castShadow = true; }); this.group.add(g);
+    g.position.set(x, STAGE.y, z); g.rotation.y = this.chestFace ?? 0; if (big) g.scale.setScalar(1.6); g.traverse((m) => { if (m.isMesh) m.castShadow = true; }); this.group.add(g);
     const sparkle = !open && this.label('✨', x, STAGE.y + 1.0, z);
-    const col = { type: 'b', x, z, hw: 0.42, hd: 0.42, c: 1, s: 0, y0: STAGE.y - 1, y1: STAGE.y + 0.5 }; this.cols.push(col); this.town.colliders.push(col);
+    const col = { type: 'b', x, z, hw: big ? 0.7 : 0.42, hd: big ? 0.7 : 0.42, c: 1, s: 0, y0: STAGE.y - 1, y1: STAGE.y + 0.5 }; this.cols.push(col); this.town.colliders.push(col);
     if (open) return;
-    this.things.push({ x, z, r: 1.4, label: () => 'あける', run: async (t) => {
+    this.things.push({ x, z, r: big ? 2.0 : 1.4, label: () => 'あける', run: async (t) => {
       t.gone = true; this.daily('taken')[id] = 1; this.st.save();
       const L = this.life, f = this.floor, lines = [];
       for (let k = 0; k <= 12; k++) setTimeout(() => { lid.rotation.x = -1.9 * k / 12; }, k * 25);
       if (sparkle) this.group.remove(sparkle);
       L.ui.jingle([523, 659, 784, 1047, 1319]);
-      const money = 300 * (Math.min(f, 10) + 1) + Math.floor(Math.random() * 5) * 100; L.st.money += money; lines.push(`たからばこを あけた!`, `${money.toLocaleString()} ナギ 入っていた!`);
-      const u = Math.random();
-      const unknown = CAVE_RECIPES.filter((rid) => !L.craft.known(rid));
-      if (unknown.length && u < 0.5) { const rid = pick(unknown); L.craft.learn(rid); lines.push(`それから、ふるい 紙きれ……「${ITEMS[rid].name}」の DIYレシピだ!`); }
-      else if (f >= 2 && u < 0.75 && !L.st.full()) { L.st.add('gold_nugget'); lines.push('金のかけらも 入っていた!'); }
-      else { const n = 2 + Math.floor(f / 2); L.st.addMat('crystal', n); lines.push(`水晶が ${n}こ 入っていた!`); }
+      const unknown = CAVE_RECIPES.filter((rid) => !L.craft.known(rid)), u = Math.random();
+      if (big) {   // the bottom: once a day, the master's hoard
+        const money = 8000 + Math.floor(Math.random() * 5) * 500; L.st.money += money;
+        lines.push('洞窟の ヌシの たからばこを あけた!!', `${money.toLocaleString()} ナギ 入っていた!`);
+        if (!L.st.full()) { L.st.add('gold_nugget'); lines.push('金のかけらも 入っていた!'); }
+        if (unknown.length) { const rid = pick(unknown); L.craft.learn(rid); lines.push(`それから、「${ITEMS[rid].name}」の DIYレシピ!`); }
+        else if (!L.st.full()) { const fid = pick(['furn_crystal_lamp', 'furn_glow_pot', 'furn_geode', 'furn_stalagmite']); L.st.add(fid); lines.push(`それから、「${ITEMS[fid].name}」が 入っていた!`); }
+        lines.push('ここが 洞窟の いちばん そこみたいだ。また あした 来てみよう。');
+      } else {
+        const money = 150 * (f + 1) + Math.floor(Math.random() * 5) * 100; L.st.money += money; lines.push(`たからばこを あけた!`, `${money.toLocaleString()} ナギ 入っていた!`);
+        if (unknown.length && u < 0.4) { const rid = pick(unknown); L.craft.learn(rid); lines.push(`それから、ふるい 紙きれ……「${ITEMS[rid].name}」の DIYレシピだ!`); }
+        else if (f >= 3 && Math.random() < 0.25 && !L.st.full()) { L.st.add('gold_nugget'); lines.push('金のかけらも 入っていた!'); }
+        else { const n = 1 + Math.floor(f / 4); L.st.addMat('crystal', n); lines.push(`水晶が ${n}こ 入っていた!`); }
+      }
       L.st.save(); L.emit('pick');
       await L.ui.say(null, lines);
     } });
@@ -345,7 +363,7 @@ export class Cave {
     g.position.set(x, STAGE.y, z); this.group.add(g);
     this.things.push({ x, z, r: 1.2, label: () => 'とる', run: (t) => {
       t.gone = true; this.group.remove(g); this.daily('taken')[id] = 1;
-      const n = this.floor >= 3 ? 2 : 1; this.st.addMat('crystal', n); this.life.emit('pick');
+      const n = 1; this.st.addMat('crystal', n); this.life.emit('pick');
       this.life.ui.blip(1568, 0.1, 'triangle', 0.14); this.life.ui.toast(`水晶を ${n}こ 手に入れた (${this.st.mat.crystal})`);
     } });
   }
@@ -361,7 +379,7 @@ export class Cave {
       const n = (this.daily('taken')[id] || 0) + 1; this.daily('taken')[id] = n;
       L.anim = { kind: 'dig', t: 0, dur: 0.45 }; L.ui.blip(1800, 0.06, 'square', 0.06); L.craft.use('shovel'); L.emit('rock');
       const u = Math.random();
-      if (u < 0.05 + 0.02 * this.floor && !this.st.full()) { this.st.add('gold_nugget'); L.ui.jingle([988, 1319]); L.ui.toast('金のかけらが 出た!!', 1800); }
+      if (u < Math.min(0.06, 0.03 + 0.003 * this.floor) && !this.st.full()) { this.st.add('gold_nugget'); L.ui.jingle([988, 1319]); L.ui.toast('金のかけらが 出た!!', 1800); }
       else { const iron = u < 0.55; this.st.addMat(iron ? 'iron' : 'stone'); L.ui.toast(`${iron ? '鉄のかけら' : '石'}を 手に入れた (${n}/3)`, 1400); }
       if (n >= 3) { t.gone = true; b.scale.multiplyScalar(0.6); g.children.slice(1).forEach((s) => (s.visible = false)); }
       this.st.save();
@@ -379,7 +397,7 @@ export class Cave {
       L.anim = { kind: 'dig', t: 0, dur: 0.7 }; L.craft.use('shovel'); this.st.stats.dig = (this.st.stats.dig || 0) + 1; L.emit('dig');
       await new Promise((res) => setTimeout(res, 600));
       L.ui.jingle([523, 659, 784]);
-      if (Math.random() < 0.3) { this.st.addMat('crystal', 2); await L.ui.say(null, ['水晶が 2こ でてきた!']); }
+      if (Math.random() < 0.5) { this.st.addMat('crystal'); await L.ui.say(null, ['水晶が でてきた!']); }
       else { this.st.add('fossil_unknown'); await L.ui.say(null, ['化石を ほりだした!', '資料館で 鑑定してもらおう。']); }
       this.st.save();
     } });
@@ -438,8 +456,8 @@ export class Cave {
     const L = this.life; o.gone = true; o.t = 0;
     L.ui.jingle([659, 880]); L.emit('cavefoe');
     const u = Math.random();
-    if (o.kind === 'goron') { const id = u < 0.12 ? 'crystal' : u < 0.45 ? 'iron' : 'stone', n = id === 'stone' ? 2 : 1; this.st.addMat(id, n); L.ui.toast(`ゴロンが おとなしくなった! ${ITEMS[id].name}を ${n}こ おとしていった`, 1800); }
-    else if (u < 0.35) { this.st.addMat('glow_moss'); L.ui.toast('コウモリが にげていった。ひかりごけが ひらひら……', 1600); }
+    if (o.kind === 'goron') { const id = u < 0.08 ? 'crystal' : u < 0.35 ? 'iron' : 'stone', n = 1; this.st.addMat(id, n); L.ui.toast(`ゴロンが おとなしくなった! ${ITEMS[id].name}を ${n}こ おとしていった`, 1800); }
+    else if (u < 0.25) { this.st.addMat('glow_moss'); L.ui.toast('コウモリが にげていった。ひかりごけが ひらひら……', 1600); }
     else L.ui.toast('コウモリが にげていった!', 1200);
   }
   // a bump: a heart less, a shove and a moment of blinking; none left and ぽっけ is carried up
@@ -457,6 +475,8 @@ export class Cave {
       const got = n0 - (this.trip[id] || 0), drop = Math.ceil(got / 2);
       if (drop > 0) { this.st.mat[id] -= drop; lost.push(`${ITEMS[id].name}×${drop}`); }
     }
+    const coins = Math.ceil(Math.max(0, this.st.money - this.tripMoney) / 2);
+    if (coins > 0) { this.st.money -= coins; lost.push(`${coins.toLocaleString()} ナギ`); }
     this.st.save();
     await L.ui.say(null, ['きゅう……。めが まわってしまった。']);
     await this.leave();

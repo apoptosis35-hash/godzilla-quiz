@@ -196,6 +196,18 @@ const foes = await G(async () => {
   return { kinds, hp1, lab, calmed, gotSome, out: !C.on && !L.home.inside, dropped: c0 + 4 - L.st.mat.crystal, hud: document.querySelector('.cavehp').hidden };
 });
 check('cave critters: bump, calm with A, faint and carried up', foes.kinds.includes('goron') && foes.kinds.includes('bat') && foes.hp1 === 2 && foes.lab === 'たたく' && foes.calmed && foes.gotSome && foes.out && foes.dropped === 2 && foes.hud, JSON.stringify(foes));
+// the bottom (B10): no way further down, the cave master's chest once a day
+const bottom = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  await C.enter(12); step(1);
+  const floor = C.floor, labels = C.things.map((t) => t.label()), big = C.things.find((t) => t.r === 2.0);
+  const say = L.ui.say; L.ui.say = async () => 0; const m0 = L.st.money; C.inv = 99;
+  if (big) await big.run(big);
+  const got = L.st.money - m0; await C.enter(10); step(1); const again = C.things.filter((t) => t.r === 2.0).length;
+  L.ui.say = say; await C.leave();
+  return { floor, down: labels.includes('おりる'), big: !!big, got, again };
+});
+check('cave bottom: B10, the master\'s chest once a day', bottom.floor === 10 && !bottom.down && bottom.big && bottom.got >= 8000 && bottom.again === 0, JSON.stringify(bottom));
 check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.camMin >= 5 && cave.lim[0] >= 0.85 && cave.lim[1] <= 11 && cave.out && cave.oy < 20, JSON.stringify(cave));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
