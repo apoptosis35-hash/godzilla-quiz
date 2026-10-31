@@ -110,8 +110,7 @@ async function pump() {
   if (busy) return; busy = true;
   while (queue.length) { speed = queue.length > 8 ? 3 : 1; await play(queue.shift()); }
   busy = false;
-  if (mode === "demo") setTimeout(startDemo, 1500);
-  else idleLife();
+  idleLife();
 }
 // 手が空いている社員はたまにコーヒーを取りに行く
 let lifeT;
@@ -249,44 +248,16 @@ async function poll() {
     lastState = s; showKpi(s.kpi);
     const fresh = Date.now() - new Date(s.updatedAt) < 10 * 60e3 && s.running;
     if (mode === "live") {
-      $("#mode").textContent = fresh ? `🟢 稼働中 — ${s.mode}` : `⚪ 業務時間外（最終更新 ${new Date(s.updatedAt).toLocaleString("ja-JP")}）`;
+      $("#mode").textContent = fresh ? `🟢 稼働中 — ${s.mode}` : !s.events.length ? "⚪ まだ本番の業務はありません" : `⚪ 業務時間外（最終業務 ${new Date(s.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}）`;
       const news = s.events.filter(e => !seen.has(key(e)));
       news.forEach(e => seen.add(key(e)));
-      if (first) { first = false; news.slice(-6).forEach(addLog); if (!fresh && s.events.length) { setMode("demo"); return; } }
+      if (first) { first = false; news.slice(-6).forEach(addLog); } // 過去の業務は再生せず、ログに残すだけ
       else { queue.push(...news); pump(); }
     }
   } catch {
-    if (first) { first = false; setMode("demo"); }
-    $("#mode").textContent = "⚪ state.json が見つかりません — デモ再生中";
+    $("#mode").textContent = "⚪ 業務ログ（data/state.json）を読み込めません";
   }
 }
 let first = true;
-function setMode(m) {
-  mode = m;
-  $("#toggle").textContent = m === "demo" ? "ライブに戻る" : "デモ再生";
-  if (m === "demo") { $("#mode").textContent = lastState?.updatedAt ? `🎬 ${new Date(lastState.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} の業務を再生中` : "🎬 デモ再生中"; queue.length = 0; startDemo(); }
-  else { queue.length = 0; lastState?.events?.forEach(e => seen.add(key(e))); $("#mode").textContent = "ライブ監視中"; }
-}
-const DEMO = [
-  { agent: "analyst", type: "meeting", msg: "朝会スタート！今日も良い記事を出しましょう" },
-  { agent: "scout", type: "work", msg: "検索ニーズを調査中" }, { agent: "scout", type: "result", msg: "記事ネタを10件発見" },
-  { agent: "scout", type: "handoff", to: "strategist", msg: "ネタ10件のリストです" },
-  { agent: "strategist", type: "work", msg: "優先順位と構成案を作成中" }, { agent: "strategist", type: "result", msg: "企画決定：在宅ワークのモニターライト選び" },
-  { agent: "strategist", type: "handoff", to: "writer", msg: "構成案お願いします" },
-  { agent: "writer", type: "work", msg: "執筆中…" }, { agent: "writer", type: "result", msg: "書き上げました（3,100字）" },
-  { agent: "writer", type: "handoff", to: "editor", msg: "原稿チェックお願いします" },
-  { agent: "editor", type: "work", msg: "景表法・ステマ規制チェック" }, { agent: "editor", type: "result", msg: "「絶対」を修正、PR表記OK" },
-  { agent: "editor", type: "handoff", to: "publisher", msg: "公開OKです" },
-  { agent: "publisher", type: "work", msg: "HTML化・リンク設置" }, { agent: "publisher", type: "result", msg: "公開しました🚀" },
-  { agent: "analyst", type: "work", msg: "成果レポートを分析中" }, { agent: "analyst", type: "result", msg: "EPCの高い商品に寄せましょう" },
-  { agent: "analyst", type: "handoff", to: "strategist", msg: "次回の企画に反映してください" },
-];
-function startDemo() {
-  if (mode !== "demo" || busy) return;
-  const src = lastState?.events?.length ? lastState.events.slice(-40) : DEMO;
-  queue.push(...src.map(e => ({ ...e, t: new Date().toISOString() })));
-  pump();
-}
-$("#toggle").onclick = () => setMode(mode === "demo" ? "live" : "demo");
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }, 1000);
 renderStaff(); renderOffice({}); poll(); setInterval(poll, 2000); idleLife(); assistLife();
