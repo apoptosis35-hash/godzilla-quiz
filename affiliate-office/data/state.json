@@ -1,0 +1,307 @@
+{
+  "updatedAt": "2026-10-31T10:25:12.153Z",
+  "mode": "オフライン（テンプレート）",
+  "running": false,
+  "kpi": {
+    "articles": 0,
+    "clicks": 0,
+    "conversions": 0,
+    "revenue": 0,
+    "epc": 0
+  },
+  "agents": {
+    "scout": {
+      "id": "scout",
+      "name": "ミナト",
+      "role": "トレンド調査",
+      "color": "#4f9dff",
+      "status": "idle",
+      "task": "本日の業務完了"
+    },
+    "strategist": {
+      "id": "strategist",
+      "name": "サクラ",
+      "role": "キーワード戦略",
+      "color": "#ff7eb6",
+      "status": "idle",
+      "task": "本日の業務完了"
+    },
+    "writer": {
+      "id": "writer",
+      "name": "ハル",
+      "role": "ライター",
+      "color": "#ffb340",
+      "status": "idle",
+      "task": "本日の業務完了"
+    },
+    "editor": {
+      "id": "editor",
+      "name": "リン",
+      "role": "校閲・法務",
+      "color": "#3ecf8e",
+      "status": "idle",
+      "task": "本日の業務完了"
+    },
+    "publisher": {
+      "id": "publisher",
+      "name": "ソラ",
+      "role": "パブリッシャー",
+      "color": "#a78bfa",
+      "status": "idle",
+      "task": "本日の業務完了"
+    },
+    "analyst": {
+      "id": "analyst",
+      "name": "ケイ",
+      "role": "アナリスト",
+      "color": "#f87171",
+      "status": "idle",
+      "task": "本日の業務完了"
+    }
+  },
+  "events": [
+    {
+      "t": "2026-10-31T10:24:59.219Z",
+      "agent": "analyst",
+      "type": "meeting",
+      "msg": "朝会スタート。今日のテーマは「一人暮らし・在宅ワークを快適にする家電とガジェット」"
+    },
+    {
+      "t": "2026-10-31T10:24:59.220Z",
+      "agent": "scout",
+      "type": "work",
+      "msg": "「一人暮らし・在宅ワークを快適にする家電とガジェット」の検索ニーズを調査中"
+    },
+    {
+      "t": "2026-10-31T10:25:00.226Z",
+      "agent": "scout",
+      "type": "result",
+      "msg": "記事ネタを20件発見"
+    },
+    {
+      "t": "2026-10-31T10:25:00.227Z",
+      "agent": "scout",
+      "type": "handoff",
+      "msg": "ネタ20件のリストを渡します",
+      "to": "strategist"
+    },
+    {
+      "t": "2026-10-31T10:25:00.229Z",
+      "agent": "strategist",
+      "type": "work",
+      "msg": "優先順位と構成案を作成中"
+    },
+    {
+      "t": "2026-10-31T10:25:01.400Z",
+      "agent": "strategist",
+      "type": "result",
+      "msg": "企画決定: 「モニターライト（スクリーンバー型）失敗しない選び方と注意点」 KW=モニターライト"
+    },
+    {
+      "t": "2026-10-31T10:25:01.402Z",
+      "agent": "strategist",
+      "type": "result",
+      "msg": "企画決定: 「電動昇降デスク失敗しない選び方と注意点」 KW=電動昇降デスク"
+    },
+    {
+      "t": "2026-10-31T10:25:01.402Z",
+      "agent": "strategist",
+      "type": "result",
+      "msg": "企画決定: 「ロボット掃除機（エントリーモデル）失敗しない選び方と注意点」 KW=ロボット掃除機 一人暮らし"
+    },
+    {
+      "t": "2026-10-31T10:25:01.403Z",
+      "agent": "strategist",
+      "type": "handoff",
+      "msg": "構成案3本お願いします",
+      "to": "writer"
+    },
+    {
+      "t": "2026-10-31T10:25:01.404Z",
+      "agent": "writer",
+      "type": "work",
+      "msg": "執筆中: モニターライト（スクリーンバー型）失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:02.334Z",
+      "agent": "writer",
+      "type": "result",
+      "msg": "書き上げました（454字）"
+    },
+    {
+      "t": "2026-10-31T10:25:02.335Z",
+      "agent": "writer",
+      "type": "handoff",
+      "msg": "「モニターライト（スクリーンバー型）失敗しない選び方と注意点」の原稿チェックお願いします",
+      "to": "editor"
+    },
+    {
+      "t": "2026-10-31T10:25:02.336Z",
+      "agent": "writer",
+      "type": "work",
+      "msg": "執筆中: 電動昇降デスク失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:02.337Z",
+      "agent": "editor",
+      "type": "work",
+      "msg": "校閲・ステマ規制/景表法チェック: モニターライト（スクリーンバー型）失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:03.474Z",
+      "agent": "writer",
+      "type": "result",
+      "msg": "書き上げました（444字）"
+    },
+    {
+      "t": "2026-10-31T10:25:03.475Z",
+      "agent": "writer",
+      "type": "handoff",
+      "msg": "「電動昇降デスク失敗しない選び方と注意点」の原稿チェックお願いします",
+      "to": "editor"
+    },
+    {
+      "t": "2026-10-31T10:25:03.477Z",
+      "agent": "writer",
+      "type": "work",
+      "msg": "執筆中: ロボット掃除機（エントリーモデル）失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:04.081Z",
+      "agent": "editor",
+      "type": "result",
+      "msg": "修正1件: 誇大表現 /確実に/g を修正"
+    },
+    {
+      "t": "2026-10-31T10:25:04.082Z",
+      "agent": "editor",
+      "type": "handoff",
+      "msg": "「モニターライト（スクリーンバー型）失敗しない選び方と注意点」公開OKです",
+      "to": "publisher"
+    },
+    {
+      "t": "2026-10-31T10:25:04.083Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "HTML化・リンク設置: モニターライト（スクリーンバー型）失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:05.098Z",
+      "agent": "writer",
+      "type": "result",
+      "msg": "書き上げました（473字）"
+    },
+    {
+      "t": "2026-10-31T10:25:05.098Z",
+      "agent": "writer",
+      "type": "handoff",
+      "msg": "「ロボット掃除機（エントリーモデル）失敗しない選び方と注意点」の原稿チェックお願いします",
+      "to": "editor"
+    },
+    {
+      "t": "2026-10-31T10:25:05.147Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "公開: site/articles/desk-lamp-guide.html"
+    },
+    {
+      "t": "2026-10-31T10:25:05.148Z",
+      "agent": "editor",
+      "type": "work",
+      "msg": "校閲・ステマ規制/景表法チェック: 電動昇降デスク失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:06.576Z",
+      "agent": "editor",
+      "type": "result",
+      "msg": "修正1件: 誇大表現 /確実に/g を修正"
+    },
+    {
+      "t": "2026-10-31T10:25:06.578Z",
+      "agent": "editor",
+      "type": "handoff",
+      "msg": "「電動昇降デスク失敗しない選び方と注意点」公開OKです",
+      "to": "publisher"
+    },
+    {
+      "t": "2026-10-31T10:25:06.579Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "HTML化・リンク設置: 電動昇降デスク失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:07.481Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "公開: site/articles/standing-desk-guide.html"
+    },
+    {
+      "t": "2026-10-31T10:25:07.484Z",
+      "agent": "editor",
+      "type": "work",
+      "msg": "校閲・ステマ規制/景表法チェック: ロボット掃除機（エントリーモデル）失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:09.147Z",
+      "agent": "editor",
+      "type": "result",
+      "msg": "修正1件: 誇大表現 /確実に/g を修正"
+    },
+    {
+      "t": "2026-10-31T10:25:09.148Z",
+      "agent": "editor",
+      "type": "handoff",
+      "msg": "「ロボット掃除機（エントリーモデル）失敗しない選び方と注意点」公開OKです",
+      "to": "publisher"
+    },
+    {
+      "t": "2026-10-31T10:25:09.150Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "HTML化・リンク設置: ロボット掃除機（エントリーモデル）失敗しない選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T10:25:10.612Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "公開: site/articles/robot-vacuum-guide.html"
+    },
+    {
+      "t": "2026-10-31T10:25:10.616Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "トップページとサイトマップを更新"
+    },
+    {
+      "t": "2026-10-31T10:25:10.629Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "トップページ更新（全3記事）・sitemap.xml 出力"
+    },
+    {
+      "t": "2026-10-31T10:25:10.631Z",
+      "agent": "analyst",
+      "type": "work",
+      "msg": "成果レポート（performance.csv）を分析中"
+    },
+    {
+      "t": "2026-10-31T10:25:12.151Z",
+      "agent": "analyst",
+      "type": "result",
+      "msg": "まだ成果データがありません。ASPの管理画面から data/performance.csv に数字を貼ると、次回から売れる記事に寄せて企画します。"
+    },
+    {
+      "t": "2026-10-31T10:25:12.152Z",
+      "agent": "analyst",
+      "type": "handoff",
+      "msg": "次回の企画に反映してください",
+      "to": "strategist"
+    },
+    {
+      "t": "2026-10-31T10:25:12.153Z",
+      "agent": "analyst",
+      "type": "meeting",
+      "msg": "終礼: 本日 3 本公開、累計 3 記事"
+    }
+  ]
+}
