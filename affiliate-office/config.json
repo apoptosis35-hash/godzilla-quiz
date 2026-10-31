@@ -1,0 +1,19 @@
+{
+  "siteName": "かしこい暮らしラボ",
+  "siteUrl": "https://example.github.io/affiliate-office/site/",
+  "niche": "一人暮らし・在宅ワークを快適にする家電とガジェット",
+  "audience": "20〜30代の一人暮らし・リモートワーカー",
+  "articlesPerRun": 3,
+  "affiliate": {
+    "amazonTag": "YOUR-AMAZON-TAG-22",
+    "rakutenId": "",
+    "note": "amazonTag に AmazonアソシエイトのトラッキングID、rakutenId に楽天アフィリエイトIDを入れてください。空のままだと通常リンクになります。"
+  },
+  "products": [
+    { "id": "desk-lamp", "name": "モニターライト（スクリーンバー型）", "category": "在宅ワーク", "keyword": "モニターライト", "asin": "", "a8Url": "", "points": ["机の上を広く使える", "画面に映り込みにくい", "USB給電"] },
+    { "id": "standing-desk", "name": "電動昇降デスク", "category": "在宅ワーク", "keyword": "電動昇降デスク", "asin": "", "a8Url": "", "points": ["立ち・座りを切り替えられる", "高さメモリー機能", "組み立てに時間がかかる"] },
+    { "id": "robot-vacuum", "name": "ロボット掃除機（エントリーモデル）", "category": "家電", "keyword": "ロボット掃除機 一人暮らし", "asin": "", "a8Url": "", "points": ["留守中に掃除が終わる", "床に物を置かない習慣が必要", "アプリで予約"] },
+    { "id": "noise-cancel", "name": "ノイズキャンセリングイヤホン", "category": "ガジェット", "keyword": "ノイズキャンセリング イヤホン 在宅", "asin": "", "a8Url": "", "points": ["生活音を抑えて集中", "オンライン会議にも使える", "長時間だと耳が疲れることも"] },
+    { "id": "rice-cooker", "name": "小型炊飯器（3合）", "category": "家電", "keyword": "炊飯器 一人暮らし", "asin": "", "a8Url": "", "points": ["場所を取らない", "早炊きモード", "まとめ炊きには不向き"] }
+  ]
+}

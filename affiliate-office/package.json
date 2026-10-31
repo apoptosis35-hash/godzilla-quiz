@@ -1,0 +1,14 @@
+{
+  "name": "affiliate-office",
+  "private": true,
+  "type": "module",
+  "description": "AIエージェントがアフィリエイト記事を作り、仮想オフィスで働きぶりが見えるシステム",
+  "scripts": {
+    "run": "node engine/run.js",
+    "run:offline": "node engine/run.js --offline",
+    "serve": "node engine/serve.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "latest"
+  }
+}
