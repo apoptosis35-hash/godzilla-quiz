@@ -163,7 +163,7 @@ let first = true;
 function setMode(m) {
   mode = m;
   $("#toggle").textContent = m === "demo" ? "ライブに戻る" : "デモ再生";
-  if (m === "demo") { $("#mode").textContent = "🎬 デモ再生中（前回の業務を再現）"; queue.length = 0; startDemo(); }
+  if (m === "demo") { $("#mode").textContent = lastState?.updatedAt ? `🎬 ${new Date(lastState.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })} の業務を再生中` : "🎬 デモ再生中"; queue.length = 0; startDemo(); }
   else { queue.length = 0; lastState?.events?.forEach(e => seen.add(key(e))); $("#mode").textContent = "ライブ監視中"; }
 }
 const DEMO = [

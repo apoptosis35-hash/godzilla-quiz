@@ -53,6 +53,17 @@ npm run serve          # → http://localhost:8787/  記事サイトは /site/
 - Amazonアソシエイトの規約上、**価格を静的に書かない**ようにしています（校閲担当が自動で削除）。
 - 「Amazonのアソシエイトとして…」の表記は `amazonTag` を設定したときだけ表示されます。
 
+## 毎日自動で働かせる（GitHub Actions）
+
+`.github/workflows/affiliate-office.yml` が毎朝 6:47（日本時間）に業務を実行し、記事と業務ログをコミットします。
+
+1. リポジトリの **Settings → Secrets and variables → Actions** に `ANTHROPIC_API_KEY` を登録
+2. このブランチを `main` にマージ（定期実行は既定ブランチでしか動きません）
+3. **Settings → Pages** が `main` から公開されていれば、`https://<ユーザー名>.github.io/<リポジトリ名>/affiliate-office/` がスマホで見られるオフィスになります
+4. すぐ試すなら Actions タブ → affiliate office → Run workflow
+
+キーが未登録の日はお休みします（テンプレート記事を量産しないため）。
+
 ## ファイル構成
 
 ```
