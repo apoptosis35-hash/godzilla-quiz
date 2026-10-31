@@ -204,7 +204,13 @@ class App {
     $('zin').onclick = () => { this.player.dist = Math.max(2.5, this.player.dist * 0.8); };
     $('zout').onclick = () => { this.player.dist = Math.min(30, this.player.dist * 1.25); };
     $('mute').onclick = () => { $('mute').textContent = this.sound.toggle() ? '🔊' : '🔇'; };
-    $('reset').onclick = () => { try { localStorage.removeItem(SAVE); localStorage.removeItem('uminagi_life_v1'); } catch { /* ignore */ } location.search = ''; };
+    $('reset').onclick = () => {
+      if (!confirm('セーブを けして、はじめから やり直しますか?\n(お金・持ち物・町・家・図鑑が ぜんぶ 消えます)')) return;
+      this.resetting = true;   // no more saving: leaving the page (visibilitychange) would write the old place back
+      this.life?.st && (this.life.st.save = () => {});
+      try { localStorage.removeItem(SAVE); localStorage.removeItem('uminagi_life_v1'); } catch { /* ignore */ }
+      location.replace(location.pathname);
+    };
     this.syncButtons();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
     addEventListener('keydown', (e) => {
@@ -218,6 +224,7 @@ class App {
     for (const b of document.querySelectorAll('[data-q]')) b.classList.toggle('on', QUALITY[b.dataset.q] === Q);
   }
   save(quality) {
+    if (this.resetting) return;
     const b = this.life?.cave?.on ? this.life.cave.back : this.life?.home.inside ? this.life.home.back : null;   // indoors: where the door is
     const p = b ? { pos: { x: b.x, z: b.z }, yaw: b.yaw, dist: b.dist } : this.player;
     store({ x: +p.pos.x.toFixed(2), z: +p.pos.z.toFixed(2), yaw: +p.yaw.toFixed(3), dist: +p.dist.toFixed(2), tod: this.world.clockMode ? 'real' : this.world.todName, quality: quality || qName, t: Date.now() });
