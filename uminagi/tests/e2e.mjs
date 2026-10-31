@@ -165,11 +165,60 @@ const cave = await G(async () => {
   const hole = C.things.find((t) => t.label() === 'おりる'); await C.enter(2); step(2);
   const floor = C.floor, deep = L.st.ext.cave.deep;
   // walk into the maze for 4 s: still on the cave floor
-  a.input.keys.add('KeyW'); step(80); a.input.keys.delete('KeyW'); const stillIn = Math.abs(P.pos.y - 100) < 0.5;
+  let camMin = 99; a.input.keys.add('KeyW'); for (let i = 0; i < 80; i++) { step(1); camMin = Math.min(camMin, P.camDist); } a.input.keys.delete('KeyW'); const stillIn = Math.abs(P.pos.y - 100) < 0.5;
+  a.input.look.y = -5; a.input.zoom = 9; step(3); const lim = [+P.pitch.toFixed(2), +P.dist.toFixed(1)];   // the camera stays above the walls
   await C.leave(); step(2);
-  return { label, inside, y, kinds: kinds.length, find: !!find, got, hole: !!hole, floor, deep, stillIn, out: !L.home.inside && !C.on, oy: +P.pos.y.toFixed(1) };
+  return { label, inside, y, kinds: kinds.length, find: !!find, got, hole: !!hole, floor, deep, stillIn, camMin: +camMin.toFixed(1), lim, out: !L.home.inside && !C.on, oy: +P.pos.y.toFixed(1) };
 });
-check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.out && cave.oy < 20, JSON.stringify(cave));
+// regressions: the day turning over inside, A pressed twice on the rope, the map's fast travel indoors
+const caveEdge = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  await C.enter(1); step(1);
+  L.st.daily = { day: 'x', talked: {}, gift: {}, shaken: {}, dug: {}, picked: {}, rock: 0, fruit: {}, bottle: false };
+  let dayOk = true; const t = C.things.find((x) => !x.gone && /ひろう|とる/.test(x.label())); try { if (t) t.run(t); } catch { dayOk = false; }
+  document.getElementById('mapbtn').click(); const mapShut = document.getElementById('bigmap').hidden;
+  const r = C.things.find((x) => x.label() === 'のぼる'); await Promise.all([r.run(r), r.run(r)]); step(1);
+  return { dayOk, mapShut, out: !C.on && !L.home.inside && L.root.visible, light: L.home.light.intensity };
+});
+check('cave edge cases: day turnover, map indoors, double A', caveEdge.dayOk && caveEdge.mapShut && caveEdge.out && caveEdge.light === 0, JSON.stringify(caveEdge));
+// cave critters: a bump costs a heart, A calms a ゴロン (it leaves something), no hearts left carries ぽっけ up
+const foes = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  await C.enter(3); step(1);
+  const kinds = [...new Set(C.foes.map((o) => o.kind))].join(','), g = C.foes.find((o) => o.kind === 'goron');
+  C.inv = 0; g.x = P.pos.x; g.z = P.pos.z - 0.5; g.stun = 0; g.rest = 0; step(1); const hp1 = C.hp;
+  C.inv = 9; g.x = P.pos.x; g.z = P.pos.z - 1.2; g.hp = 1; g.stun = 0; P.heading = Math.PI; const m0 = JSON.stringify(L.st.mat); step(1);
+  const lab = L.target()?.label; C.hitFoe(g); const calmed = !!g.gone, gotSome = JSON.stringify(L.st.mat) !== m0;
+  const say = L.ui.say; L.ui.say = async () => 0;
+  const c0 = L.st.mat.crystal || 0; L.st.addMat('crystal', 4); C.hp = 1; C.inv = 0; await C.hurt(C.foes.find((o) => !o.gone) || g);
+  for (let i = 0; i < 60 && (C.on || C.busy); i++) await new Promise((r) => setTimeout(r, 50));
+  await new Promise((r) => setTimeout(r, 200)); L.ui.say = say;
+  return { kinds, hp1, lab, calmed, gotSome, out: !C.on && !L.home.inside, dropped: c0 + 4 - L.st.mat.crystal, hud: document.querySelector('.cavehp').hidden };
+});
+check('cave critters: bump, calm with A, faint and carried up', foes.kinds.includes('goron') && foes.kinds.includes('bat') && foes.hp1 === 2 && foes.lab === 'たたく' && foes.calmed && foes.gotSome && foes.out && foes.dropped === 2 && foes.hud, JSON.stringify(foes));
+// every creature, fossil and shell has its own model and picture; the pocket and the encyclopedia show them
+const pics = await G(async () => {
+  const { FISH, BUGS, FOSSILS, SHELLS } = await import('/uminagi/js/life/data.js'), { SEA } = await import('/uminagi/js/life/items2.js');
+  const C = await import('/uminagi/js/life/creatures.js'), L = window.__uminagi.life;
+  const all = [...FISH, ...BUGS, ...SEA, ...FOSSILS, ...SHELLS].map((s) => s.id), bad = all.filter((id) => !C.hasCreature(id) || !C.creatureModel(id));
+  const icon = C.creatureIcon('madai'), butterfly = L.bugMesh('ageha');
+  L.st.caught.madai = 'x'; L.ui.book(L.st); await new Promise((r) => setTimeout(r, 50)); const img = !!document.querySelector('.bcell .cpic'); L.ui.closePanel(-1);
+  return { n: all.length, bad, icon: /^data:image\/png/.test(icon || '') && icon.length > 2000, wings: butterfly.userData.wings.length, img };
+});
+check('a model and a picture for all 191 creatures, fossils and shells', pics.n === 191 && !pics.bad.length && pics.icon && pics.wings === 2 && pics.img, JSON.stringify(pics));
+// the bottom (B10): no way further down, the cave master's chest once a day
+const bottom = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  await C.enter(12); step(1);
+  const floor = C.floor, labels = C.things.map((t) => t.label()), big = C.things.find((t) => t.r === 2.0);
+  const say = L.ui.say; L.ui.say = async () => 0; const m0 = L.st.money; C.inv = 99;
+  if (big) await big.run(big);
+  const got = L.st.money - m0; await C.enter(10); step(1); const again = C.things.filter((t) => t.r === 2.0).length;
+  L.ui.say = say; await C.leave();
+  return { floor, down: labels.includes('おりる'), big: !!big, got, again };
+});
+check('cave bottom: B10, the master\'s chest once a day', bottom.floor === 10 && !bottom.down && bottom.big && bottom.got >= 8000 && bottom.again === 0, JSON.stringify(bottom));
+check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.camMin >= 5 && cave.lim[0] >= 0.85 && cave.lim[1] <= 11 && cave.out && cave.oy < 20, JSON.stringify(cave));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
   const a = window.__uminagi, L = a.life, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

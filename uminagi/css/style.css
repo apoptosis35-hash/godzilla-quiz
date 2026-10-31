@@ -116,6 +116,7 @@ body.post #vig { display: none; }
 .pgrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
 .slot, .bcell { aspect-ratio: 1; border-radius: 14px; border: 2px solid #ecd9a6; background: #fff; color: #4a3a22; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 2px; font-family: inherit; }
 .slot span, .bcell span { font-size: 26px; line-height: 1.1; }
+.slot .cpic, .bcell .cpic { width: 72%; max-width: 64px; aspect-ratio: 1; object-fit: contain; display: block; margin: 0 auto -2px; }   /* creature pictures (js/life/creatures.js) */
 .slot small, .bcell small { font-size: 9.5px; line-height: 1.1; text-align: center; overflow: hidden; max-height: 2.2em; }
 .slot.empty { background: #f6eedb; border-style: dashed; }
 .slot.off { opacity: .35; }
@@ -167,3 +168,6 @@ body.talking #web { visibility: hidden; }
 .stampbook .stars { color: #e8a820; letter-spacing: 1px; }
 .tourfade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .6s; z-index: 50; }
 .tourfade.on { opacity: 1; }
+/* hearts in the cave (js/life/cave.js) */
+.cavehp { position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9; font-size: 24px; letter-spacing: 2px; padding: 2px 12px; border-radius: 99px; background: rgba(0, 0, 0, .35); pointer-events: none; font-family: system-ui, sans-serif; }
+.cavehp[hidden] { display: none; }

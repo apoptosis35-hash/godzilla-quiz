@@ -15,6 +15,7 @@ import { Folk, registerFolk } from './folk.js';
 import { Tour } from './tour.js';
 import { Skills } from './skills.js';
 import { Cave } from './cave.js';
+import { hasCreature, creatureModel, creatureShape } from './creatures.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
 import { Market } from './market.js';
@@ -568,7 +569,9 @@ export class Life {
   async got(sp, kind, extra = {}) {
     this.anim = { kind: 'show', t: 0, dur: 1e9, item: sp.id };
     this.ui.jingle();
-    const held = this.itemSprite(sp.id); held.position.copy(this.player.pos).y += 0.95; this.root.add(held);
+    const model = hasCreature(sp.id) && creatureModel(sp.id), held = model || this.itemSprite(sp.id);   // the creature itself, turning over ぽっけ's head
+    if (model) model.scale.setScalar(kind === 'fish' ? 0.85 : 0.55);
+    held.position.copy(this.player.pos).y += model ? 1.05 : 0.95; this.root.add(held); this.held = model;
     const first = !this.st.caught[sp.id];
     const lines = [sp.comment || `${sp.name}を つかまえた!`, ...(this.goals ? this.goals.catchLines(sp, kind, extra) : [])];
     if (first) lines.push(`${sp.name}が 図鑑に のった!`);
@@ -577,7 +580,7 @@ export class Life {
     this.emit(kind);
     this.st.stats[kind] = (this.st.stats[kind] || 0) + 1; this.st.lastCatch = { id: sp.id, kind, t: Date.now() }; this.st.save();
     await this.ui.say(null, lines);
-    this.anim = null; this.root.remove(held); held.material.map.dispose(); held.material.dispose();
+    this.anim = null; this.root.remove(held); this.held = null; if (!model) { held.material.map.dispose(); held.material.dispose(); }
   }
   // the catch held up over the head: the item's icon drawn on a sprite
   itemSprite(id) {
@@ -590,6 +593,12 @@ export class Life {
   }
   // ---------------------------------------------------------------- bugs
   bugMesh(id) {
+    if (hasCreature(id)) {   // the species' own model (creatures.js), bug-sized
+      const o = creatureModel(id), sh = creatureShape(id);
+      o.scale.setScalar({ fly: 0.3, dragon: 0.34, beetle: 0.2, dot: 0.13, shell: 0.15, glow: 0.12 }[sh] ?? 0.2);
+      o.userData.shape = BUG_LOOK[id]?.[0] === 'dragon' || sh === 'dragon' ? 'dragon' : sh; o.userData.glow = o.userData.glow || null;
+      return o;
+    }
     const [shape, c1, c2 = 0x222222] = BUG_LOOK[id] || ['crawl', 0x333333];
     const g = new THREE.Group(), m1 = new THREE.MeshStandardMaterial({ color: c1, roughness: 0.6, side: THREE.DoubleSide }), m2 = new THREE.MeshStandardMaterial({ color: c2, roughness: 0.5, side: THREE.DoubleSide });
     const body = (sx, sy, sz, m, z = 0) => { const b = new THREE.Mesh(new THREE.SphereGeometry(1, 10, 7), m); b.scale.set(sx, sy, sz); b.position.z = z; g.add(b); return b; };
@@ -639,7 +648,7 @@ export class Life {
       const t = pick(ts), a = Math.random() * 6.28; x = t.x + Math.sin(a) * 0.32; z = t.z + Math.cos(a) * 0.32; y = this.ground.height(t.x, t.z) + 0.9 + Math.random() * 0.7; base = a; mode = 'trunk';
     } else if (w === 'flower') {
       const fs = this.flowers.filter(ring); if (!fs.length) return;
-      const f = pick(fs); x = f.x; z = f.z; y = this.ground.height(x, z) + 0.3; mode = /monshiro|ageha|omurasaki|aosuji/.test(sp.id) ? 'hover' : 'sit';
+      const f = pick(fs); x = f.x; z = f.z; y = this.ground.height(x, z) + 0.3; mode = creatureShape(sp.id) === 'fly' ? 'hover' : 'sit';
     } else if (w === 'rock') {
       const rs = this.rocks.filter(ring); if (!rs.length) return;
       const rk = pick(rs); const p = this.near(rk.x, rk.z, (a, b) => this.walkable(a, b) && Math.hypot(a - rk.x, b - rk.z) > 0.6, 4); if (!p) return; [x, z] = p; y = this.ground.height(x, z);
@@ -655,7 +664,7 @@ export class Life {
     }
     const o = this.bugMesh(sp.id); o.position.set(x, y, z); this.root.add(o);
     const gold = Math.random() < (this.tour?.boost ? 0.1 : 0.03);   // now and then a golden one
-    if (gold) o.traverse((m) => { if (m.isMesh) m.material = new THREE.MeshStandardMaterial({ color: 0xffc830, emissive: 0x8a5a00, emissiveIntensity: 0.6, metalness: 0.8, roughness: 0.3 }); });
+    if (gold) o.traverse((m) => { if (m.isMesh && !m.userData.outline) m.material = new THREE.MeshStandardMaterial({ color: 0xffc830, emissive: 0x8a5a00, emissiveIntensity: 0.6, metalness: 0.8, roughness: 0.3 }); });
     if (mode === 'trunk') { o.rotation.set(-PI / 2, base + PI, 0, 'YXZ'); }
     this.bugs.push({ sp, w, o, mode, x, y, z, x0: x, y0: y, z0: z, t: Math.random() * 9, h: Math.random() * 6.28, flee: 0, base, gold });
   }
@@ -1131,6 +1140,7 @@ export class Life {
     this.updateCast(dt);
     this.pose(dt);
     for (const p of this.pickups) if (p.money) p.o.rotation.y += dt * 1.5;
+    if (this.held) this.held.rotation.y += dt * 1.4;
     if (!this.st.intro && !this.introStarted && this.app.playing) { this.introStarted = true; setTimeout(() => this.intro(), 1500); }
     this.hudT -= dt;
     if (this.hudT <= 0) {

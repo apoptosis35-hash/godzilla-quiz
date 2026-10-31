@@ -1,0 +1,63 @@
+{
+  "updatedAt": "2026-10-31T10:25:12.153Z",
+  "mode": "まだ本番の業務はありません",
+  "running": false,
+  "kpi": {
+    "articles": 0,
+    "clicks": 0,
+    "conversions": 0,
+    "revenue": 0,
+    "epc": 0
+  },
+  "agents": {
+    "scout": {
+      "id": "scout",
+      "name": "ミナト",
+      "role": "トレンド調査",
+      "color": "#4f9dff",
+      "status": "idle",
+      "task": "待機中"
+    },
+    "strategist": {
+      "id": "strategist",
+      "name": "サクラ",
+      "role": "キーワード戦略",
+      "color": "#ff7eb6",
+      "status": "idle",
+      "task": "待機中"
+    },
+    "writer": {
+      "id": "writer",
+      "name": "ハル",
+      "role": "ライター",
+      "color": "#ffb340",
+      "status": "idle",
+      "task": "待機中"
+    },
+    "editor": {
+      "id": "editor",
+      "name": "リン",
+      "role": "校閲・法務",
+      "color": "#3ecf8e",
+      "status": "idle",
+      "task": "待機中"
+    },
+    "publisher": {
+      "id": "publisher",
+      "name": "ソラ",
+      "role": "パブリッシャー",
+      "color": "#a78bfa",
+      "status": "idle",
+      "task": "待機中"
+    },
+    "analyst": {
+      "id": "analyst",
+      "name": "ケイ",
+      "role": "アナリスト",
+      "color": "#f87171",
+      "status": "idle",
+      "task": "待機中"
+    }
+  },
+  "events": []
+}

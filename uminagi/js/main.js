@@ -200,11 +200,17 @@ class App {
     for (const b of document.querySelectorAll('[data-q]')) b.onclick = () => { this.save(b.dataset.q); location.search = '?q=' + b.dataset.q; };
     const NEED = { street: 'street', houses: 'houses', shrine: 'shrine', hill: 'hill' };
     for (const b of document.querySelectorAll('[data-go]')) { b.hidden = !!NEED[b.dataset.go] && !this.has(NEED[b.dataset.go]); if (b.dataset.go === 'harbour' && !this.has('harbour')) b.textContent = 'キャンプ'; }
-    for (const b of document.querySelectorAll('[data-go]')) b.onclick = () => { const [x, z, yaw] = SPOTS[b.dataset.go]; this.player.place(x, z, yaw); this.player.heading = yaw + Math.PI; this.toggleMap(false); this.save(); };
+    for (const b of document.querySelectorAll('[data-go]')) b.onclick = () => { if (this.life?.home.inside) return; const [x, z, yaw] = SPOTS[b.dataset.go]; this.player.place(x, z, yaw); this.player.heading = yaw + Math.PI; this.toggleMap(false); this.save(); };
     $('zin').onclick = () => { this.player.dist = Math.max(2.5, this.player.dist * 0.8); };
     $('zout').onclick = () => { this.player.dist = Math.min(30, this.player.dist * 1.25); };
     $('mute').onclick = () => { $('mute').textContent = this.sound.toggle() ? '🔊' : '🔇'; };
-    $('reset').onclick = () => { try { localStorage.removeItem(SAVE); localStorage.removeItem('uminagi_life_v1'); } catch { /* ignore */ } location.search = ''; };
+    $('reset').onclick = () => {
+      if (!confirm('セーブを けして、はじめから やり直しますか?\n(お金・持ち物・町・家・図鑑が ぜんぶ 消えます)')) return;
+      this.resetting = true;   // no more saving: leaving the page (visibilitychange) would write the old place back
+      this.life?.st && (this.life.st.save = () => {});
+      try { localStorage.removeItem(SAVE); localStorage.removeItem('uminagi_life_v1'); } catch { /* ignore */ }
+      location.replace(location.pathname);
+    };
     this.syncButtons();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
     addEventListener('keydown', (e) => {
@@ -218,11 +224,15 @@ class App {
     for (const b of document.querySelectorAll('[data-q]')) b.classList.toggle('on', QUALITY[b.dataset.q] === Q);
   }
   save(quality) {
+    if (this.resetting) return;
     const b = this.life?.cave?.on ? this.life.cave.back : this.life?.home.inside ? this.life.home.back : null;   // indoors: where the door is
     const p = b ? { pos: { x: b.x, z: b.z }, yaw: b.yaw, dist: b.dist } : this.player;
     store({ x: +p.pos.x.toFixed(2), z: +p.pos.z.toFixed(2), yaw: +p.yaw.toFixed(3), dist: +p.dist.toFixed(2), tod: this.world.clockMode ? 'real' : this.world.todName, quality: quality || qName, t: Date.now() });
   }
-  toggleMap(show = $('bigmap').hidden) { $('bigmap').hidden = !show; if (show) this.drawMap($('bigmapcv'), 1); }
+  toggleMap(show = $('bigmap').hidden) {
+    if (show && this.life?.home.inside) { this.life.ui.toast('中では 地図が つかえないよ。外に 出てからにしよう'); return; }   // fast travel from a room or the cave would leave the world hidden
+    $('bigmap').hidden = !show; if (show) this.drawMap($('bigmapcv'), 1);
+  }
   // ------------------------------------------------------------------ minimap
   drawMapBase() {
     const W = G.x1 - G.x0, Hh = G.z1 - G.z0, cv = document.createElement('canvas'); cv.width = W; cv.height = Hh;

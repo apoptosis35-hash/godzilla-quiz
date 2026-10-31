@@ -1,12 +1,12 @@
-// Moves ぽっけ learns as the town grows: dash after the first DIY tool, jump once a public work is finished,
+// Moves ぽっけ learns as the town grows: dash once five kinds of creature are shown to the raccoon, jump once a public work is finished,
 // climbing walls (and running over roofs) once ぽっけ has a house, and swinging on a line once the museum stands.
 // Each comes with a little scene; the stamp book lists what is learnt and what unlocks the next one.
 // `?town=all` (previews, tests) has everything.
 
 const SKILLS = [
-  { id: 'dash', name: 'ダッシュ', how: 'はじめて DIYで 道具を 作る', got: (L) => (L.st.ext.goals?.total?.craft || 0) >= 1 || L.st.tools().length > 0,
+  { id: 'dash', name: 'ダッシュ', how: '生きものを 5種類 見つけて、あらたに 見せる', got: (L) => !!L.st.owlCalled,   // the "something nice" あらた promises in the welcome
     sp: { name: 'あらた', color: '#4f8a46', pitch: 1.05 },
-    lines: ['おっ、自分で 道具を 作ったんだね! りっぱ りっぱ!', 'ごほうびに この 「かるがる スニーカー」を あげる!', '「ダッシュ」ボタンで 走れるように なったよ!\n(キーボードでは Shift)'] },
+    lines: ['そうそう、やくそくの 「いいこと」!', '島じゅうを かけまわってくれた ぽっけに、この 「かるがる スニーカー」を あげる!', '「ダッシュ」ボタンで 走れるように なったよ!\n(キーボードでは Shift)'] },
   { id: 'jump', name: 'ジャンプ', how: '町の工事を ひとつ 完成させる', got: (L) => L.st.town.built.length >= 1,
     sp: { name: 'モアイ', color: '#7fb85a', pitch: 0.72 },
     lines: ['やあ〜、工事 おつかれさま〜。', '現場で つかってた 「ばねの くつ」、ぽっけに あげるよ〜。', '「ジャンプ」ボタンで ジャンプできるように なったよ!\n(キーボードでは スペース)'] },

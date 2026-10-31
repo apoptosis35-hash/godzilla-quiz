@@ -1,0 +1,175 @@
+{
+  "siteName": "かしこい暮らしラボ",
+  "siteUrl": "https://example.github.io/affiliate-office/site/",
+  "niche": "一人暮らし・在宅ワークを快適にする家電とガジェット",
+  "audience": "20〜30代の一人暮らし・リモートワーカー",
+  "articlesPerRun": 3,
+  "affiliate": {
+    "amazonTag": "YOUR-AMAZON-TAG-22",
+    "rakutenId": "",
+    "note": "amazonTag にAmazonアソシエイトのトラッキングID、rakutenId に楽天アフィリエイトIDを入れてください。A8.net は商品ごとの a8Tag に管理画面の広告コード（テキストリンク）をそのまま貼ります。サービス系で Amazon/楽天ボタンが不要なら a8Only: true。a8Label はボタンに表示する文言。"
+  },
+  "products": [
+    {
+      "id": "desk-lamp",
+      "name": "モニターライト（スクリーンバー型）",
+      "category": "在宅ワーク",
+      "keyword": "モニターライト",
+      "asin": "",
+      "points": [
+        "机の上を広く使える",
+        "画面に映り込みにくい",
+        "USB給電"
+      ],
+      "a8Tag": "",
+      "a8Only": false
+    },
+    {
+      "id": "standing-desk",
+      "name": "電動昇降デスク",
+      "category": "在宅ワーク",
+      "keyword": "電動昇降デスク",
+      "asin": "",
+      "points": [
+        "立ち・座りを切り替えられる",
+        "高さメモリー機能",
+        "組み立てに時間がかかる"
+      ],
+      "a8Tag": "",
+      "a8Only": false
+    },
+    {
+      "id": "robot-vacuum",
+      "name": "ロボット掃除機（エントリーモデル）",
+      "category": "家電",
+      "keyword": "ロボット掃除機 一人暮らし",
+      "asin": "",
+      "points": [
+        "留守中に掃除が終わる",
+        "床に物を置かない習慣が必要",
+        "アプリで予約"
+      ],
+      "a8Tag": "",
+      "a8Only": false
+    },
+    {
+      "id": "noise-cancel",
+      "name": "ノイズキャンセリングイヤホン",
+      "category": "ガジェット",
+      "keyword": "ノイズキャンセリング イヤホン 在宅",
+      "asin": "",
+      "points": [
+        "生活音を抑えて集中",
+        "オンライン会議にも使える",
+        "長時間だと耳が疲れることも"
+      ],
+      "a8Label": "EarFun公式サイトで見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+757A42+5REO+5YRHE\" rel=\"nofollow\">【EarFun】</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www13.a8.net/0.gif?a8mat=4BESUC+757A42+5REO+5YRHE\" alt=\"\">",
+      "a8Only": false
+    },
+    {
+      "id": "rice-cooker",
+      "name": "小型炊飯器（3合）",
+      "category": "家電",
+      "keyword": "炊飯器 一人暮らし",
+      "asin": "",
+      "points": [
+        "場所を取らない",
+        "早炊きモード",
+        "まとめ炊きには不向き"
+      ],
+      "a8Tag": "",
+      "a8Only": false
+    },
+    {
+      "id": "gaming-monitor",
+      "name": "ゲーミングモニター（Pixio）",
+      "category": "PC周辺機器",
+      "keyword": "ゲーミングモニター 在宅",
+      "asin": "",
+      "points": [
+        "在宅ワークとゲームを1台で兼用できる",
+        "公式ストアで購入できる",
+        "用途に合うサイズ・リフレッシュレート選びが大切"
+      ],
+      "a8Label": "Pixio公式ストアで見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+74LUIA+XTI+15ORS2\" rel=\"nofollow\">Pixioのゲーミングモニター</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www12.a8.net/0.gif?a8mat=4BESUC+74LUIA+XTI+15ORS2\" alt=\"\">",
+      "a8Only": false
+    },
+    {
+      "id": "appliance-rental",
+      "name": "家電レンタル・サブスク（みんなのHappy）",
+      "category": "暮らし",
+      "keyword": "家電レンタル 一人暮らし",
+      "asin": "",
+      "points": [
+        "初期費用を抑えて家電を揃えられる",
+        "短期利用や引っ越しのときに向く",
+        "対象エリアは関東中心（申込前に要確認）"
+      ],
+      "a8Label": "みんなのHappyで詳しく見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+7L9ZG2+5MMG+5YJRM\" rel=\"nofollow\">家電レンタルみんなのHappy</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www12.a8.net/0.gif?a8mat=4BESUC+7L9ZG2+5MMG+5YJRM\" alt=\"\">",
+      "a8Only": true
+    },
+    {
+      "id": "pocket-wifi",
+      "name": "ポケットWi-Fi（MONSTER MOBILE）",
+      "category": "ネット回線",
+      "keyword": "ポケットwifi 一人暮らし",
+      "asin": "",
+      "points": [
+        "工事不要ですぐ使える",
+        "縛りなし・長期など複数プランから選べる",
+        "使い方によっては速度制限に注意"
+      ],
+      "a8Label": "MONSTER MOBILEを見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+7N2A9E+348K+3YW8WI\" rel=\"nofollow\">モンスターモバイル</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www18.a8.net/0.gif?a8mat=4BESUC+7N2A9E+348K+3YW8WI\" alt=\"\">",
+      "a8Only": true
+    },
+    {
+      "id": "wifi-rental",
+      "name": "WiFiの短期レンタル（WiFiレンタルどっとこむ）",
+      "category": "ネット回線",
+      "keyword": "wifi レンタル 短期",
+      "asin": "",
+      "points": [
+        "1日単位で借りられる",
+        "引っ越し直後や出張のつなぎに便利",
+        "長期利用なら契約型のほうが割安"
+      ],
+      "a8Label": "WiFiレンタルどっとこむを見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+76E5BM+2JMM+TSJ42\" rel=\"nofollow\">Wifiレンタルどっとこむ</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www15.a8.net/0.gif?a8mat=4BESUC+76E5BM+2JMM+TSJ42\" alt=\"\">",
+      "a8Only": true
+    },
+    {
+      "id": "mealkit",
+      "name": "ミールキットお試し（ヨシケイ）",
+      "category": "食材宅配",
+      "keyword": "ミールキット お試し",
+      "asin": "",
+      "points": [
+        "献立と食材がセットで届く",
+        "お試し5daysから気軽に始められる",
+        "配達エリアの確認が必要"
+      ],
+      "a8Label": "ヨシケイのお試しを見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+77L0J6+1QM6+HZAGY\" rel=\"nofollow\">ヨシケイのミールキット</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www17.a8.net/0.gif?a8mat=4BESUC+77L0J6+1QM6+HZAGY\" alt=\"\">",
+      "a8Only": true
+    },
+    {
+      "id": "food-delivery",
+      "name": "食材宅配おためしセット（Oisix）",
+      "category": "食材宅配",
+      "keyword": "オイシックス お試し",
+      "asin": "",
+      "points": [
+        "人気の食材やミールキットをお得に試せる",
+        "時短・下ごしらえ済みの食材が中心",
+        "継続は定期コース（初回だけの利用も可）"
+      ],
+      "a8Label": "Oisixのお試しを見る",
+      "a8Tag": "<a href=\"https://px.a8.net/svt/ejp?a8mat=4BESUC+786G4Y+3RK+2T8JPE\" rel=\"nofollow\">Oisixおためしセット</a><img border=\"0\" width=\"1\" height=\"1\" src=\"https://www19.a8.net/0.gif?a8mat=4BESUC+786G4Y+3RK+2T8JPE\" alt=\"\">",
+      "a8Only": true
+    }
+  ]
+}
