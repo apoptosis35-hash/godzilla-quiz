@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Creature pictures</title>
+<!-- Every creature's picture (js/life/creatures.js) on one sheet, to check them at a glance:
+     serve the repo root and open /uminagi/tools/creatures.html -->
+<script type="importmap">{ "imports": { "three": "../vendor/three.module.min.js", "three/addons/": "../vendor/addons/" } }</script>
+<style>
+  body { margin: 0; padding: 12px; background: #fff7e6; font-family: system-ui, sans-serif; color: #4a3a22; }
+  h2 { margin: 14px 0 6px; font-size: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, 104px); gap: 6px; }
+  .c { background: #fff; border: 2px solid #ecd9a6; border-radius: 12px; text-align: center; padding: 4px; }
+  .c img { width: 96px; height: 96px; display: block; }
+  .c small { font-size: 11px; }
+</style></head>
+<body><div id="out"></div>
+<script type="module">
+  import { creatureIcon } from '../js/life/creatures.js';
+  import { FISH, BUGS, FOSSILS, SHELLS } from '../js/life/data.js';
+  import { SEA } from '../js/life/items2.js';
+  const out = document.getElementById('out');
+  for (const [title, list] of [['魚', FISH], ['虫', BUGS], ['海の生きもの', SEA], ['化石', FOSSILS], ['貝がら', SHELLS]]) {
+    const h = document.createElement('h2'); h.textContent = `${title} (${list.length})`; out.appendChild(h);
+    const grid = document.createElement('div'); grid.className = 'grid'; out.appendChild(grid);
+    for (const s of list) { const d = document.createElement('div'); d.className = 'c'; let url = null; try { url = creatureIcon(s.id); } catch (e) { console.error(s.id, e); } d.innerHTML = `${url ? `<img src="${url}">` : '<div style="height:96px">✖</div>'}<small>${s.name}</small>`; grid.appendChild(d); }
+  }
+  window.__done = true;
+</script></body></html>

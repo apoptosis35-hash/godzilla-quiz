@@ -196,6 +196,16 @@ const foes = await G(async () => {
   return { kinds, hp1, lab, calmed, gotSome, out: !C.on && !L.home.inside, dropped: c0 + 4 - L.st.mat.crystal, hud: document.querySelector('.cavehp').hidden };
 });
 check('cave critters: bump, calm with A, faint and carried up', foes.kinds.includes('goron') && foes.kinds.includes('bat') && foes.hp1 === 2 && foes.lab === 'たたく' && foes.calmed && foes.gotSome && foes.out && foes.dropped === 2 && foes.hud, JSON.stringify(foes));
+// every creature, fossil and shell has its own model and picture; the pocket and the encyclopedia show them
+const pics = await G(async () => {
+  const { FISH, BUGS, FOSSILS, SHELLS } = await import('/uminagi/js/life/data.js'), { SEA } = await import('/uminagi/js/life/items2.js');
+  const C = await import('/uminagi/js/life/creatures.js'), L = window.__uminagi.life;
+  const all = [...FISH, ...BUGS, ...SEA, ...FOSSILS, ...SHELLS].map((s) => s.id), bad = all.filter((id) => !C.hasCreature(id) || !C.creatureModel(id));
+  const icon = C.creatureIcon('madai'), butterfly = L.bugMesh('ageha');
+  L.st.caught.madai = 'x'; L.ui.book(L.st); await new Promise((r) => setTimeout(r, 50)); const img = !!document.querySelector('.bcell .cpic'); L.ui.closePanel(-1);
+  return { n: all.length, bad, icon: /^data:image\/png/.test(icon || '') && icon.length > 2000, wings: butterfly.userData.wings.length, img };
+});
+check('a model and a picture for all 191 creatures, fossils and shells', pics.n === 191 && !pics.bad.length && pics.icon && pics.wings === 2 && pics.img, JSON.stringify(pics));
 // the bottom (B10): no way further down, the cave master's chest once a day
 const bottom = await G(async () => {
   const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

@@ -9,6 +9,7 @@ import { VILLAGERS, FISH, BUGS, FOSSILS } from './data.js';
 import { SEA } from './items2.js';
 import { RACCOON, OWL, LETTERS } from './data2.js';
 import { ART, hangPainting } from './art.js';
+import { hasCreature, creatureModel } from './creatures.js';
 
 const PI = Math.PI;
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
@@ -221,7 +222,11 @@ export class Home {
     all.forEach((it, i) => {
       const x = (i % n - (n - 1) / 2) * sp, z = (Math.floor(i / n) - (n - 1) / 2) * sp - 0.4;
       if (this.town.protos.museum_pedestal) { const p = this.town.clone('museum_pedestal', 0, 0, 0, 0, true); p.parent.remove(p); p.position.set(STAGE.x + x, STAGE.y, STAGE.z + z); p.scale.setScalar(Math.min(1, sp / 0.9)); const glass = p.getObjectByName('museum_pedestal_glass'); if (glass) glass.visible = false; this.room.add(p); }
-      const s = this.life.textSprite(icon(it.id), 0.42); s.position.set(STAGE.x + x, STAGE.y + 0.6 * Math.min(1, sp / 0.9) + 0.24, STAGE.z + z); this.room.add(s);
+      const k = Math.min(1, sp / 0.9), top = STAGE.y + 0.6 * k;
+      if (hasCreature(it.id)) {   // the creature (or fossil) itself, set on its pedestal
+        const o = creatureModel(it.id), kind = o.userData.kind; o.scale.setScalar(0.48 * k); o.position.set(STAGE.x + x, top + 0.48 * k * o.userData.half.y + 0.03 + (kind === 'fish' ? 0.08 * k : 0), STAGE.z + z);
+        if (kind !== 'fish') o.rotation.x = 0.35; this.room.add(o);
+      } else { const s = this.life.textSprite(icon(it.id), 0.42); s.position.set(STAGE.x + x, top + 0.24, STAGE.z + z); this.room.add(s); }
     });
     if (!all.length) { const s = this.life.textSprite('まだ 展示が ないよ', 0.6, 520); s.position.set(STAGE.x, STAGE.y + 1.4, STAGE.z - 1); this.room.add(s); }
   }

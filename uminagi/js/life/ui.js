@@ -4,6 +4,10 @@ import { ITEMS, icon, TOOL_ICON } from './state.js';
 import { FISH, BUGS, FOSSILS } from './data.js';
 import { SEA } from './items2.js';
 import { ART, paintingURL } from './art.js';
+import { hasCreature, creatureIcon } from './creatures.js';
+
+// a creature's picture (creatures.js), or the item's emoji
+const pic = (id) => (hasCreature(id) ? `<img class="cpic" src="${creatureIcon(id)}" alt="">` : `<span>${icon(id)}</span>`);
 
 const $ = (id) => document.getElementById(id);
 const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
@@ -153,7 +157,7 @@ export class LifeUI {
     const grid = el('div', 'pgrid'); wrap.appendChild(grid);
     for (let i = 0; i < st.cap(); i++) {
       const id = st.pocket[i], it = ITEMS[id], ok = id && (!filter || filter(id));
-      const c = el('button', 'slot' + (id ? '' : ' empty') + (ok ? '' : ' off') + (id && id === st.tool ? ' held' : ''), id ? `<span>${icon(id)}</span><small>${it.name}</small>` : '');
+      const c = el('button', 'slot' + (id ? '' : ' empty') + (ok ? '' : ' off') + (id && id === st.tool ? ' held' : ''), id ? `${pic(id)}<small>${it.name}</small>` : '');
       if (ok) c.onclick = () => this.closePanel(i);
       grid.appendChild(c);
     }
@@ -177,12 +181,12 @@ export class LifeUI {
       let got = 0, don = 0;
       for (const it of list) {
         const c = !!st.caught[it.id], d = !!st.donated[it.id]; got += c; don += d;
-        const cell = el('button', 'bcell' + (c ? '' : ' unknown') + (d ? ' don' : ''), c ? `<span>${icon(it.id)}</span><small>${it.name}</small>` : '<span>？</span><small>？？？</small>');
+        const cell = el('button', 'bcell' + (c ? '' : ' unknown') + (d ? ' don' : ''), c ? `${pic(it.id)}<small>${it.name}</small>` : '<span>？</span><small>？？？</small>');
         cell.onclick = () => {
           if (!c) { info.textContent = 'まだ見つけていない。'; return; }
           if (it.style) { info.innerHTML = `<img src="${paintingURL(it.id)}" style="width:100%;max-width:320px;border-radius:8px;display:block;margin:0 auto 6px">「${it.name}」 ${it.painter} ${it.year}年${d ? '　(資料館に展示中)' : ''}`; return; }
           const when = it.months ? `　${it.months.length === 12 ? '一年中' : it.months[0] + '〜' + it.months[it.months.length - 1] + '月'}` : '';
-          info.textContent = `${it.name}　${it.price} ナギ${when}${d ? '　(資料館に展示中)' : ''}`;
+          info.innerHTML = `${hasCreature(it.id) ? `<img src="${creatureIcon(it.id)}" style="width:112px;height:112px;display:block;margin:0 auto">` : ''}${it.name}　${it.price} ナギ${when}${d ? '　(資料館に展示中)' : ''}`;
         };
         grid.appendChild(cell);
       }

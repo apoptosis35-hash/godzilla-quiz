@@ -37,13 +37,13 @@ function brighten(geo) {
   col.needsUpdate = true;
 }
 export function toonify(root) {
-  const meshes = []; root.traverse((m) => { if (m.isMesh && !m.userData.outline) meshes.push(m); });
+  const meshes = []; root.traverse((m) => { if (m.isMesh && !m.userData.outline && !m.userData.keep) meshes.push(m); });   // keep: glowing bits stay as they are
   for (const m of meshes) {
     const old = m.material; if (!old || old.userData?.toon) continue;
     if (m.geometry.attributes.color) brighten(m.geometry);
-    const t = new THREE.MeshToonMaterial({ color: old.color || 0xffffff, map: old.map || null, vertexColors: !!m.geometry.attributes.color, gradientMap: gradient(), transparent: old.transparent, opacity: old.opacity });
+    const t = new THREE.MeshToonMaterial({ color: old.color || 0xffffff, map: old.map || null, vertexColors: !!m.geometry.attributes.color, gradientMap: gradient(), transparent: old.transparent, opacity: old.opacity, side: old.side, depthWrite: old.depthWrite });
     t.userData.toon = true; m.material = t;
-    if (m.geometry.attributes.normal && !old.transparent) {
+    if (m.geometry.attributes.normal && !old.transparent && old.side !== THREE.DoubleSide) {   // thin double-sided parts (fins, wings) get no hull
       const o = new THREE.Mesh(m.geometry, outline()); o.userData.outline = true; o.castShadow = false; o.receiveShadow = false; o.renderOrder = -1;
       m.add(o);
     }
