@@ -57,11 +57,12 @@ const MAKERS = {
     return crystals(g, 3, 0x9ae8ff, 0.18, 0.08, 0.16, 0, 11);
   },
 };
+// prices: what they sell for (a quarter) stays under what their crystals would take to find again
 const CAVE_FURN = [
-  { id: 'furn_crystal_lamp', name: '水晶ランプ', icon: '💎', w: 0.45, d: 0.45, where: 'both', light: true, price: 6000 },
-  { id: 'furn_glow_pot', name: 'ひかりごけの鉢', icon: '🪴', w: 0.45, d: 0.45, where: 'both', light: true, price: 3000 },
-  { id: 'furn_geode', name: '大きなジオード', icon: '🔮', w: 0.8, d: 0.6, where: 'both', price: 12000 },
-  { id: 'furn_stalagmite', name: 'しょうにゅう石', icon: '🗻', w: 0.6, d: 0.6, where: 'both', price: 5000 },
+  { id: 'furn_crystal_lamp', name: '水晶ランプ', icon: '💎', w: 0.45, d: 0.45, where: 'both', light: true, price: 3600 },
+  { id: 'furn_glow_pot', name: 'ひかりごけの鉢', icon: '🪴', w: 0.45, d: 0.45, where: 'both', light: true, price: 2000 },
+  { id: 'furn_geode', name: '大きなジオード', icon: '🔮', w: 0.8, d: 0.6, where: 'both', price: 6000 },
+  { id: 'furn_stalagmite', name: 'しょうにゅう石', icon: '🗻', w: 0.6, d: 0.6, where: 'both', price: 3000 },
 ];
 for (const f of CAVE_FURN) { ITEMS[f.id] = { ...f, kind: 'furniture', make: MAKERS[f.id] }; ICON_BY_ID[f.id] = f.icon; }
 const CAVE_RECIPES = RECIPES.filter((r) => r.cave).map((r) => r.id);
