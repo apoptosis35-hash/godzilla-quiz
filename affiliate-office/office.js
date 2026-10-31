@@ -108,8 +108,9 @@ async function play(ev) {
 const queue = []; let busy = false;
 async function pump() {
   if (busy) return; busy = true;
-  while (queue.length) { speed = queue.length > 8 ? 3 : 1; await play(queue.shift()); }
+  while (queue.length) { speed = replaying ? 1.3 : queue.length > 8 ? 3 : 1; await play(queue.shift()); }
   busy = false;
+  if (replaying) { replaying = false; $("#replay").disabled = false; poll(); }
   idleLife();
 }
 // 手が空いている社員はたまにコーヒーを取りに行く
@@ -248,16 +249,29 @@ async function poll() {
     lastState = s; showKpi(s.kpi);
     const fresh = Date.now() - new Date(s.updatedAt) < 10 * 60e3 && s.running;
     if (mode === "live") {
-      $("#mode").textContent = fresh ? `🟢 稼働中 — ${s.mode}` : !s.events.length ? "⚪ まだ本番の業務はありません" : `⚪ 業務時間外（最終業務 ${new Date(s.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}）`;
+      if (!replaying) $("#mode").textContent = fresh ? `🟢 稼働中 — ${s.mode}` : !s.events.length ? "⚪ まだ本番の業務はありません" : `⚪ 業務時間外（最終業務 ${new Date(s.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}）`;
       const news = s.events.filter(e => !seen.has(key(e)));
       news.forEach(e => seen.add(key(e)));
-      if (first) { first = false; news.slice(-6).forEach(addLog); } // 過去の業務は再生せず、ログに残すだけ
+      if (first) { first = false; if (fresh || !s.events.length) news.slice(-6).forEach(addLog); else replayLatest(); }
       else { queue.push(...news); pump(); }
     }
   } catch {
     $("#mode").textContent = "⚪ 業務ログ（data/state.json）を読み込めません";
   }
 }
-let first = true;
+let first = true, replaying = false;
+// 最後に実行された業務（朝会から終礼まで）の実際のログを、もう一度再生する
+function replayLatest() {
+  const ev = lastState?.events ?? [];
+  if (!ev.length || busy) return;
+  let start = ev.map(e => e.type === "meeting" && e.msg.startsWith("朝会")).lastIndexOf(true);
+  if (start < 0) start = 0;
+  replaying = true; $("#replay").disabled = true;
+  const at = new Date(ev[start].t).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  $("#mode").textContent = `📼 ${at} の業務を再生中（実際のログ）`;
+  queue.push(...ev.slice(start));
+  pump();
+}
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }, 1000);
+$("#replay").onclick = replayLatest;
 renderStaff(); renderOffice({}); poll(); setInterval(poll, 2000); idleLife(); assistLife();
