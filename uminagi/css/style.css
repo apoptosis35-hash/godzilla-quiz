@@ -167,3 +167,6 @@ body.talking #web { visibility: hidden; }
 .stampbook .stars { color: #e8a820; letter-spacing: 1px; }
 .tourfade { position: fixed; inset: 0; background: #000; opacity: 0; pointer-events: none; transition: opacity .6s; z-index: 50; }
 .tourfade.on { opacity: 1; }
+/* hearts in the cave (js/life/cave.js) */
+.cavehp { position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9; font-size: 24px; letter-spacing: 2px; padding: 2px 12px; border-radius: 99px; background: rgba(0, 0, 0, .35); pointer-events: none; font-family: system-ui, sans-serif; }
+.cavehp[hidden] { display: none; }

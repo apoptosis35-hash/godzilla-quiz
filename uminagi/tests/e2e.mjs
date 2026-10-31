@@ -181,6 +181,21 @@ const caveEdge = await G(async () => {
   return { dayOk, mapShut, out: !C.on && !L.home.inside && L.root.visible, light: L.home.light.intensity };
 });
 check('cave edge cases: day turnover, map indoors, double A', caveEdge.dayOk && caveEdge.mapShut && caveEdge.out && caveEdge.light === 0, JSON.stringify(caveEdge));
+// cave critters: a bump costs a heart, A calms a ゴロン (it leaves something), no hearts left carries ぽっけ up
+const foes = await G(async () => {
+  const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  await C.enter(3); step(1);
+  const kinds = [...new Set(C.foes.map((o) => o.kind))].join(','), g = C.foes.find((o) => o.kind === 'goron');
+  C.inv = 0; g.x = P.pos.x; g.z = P.pos.z - 0.5; g.stun = 0; g.rest = 0; step(1); const hp1 = C.hp;
+  C.inv = 9; g.x = P.pos.x; g.z = P.pos.z - 1.2; g.hp = 1; g.stun = 0; P.heading = Math.PI; const m0 = JSON.stringify(L.st.mat); step(1);
+  const lab = L.target()?.label; C.hitFoe(g); const calmed = !!g.gone, gotSome = JSON.stringify(L.st.mat) !== m0;
+  const say = L.ui.say; L.ui.say = async () => 0;
+  const c0 = L.st.mat.crystal || 0; L.st.addMat('crystal', 4); C.hp = 1; C.inv = 0; await C.hurt(C.foes.find((o) => !o.gone) || g);
+  for (let i = 0; i < 60 && (C.on || C.busy); i++) await new Promise((r) => setTimeout(r, 50));
+  await new Promise((r) => setTimeout(r, 200)); L.ui.say = say;
+  return { kinds, hp1, lab, calmed, gotSome, out: !C.on && !L.home.inside, dropped: c0 + 4 - L.st.mat.crystal, hud: document.querySelector('.cavehp').hidden };
+});
+check('cave critters: bump, calm with A, faint and carried up', foes.kinds.includes('goron') && foes.kinds.includes('bat') && foes.hp1 === 2 && foes.lab === 'たたく' && foes.calmed && foes.gotSome && foes.out && foes.dropped === 2 && foes.hud, JSON.stringify(foes));
 check('cave: enter, find something, go down, walls hold, back out', cave.label === 'はいる' && cave.inside === 'cave' && cave.y === 100 && cave.find && cave.got && cave.hole && cave.floor === 2 && cave.deep >= 2 && cave.stillIn && cave.camMin >= 5 && cave.lim[0] >= 0.85 && cave.lim[1] <= 11 && cave.out && cave.oy < 20, JSON.stringify(cave));
 // DIY at the raccoon's stall, then chop wood with the new axe; tools wear down
 const diy = await G(async () => {
