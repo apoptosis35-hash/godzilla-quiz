@@ -130,17 +130,30 @@ export async function editor(bus, cfg, brief, md) {
 }
 
 // ───────── 5. パブリッシャー ─────────
+// A8.net の管理画面で取得した広告コード（<a href="https://px.a8.net/...">…<img src="https://www…a8.net/0.gif?…">）を
+// そのまま config.json の a8Tag に貼れるようにする。URL だけなら a8Url でもOK。
+export function parseA8(p) {
+  const src = p.a8Tag || p.a8Url || "";
+  const href = (src.match(/https?:\/\/px\.a8\.net\/svt\/ejp\?a8mat=[\w+.%-]+/) || [])[0] || "";
+  const pixel = (src.match(/https?:\/\/www\d*\.a8\.net\/0\.gif\?a8mat=[\w+.%-]+/) || [])[0] || "";
+  return { href, pixel };
+}
 function linkFor(cfg, p) {
   const real = v => (v && !/^YOUR/i.test(v) ? v : "");
   const amazonTag = real(cfg.affiliate.amazonTag), rakutenId = real(cfg.affiliate.rakutenId);
   const links = [];
-  if (p.a8Url) links.push(["公式・詳細を見る", p.a8Url]);
-  const q = encodeURIComponent(p.keyword);
-  const amazon = p.asin ? `https://www.amazon.co.jp/dp/${p.asin}` : `https://www.amazon.co.jp/s?k=${q}`;
-  links.push(["Amazonで見る", amazonTag ? `${amazon}${amazon.includes("?") ? "&" : "?"}tag=${encodeURIComponent(amazonTag)}` : amazon]);
-  const rakuten = `https://search.rakuten.co.jp/search/mall/${q}/`;
-  links.push(["楽天市場で見る", rakutenId ? `https://hb.afl.rakuten.co.jp/hgc/${rakutenId}/?pc=${encodeURIComponent(rakuten)}` : rakuten]);
-  return `<div class="buy"><div class="buy-name">${p.name}</div>${links.map(([t, u]) => `<a class="btn" rel="sponsored noopener" target="_blank" href="${u}" data-product="${p.id}">${t}</a>`).join("")}</div>`;
+  const a8 = parseA8(p);
+  if (a8.href) links.push([p.a8Label || "公式サイトで詳しく見る", a8.href]);
+  // a8Only: サービス系（レンタル・サブスク等）は Amazon/楽天 のボタンを出さない
+  if (!(p.a8Only && a8.href)) {
+    const q = encodeURIComponent(p.keyword);
+    const amazon = p.asin ? `https://www.amazon.co.jp/dp/${p.asin}` : `https://www.amazon.co.jp/s?k=${q}`;
+    links.push(["Amazonで見る", amazonTag ? `${amazon}${amazon.includes("?") ? "&" : "?"}tag=${encodeURIComponent(amazonTag)}` : amazon]);
+    const rakuten = `https://search.rakuten.co.jp/search/mall/${q}/`;
+    links.push(["楽天市場で見る", rakutenId ? `https://hb.afl.rakuten.co.jp/hgc/${rakutenId}/?pc=${encodeURIComponent(rakuten)}` : rakuten]);
+  }
+  const imp = a8.pixel ? `<img class="a8px" src="${a8.pixel}" width="1" height="1" alt="">` : ""; // A8のインプレッション計測
+  return `<div class="buy"><div class="buy-name">${p.name}</div>${links.map(([t, u]) => `<a class="btn" rel="sponsored noopener" target="_blank" href="${u}" data-product="${p.id}">${t}</a>`).join("")}${imp}</div>`;
 }
 const esc = s => s.replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 function mdToHtml(md, cfg) {

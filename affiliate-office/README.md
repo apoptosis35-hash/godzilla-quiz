@@ -38,8 +38,10 @@ npm run serve          # → http://localhost:8787/  記事サイトは /site/
 このシステムは「記事を作って載せる」ところまでを自動化します。お金が発生するには以下が必要です。
 
 1. **ASPに登録**: Amazonアソシエイト、楽天アフィリエイト、A8.net など。審査があります（記事が一定数あるサイトが必要なことが多い）。
-2. **IDを設定**: `config.json` の `affiliate.amazonTag` / `rakutenId`、商品ごとの `asin`・`a8Url` を埋める。
+2. **IDを設定**: `config.json` の `affiliate.amazonTag` / `rakutenId`、商品ごとの `asin`・`a8Tag` を埋める。
    `YOUR-...` のままだとアフィリエイトタグは付きません。
+   - **A8.net**: 管理画面で広告主と提携 → 「広告リンク作成」→ テキストリンクのコードをコピーし、商品の `a8Tag` にそのまま貼る（`<a href="https://px.a8.net/...">…</a><img src="https://www….a8.net/0.gif?...">` の形）。
+     リンクとインプレッション計測用の画像は自動で取り出されます。家電レンタルやサブスクなど Amazon/楽天 で買えないものは `"a8Only": true`。
 3. **公開**: `site/` を GitHub Pages や独自ドメインで公開し、`config.json` の `siteUrl` を合わせて Google Search Console に `sitemap.xml` を登録。
 4. **定期実行**: cron や GitHub Actions で `npm run run` を回して記事を増やす。
 5. **成果を戻す**: ASP管理画面の数字を `data/performance.csv`（`date,article,clicks,conversions,revenue_jpy`）に貼る → アナリストが次の企画に反映。
