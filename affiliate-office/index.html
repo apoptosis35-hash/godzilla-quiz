@@ -9,6 +9,11 @@
 <body>
 <header class="topbar">
   <div class="brand">🏢 AIアフィリエイト事務所 <small id="mode">接続中…</small></div>
+  <div class="office-level" id="office-level" title="事務所レベル">
+    <div class="ol-main"><span class="ol-lv" id="ol-lv">Lv.1</span><span class="ol-name" id="ol-name">スタートアップ</span></div>
+    <div class="ol-bar"><i id="ol-fill"></i></div>
+    <small class="ol-next" id="ol-next">次のレベルまで —</small>
+  </div>
   <div class="kpis">
     <div class="kpi"><span>公開記事</span><b id="k-articles">0</b></div>
     <div class="kpi"><span>クリック</span><b id="k-clicks">0</b></div>
@@ -26,7 +31,7 @@
       <div class="board-note" id="board-note">—</div></div>
     <div class="clock" id="clock">--:--</div>
     <div class="meeting"><div class="table"></div><span>会議テーブル</span></div>
-    <div class="plant p1">🪴</div><div class="plant p2">🌿</div><div class="coffee">☕<span>コーヒー</span></div>
+    <div class="plant p1">🌱</div><div class="plant p2">🌿</div><div class="coffee">☕<span>コーヒー</span></div>
   </div>
   <aside class="side">
     <h2>👥 スタッフ</h2>
@@ -35,6 +40,7 @@
     <ol id="log"></ol>
   </aside>
 </div>
+<div class="toasts" id="toasts"></div>
 <script src="office.js"></script>
 </body>
 </html>

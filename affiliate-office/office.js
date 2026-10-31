@@ -131,6 +131,106 @@ function idleLife() {
   }, 6000 + Math.random() * 6000);
 }
 
+// ───── 事務所レベル・内装（放置ゲーム：実データ kpi だけで育つ）─────
+const LEVELS = [
+  { lv: 1, name: "スタートアップ",       min: 0 },
+  { lv: 2, name: "町の小さな事務所",     min: 5 },
+  { lv: 3, name: "にぎわう編集部",       min: 10 },
+  { lv: 4, name: "人気メディア",         min: 20 },
+  { lv: 5, name: "業界注目の事務所",     min: 35 },
+  { lv: 6, name: "老舗メディア企業",     min: 50 },
+];
+// 内装（絵文字の小物）: 公開記事数 or 報酬のしきい値で解放。架空の数字では増えない。
+const DECOR = [
+  { id: "plant3", emoji: "🌵",  pos: PHONE ? [7, 55]  : [6, 55],  need: { articles: 5 } },
+  { id: "books",  emoji: "📚",  pos: PHONE ? [93, 55] : [95, 55], need: { articles: 10 } },
+  { id: "water",  emoji: "🧴",  pos: PHONE ? [10, 93] : [8, 92],  need: { articles: 10 } },
+  { id: "sofa",   emoji: "🛋️",  pos: PHONE ? [50, 95] : [50, 93], need: { articles: 20 } },
+  { id: "plantB", emoji: "🌱",  pos: PHONE ? [93, 72] : [95, 70], need: { articles: 20 } },
+  { id: "trophy", emoji: "🏆",  pos: PHONE ? [20, 8]  : [28, 5],  need: { revenue: 1000 } },
+  { id: "award",  emoji: "🎖️",  pos: PHONE ? [80, 8]  : [72, 5],  need: { revenue: 10000 } },
+];
+const ASSIST_NAMES = ["アシスタント", "インターン", "新人スタッフ"];
+const ASSIST_COLORS = ["#9aa0c0", "#7bd389", "#f0a6ca"];
+const ASSIST = [];
+function moveEl(el, [x, y], instant) {
+  if (instant) el.style.transition = "none";
+  el.style.left = x + "%"; el.style.top = y + "%";
+  if (instant) { el.offsetWidth; el.style.transition = ""; }
+}
+function computeLevel(kpi) {
+  const a = kpi?.articles || 0, rev = kpi?.revenue || 0;
+  let cur = LEVELS[0];
+  for (const L of LEVELS) if (a >= L.min) cur = L;
+  const next = LEVELS.find(L => L.min > a) || null;
+  const progress = next ? (a - cur.min) / (next.min - cur.min) : 1;
+  return { ...cur, next, progress, articles: a, revenue: rev };
+}
+const unlocked = kpi => DECOR.filter(d =>
+  (d.need.articles ? (kpi?.articles || 0) >= d.need.articles : true) &&
+  (d.need.revenue ? (kpi?.revenue || 0) >= d.need.revenue : true));
+const assistantCount = lv => Math.max(0, lv - 3); // Lv4で1人、Lv5で2人、Lv6で3人
+function ensureAssistants(n) {
+  while (ASSIST.length < n) {
+    const i = ASSIST.length;
+    const el = document.createElement("div");
+    el.className = "agent assistant idle";
+    el.style.cssText = `--c:${ASSIST_COLORS[i % 3]};--hair:#3a2a1a`;
+    el.innerHTML = `<div class="body"><div class="torso"></div><div class="head"></div><div class="hair"></div><div class="eyes"><i></i><i></i></div></div><div class="name">${ASSIST_NAMES[i % 3]}</div>`;
+    floor.append(el);
+    const home = [12 + Math.random() * 76, 55 + Math.random() * 32];
+    ASSIST.push({ el, home });
+    moveEl(el, home, true);
+  }
+  while (ASSIST.length > n) ASSIST.pop().el.remove();
+}
+let assistT;
+function assistLife() {
+  clearTimeout(assistT);
+  assistT = setTimeout(() => {
+    for (const a of ASSIST) if (Math.random() < 0.6) {
+      a.el.classList.add("walking");
+      moveEl(a.el, [12 + Math.random() * 76, 55 + Math.random() * 34]);
+      setTimeout(() => a.el.classList.remove("walking"), 1300);
+    }
+    assistLife();
+  }, 4000 + Math.random() * 4000);
+}
+function toast(msg) {
+  const box = $("#toasts"); if (!box) return;
+  const t = document.createElement("div"); t.className = "toast"; t.textContent = msg;
+  box.append(t);
+  requestAnimationFrame(() => t.classList.add("show"));
+  setTimeout(() => { t.classList.remove("show"); setTimeout(() => t.remove(), 400); }, 5500);
+}
+let _decorKey = "";
+function renderOffice(kpi) {
+  const info = computeLevel(kpi || {});
+  const lvEl = $("#ol-lv"); if (!lvEl) return;
+  lvEl.textContent = "Lv." + info.lv;
+  $("#ol-name").textContent = info.name;
+  $("#ol-fill").style.width = Math.round(info.progress * 100) + "%";
+  $("#ol-next").textContent = info.next ? `次のLvまで 記事あと${info.next.min - info.articles}本` : "最大レベル達成 🎉";
+  const ud = unlocked(kpi || {}), n = assistantCount(info.lv);
+  const dkey = info.lv + "|" + ud.map(d => d.id).join(",") + "|" + n;
+  if (dkey !== _decorKey) {
+    _decorKey = dkey;
+    floor.querySelectorAll(".decor").forEach(e => e.remove());
+    for (const d of ud) {
+      const el = document.createElement("div");
+      el.className = "decor"; el.style.cssText = `left:${d.pos[0]}%;top:${d.pos[1]}%`;
+      el.textContent = d.emoji; floor.append(el);
+    }
+    ensureAssistants(n);
+  }
+  // レベルアップ演出（localStorage で前回レベルを記憶。初回は演出なし）
+  const prev = +(localStorage.getItem("office.level") || 0);
+  if (info.lv > prev) {
+    if (prev > 0) toast(`🎉 事務所レベルアップ！ Lv.${info.lv}「${info.name}」`);
+    localStorage.setItem("office.level", info.lv);
+  }
+}
+
 // ───── データ取得 ─────
 let mode = "live", seen = new Set(), lastState = null;
 const key = e => e.t + e.agent + e.msg;
@@ -140,6 +240,7 @@ function showKpi(k = {}) {
   $("#k-conversions").textContent = k.conversions ?? 0;
   $("#k-revenue").textContent = "¥" + (k.revenue ?? 0).toLocaleString();
   $("#k-epc").textContent = "¥" + (k.epc ?? 0);
+  renderOffice(k);
 }
 async function poll() {
   try {
@@ -188,4 +289,4 @@ function startDemo() {
 }
 $("#toggle").onclick = () => setMode(mode === "demo" ? "live" : "demo");
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }, 1000);
-renderStaff(); poll(); setInterval(poll, 2000); idleLife();
+renderStaff(); renderOffice({}); poll(); setInterval(poll, 2000); idleLife(); assistLife();
