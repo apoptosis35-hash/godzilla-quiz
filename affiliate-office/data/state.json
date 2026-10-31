@@ -1,9 +1,9 @@
 {
-  "updatedAt": "2026-10-31T10:25:12.153Z",
-  "mode": "まだ本番の業務はありません",
+  "updatedAt": "2026-10-31T12:19:57.931Z",
+  "mode": "手書き記事（APIなし）",
   "running": false,
   "kpi": {
-    "articles": 0,
+    "articles": 3,
     "clicks": 0,
     "conversions": 0,
     "revenue": 0,
@@ -16,7 +16,7 @@
       "role": "トレンド調査",
       "color": "#4f9dff",
       "status": "idle",
-      "task": "待機中"
+      "task": "本日の業務完了"
     },
     "strategist": {
       "id": "strategist",
@@ -24,7 +24,7 @@
       "role": "キーワード戦略",
       "color": "#ff7eb6",
       "status": "idle",
-      "task": "待機中"
+      "task": "本日の業務完了"
     },
     "writer": {
       "id": "writer",
@@ -32,7 +32,7 @@
       "role": "ライター",
       "color": "#ffb340",
       "status": "idle",
-      "task": "待機中"
+      "task": "本日の業務完了"
     },
     "editor": {
       "id": "editor",
@@ -40,7 +40,7 @@
       "role": "校閲・法務",
       "color": "#3ecf8e",
       "status": "idle",
-      "task": "待機中"
+      "task": "本日の業務完了"
     },
     "publisher": {
       "id": "publisher",
@@ -48,7 +48,7 @@
       "role": "パブリッシャー",
       "color": "#a78bfa",
       "status": "idle",
-      "task": "待機中"
+      "task": "本日の業務完了"
     },
     "analyst": {
       "id": "analyst",
@@ -56,8 +56,183 @@
       "role": "アナリスト",
       "color": "#f87171",
       "status": "idle",
-      "task": "待機中"
+      "task": "本日の業務完了"
     }
   },
-  "events": []
+  "events": [
+    {
+      "t": "2026-10-31T12:19:49.503Z",
+      "agent": "analyst",
+      "type": "meeting",
+      "msg": "本日は手書きの記事を公開します"
+    },
+    {
+      "t": "2026-10-31T12:19:49.506Z",
+      "agent": "writer",
+      "type": "work",
+      "msg": "執筆: 在宅ワークにノイズキャンセリングイヤホンは必要？失敗しない選び方"
+    },
+    {
+      "t": "2026-10-31T12:19:49.507Z",
+      "agent": "writer",
+      "type": "result",
+      "msg": "書き上げました（1049字）"
+    },
+    {
+      "t": "2026-10-31T12:19:49.507Z",
+      "agent": "writer",
+      "type": "handoff",
+      "msg": "「在宅ワークにノイズキャンセリングイヤホンは必要？失敗しない選び方」の原稿チェックお願いします",
+      "to": "editor"
+    },
+    {
+      "t": "2026-10-31T12:19:49.508Z",
+      "agent": "editor",
+      "type": "work",
+      "msg": "校閲・ステマ規制/景表法チェック: 在宅ワークにノイズキャンセリングイヤホンは必要？失敗しない選び方"
+    },
+    {
+      "t": "2026-10-31T12:19:51.105Z",
+      "agent": "editor",
+      "type": "result",
+      "msg": "問題なし。PR表記を付けてOK"
+    },
+    {
+      "t": "2026-10-31T12:19:51.106Z",
+      "agent": "editor",
+      "type": "handoff",
+      "msg": "「在宅ワークにノイズキャンセリングイヤホンは必要？失敗しない選び方」公開OKです",
+      "to": "publisher"
+    },
+    {
+      "t": "2026-10-31T12:19:51.107Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "HTML化・リンク設置: 在宅ワークにノイズキャンセリングイヤホンは必要？失敗しない選び方"
+    },
+    {
+      "t": "2026-10-31T12:19:52.583Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "公開: site/articles/noise-cancel-earbuds-remote-work.html"
+    },
+    {
+      "t": "2026-10-31T12:19:52.587Z",
+      "agent": "writer",
+      "type": "work",
+      "msg": "執筆: 一人暮らしの家電は買う前に『レンタル・サブスク』も検討しよう"
+    },
+    {
+      "t": "2026-10-31T12:19:52.589Z",
+      "agent": "writer",
+      "type": "result",
+      "msg": "書き上げました（875字）"
+    },
+    {
+      "t": "2026-10-31T12:19:52.591Z",
+      "agent": "writer",
+      "type": "handoff",
+      "msg": "「一人暮らしの家電は買う前に『レンタル・サブスク』も検討しよう」の原稿チェックお願いします",
+      "to": "editor"
+    },
+    {
+      "t": "2026-10-31T12:19:52.595Z",
+      "agent": "editor",
+      "type": "work",
+      "msg": "校閲・ステマ規制/景表法チェック: 一人暮らしの家電は買う前に『レンタル・サブスク』も検討しよう"
+    },
+    {
+      "t": "2026-10-31T12:19:53.739Z",
+      "agent": "editor",
+      "type": "result",
+      "msg": "問題なし。PR表記を付けてOK"
+    },
+    {
+      "t": "2026-10-31T12:19:53.740Z",
+      "agent": "editor",
+      "type": "handoff",
+      "msg": "「一人暮らしの家電は買う前に『レンタル・サブスク』も検討しよう」公開OKです",
+      "to": "publisher"
+    },
+    {
+      "t": "2026-10-31T12:19:53.741Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "HTML化・リンク設置: 一人暮らしの家電は買う前に『レンタル・サブスク』も検討しよう"
+    },
+    {
+      "t": "2026-10-31T12:19:55.145Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "公開: site/articles/home-appliance-rental-single-life.html"
+    },
+    {
+      "t": "2026-10-31T12:19:55.147Z",
+      "agent": "writer",
+      "type": "work",
+      "msg": "執筆: 一人暮らしのネット回線にポケットWi-Fiはアリ？選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T12:19:55.149Z",
+      "agent": "writer",
+      "type": "result",
+      "msg": "書き上げました（837字）"
+    },
+    {
+      "t": "2026-10-31T12:19:55.150Z",
+      "agent": "writer",
+      "type": "handoff",
+      "msg": "「一人暮らしのネット回線にポケットWi-Fiはアリ？選び方と注意点」の原稿チェックお願いします",
+      "to": "editor"
+    },
+    {
+      "t": "2026-10-31T12:19:55.152Z",
+      "agent": "editor",
+      "type": "work",
+      "msg": "校閲・ステマ規制/景表法チェック: 一人暮らしのネット回線にポケットWi-Fiはアリ？選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T12:19:56.345Z",
+      "agent": "editor",
+      "type": "result",
+      "msg": "問題なし。PR表記を付けてOK"
+    },
+    {
+      "t": "2026-10-31T12:19:56.346Z",
+      "agent": "editor",
+      "type": "handoff",
+      "msg": "「一人暮らしのネット回線にポケットWi-Fiはアリ？選び方と注意点」公開OKです",
+      "to": "publisher"
+    },
+    {
+      "t": "2026-10-31T12:19:56.348Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "HTML化・リンク設置: 一人暮らしのネット回線にポケットWi-Fiはアリ？選び方と注意点"
+    },
+    {
+      "t": "2026-10-31T12:19:57.911Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "公開: site/articles/pocket-wifi-single-life-guide.html"
+    },
+    {
+      "t": "2026-10-31T12:19:57.913Z",
+      "agent": "publisher",
+      "type": "work",
+      "msg": "トップページとサイトマップを更新"
+    },
+    {
+      "t": "2026-10-31T12:19:57.928Z",
+      "agent": "publisher",
+      "type": "result",
+      "msg": "トップページ更新（全3記事）・sitemap.xml 出力"
+    },
+    {
+      "t": "2026-10-31T12:19:57.930Z",
+      "agent": "analyst",
+      "type": "result",
+      "msg": "本日 3 本公開、累計 3 記事"
+    }
+  ]
 }
