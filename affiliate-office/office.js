@@ -7,9 +7,14 @@ const AGENTS = [
   { id: "publisher",  name: "ソラ",   role: "パブリッシャー", color: "#a78bfa", hair: "#6b4f2b" },
   { id: "analyst",    name: "ケイ",   role: "アナリスト",     color: "#f87171", hair: "#444" },
 ];
-const DESKS = { scout: [18, 30], strategist: [50, 30], writer: [82, 30], editor: [18, 80], publisher: [50, 80], analyst: [82, 80] };
-const MEETING = [[44, 48], [50, 46], [56, 48], [44, 62], [50, 64], [56, 62]];
-const COFFEE = [92, 86];
+const PHONE = matchMedia("(max-width:640px)").matches;
+const DESKS = PHONE
+  ? { scout: [25, 22], strategist: [75, 22], writer: [25, 45], editor: [75, 45], publisher: [25, 82], analyst: [75, 82] }
+  : { scout: [18, 30], strategist: [50, 30], writer: [82, 30], editor: [18, 80], publisher: [50, 80], analyst: [82, 80] };
+const MEETING = PHONE
+  ? [[36, 61], [50, 59], [64, 61], [36, 71], [50, 73], [64, 71]]
+  : [[44, 48], [50, 46], [56, 48], [44, 62], [50, 64], [56, 62]];
+const COFFEE = PHONE ? [88, 94] : [92, 86];
 const $ = s => document.querySelector(s);
 const floor = $("#floor");
 const A = {};
@@ -18,7 +23,7 @@ const A = {};
 for (const [i, a] of AGENTS.entries()) {
   const [x, y] = DESKS[a.id];
   const desk = document.createElement("div");
-  desk.className = "desk"; desk.style.cssText = `left:${x}%;top:${y - 8}%;--c:${a.color}`;
+  desk.className = "desk"; desk.style.cssText = `left:${x}%;top:${y - (PHONE ? 6 : 8)}%;--c:${a.color}`;
   desk.innerHTML = `<div class="surface"><div class="monitor"></div><div class="paper">${["🔍", "🗂️", "✍️", "🧐", "🚀", "📊"][i]}</div></div><div class="plate">${a.role}</div>`;
   floor.append(desk);
   const el = document.createElement("div");
@@ -26,7 +31,7 @@ for (const [i, a] of AGENTS.entries()) {
   el.innerHTML = `<div class="body"><div class="torso"></div><div class="head"></div><div class="hair"></div><div class="eyes"><i></i><i></i></div></div>
     <div class="zzz">💤</div><div class="doc">📄</div><div class="name">${a.name}</div><div class="bubble"></div>`;
   floor.append(el);
-  A[a.id] = { ...a, el, desk, home: [x, y + 3], status: "idle", task: "待機中", bubbleT: 0 };
+  A[a.id] = { ...a, el, desk, home: [x, y + (PHONE ? 2 : 3)], status: "idle", task: "待機中", bubbleT: 0 };
   moveTo(a.id, A[a.id].home, true);
 }
 function moveTo(id, [x, y], instant) {
