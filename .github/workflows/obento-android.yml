@@ -33,6 +33,11 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Image tools (icons and launch screens)
+        run: python -m pip install --quiet pillow
       - run: npm ci
       - name: Game logic tests
         run: npm test
