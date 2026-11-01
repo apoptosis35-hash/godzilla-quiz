@@ -1,0 +1,54 @@
+# AIアフィリエイト事務所: 毎朝 AI社員が 調査→企画→執筆→校閲→公開→分析 を行い、
+# 記事（affiliate-office/site）と業務ログ（affiliate-office/data/state.json）をコミットする。
+# 仮想オフィス（affiliate-office/index.html）はこのログを読んで、その日の仕事ぶりを再生する。
+# 必要: リポジトリの Settings → Secrets and variables → Actions に ANTHROPIC_API_KEY を登録。
+name: affiliate office
+on:
+  schedule:
+    - cron: '47 21 * * *'   # 毎日 6:47（日本時間）
+  workflow_dispatch:
+    inputs:
+      offline:
+        description: 'APIを使わずテンプレートで動かす（動作確認用）'
+        type: boolean
+        default: false
+permissions:
+  contents: write
+concurrency:
+  group: affiliate-office
+  cancel-in-progress: false
+jobs:
+  work:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: affiliate-office
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm ci
+      - name: 本日の業務
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OFFLINE: ${{ inputs.offline }}
+        run: |
+          if [ "$OFFLINE" = "true" ]; then
+            node engine/run.js --offline
+          elif [ -z "$ANTHROPIC_API_KEY" ]; then
+            echo "::warning::ANTHROPIC_API_KEY が未登録なので今日はお休みです（テンプレート記事の量産はしません）"
+            exit 0
+          else
+            node engine/run.js
+          fi
+      - name: 成果をコミット
+        run: |
+          git config user.name "affiliate-office bot"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add site data
+          if git diff --cached --quiet; then echo "変更なし"; exit 0; fi
+          git commit -m "Affiliate office: $(date -u -d '+9 hours' '+%Y-%m-%d') の業務"
+          for i in 1 2 3 4; do git pull --rebase -q && git push -q && exit 0; sleep $((i * 5)); done
+          exit 1

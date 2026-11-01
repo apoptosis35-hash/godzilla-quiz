@@ -1,0 +1,12 @@
+:root { --bg: #fff6e4; --card: #fffdf7; --ink: #5a3626; --sub: #8a6450; --accent: #e0566a; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Hiragino Maru Gothic ProN", "Hiragino Sans", "M PLUS Rounded 1c", "Yu Gothic", sans-serif; line-height: 1.8; }
+main { max-width: 720px; margin: 0 auto; padding: 24px 16px 48px; }
+header { display: flex; align-items: center; gap: 12px; margin-bottom: 8px; }
+header img { width: 56px; height: 56px; border-radius: 14px; }
+h1 { font-size: 22px; margin: 0; }
+h2 { font-size: 17px; margin: 28px 0 6px; color: var(--accent); }
+section { background: var(--card); border-radius: 16px; padding: 4px 18px 14px; margin-top: 14px; box-shadow: 0 2px 0 #f3dcc0; }
+p, li { font-size: 15px; }
+small, .date { color: var(--sub); font-size: 13px; }
+a { color: var(--accent); }
