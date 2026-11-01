@@ -76,6 +76,7 @@ export const FURNITURE = [
   { id: 'furn_hammock', name: 'ハンモック', price: 5200, w: 2.0, d: 0.7, where: 'out' },
   { id: 'furn_mailbox_red', name: '赤いポスト', price: 2500, w: 0.4, d: 0.4, where: 'out' },
   { id: 'furn_easel', name: 'イーゼル', price: 1400, w: 0.7, d: 0.6, where: 'both' },
+  { id: 'furn_kitchen', name: 'キッチン', price: 4800, w: 1.3, d: 0.55, where: 'in', model: 'furn_counter', cook: true },   // cooking (farm.js)
   // props from the town kit
   { id: 'bench', name: 'ベンチ', price: 2200, w: 1.6, d: 0.6, where: 'out', model: 'bench' },
   { id: 'plant_pots', name: '鉢植え', price: 700, w: 0.8, d: 0.5, where: 'both', model: 'plant_pots' },
@@ -166,6 +167,9 @@ export const CLOTHES = [
   { id: 'bandana_green', name: '緑のバンダナ', price: 600, bandana: [0.18, 0.55, 0.3] },
   { id: 'bandana_yellow', name: '黄色いバンダナ', price: 600, bandana: [0.95, 0.75, 0.15] },
   { id: 'bandana_pink', name: 'ピンクのバンダナ', price: 600, bandana: [0.95, 0.55, 0.68] },
+  { id: 'bandana_sky', name: 'みずいろのバンダナ', price: 600, bandana: [0.45, 0.75, 0.95] },
+  { id: 'bandana_purple', name: 'むらさきのバンダナ', price: 600, bandana: [0.55, 0.35, 0.8] },
+  { id: 'bandana_white', name: 'しろいバンダナ', price: 600, bandana: [0.95, 0.95, 0.92] },
   { id: 'hat_straw', name: '麦わらぼうし', price: 1500, hat: 'hat_straw' },
   { id: 'hat_cap', name: 'キャップ', price: 1200, hat: 'hat_cap' },
   { id: 'hat_beanie', name: 'ニット帽', price: 1200, hat: 'hat_beanie' },

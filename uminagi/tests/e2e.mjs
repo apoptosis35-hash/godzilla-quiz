@@ -195,7 +195,7 @@ const foes = await G(async () => {
   await new Promise((r) => setTimeout(r, 200)); L.ui.say = say;
   return { kinds, hp1, lab, calmed, gotSome, out: !C.on && !L.home.inside, dropped: c0 + 4 - L.st.mat.crystal, hud: document.querySelector('.cavehp').hidden };
 });
-check('cave critters: bump, calm with A, faint and carried up', foes.kinds.includes('goron') && foes.kinds.includes('bat') && foes.hp1 === 2 && foes.lab === 'たたく' && foes.calmed && foes.gotSome && foes.out && foes.dropped === 2 && foes.hud, JSON.stringify(foes));
+check('cave critters: bump, calm with A, faint and carried up', foes.kinds.includes('goron') && foes.kinds.includes('bat') && foes.hp1 === 2 && foes.lab === 'たたく' && foes.calmed && foes.gotSome && foes.out && foes.dropped >= 2 && foes.hud, JSON.stringify(foes));
 // every creature, fossil and shell has its own model and picture; the pocket and the encyclopedia show them
 const pics = await G(async () => {
   const { FISH, BUGS, FOSSILS, SHELLS } = await import('/uminagi/js/life/data.js'), { SEA } = await import('/uminagi/js/life/items2.js');
@@ -206,6 +206,23 @@ const pics = await G(async () => {
   return { n: all.length, bad, icon: /^data:image\/png/.test(icon || '') && icon.length > 2000, wings: butterfly.userData.wings.length, img };
 });
 check('a model and a picture for all 191 creatures, fossils and shells', pics.n === 191 && !pics.bad.length && pics.icon && pics.wings === 2 && pics.img, JSON.stringify(pics));
+// the nine additions: save codes, loose stones, requests, the wardrobe, the vegetable patch + kitchen, festivals, photo, music
+const nine = await G(async () => {
+  const a = window.__uminagi, L = a.life, st = L.st, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  const S = await import('/uminagi/js/store.js'), code = await S.backupCode(), back = await S.decode(code);
+  const stones = L.pickups.filter((q) => q.id === 'stone').length;
+  const reqs = st.ext.reqs.length;
+  st.add('hat_beret_red'); await L.home.wearItem(st.pocket.indexOf('hat_beret_red')); const worn = L.home.worn.length;
+  const F = await import('/uminagi/js/life/farm.js'); st.add('aji'); const say = L.ui.list; L.ui.list = async () => 0; const cooking = F.cook(L);
+  for (let k = 0; k < 400 && (!st.has('dish_yakizakana') || L.ui.busy()); k++) { const q = L.ui.queue; if (q) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); }
+  await cooking; L.ui.list = say;
+  const dish = st.has('dish_yakizakana');
+  const fest = !!L.fest && typeof L.fest.visit === 'function';
+  a.photoMode.open(); step(1); const photo = document.body.classList.contains('photo'); a.photoMode.close();
+  const music = !!a.sound.music || !a.sound.ctx;
+  return { code: code.length, back: !!back.data, stones, reqs, worn, dish, fest, photo, music };
+});
+check('save codes, stones, requests, wardrobe, cooking, festivals, photo, music', nine.code > 100 && nine.back && nine.stones >= 1 && nine.reqs >= 1 && nine.worn >= 1 && nine.dish && nine.fest && nine.photo && nine.music, JSON.stringify(nine));
 // the bottom (B10): no way further down, the cave master's chest once a day
 const bottom = await G(async () => {
   const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

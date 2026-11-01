@@ -1,6 +1,7 @@
 // Island-life save state: money (ナギ), the 20-slot pocket, tools, encyclopedia (caught / donated),
 // friendship with each villager and the per-day flags that reset every morning at 5:00.
 import { FISH, BUGS, FOSSILS, SHELLS, FRUIT, TOOLS } from './data.js';
+import { getItem, setItem } from '../store.js';
 
 const KEY = 'uminagi_life_v1';
 export const POCKET = 20;
@@ -29,7 +30,7 @@ export function seeded(str) { let h = 2166136261; for (const c of str) { h ^= c.
 
 export class LifeState {
   constructor() {
-    const s = (() => { try { return JSON.parse(localStorage.getItem(KEY)); } catch { return null; } })() || {};
+    const s = (() => { try { return JSON.parse(getItem(KEY)); } catch { return null; } })() || {};
     this.money = s.money ?? 0;   // like a new islander: no money, no tools
     this.pocket = s.pocket || [];          // item ids (tools live here too, so they take a slot like in the original games)
     this.tool = s.tool || null;            // the tool in the paw
@@ -63,7 +64,7 @@ export class LifeState {
   owlHere() { return !!this.owlCalled && this.owlCalled !== dayKey(); }
   save() {
     try {
-      localStorage.setItem(KEY, JSON.stringify({ money: this.money, pocket: this.pocket, tool: this.tool, caught: this.caught, donated: this.donated, friend: this.friend,
+      setItem(KEY, JSON.stringify({ money: this.money, pocket: this.pocket, tool: this.tool, caught: this.caught, donated: this.donated, friend: this.friend,
         met: this.met, intro: this.intro, daily: this.daily, stats: this.stats, lastCatch: this.lastCatch, town: this.town, owlCalled: this.owlCalled, mat: this.mat, ext: this.ext }));
     } catch { /* private mode */ }
   }

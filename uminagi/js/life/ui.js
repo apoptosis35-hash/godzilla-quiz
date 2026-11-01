@@ -45,7 +45,7 @@ export class LifeUI {
     const d = new Date();
     $('ltime').textContent = `${d.getHours()}:${String(d.getMinutes()).padStart(2, '0')}`;
     $('ldate').textContent = `${d.getMonth() + 1}月${d.getDate()}日(${WEEK[d.getDay()]}) ${{ clear: '☀️', cloudy: '☁️', rain: '☔', snow: '⛄' }[weather] || ''}`;
-    $('lhat').hidden = !st.ext?.wear?.hat;
+    $('lhat').hidden = !(st.ext?.wear?.hat || st.ext?.wear?.face || st.ext?.wear?.back);
     $('lmoney').innerHTML = `${st.money.toLocaleString()} <small>ナギ</small>`;
     $('ltool').textContent = tool ? TOOL_ICON[tool] : '✋';
   }

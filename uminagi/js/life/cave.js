@@ -151,6 +151,7 @@ export class Cave {
         for (const o of this.town.root.children) if (o !== pl.model && o.visible) { o.visible = false; this.hidden.push(o); }
         this.bg = this.scene.background; this.scene.background = new THREE.Color(0x020203);
         this.on = true; L.home.inside = 'cave'; this.group.visible = true; this.st.ext.cave.trips++;
+        this.maxHp = this.st.ext.fed === dayKey() ? 4 : 3;   // a good meal today (farm.js) brings an extra heart
         this.hp = this.maxHp; this.trip = { ...this.st.mat }; this.tripMoney = this.st.money; this.hud.hidden = false;
         pl.skills.climb = false; pl.skills.web = false;   // no climbing over the maze walls
         pl.camLimits = { pitch: [0.85, 1.25], dist: [5.5, 11] };   // from above: never down among the walls, never so far out the maze shows whole

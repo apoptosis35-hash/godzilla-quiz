@@ -9,6 +9,8 @@ import { VILLAGERS, FISH, BUGS, FOSSILS } from './data.js';
 import { SEA } from './items2.js';
 import { RACCOON, OWL, LETTERS } from './data2.js';
 import { ART, hangPainting } from './art.js';
+import { makeWearable } from './clothes.js';
+import { cook } from './farm.js';
 import { hasCreature, creatureModel } from './creatures.js';
 
 const PI = Math.PI;
@@ -259,9 +261,11 @@ export class Home {
   async furnMenu(rec, list) {
     const it = ITEMS[rec.f.id], rows = [{ label: 'まわす' }, { label: 'しまう' }];
     if (it.bench) rows.unshift({ label: 'DIYする' });
+    if (it.cook) rows.unshift({ label: 'りょうりする' });
     rows.push({ label: 'やめる' });
     const k = await this.life.ui.list(it.name, rows), pick = rows[k]?.label;
     if (pick === 'DIYする') return this.life.craft.menu();
+    if (pick === 'りょうりする') return cook(this.life);
     if (pick === 'まわす') { rec.f.ry += PI / 2; rec.o.rotation.y = rec.f.ry; if (rec.col) { rec.col.c = Math.cos(rec.f.ry); rec.col.s = Math.sin(rec.f.ry); } this.st.save(); }
     if (pick === 'しまう') {
       if (this.st.full()) { this.life.ui.toast('ポケットが いっぱい!'); return; }
@@ -286,13 +290,16 @@ export class Home {
   async wearItem(i) {
     const st = this.st, id = st.pocket[i], c = ITEMS[id];
     if (c.bandana) { const old = st.ext.wear.bandana; st.ext.wear.bandana = id; st.pocket[i] = old; }
-    else if (c.hat) { const old = st.ext.wear.hat; st.ext.wear.hat = id; if (old) st.pocket[i] = old; else st.pocket.splice(i, 1); }
+    else { const slot = c.wear || 'hat', old = st.ext.wear[slot]; st.ext.wear[slot] = id; if (old) st.pocket[i] = old; else st.pocket.splice(i, 1); }   // hat / face / back
     st.save(); this.wear(); this.life.ui.blip(880, 0.08, 'triangle', 0.14);
   }
+  // take something off (choose when more than one is worn)
   async takeOffHat() {
-    const st = this.st; if (!st.ext.wear.hat) return;
+    const st = this.st, w = st.ext.wear, on = ['hat', 'face', 'back'].filter((k) => w[k]); if (!on.length) return;
+    let slot = on[0];
+    if (on.length > 1) { const k = await this.life.ui.list('はずす', on.map((s) => ({ label: ITEMS[w[s]].name }))); if (k < 0) return; slot = on[k]; }
     if (st.full()) { this.life.ui.toast('ポケットが いっぱい!'); return; }
-    st.pocket.push(st.ext.wear.hat); st.ext.wear.hat = null; st.save(); this.wear();
+    st.pocket.push(w[slot]); w[slot] = null; st.save(); this.wear();
   }
   // recolour the bandana in ぽっけ's vertex colours and put the hat on the head
   wear() {
@@ -308,11 +315,18 @@ export class Home {
     }
     const target = new THREE.Color().setRGB(...c.bandana, THREE.SRGBColorSpace);
     for (const { col, idx } of this.bandana) { for (const i of idx) col.setXYZ(i, target.r, target.g, target.b); col.needsUpdate = true; }
+    for (const o of this.worn || []) o.parent?.remove(o); this.worn = [];
     if (this.hat) { this.hat.parent?.remove(this.hat); this.hat = null; }
     const h = w.hat && ITEMS[w.hat]?.hat;
     if (h && this.town.protos[h]) {
       const o = this.town.clone(h, 0, 0, 0, 0, true); o.parent.remove(o); L.head.add(o);
       const R0 = this.player.rest; o.position.set(-R0.body.x - R0.head.x, 1.13 - R0.body.y - R0.head.y, -R0.body.z - R0.head.z); o.scale.setScalar(1.35); this.hat = o;   // hat brim at y 1.16 in the shiba's model space
+    }
+    // the wardrobe made in code (clothes.js): hats and glasses on the head, the rest on the body
+    for (const slot of ['hat', 'face', 'back']) {
+      const id = w[slot]; if (!id || ITEMS[id]?.hat) continue;
+      const o = makeWearable(id); if (!o) continue;
+      (slot === 'back' ? L.body : L.head).add(o); this.worn.push(o);
     }
   }
   // ---------------------------------------------------------------- per frame

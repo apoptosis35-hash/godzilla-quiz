@@ -3,6 +3,7 @@
 // the next game day (after 5:00), like moving-in and construction in the slow-life games.
 // `?town=all` builds everything at once (tests, previews).
 import { dayKey } from './state.js';
+import { getItem } from '../store.js';
 
 // costs follow the public works of the slow-life games (bridges and slopes 98,000-228,000); the shop street is built
 // from materials, and the shrine with the museum comes free once the owl has 15 donations
@@ -26,7 +27,7 @@ const KEY = 'uminagi_life_v1';
 export function townBuilt() {
   try { if (new URLSearchParams(location.search).get('town') === 'all') return null; } catch { /* no location */ }
   let t = null;
-  try { t = JSON.parse(localStorage.getItem(KEY))?.town || null; } catch { /* private mode */ }
+  try { t = JSON.parse(getItem(KEY))?.town || null; } catch { /* private mode */ }
   const set = new Set(t?.built || []), today = dayKey();
   for (const [id, day] of Object.entries(t?.orders || {})) if (day !== today) set.add(id);
   return set;

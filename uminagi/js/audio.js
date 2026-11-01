@@ -1,4 +1,6 @@
-// Ambient sound synthesised with WebAudio: waves (louder near the sea), seagull calls, footsteps, night insects.
+// Ambient sound synthesised with WebAudio: waves (louder near the sea), seagull calls, footsteps, night insects;
+// and the background music (music.js), which can be switched off on its own.
+import { Music } from './music.js';
 export class Sound {
   constructor() { this.on = true; this.ctx = null; this.stepT = 0; this.gullT = 3; }
   start() {
@@ -21,7 +23,10 @@ export class Sound {
     const mod = c.createGain(); mod.gain.value = 0.5; am.connect(amg).connect(mod.gain);
     o1.connect(mod); o2.connect(mod); mod.connect(this.bugG).connect(this.master);
     o1.start(); o2.start(); am.start();
+    this.music = new Music(c, this.master); if (!this.bgmOn()) this.music.toggle(false);
   }
+  bgmOn() { try { return localStorage.getItem('uminagi_bgm') !== 'off'; } catch { return true; } }
+  toggleBgm() { const on = !this.bgmOn(); try { localStorage.setItem('uminagi_bgm', on ? 'on' : 'off'); } catch { /* ignore */ } this.music?.toggle(on); return on; }
   toggle() { this.on = !this.on; if (this.master) this.master.gain.value = this.on ? 0.7 : 0; return this.on; }
   gull() {
     const c = this.ctx, t = c.currentTime, o = c.createOscillator(), g = c.createGain(), f = c.createBiquadFilter();

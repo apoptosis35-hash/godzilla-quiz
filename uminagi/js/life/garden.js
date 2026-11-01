@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { ITEMS, dayKey, seeded } from './state.js';
 import { SEEDS, SEA } from './items2.js';
+import { vegObject, ripe, harvest } from './farm.js';
 
 const days = (from) => Math.round((new Date(dayKey().replace(/-/g, '/')) - new Date(from.replace(/-/g, '/'))) / 864e5);
 
@@ -32,6 +33,7 @@ export class Garden {
       if (s) { L.root.attach(s); s.scale.setScalar(0.6 + age * 0.25); L.root.remove(g); return s; }
       const m = new THREE.Mesh(new THREE.ConeGeometry(0.2, 0.6, 6), new THREE.MeshStandardMaterial({ color: 0x5a9a3a })); m.position.y = 0.3; g.add(m); return g;
     }
+    if (p.type === 'veg') { const o = vegObject(p, age); o.position.set(p.x, y, p.z); o.rotation.y = p.ry || 0; L.root.add(o); L.root.remove(g); return o; }
     const seed = SEEDS.find((s) => s.id === p.seed);
     if (age >= 2 && seed && L.town.protos[seed.flower]) { const o = L.town.clone(seed.flower, p.x, y, p.z, p.ry || 0, true); L.root.attach(o); o.scale.setScalar(1.7); L.root.remove(g); return o; }
     if (age >= 1 && seed && L.town.protos[seed.flower]) { const o = L.town.clone(seed.flower, p.x, y, p.z, p.ry || 0, true); L.root.attach(o); o.scale.set(1.2, 0.55, 1.2); L.root.remove(g); return o; }
@@ -43,13 +45,13 @@ export class Garden {
     const L = this.life, st = this.st, id = st.pocket[i], pl = L.player;
     if (L.home.inside) { L.ui.toast('家の中には 植えられないよ'); return; }
     const x = pl.pos.x + Math.sin(pl.heading) * 0.9, z = pl.pos.z + Math.cos(pl.heading) * 0.9;
-    const tree = id === 'mikan';
+    const tree = id === 'mikan', veg = !!ITEMS[id]?.veg;
     if (!this.soil(x, z, tree ? 1.2 : 0.3) || this.st.ext.plants.some((p) => Math.hypot(p.x - x, p.z - z) < (tree ? 2.5 : 0.6))) { L.ui.toast('ここには 植えられないみたい'); return; }
-    const p = { type: tree ? 'tree' : 'flower', seed: tree ? null : id, x, z, ry: Math.random() * 6.28, day: dayKey() };
+    const p = { type: tree ? 'tree' : veg ? 'veg' : 'flower', seed: tree ? null : id, x, z, ry: Math.random() * 6.28, day: dayKey() };
     st.pocket.splice(i, 1); st.ext.plants.push(p); st.save(); L.emit('plant');
     L.anim = { kind: 'dig', t: 0, dur: 0.6 }; L.splash(0.12, 300);
     this.objs.push({ p, o: this.plantObject(p) });
-    L.ui.toast(tree ? 'みかんを 植えた。3日で 木になるよ' : `${ITEMS[id].name}を まいた`);
+    L.ui.toast(tree ? 'みかんを 植えた。3日で 木になるよ' : veg ? `${ITEMS[id].name}を まいた。${id === 'seed_pumpkin' ? 4 : 3}日で しゅうかくできるよ` : `${ITEMS[id].name}を まいた`);
   }
   // grass or earth (natural ground, or a grassy / earthen terrace), fairly flat, nothing standing there
   soil(x, z, r) {
@@ -75,6 +77,7 @@ export class Garden {
   target(front) {
     if (this.life.home.inside) return null;
     for (const t of this.pools) if (front(t.x, t.z, 1.1)) return { label: 'しらべる', run: () => this.search(t) };
+    for (const o of this.objs) if (o.p.type === 'veg' && ripe(o.p, days(o.p.day)) && front(o.p.x, o.p.z, 1.0)) return { label: 'しゅうかく', run: () => { if (harvest(this.life, o) !== false) this.unplant(o); } };
     if (this.life.st.tool === 'shovel') for (const o of this.objs) if (front(o.p.x, o.p.z, o.p.type === 'tree' ? 1.6 : 0.9) && (o.p.type !== 'tree' || days(o.p.day) < 3)) return { label: 'ほりかえす', run: () => this.dig(o) };
     return null;
   }
@@ -87,6 +90,7 @@ export class Garden {
     await new Promise((r) => setTimeout(r, 450));
     await L.got(sp, 'sea');
   }
+  unplant(o) { const st = this.st; st.ext.plants.splice(st.ext.plants.indexOf(o.p), 1); this.life.root.remove(o.o); this.objs.splice(this.objs.indexOf(o), 1); st.save(); }
   dig(o) {
     const L = this.life, st = this.st;
     if (st.full()) { L.ui.toast('ポケットが いっぱい!'); return; }

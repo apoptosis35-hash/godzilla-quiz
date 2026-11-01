@@ -171,3 +171,26 @@ body.talking #web { visibility: hidden; }
 /* hearts in the cave (js/life/cave.js) */
 .cavehp { position: fixed; left: 50%; top: max(10px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 9; font-size: 24px; letter-spacing: 2px; padding: 2px 12px; border-radius: 99px; background: rgba(0, 0, 0, .35); pointer-events: none; font-family: system-ui, sans-serif; }
 .cavehp[hidden] { display: none; }
+
+/* saves: export / import / show the town (js/backup.js) */
+.savebox { border-top: 1px solid rgba(255, 255, 255, .15); margin-top: 10px; padding-top: 4px; }
+.savepanel { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); width: min(460px, 92vw); max-height: 90vh; overflow: auto; z-index: 21; }
+.savepanel[hidden] { display: none; }
+.codebox { width: 100%; box-sizing: border-box; font: 12px/1.4 ui-monospace, monospace; border-radius: 10px; padding: 8px; border: 2px solid #e0c27a; background: #fffaea; color: #4a3a22; word-break: break-all; }
+.codename { width: 100%; box-sizing: border-box; font-size: 16px; padding: 8px; border-radius: 10px; border: 2px solid #e0c27a; margin-bottom: 8px; }
+.vbanner { position: fixed; left: 50%; top: max(6px, env(safe-area-inset-top)); transform: translateX(-50%); z-index: 12; display: flex; gap: 10px; align-items: center; background: rgba(255, 250, 235, .95); color: #4a3a22; padding: 6px 8px 6px 14px; border-radius: 99px; font-weight: bold; font-size: 14px; box-shadow: 0 4px 14px rgba(0, 0, 0, .3); white-space: nowrap; }
+.vbanner .btn { padding: 4px 12px; font-size: 13px; }
+
+/* photo mode (js/photo.js) */
+body.photo #hud, body.photo .cavehp, body.photo .vbanner, body.photo .ltoast, body.photo #area { display: none !important; }
+.photoov { position: fixed; left: 0; right: 0; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 13; text-align: center; pointer-events: none; }
+.photoov[hidden] { display: none; }
+.photoov .prow { display: inline-flex; gap: 10px; align-items: center; pointer-events: auto; }
+.photoov .phint { margin: 0 0 8px; font-size: 13px; text-shadow: 0 1px 3px rgba(0, 0, 0, .7); font-family: system-ui, sans-serif; }
+.photoov .btn { background: rgba(255, 250, 235, .92); color: #4a3a22; }
+.photoov .pshoot { font-size: 28px; width: 64px; height: 64px; border-radius: 50%; padding: 0; }
+.pflash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 30; }
+.pflash.go { animation: pflash .45s ease-out; }
+@keyframes pflash { from { opacity: .85; } to { opacity: 0; } }
+.ppreview { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 22; width: min(560px, 92vw); max-height: 92vh; overflow: auto; text-align: center; }
+.ppreview img { width: 100%; border-radius: 10px; display: block; margin-bottom: 8px; }

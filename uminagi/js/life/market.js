@@ -24,7 +24,7 @@ export class Market {
     const k = dayKey(), r = seeded('stock' + k), m = new Date().getMonth() + 1;
     const furn = FURNITURE.filter((f) => f.price && (!f.season || f.season.includes(m)));
     const take = (list, n) => { const a = [...list], out = []; while (a.length && out.length < n) out.push(a.splice(Math.floor(r() * a.length), 1)[0].id); return out; };
-    this.stock = [...take(furn, 3), ...take(CLOTHES.filter((c) => c.price), 1)];
+    this.stock = [...take(furn, 3), ...take(CLOTHES.filter((c) => c.price), 2)];
     // the merchant cat comes on about one day in four (never on Sunday)
     const d = new Date(Date.now() - 5 * 3600e3);
     this.merchantDay = d.getDay() !== 0 && r() < 0.28;

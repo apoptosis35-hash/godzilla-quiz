@@ -15,6 +15,9 @@ import { Folk, registerFolk } from './folk.js';
 import { Tour } from './tour.js';
 import { Skills } from './skills.js';
 import { Cave } from './cave.js';
+import './clothes.js';
+import { eat } from './farm.js';
+import { Fest } from './events.js';
 import { hasCreature, creatureModel, creatureShape } from './creatures.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
@@ -80,8 +83,8 @@ export class Life {
     this.day = null; this.refreshDay();
     this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
-    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this);
-    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave];
+    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this); this.fest = new Fest(this);
+    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave, this.fest];
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries
@@ -373,6 +376,12 @@ export class Life {
       const t = near[Math.floor(r() * near.length)], a = r() * 6.28, x = t.x + Math.cos(a) * (t.rad + 0.9), z = t.z + Math.sin(a) * (t.rad + 0.9), key = 'branch' + n;
       if (!this.walkable(x, z)) continue;
       n++; if (!this.st.daily.picked[key]) this.addPickup('branch', x, z, key);
+    }
+    // a few loose stones round the camp, so the first axe (branches + a stone) needs no shovel
+    for (let n = 0, k2 = 0; n < 3 && k2 < 120; k2++) {
+      const a = r() * 6.28, d = 12 + r() * 26, x = Math.cos(a) * d, z = 10 + Math.sin(a) * d * 0.8, key = 'stone' + n;
+      if (!this.walkable(x, z) || this.water(x, z) || this.blockedAt(x, z, 0.6) || this.onRoad(x, z)) continue;
+      n++; if (!this.st.daily.picked[key]) this.addPickup('stone', x, z, key);
     }
     // beach combing: shells and one message bottle on the east beach and the island
     const sand = (x, z) => { const s = this.ground.sample(x, z); return !s.plat && s.h > 0.05 && s.h < 1.6 && !this.blockedAt(x, z, 0.3); };
@@ -818,6 +827,7 @@ export class Life {
     if (!st.daily.talked[d.id]) { st.daily.talked[d.id] = 1; st.friend[d.id] = (st.friend[d.id] || 0) + 1; this.emit('talk'); }
     await this.social.opening(v);
     await this.folk.opening(v);
+    await this.fest?.treat(v);
     let line = this.lineFor(v, true);
     for (let n = 0; n < 8; n++) {
       const req = this.social.hasRequest(v), choices = ['話す', 'プレゼント', ...(req ? ['たのまれた物'] : []), 'またね'];
@@ -871,13 +881,13 @@ export class Life {
         const dk = st.ext.daikon;
         const c = await this.ui.list('売る', [{ label: 'ひとつずつ 売る' }, { label: 'まとめて 売る', sub: '魚・虫・貝・果物・海の幸' }, ...(dk.n ? [{ label: 'だいこんを 売る', sub: `${dk.n}本` }] : [])]);
         if (c === 0) {
-          const i = await this.ui.pocket(st, { title: '売る', filter: (id) => !['tool', 'recipe', 'kit', 'ticket'].includes(ITEMS[id].kind) && !ITEMS[id].trophy && !ITEMS[id].photo, note: '売るものを えらんでね' });
+          const i = await this.ui.pocket(st, { title: '売る', filter: (id) => !['tool', 'recipe', 'kit', 'ticket', 'parcel'].includes(ITEMS[id].kind) && !ITEMS[id].trophy && !ITEMS[id].photo, note: '売るものを えらんでね' });
           if (i < 0) { line = again; continue; }
           const it = ITEMS[st.pocket[i]], price = this.sellValue(st.pocket[i]);
           const ok = await this.ui.say(sp, fill(pick(L.buyPrompt), V({ item: it.name, price: price.toLocaleString() })), ['売る', 'やめる']);
           if (ok === 0) { st.remove(i); st.money += price; st.stats.sold++; this.emit('sell'); this.ui.blip(1320, 0.1, 'triangle', 0.15); line = fill(pick(L.sold), V()); } else line = again;
         } else if (c === 1) {
-          const idx = st.pocket.map((id, i) => [id, i]).filter(([id]) => ['fish', 'bug', 'shell', 'fruit', 'sea'].includes(ITEMS[id].kind));
+          const idx = st.pocket.map((id, i) => [id, i]).filter(([id]) => ['fish', 'bug', 'shell', 'fruit', 'sea', 'veg'].includes(ITEMS[id].kind));
           if (!idx.length) { line = fill(pick(L.nothingToSell), V()); continue; }
           const sum = idx.reduce((a, [id]) => a + ITEMS[id].price, 0);
           const ok = await this.ui.say(sp, `魚・虫・貝・果物・海の幸 ぜんぶで ${idx.length}こ……\f${sum.toLocaleString()} ナギで どうだい?`, ['売る', 'やめる']);
@@ -986,7 +996,7 @@ export class Life {
     await this.ui.say(sp, ['おーい! キミが 港町に来た ぽっけ だね! まいど!', 'オイラは あらた。この テントで 「海凪商店」を やってるんだ。', 'ここは まだ なんにもない 入り江なんだ。\nいま住んでるのは ノリと モアイと オイラだけ。', 'でも 海も 山も きれいだろ? みんなで すこしずつ 町を つくっていこう!', 'まずは 道具づくりから だね。\nつりざお・あみ・おのの 作り方を 教えるよ!']);
     this.ui.jingle();
     await this.ui.say(null, ['つりざお・あみ・おの・たき火の DIYレシピを おぼえた!']);
-    await this.ui.say(sp, ['木の下に 落ちている 木の枝を 5本 ひろって、\nオイラの 屋台で 「DIY」を えらんでね。', 'できたての 道具は ちょっと もろいから、\nこわれたら また 作るか、ナギを ためて 店で 買ってね。']);
+    await this.ui.say(sp, ['木の下に 落ちている 木の枝を 5本 ひろって、\nオイラの 屋台で 「DIY」を えらんでね。', 'おのは 木の枝3本と 石1こ。石も キャンプの まわりに 落ちてるよ。', 'できたての 道具は ちょっと もろいから、\nこわれたら また 作るか、ナギを ためて 店で 買ってね。']);
     this.giveTent();
     await this.ui.say(sp, ['それから、東の 岸壁に キミの テントを はっておいたよ。\n中に 家具を おいて、すきに かざってね。', '道具は 使うと だんだん こわれるんだ。\n木の枝や 木材を あつめて、オイラの 屋台で DIYできるよ。']);
     await this.ui.say(sp, ['つりざおを 持って 水ぎわで A。影が 浮きを つついて、\nグッと しずんだ瞬間に もう一度 A!', 'あみは A ボタンを押しっぱなしで そーっと近づいて、はなすと ふれるよ。', 'とれたものは オイラが 買いとるよ。\n生きものを 5種類 見つけたら、オイラに 教えてね。いいこと あるかも!', 'ナギが たまったら 「町づくり」で 港や 家を たのんでね。\n工事は ひと晩で おわるよ!', '時間は ほんとうの時計と いっしょ。毎朝5時に 新しい一日が はじまるよ。\nじゃ、よろしくね!']);
@@ -1033,7 +1043,7 @@ export class Life {
     if (this.ui.busy()) return;
     const mats = Object.entries(this.st.mat).filter(([, n]) => n > 0).map(([k, n]) => `${ITEMS[k].name}×${n}`).join(' ');
     const wear = this.st.ext.wear, dk = this.st.ext.daikon.n;
-    const i = await this.ui.pocket(this.st, { note: `ざいりょう: ${mats || 'なし'}${dk ? `　だいこん×${dk}` : ''}${wear.hat ? '　(👒ボタンで ぼうしを 外せるよ)' : ''}` });
+    const i = await this.ui.pocket(this.st, { note: `ざいりょう: ${mats || 'なし'}${dk ? `　だいこん×${dk}` : ''}${wear.hat || wear.face || wear.back ? '　(👒ボタンで はずせるよ)' : ''}` });
     if (i < 0) return;
     const id = this.st.pocket[i], it = ITEMS[id];
     if (it.kind === 'tool') { this.equip(this.st.tool === id ? null : id); return; }
@@ -1045,6 +1055,7 @@ export class Life {
       ...(it.kind === 'art' ? [['見る', () => this.ui.picture(it.name, paintingURL(id))]] : []),
       ...(it.kind === 'seed' || id === 'mikan' ? [['植える', () => this.garden.plant(i)]] : []),
       ...(it.kind === 'clothes' ? [['身につける', () => this.home.wearItem(i)]] : []),
+      ...(it.kind === 'dish' ? [['たべる', () => eat(this, i)]] : []),
       [live ? 'にがす' : 'すてる', () => { this.st.remove(i); this.ui.toast(`${it.name}を ${live ? 'にがした' : 'すてた'}`); }],
       ['もどる', null],
     ];
@@ -1062,7 +1073,7 @@ export class Life {
       return this.home.target(front);
     }
     for (const v of this.villagers) if (v.o.visible && front(v.o.position.x, v.o.position.z, 1.7)) return { kind: 'talk', v, label: '話す' };
-    for (const m of [this.season, this.home, this.market, this.garden, this.build, this.goals, this.tour, this.cave]) { const t = m?.target(front); if (t) return t; }
+    for (const m of [this.season, this.home, this.market, this.garden, this.build, this.goals, this.tour, this.cave, this.fest]) { const t = m?.target(front); if (t) return t; }
     for (const p of this.pickups) if (front(p.x, p.z, 1.0)) return { kind: 'take', p, label: 'ひろう' };
     const tool = this.st.tool;
     if (tool === 'axe') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + 1.0)) return { label: 'きる', run: () => this.craft.chop(t) };
@@ -1115,11 +1126,13 @@ export class Life {
     else if (a.kind === 'reel') { L.arm_r.rotation.set(-1.25 - Math.sin(k * PI) * 1.4, 0, 0.1); L.body.rotation.x = -0.2 * Math.sin(k * PI); }
     else if (a.kind === 'dig') { const s = Math.sin(k * PI); L.arm_r.rotation.set(-0.4 - s * 1.3, 0, 0.1); L.arm_l.rotation.set(-0.4 - s * 1.2, 0, -0.1); L.body.rotation.x = 0.35 * s; }
     else if (a.kind === 'shake') { const s = Math.sin(a.t * 26) * 0.18; L.arm_r.rotation.set(-2.0 + s, 0, 0.2); L.arm_l.rotation.set(-2.0 - s, 0, -0.2); L.body.rotation.z = s * 0.4; }
+    else if (a.kind === 'wave') { L.arm_r.rotation.set(-2.7, 0, 0.35 + Math.sin(a.t * 9) * 0.4); L.head.rotation.z = 0.12; }   // photo poses
+    else if (a.kind === 'peace') { L.arm_r.rotation.set(-1.9, 0.3, 0.5); L.arm_l.rotation.set(-0.3, 0, -0.2); L.head.rotation.z = -0.15; L.tail.rotation.z = Math.sin(a.t * 6) * 0.4; }
     else if (a.kind === 'show') {   // holds the catch up high
       L.arm_r.rotation.set(-2.9, 0, 0.35); L.arm_l.rotation.set(-2.9, 0, -0.35); L.head.rotation.x = -0.25;
       L.tail.rotation.z = Math.sin(a.t * 18) * 0.6;
     }
-    if (k >= 1 && a.kind !== 'show') this.anim = null;
+    if (k >= 1 && !['show', 'wave', 'peace'].includes(a.kind)) this.anim = null;
   }
   update(dt) {
     this.t += dt;

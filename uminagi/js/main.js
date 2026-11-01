@@ -9,6 +9,9 @@ import { Input } from './input.js';
 import { Sound } from './audio.js';
 import { Life } from './life/life.js';
 import { townBuilt } from './life/progress.js';
+import { getItem, setItem, removeItem, visiting, LIFE_KEY } from './store.js';
+import { setupBackup } from './backup.js';
+import { Photo } from './photo.js';
 
 // aerial perspective: fog thickens exponentially with distance (like real air) instead of the linear ramp
 THREE.ShaderChunk.fog_fragment = `#ifdef USE_FOG
@@ -34,8 +37,8 @@ const TONE = { aces: THREE.ACESFilmicToneMapping, agx: THREE.AgXToneMapping, neu
 
 const $ = (id) => document.getElementById(id);
 const SAVE = 'uminagi-save-v1';
-const load = () => { try { return JSON.parse(localStorage.getItem(SAVE)) || null; } catch { return null; } };
-const store = (s) => { try { localStorage.setItem(SAVE, JSON.stringify(s)); } catch { /* private mode */ } };
+const load = () => { try { return JSON.parse(getItem(SAVE)) || null; } catch { return null; } };
+const store = (s) => setItem(SAVE, JSON.stringify(s));
 
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
 const QUALITY = {
@@ -185,7 +188,7 @@ class App {
     const start = (fresh) => {
       if (fresh) { this.player.place(0, 19, 0); this.player.heading = Math.PI; this.world.setClock(true); }
       $('start').hidden = true; $('hud').hidden = false; this.input.enabled = true; this.playing = true;
-      this.sound.start(); this.areaShown = null; this.life.start();
+      this.sound.start(); this.areaShown = null; this.life.start(); this.remindBackup?.();
       try { if (isMobile && screen.orientation?.lock) screen.orientation.lock('landscape').catch(() => {}); } catch { /* not supported */ }
     };
     $('startbtn').onclick = () => start(true);
@@ -204,13 +207,17 @@ class App {
     $('zin').onclick = () => { this.player.dist = Math.max(2.5, this.player.dist * 0.8); };
     $('zout').onclick = () => { this.player.dist = Math.min(30, this.player.dist * 1.25); };
     $('mute').onclick = () => { $('mute').textContent = this.sound.toggle() ? '🔊' : '🔇'; };
+    const bgm = $('bgm'), bgmLabel = () => { bgm.textContent = this.sound.bgmOn() ? 'BGM: あり' : 'BGM: なし'; };
+    bgmLabel(); bgm.onclick = () => { this.sound.toggleBgm(); bgmLabel(); };
     $('reset').onclick = () => {
       if (!confirm('セーブを けして、はじめから やり直しますか?\n(お金・持ち物・町・家・図鑑が ぜんぶ 消えます)')) return;
       this.resetting = true;   // no more saving: leaving the page (visibilitychange) would write the old place back
       this.life?.st && (this.life.st.save = () => {});
-      try { localStorage.removeItem(SAVE); localStorage.removeItem('uminagi_life_v1'); } catch { /* ignore */ }
+      removeItem(SAVE); removeItem(LIFE_KEY);
       location.replace(location.pathname);
     };
+    setupBackup(this);
+    this.photoMode = new Photo(this);
     this.syncButtons();
     document.addEventListener('visibilitychange', () => { if (document.hidden) this.save(); });
     addEventListener('keydown', (e) => {
@@ -309,16 +316,24 @@ class App {
     this.fpsT += dt; this.fpsN++;
     if (this.fpsT > 1) { this.fps = this.fpsN / this.fpsT; this.fpsT = 0; this.fpsN = 0; if ($('fps')) $('fps').textContent = this.fps.toFixed(0) + ' fps'; }
   }
+  // which tune: the cave, indoors, or the part of the day
+  bgmTheme() {
+    const inside = this.life?.home.inside; if (inside === 'cave') return 'cave'; if (inside) return 'home';
+    const W = this.world, h = W.clockMode ? W.clockHour ?? 12 : { day: 12, evening: 17, night: 22 }[W.todName] ?? 12;
+    return h >= 5 && h < 10 ? 'morning' : h < 16 && h >= 10 ? 'day' : h >= 16 && h < 19 ? 'evening' : 'night';
+  }
   frame(dt, draw = true) {
     const pl = this.player;
     if (this.playing) {
       this.input.update();
+      if (this.photo) { this.input.move = { x: 0, y: 0 }; this.input.jump = false; this.input.run = false; }   // photo mode: the feet stay put
       this.life.preInput(this.input);
       pl.update(dt, this.input, pl.yaw);
       this.life.update(dt);
       this.saveT = (this.saveT || 0) + dt; if (this.saveT > 5) { this.saveT = 0; this.save(); }
       this.area();
       this.sound.update(dt, pl, this.world.todName, this.ground);
+      this.sound.music?.set(this.bgmTheme());
     }
     const look = this.playing ? this.input.takeLook() : { x: dt * 0.05, y: 0 };
     const cam = pl.updateCamera(dt, this.camera, look, this.playing ? this.input.takeZoom() : 0);
