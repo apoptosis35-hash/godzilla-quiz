@@ -248,6 +248,24 @@ const perks = await G(async () => {
   return out;
 });
 check('facility rewards: bench, board, drinks, telescope, bus, tent, tea, torii, lamps', perks.label === 'すわる' && perks.ramune === true && perks.tent && perks.bless && perks.big && perks.fast && perks.bus && perks.sell && perks.heart && !!perks.lamp, JSON.stringify(perks));
+// the town works open up things to do too (districts.js)
+const dist = await G(async () => {
+  const a = window.__uminagi, L = a.life, st = L.st, D = L.districts, out = { places: D.places.map((q) => q.id).join(',') };
+  const say = L.ui.say, list = L.ui.list, pocket = L.ui.pocket; L.ui.say = async () => 0; L.ui.list = async () => 0; L.ui.pocket = async (s, o) => s.pocket.findIndex((id) => !o?.filter || o.filter(id));
+  st.pocket.splice(6); st.money += 50000; st.add('aji'); const m0 = st.money, fish0 = st.pocket.filter((id) => L.sellValue && id === 'aji').length;
+  await D.use('harbour'); out.auction = st.pocket.filter((id) => id === 'aji').length === fish0 - 1 && st.money > m0;
+  const m1 = st.money; await D.use('street'); out.lotto = st.daily.dist.lotto === 1;
+  await D.use('shrine'); out.omikuji = st.daily.dist.omikuji;
+  await D.use('houses'); out.share = !!st.daily.dist.share;
+  await D.use('island'); out.benten = st.daily.benten === 1;
+  await D.use('beach'); out.hut = st.pocket.some((id) => ['drink_kakigori', 'dish_yakisoba'].includes(id));
+  await D.use('hill');
+  const p0 = { ...a.player.pos }; await D.use('tram'); out.tram = Math.hypot(a.player.pos.x - p0.x, a.player.pos.z - p0.z) > 20;
+  L.ui.say = say; L.ui.list = list; L.ui.pocket = pocket;
+  a.player.place(40, -60, 0); out.road = L.onRoad(40, -60) ? a.player.speedK() > 1.2 : 'off-road';
+  return out;
+});
+check('town works: auction, lottery, fortune, sharing box, goddess, beach hut, lookout, train, roads', dist.places.split(',').length === 8 && dist.auction && dist.lotto && dist.omikuji && dist.share && dist.benten && dist.hut && dist.tram && dist.road === true, JSON.stringify(dist));
 // the bottom (B10): no way further down, the cave master's chest once a day
 const bottom = await G(async () => {
   const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

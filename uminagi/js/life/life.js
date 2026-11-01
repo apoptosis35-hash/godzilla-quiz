@@ -21,6 +21,7 @@ import { eat } from './farm.js';
 import { Fest } from './events.js';
 import { Tips } from './tips.js';
 import { Perks } from './perks.js';
+import { Districts, DISTRICTS } from './districts.js';
 import { hasCreature, creatureModel, creatureShape } from './creatures.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
@@ -88,6 +89,7 @@ export class Life {
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
     this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this); this.fest = new Fest(this); this.tips = new Tips(this); this.perks = new Perks(this);
     this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave, this.fest, this.tips];
+    this.districts = new Districts(this); this.districts.start();
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries
@@ -919,7 +921,7 @@ export class Life {
     const i = await this.ui.list('町づくり', rows);
     if (i < 0) return 'ほかに なにか あるかい?';
     const q = PROJECTS[i];
-    const c = await this.ui.say(sp, [`「${q.name}」だね! ${q.desc}。`, q.mats ? `ざいりょうを あつめてくれたら 作れるよ。\n${price(q)} で たのむかい?` : `${price(q)}で たのむかい?`], ['たのむ', 'やめる']);
+    const c = await this.ui.say(sp, [`「${q.name}」だね! ${q.desc}。${DISTRICTS[q.id] ? `\nできると: ${DISTRICTS[q.id].what}` : ''}`, q.mats ? `ざいりょうを あつめてくれたら 作れるよ。\n${price(q)} で たのむかい?` : `${price(q)}で たのむかい?`], ['たのむ', 'やめる']);
     if (c !== 0) return 'ほかに なにか あるかい?';
     if (q.mats) {
       if (!st.hasMats(q.mats)) return `ざいりょうが まだ たりないみたいだね。\n木材は おので、石と鉄は スコップで 岩を たたいて あつめてね!`;
@@ -942,6 +944,7 @@ export class Life {
       if (v) lines.push(`それから ${v.species}の ${v.name}が この町に 引っこしてきたよ。あいさつしておいで!`);
       if (id === 'shrine') lines.push('ほうさくさんの 資料館も 神社に うつったよ。');
       if (id === 'street') lines.push('オイラの 海凪商店も 商店街に うつったよ。');
+      if (DISTRICTS[id]) lines.push(`あたらしく できること:\n${DISTRICTS[id].what}`);
     }
     if (list.includes('__house')) lines.push('おはよう! キミの 家が できあがったよ!', '中は ひろくなったから、家具を たくさん おけるよ。まいど!');
     if (list.includes('__stars')) lines.push(...this.season.starNews());
@@ -1080,7 +1083,7 @@ export class Life {
       return this.home.target(front);
     }
     for (const v of this.villagers) if (v.o.visible && front(v.o.position.x, v.o.position.z, 1.7)) return { kind: 'talk', v, label: '話す' };
-    for (const m of [this.season, this.home, this.market, this.garden, this.build, this.goals, this.tour, this.cave, this.fest]) { const t = m?.target(front); if (t) return t; }
+    for (const m of [this.season, this.home, this.market, this.garden, this.build, this.goals, this.tour, this.cave, this.fest, this.districts]) { const t = m?.target(front); if (t) return t; }
     for (const p of this.pickups) if (front(p.x, p.z, 1.0)) return { kind: 'take', p, label: 'ひろう' };
     const tool = this.st.tool;
     if (tool === 'axe') for (const t of this.trees) if (Math.abs(t.x - pp.x) < 3 && Math.abs(t.z - pp.z) < 3 && front(t.x, t.z, t.rad + 1.0)) return { label: 'きる', run: () => this.craft.chop(t) };

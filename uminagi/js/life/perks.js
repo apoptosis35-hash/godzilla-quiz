@@ -68,7 +68,7 @@ export class Perks {
   // weight factor for a species when picking what turns up
   luck(kind, s) {
     let k = 1;
-    if (kind === 'fish' && s.rarity >= 3 && (this.blessing() === 'fish' || performance.now() < this.bigUntil)) k *= this.blessing() === 'fish' && performance.now() < this.bigUntil ? 4 : 2.5;
+    if (kind === 'fish' && s.rarity >= 3) for (const on of [this.blessing() === 'fish', performance.now() < this.bigUntil, !!this.st.daily.benten]) if (on) k *= 2;   // the torii, the telescope, the island goddess (districts.js)
     if (kind === 'bug' && s.rarity >= 3 && this.blessing() === 'bug') k *= 2.5;
     return k;
   }
@@ -85,7 +85,7 @@ export class Perks {
     return k;
   }
   caveHeart() { return this.blessing() === 'cave' ? 1 : 0; }
-  speedK() { return performance.now() < this.fastUntil ? 1.3 : 1; }
+  speedK() { return (performance.now() < this.fastUntil ? 1.3 : 1) * (this.life.districts?.roadK() ?? 1); }
 
   // ---------------------------------------------------------------- the lamps draw bugs at night
   // called before the usual bug spawn: true when a bug was put by a lamp instead
