@@ -11,6 +11,7 @@ export const AGENTS = [
   { id: "scout",     name: "ミナト", role: "トレンド調査",   color: "#4f9dff" },
   { id: "strategist",name: "サクラ", role: "キーワード戦略", color: "#ff7eb6" },
   { id: "writer",    name: "ハル",   role: "ライター",       color: "#ffb340" },
+  { id: "qa",        name: "ナギ",   role: "品質・CTA",      color: "#22d3ee" },
   { id: "editor",    name: "リン",   role: "校閲・法務",     color: "#3ecf8e" },
   { id: "publisher", name: "ソラ",   role: "パブリッシャー", color: "#a78bfa" },
   { id: "analyst",   name: "ケイ",   role: "アナリスト",     color: "#f87171" },
