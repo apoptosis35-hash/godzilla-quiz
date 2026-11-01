@@ -3,17 +3,18 @@ const AGENTS = [
   { id: "scout",      name: "ミナト", role: "トレンド調査",   color: "#4f9dff", hair: "#2b2b2b" },
   { id: "strategist", name: "サクラ", role: "キーワード戦略", color: "#ff7eb6", hair: "#8b4a2b" },
   { id: "writer",     name: "ハル",   role: "ライター",       color: "#ffb340", hair: "#3a2a1a" },
+  { id: "qa",         name: "ナギ",   role: "品質・CTA",      color: "#22d3ee", hair: "#222" },
   { id: "editor",     name: "リン",   role: "校閲・法務",     color: "#3ecf8e", hair: "#111" },
   { id: "publisher",  name: "ソラ",   role: "パブリッシャー", color: "#a78bfa", hair: "#6b4f2b" },
   { id: "analyst",    name: "ケイ",   role: "アナリスト",     color: "#f87171", hair: "#444" },
 ];
 const PHONE = matchMedia("(max-width:640px)").matches;
 const DESKS = PHONE
-  ? { scout: [25, 22], strategist: [75, 22], writer: [25, 45], editor: [75, 45], publisher: [25, 82], analyst: [75, 82] }
-  : { scout: [18, 30], strategist: [50, 30], writer: [82, 30], editor: [18, 80], publisher: [50, 80], analyst: [82, 80] };
+  ? { scout: [25, 20], strategist: [75, 20], writer: [25, 42], qa: [75, 42], editor: [18, 86], publisher: [50, 86], analyst: [82, 86] }
+  : { scout: [13, 30], strategist: [37, 30], writer: [61, 30], qa: [85, 30], editor: [25, 80], publisher: [50, 80], analyst: [75, 80] };
 const MEETING = PHONE
-  ? [[36, 61], [50, 59], [64, 61], [36, 71], [50, 73], [64, 71]]
-  : [[44, 48], [50, 46], [56, 48], [44, 62], [50, 64], [56, 62]];
+  ? [[38, 60], [50, 58], [62, 60], [36, 67], [64, 67], [44, 73], [56, 73]]
+  : [[42, 47], [50, 45], [58, 47], [41, 55], [59, 55], [45, 63], [55, 63]];
 const COFFEE = PHONE ? [88, 94] : [92, 86];
 const $ = s => document.querySelector(s);
 const floor = $("#floor");
@@ -24,7 +25,7 @@ for (const [i, a] of AGENTS.entries()) {
   const [x, y] = DESKS[a.id];
   const desk = document.createElement("div");
   desk.className = "desk"; desk.style.cssText = `left:${x}%;top:${y - (PHONE ? 6 : 8)}%;--c:${a.color}`;
-  desk.innerHTML = `<div class="surface"><div class="monitor"></div><div class="paper">${["🔍", "🗂️", "✍️", "🧐", "🚀", "📊"][i]}</div></div><div class="plate">${a.role}</div>`;
+  desk.innerHTML = `<div class="surface"><div class="monitor"></div><div class="paper">${["🔍", "🗂️", "✍️", "🔎", "🧐", "🚀", "📊"][i]}</div></div><div class="plate">${a.role}</div>`;
   floor.append(desk);
   const el = document.createElement("div");
   el.className = "agent idle"; el.style.cssText = `--c:${a.color};--hair:${a.hair}`;

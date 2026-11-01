@@ -5,7 +5,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { createBus, ROOT } from "./bus.js";
 import { initLLM, MODEL } from "./llm.js";
-import { scout, strategist, writer, editor, publisher, buildIndex, analyst } from "./agents.js";
+import { scout, strategist, writer, qa, editor, publisher, buildIndex, analyst } from "./agents.js";
 
 const offline = process.argv.includes("--offline");
 const cfg = JSON.parse(fs.readFileSync(path.join(ROOT, "config.json"), "utf8"));
@@ -23,7 +23,7 @@ try {
   let chain = Promise.resolve();
   for (const b of briefs) {
     const draft = await writer(bus, cfg, b);
-    chain = chain.then(async () => publisher(bus, cfg, b, await editor(bus, cfg, b, draft)));
+    chain = chain.then(async () => publisher(bus, cfg, b, await editor(bus, cfg, b, await qa(bus, cfg, b, draft))));
   }
   await chain;
   const metas = buildIndex(bus, cfg);
