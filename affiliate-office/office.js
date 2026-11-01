@@ -131,6 +131,65 @@ function idleLife() {
   }, 6000 + Math.random() * 6000);
 }
 
+// ───── 並行再生（複数の社員が同時に働いて見える）─────
+// 既存の live 用 pump/play はそのまま。再生(replay)だけ、社員ごとに独立して
+// 動くスケジューラに通すことで、調査・企画・執筆・校閲・公開が重なって見える。
+const STAGGER = 700, WORK_DUR = 3200, HOP = 1050;
+function startWork(id, msg) {
+  clearTimeout(A[id].workT);
+  setStatus(id, "working", msg); say(id, msg, WORK_DUR);
+  A[id].workT = setTimeout(() => setStatus(id, "idle", "待機中"), WORK_DUR);
+}
+function keepWork(id, extra = 1600) {        // result で作業時間を少し延長
+  clearTimeout(A[id].workT);
+  A[id].workT = setTimeout(() => setStatus(id, "idle", "待機中"), extra);
+}
+async function playMeetingEv(ev) {           // 朝会・終礼は全員集合（同期）
+  AGENTS.forEach(({ id }, i) => { clearTimeout(A[id].workT); A[id].el.classList.add("walking"); setStatus(id, "away", "会議"); moveTo(id, MEETING[i]); });
+  await wait(1200);
+  AGENTS.forEach(({ id }) => A[id].el.classList.remove("walking"));
+  say(ev.agent, ev.msg, 3000);
+  await wait(2400);
+  AGENTS.forEach(({ id }) => { A[id].el.classList.add("walking"); moveTo(id, A[id].home); });
+  await wait(1200);
+  AGENTS.forEach(({ id }) => { A[id].el.classList.remove("walking"); setStatus(id, "idle", "待機中"); });
+}
+function doHandoff(ev) {                      // 非ブロッキング：原稿を持って相手に渡しに行く
+  const from = A[ev.agent], to = A[ev.to]; if (!from || !to) return;
+  clearTimeout(from.workT);
+  const [tx, ty] = to.home, back = from.home;
+  setStatus(ev.agent, "away", ev.msg);
+  from.el.classList.add("walking", "carry");
+  moveTo(ev.agent, [tx + (tx > back[0] ? -5 : 5), ty]);
+  setTimeout(() => {
+    from.el.classList.remove("walking");
+    say(ev.agent, ev.msg, 1600); say(ev.to, "了解です！", 1600);
+    setTimeout(() => {
+      from.el.classList.remove("carry"); from.el.classList.add("walking");
+      moveTo(ev.agent, back);
+      setTimeout(() => { from.el.classList.remove("walking"); if (from.status === "away") setStatus(ev.agent, "idle", "待機中"); }, HOP);
+    }, 1100);
+  }, HOP);
+}
+async function pumpParallel(events) {
+  if (busy) return; busy = true; speed = 1;
+  for (const ev of events) {
+    if (ev.type !== "meeting" && !A[ev.agent]) continue;
+    addLog(ev);
+    if (A[ev.agent]) $("#board-note").textContent = `${A[ev.agent].name}: ${ev.msg}`;
+    if (ev.type === "meeting") await playMeetingEv(ev);
+    else if (ev.type === "work") { startWork(ev.agent, ev.msg); await wait(STAGGER); }
+    else if (ev.type === "result") { say(ev.agent, ev.msg, 2600); keepWork(ev.agent); await wait(STAGGER * 0.6); }
+    else if (ev.type === "handoff") { doHandoff(ev); await wait(STAGGER); }
+    else if (ev.type === "error") { say(ev.agent, "⚠️ " + ev.msg, 3500); await wait(STAGGER); }
+  }
+  await wait(1600);
+  AGENTS.forEach(({ id }) => { clearTimeout(A[id].workT); setStatus(id, "idle", "待機中"); });
+  busy = false;
+  if (replaying) { replaying = false; const r = $("#replay"); if (r) r.disabled = false; poll(); }
+  idleLife();
+}
+
 // ───── 事務所レベル・内装（放置ゲーム：実データ kpi だけで育つ）─────
 const LEVELS = [
   { lv: 1, name: "スタートアップ",       min: 0 },
@@ -269,8 +328,7 @@ function replayLatest() {
   replaying = true; $("#replay").disabled = true;
   const at = new Date(ev[start].t).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
   $("#mode").textContent = `📼 ${at} の業務を再生中（実際のログ）`;
-  queue.push(...ev.slice(start));
-  pump();
+  pumpParallel(ev.slice(start));
 }
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }, 1000);
 $("#replay").onclick = replayLatest;
