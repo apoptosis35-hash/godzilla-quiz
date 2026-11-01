@@ -195,7 +195,7 @@ if (want('farm') || want('cave') || want('pose')) {
   }
   if (want('pose')) {
     // photo mode on the quay: the HUD gone, a cheer, the camera swinging round
-    await p.evaluate(() => { const a = window.__uminagi, L = a.life, P = a.player; Object.assign(L.st.ext.wear, { hat: 'hat_flowers', face: 'face_round', back: null }); L.home.wear(); P.place(-24.5, 21.3, 0); P.heading = Math.PI; P.yaw = Math.PI - 0.6; P.pitch = 0.18; P.dist = 3.2; P.snapCam = true; a.photoMode.open(); a.photoMode.pose = 0; a.photoMode.nextPose(); for (let i = 0; i < 4; i++) a.frame(0.05, false); });
+    await p.evaluate(() => { const a = window.__uminagi, L = a.life, P = a.player; Object.assign(L.st.ext.wear, { hat: 'hat_flowers', face: 'face_round', back: null }); L.home.wear(); P.place(-24.5, 21.3, 0); P.heading = Math.PI; P.yaw = Math.PI - 0.6; P.pitch = 0.16; P.dist = 2.4; P.snapCam = true; a.photoMode.open(); a.photoMode.pose = 0; a.photoMode.nextPose(); for (let i = 0; i < 4; i++) a.frame(0.05, false); });
     await p.addStyleTag({ content: '.photoov{display:none!important}' });
     const f = await rec(p, 'pose', 48, (a, i) => { a.player.yaw += 0.012; if (i === 30) { a.photoMode.pose = 2; a.photoMode.setPose(); } });
     console.log('pose', f);

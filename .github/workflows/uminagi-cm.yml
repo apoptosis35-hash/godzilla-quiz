@@ -6,7 +6,7 @@ name: uminagi cm
 on:
   workflow_dispatch:
     inputs:
-      clips: { description: 'clips to capture (space separated); empty = only re-cut', default: 'fish bug diy furn before after' }
+      clips: { description: 'clips to capture (space separated); empty = only re-cut', default: 'fish bug diy farm cave fest pose before after' }
       reuse_run: { description: 'run id whose captured clips to re-cut (when clips is empty)', default: '' }
 permissions:
   contents: write
@@ -21,7 +21,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        clip: [fish, bug, diy, furn, before, after]
+        clip: [fish, bug, diy, farm, cave, fest, pose, before, after]
     steps:
       - uses: actions/checkout@v4
         if: contains(inputs.clips, matrix.clip)

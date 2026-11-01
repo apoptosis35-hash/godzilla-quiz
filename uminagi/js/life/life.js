@@ -3,6 +3,7 @@
 // combing, the raccoon's shop and the owl's museum. Everything follows the real clock and resets at 5:00.
 import * as THREE from 'three';
 import { toonify } from '../toon.js';
+import { OVERLAYS } from '../terrain.js';
 import { LifeState, ITEMS, dayKey, seeded, donatable, icon } from './state.js';
 import { SEA } from './items2.js';
 import { ART, isFake, paintingURL } from './art.js';
@@ -345,7 +346,8 @@ export class Life {
     const sg = new THREE.ConeGeometry(0.07, 0.06, 9); sg.rotateX(-PI / 2 + 0.3); sg.translate(0, 0.025, 0);
     this.shellGeo = sg;
   }
-  onRoad(x, z) { const s = this.ground.sample(x, z); return !!(s.plat && /asphalt|road/.test(s.plat.mat || '')); }
+  // a road or a paved lane: a platform's surface, or one of the surfaces laid over the ground (terrace lanes, the street)
+  onRoad(x, z) { const s = this.ground.sample(x, z); if (s.plat && /asphalt|road|paving/.test(s.plat.mat || '')) return true; return OVERLAYS.some((o) => /asphalt|paving/.test(o.mat) && x >= o.x0 && x <= o.x1 && z >= o.z0 && z <= o.z1); }
   // today's dig spots, the money rock, shells and the message bottle (seeded by the date: the same all day)
   refreshDay() {
     const k = dayKey(); if (this.day === k) return;
