@@ -134,13 +134,13 @@ function idleLife() {
 // ───── 並行再生（複数の社員が同時に働いて見える）─────
 // 既存の live 用 pump/play はそのまま。再生(replay)だけ、社員ごとに独立して
 // 動くスケジューラに通すことで、調査・企画・執筆・校閲・公開が重なって見える。
-const STAGGER = 700, WORK_DUR = 3200, HOP = 1050;
+const STAGGER = 900, WORK_DUR = 6000, HOP = 1050;  // 各社員がしばらく働いて見えるよう長め
 function startWork(id, msg) {
   clearTimeout(A[id].workT);
   setStatus(id, "working", msg); say(id, msg, WORK_DUR);
   A[id].workT = setTimeout(() => setStatus(id, "idle", "待機中"), WORK_DUR);
 }
-function keepWork(id, extra = 1600) {        // result で作業時間を少し延長
+function keepWork(id, extra = 3000) {        // result のあとも少しのあいだ作業を続ける
   clearTimeout(A[id].workT);
   A[id].workT = setTimeout(() => setStatus(id, "idle", "待機中"), extra);
 }
