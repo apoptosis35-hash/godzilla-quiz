@@ -286,7 +286,7 @@ export class Cave {
     // a handful of finds a floor (5 on B1 up to 12), however big the maze: the cave is a good day out, not a mine
     const nChest = Math.min(deadEnds.length, 1 + Math.floor(f / 3)), rest = [...deadEnds.slice(nChest), ...others].sort(() => r() - 0.5);
     const spots = [...deadEnds.slice(0, nChest), ...rest.slice(0, Math.min(12, 4 + f))], plan = [];
-    for (let k = 0; k < spots.length; k++) plan.push(k < nChest ? 'chest' : pick(['crystal', 'crystal', 'crystal', 'ore', 'ore', 'ore', 'moss', 'moss', 'crack', 'crack'], r));
+    for (let k = 0; k < spots.length; k++) plan.push(k < nChest ? 'chest' : pick(['crystal', 'ore', 'ore', 'moss', 'moss', 'crack', 'crack', 'moss'], r));
     spots.forEach(([i, j], k) => {
       const kind = plan[k]; if (!kind) return;
       const id = key(`${kind}${i}_${j}`), a = r() * PI * 2, d = kind === 'chest' ? 0 : r() * 1.2;
@@ -309,7 +309,7 @@ export class Cave {
 
     // ---- ぽっけ at the foot of the rope, the camera high behind
     const pl = this.player;
-    pl.place(cx(si), cz(sj) + 0.6, 0); pl.pos.y = Y; pl.heading = PI; pl.yaw = 0; pl.pitch = 1.1; pl.dist = 7.5; pl.snapCam = true; pl.lastSafe.copy(pl.pos);
+    pl.place(cx(si), cz(sj) + 1.5, 0); pl.pos.y = Y;   // a step away from the rope, so a held A does not climb straight back pl.heading = PI; pl.yaw = 0; pl.pitch = 1.1; pl.dist = 7.5; pl.snapCam = true; pl.lastSafe.copy(pl.pos);
   }
   // push box / pillar vertices about (not the bottom, so walls stay on the floor)
   rough(g, k, Y) {
@@ -354,7 +354,7 @@ export class Cave {
         const money = 150 * (f + 1) + Math.floor(Math.random() * 5) * 100; L.st.money += money; lines.push(`たからばこを あけた!`, `${money.toLocaleString()} ナギ 入っていた!`);
         if (unknown.length && u < 0.4) { const rid = pick(unknown); L.craft.learn(rid); lines.push(`それから、ふるい 紙きれ……「${ITEMS[rid].name}」の DIYレシピだ!`); }
         else if (f >= 3 && Math.random() < 0.25 && !L.st.full()) { L.st.add('gold_nugget'); lines.push('金のかけらも 入っていた!'); }
-        else { const n = 1 + Math.floor(f / 4); L.st.addMat('crystal', n); lines.push(`水晶が ${n}こ 入っていた!`); }
+        else { const n = f >= 6 ? 2 : 1; L.st.addMat('crystal', n); lines.push(`水晶が ${n}こ 入っていた!`); }
       }
       L.st.save(); L.emit('pick');
       await L.ui.say(null, lines);
@@ -399,7 +399,7 @@ export class Cave {
       L.anim = { kind: 'dig', t: 0, dur: 0.7 }; L.craft.use('shovel'); this.st.stats.dig = (this.st.stats.dig || 0) + 1; L.emit('dig');
       await new Promise((res) => setTimeout(res, 600));
       L.ui.jingle([523, 659, 784]);
-      if (Math.random() < 0.5) { this.st.addMat('crystal'); await L.ui.say(null, ['水晶が でてきた!']); }
+      if (Math.random() < 0.35) { this.st.addMat('crystal'); await L.ui.say(null, ['水晶が でてきた!']); }
       else { this.st.add('fossil_unknown'); await L.ui.say(null, ['化石を ほりだした!', '資料館で 鑑定してもらおう。']); }
       this.st.save();
     } });

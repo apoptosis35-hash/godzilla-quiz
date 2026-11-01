@@ -18,6 +18,7 @@ import { Cave } from './cave.js';
 import './clothes.js';
 import { eat } from './farm.js';
 import { Fest } from './events.js';
+import { Tips } from './tips.js';
 import { hasCreature, creatureModel, creatureShape } from './creatures.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
@@ -83,8 +84,8 @@ export class Life {
     this.day = null; this.refreshDay();
     this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
-    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this); this.fest = new Fest(this);
-    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave, this.fest];
+    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this); this.fest = new Fest(this); this.tips = new Tips(this);
+    this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave, this.fest, this.tips];
     this.bindUI();
   }
   // ---------------------------------------------------------------- world queries

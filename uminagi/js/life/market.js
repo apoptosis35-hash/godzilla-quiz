@@ -57,6 +57,7 @@ export class Market {
     for (const id of this.stock) { const it = ITEMS[id]; rows.push({ label: `今日の品: ${it.name}`, sub: `${it.price} ナギ`, ok: st.money >= it.price }); acts.push(['item', id, it.price]); }
     for (const s of seeds) { rows.push({ label: s.name, sub: `${s.price} ナギ`, ok: st.money >= s.price }); acts.push(['item', s.id, s.price]); }
     if (m === 10) { rows.push({ label: 'かぼちゃランタン', sub: '600 ナギ', ok: st.money >= 600 }); acts.push(['item', 'furn_pumpkin', 600]); }
+    rows.push({ label: 'キッチン', sub: '4800 ナギ (家で りょうりが できる)', ok: st.money >= 4800 }); acts.push(['item', 'furn_kitchen', 4800]);
     const i = await ui.list('買いもの', rows);
     if (i < 0) return 'ほかに なにか あるかい?';
     const [kind, id, price] = acts[i];

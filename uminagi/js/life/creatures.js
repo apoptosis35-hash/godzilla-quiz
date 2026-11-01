@@ -327,7 +327,9 @@ function butterfly(s) {
   const [m, a, kind] = [C(s.w[0]), C(s.w[1]), s.pat];
   wings(g, BFW(s.tails, s.k ?? 1), (c, x, z) => {
     const r = Math.hypot(x, z); c.copy(m);
-    if (kind === 'tip' && x > 0.3 && z > 0.05) c.copy(a);
+    if ((kind === 'tip' || kind === 'tipdots') && x > 0.3 && z > 0.05) c.copy(a);
+    if (kind === 'tipdots' && (Math.hypot(x - 0.24, z - 0.08) < 0.03 || Math.hypot(x - 0.2, z + 0.06) < 0.025)) c.copy(a);
+    if (kind === 'tipdots' && Math.hypot(x, z) > 0.38) c.lerp(C(0xa8a898), 0.6);
     if (kind === 'edge' && (r > 0.34 || (z < -0.2 && r > 0.25))) c.copy(a);
     if (kind === 'band' && Math.abs(r - 0.22) < 0.05) c.copy(a);
     if (kind === 'veins' && (Math.sin(Math.atan2(z, x) * 18) > 0.75 || r > 0.38)) c.copy(a);
@@ -425,15 +427,24 @@ function crab(s) {
   }
   return g;
 }
-function spiral(s) {   // a coiled shell: spheres along a narrowing spiral, merged
-  const parts = [], n = s.n ?? 26, R = s.R ?? 0.22, up = s.up ?? 0.3;
-  for (let i = 0; i < n; i++) {
-    const u = i / (n - 1), a = u * (s.turns ?? 3) * TAU, rr = R * (1 - u * 0.85), x = Math.cos(a) * rr * 0.6, z = Math.sin(a) * rr * 0.6, y = u * up;
-    const sp = new THREE.SphereGeometry(rr * 0.75 + 0.01, 12, 8).toNonIndexed(); sp.translate(x, y, z); parts.push(sp);
-    if (s.spines && i % 2 === 0 && u < 0.7) { const sv = new THREE.ConeGeometry(0.02, 0.09, 5).toNonIndexed(); sv.rotateZ(-PI / 2); sv.rotateY(-a); sv.translate(x + Math.cos(a) * rr * 0.7, y + rr * 0.3, z + Math.sin(a) * rr * 0.7); parts.push(sv); }
-  }
+function spiral(s) {   // a coiled shell: a tube winding up a cone, thick at the opening and fine at the tip
+  const turns = s.turns ?? 3, R = s.R ?? 0.22, up = s.up ?? 0.3, n = Math.ceil(28 * turns), pts = [];
+  const helix = (u) => R * 0.62 * Math.pow(1 - u, 0.95), tubeR = (u) => R * 0.6 * Math.pow(1 - u, 1.15) + 0.006;
+  for (let i = 0; i <= n; i++) { const u = i / n, a = u * turns * TAU; pts.push(new THREE.Vector3(Math.cos(a) * helix(u), u * up, Math.sin(a) * helix(u))); }
+  const curve = new THREE.CatmullRomCurve3(pts), tube = new THREE.TubeGeometry(curve, n, 1, 14, false), P = tube.attributes.position, N = tube.attributes.normal;
+  for (let i = 0; i < P.count; i++) { const u = Math.floor(i / 15) / n, c = curve.getPointAt(Math.min(1, u)), r = tubeR(u) * (s.spines && u < 0.65 && (i % 15) % 5 === 0 ? 1.25 : 1); P.setXYZ(i, c.x + N.getX(i) * r, c.y + N.getY(i) * r, c.z + N.getZ(i) * r); }
+  tube.computeVertexNormals();
+  const parts = [tube.toNonIndexed()];
+  // the opening, a little darker inside
+  const lip = new THREE.CircleGeometry(tubeR(0) * 0.92, 14).toNonIndexed(); lip.lookAt(curve.getTangentAt(0).negate()); lip.translate(pts[0].x, pts[0].y, pts[0].z); parts.push(lip);
+  if (s.spines) for (let i = 0; i < n * 0.6; i += 3) { const u = i / n, c = curve.getPointAt(u), out = new THREE.Vector3(c.x, 0, c.z).normalize(), r = tubeR(u); const sv = new THREE.ConeGeometry(0.018 + r * 0.12, r * 0.9, 5).toNonIndexed(); sv.applyQuaternion(new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 1, 0), out.clone().add(new THREE.Vector3(0, 0.6, 0)).normalize())); sv.translate(c.x + out.x * r * 0.9, c.y + r * 0.4, c.z + out.z * r * 0.9); parts.push(sv); }
   const geo = mergeGeometries(parts.map((p) => { p.deleteAttribute('uv'); return p; }));
-  paint(geo, (c, x, y, z) => { c.set(s.c); if (s.stripe && Math.sin(y * (s.sf ?? 60)) > 0.4) c.set(s.stripe); if (s.check && Math.sin(y * 70) * Math.sin(Math.atan2(z, x) * 8) > 0.3) c.set(s.check); });
+  paint(geo, (c, x, y, z) => {
+    c.set(s.c); const a = Math.atan2(z, x);
+    if (s.stripe && Math.sin(y * (s.sf ?? 60) + a * 0.5) > 0.35) c.set(s.stripe);
+    if (s.check && Math.sin(y * 70) * Math.sin(a * 8) > 0.3) c.set(s.check);
+    c.multiplyScalar(0.85 + 0.15 * Math.min(1, y / Math.max(0.01, up)));
+  });
   const g = new THREE.Group(); add(g, geo); return g;
 }
 function snail(s) {
@@ -448,7 +459,7 @@ function snail(s) {
 const BUGS = {
   ari: () => ant({ c: 0x1a1410 }),
   funamushi: () => isopod({ c: 0x5a554c, flat: 1 }),
-  monshiro: () => butterfly({ w: [0xf4f2e8, 0x333333], pat: 'tip', body: 0x5a5a5a }),
+  monshiro: () => butterfly({ w: [0xe4dfc2, 0x2a2a2a], pat: 'tipdots', body: 0x5a5a5a }),
   nanahoshi: () => beetle({ c: 0xd8261c, nspots: 7, pro: 0x111111, L: 0.13, W: 0.12, legLen: 0.14 }),
   yadokari: () => hermit({ c: 0xd8a070, shell: 0xc89068 }),
   amenbo: () => strider({ c: 0x2a2a28 }),

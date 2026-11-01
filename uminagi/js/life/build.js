@@ -111,7 +111,8 @@ export class Build {
   // ---------------------------------------------------------------- buying, placing, moving
   async menu(sp) {
     const st = this.st, ui = this.life.ui;
-    const rows = FACILITIES.map((f) => ({ label: f.name, sub: `${f.cost.toLocaleString()} ナギ${f.desc ? ' / ' + f.desc : ''}`, ok: st.money >= f.cost }));
+    // facilities count three times what a piece of outdoor furniture does in the town's rating (goals.js), and lamps light up at night
+    const rows = FACILITIES.map((f) => ({ label: f.name, sub: `${f.cost.toLocaleString()} ナギ${f.desc ? ' / ' + f.desc : f.house ? '' : ' / 町の評判が 家具の3倍 上がる'}${LAMPS[f.model] ? '・夜は 光る' : ''}`, ok: st.money >= f.cost }));
     const i = await ui.list('しせつを たてる', rows);
     if (i < 0) return 'ほかに なにか あるかい?';
     const f = FACILITIES[i];

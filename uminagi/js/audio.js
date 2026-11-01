@@ -7,6 +7,12 @@ export class Sound {
     if (this.ctx) { this.ctx.resume?.(); return; }
     const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return;
     const c = this.ctx = new AC();
+    // phones suspend (or 'interrupt') the audio when the app goes to the background or the screen locks:
+    // wake it again when the page is shown and on the next touch or key
+    const wake = () => { if (c.state !== 'running' && this.on) c.resume?.().catch(() => {}); };
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) wake(); });
+    addEventListener('pageshow', wake); addEventListener('focus', wake);
+    for (const ev of ['pointerdown', 'touchend', 'keydown']) addEventListener(ev, wake, { passive: true });
     this.master = c.createGain(); this.master.gain.value = 0.7; this.master.connect(c.destination);
     // brown noise -> lowpass with a slow swell = waves
     const len = c.sampleRate * 4, buf = c.createBuffer(1, len, c.sampleRate), d = buf.getChannelData(0);

@@ -64,7 +64,10 @@ export class Fest {
     if (this.petals) { L.root.remove(this.petals); this.petals = null; }
     const ev = this.ev = this.today(), F = FEST[ev]; if (!F) return;
     // the stall by the camp, with the festival's name over it
-    const p = L.near(-4, 14, (x, z) => L.walkable(x, z) && !L.blockedAt(x, z, 2) && !L.water(x, z), 14); if (!p) return;
+    // an open spot near the camp: nothing standing within a few metres (a finished town has the fish market there)
+    const open = (x, z) => L.walkable(x, z) && !L.water(x, z) && !L.blockedAt(x, z, 3.6) && [[2.5, 0], [-2.5, 0], [0, 3], [0, -2.5]].every(([dx, dz]) => L.walkable(x + dx, z + dz) && !L.water(x + dx, z + dz));
+    let p = null; for (const [x0, z0] of [[-4, 14], [12, 26], [-22, 22], [24, 14], [0, 32], [-30, 10]]) if ((p = L.near(x0, z0, open, 10))) break;
+    p ||= L.near(-4, 14, (x, z) => L.walkable(x, z) && !L.blockedAt(x, z, 2) && !L.water(x, z), 14); if (!p) return;
     const y = L.ground.height(p[0], p[1]), tent = L.town.protos.market_tent ? L.town.clone('market_tent', p[0], y, p[1], PI, true) : L.tent(p[0], p[1], PI, 0xd84a3a, 1.1);
     if (tent.parent !== L.root) L.root.attach(tent); this.objs.push(tent);
     const sign = L.textSprite(`🏮 ${F.name}の 屋台`, 0.9, 460); sign.position.set(p[0], y + 3.1, p[1]); L.root.add(sign); this.objs.push(sign);
