@@ -223,6 +223,31 @@ const nine = await G(async () => {
   return { code: code.length, back: !!back.data, stones, reqs, worn, dish, fest, photo, music };
 });
 check('save codes, stones, requests, wardrobe, cooking, festivals, photo, music', nine.code > 100 && nine.back && nine.stones >= 1 && nine.reqs >= 1 && nine.worn >= 1 && nine.dish && nine.fest && nine.photo && nine.music, JSON.stringify(nine));
+// facility rewards: each finished facility opens up something (perks.js)
+const perks = await G(async () => {
+  const a = window.__uminagi, L = a.life, st = L.st, B = L.build, K = L.perks, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };
+  const drain = async (pr) => { let done = false; pr.then(() => { done = true; }); for (let k = 0; k < 600 && !done; k++) { if (L.ui.queue) { if (L.ui.typing) L.ui.endLine(); L.ui.advance(); } await new Promise((r) => setTimeout(r, 5)); } await pr; };
+  const ids = ['bench', 'info_board', 'vending_machine', 'telescope', 'bus_stop', 'market_tent', 'azumaya', 'torii', 'street_light', 'ishidoro'];
+  const n0 = B.list.length; ids.forEach((id, i) => B.list.push({ id, x: 20 + i * 4, z: -40, ry: 0, day: '2000-1-1' })); B.render();
+  const mine = B.list.slice(n0), out = {};
+  const c0 = K.centre(mine[0]); out.label = B.target((x, z) => (Math.hypot(x - c0.x, z - c0.z) < 0.01 ? 1 : 0))?.label;
+  const list = L.ui.list; L.ui.list = async () => 0; st.money += 200000; const m0 = st.money;
+  for (const b of mine) { if (b.id === 'bus_stop') continue; await drain(K.use(b)); }
+  out.ramune = st.has('drink_ramune'); out.tent = st.money < m0 - 160;
+  out.bless = st.daily.bless; out.big = K.bigFish() || K.night();
+  await drain(K.drink(st.pocket.indexOf('drink_ramune'))); out.fast = a.player.speedK() > 1.2;
+  await drain(K.use(mine[ids.indexOf('bus_stop')])); const h = L.home.door; out.bus = !!h && Math.hypot(a.player.pos.x - h.x, a.player.pos.z - h.z) < 3;
+  L.ui.list = list;
+  st.daily.bless = 'money'; out.sell = L.sellValue('aji') > (await import('/uminagi/js/life/state.js')).ITEMS.aji.price;
+  st.daily.bless = 'cave'; out.heart = K.caveHeart() === 1; st.daily.bless = null;
+  // a summer night by the street light draws beetles
+  const hour = L.hour, month = L.month; L.hour = () => 21; L.month = () => 7; const pp = { x: mine[8].x, z: mine[8].z + 5 };
+  for (let k = 0; k < 60 && !L.bugs.some((q) => q.lamp); k++) K.lampBug(pp);
+  out.lamp = L.bugs.find((q) => q.lamp)?.sp.id || null; L.hour = hour; L.month = month;
+  B.list.splice(n0); B.render();
+  return out;
+});
+check('facility rewards: bench, board, drinks, telescope, bus, tent, tea, torii, lamps', perks.label === 'すわる' && perks.ramune === true && perks.tent && perks.bless && perks.big && perks.fast && perks.bus && perks.sell && perks.heart && !!perks.lamp, JSON.stringify(perks));
 // the bottom (B10): no way further down, the cave master's chest once a day
 const bottom = await G(async () => {
   const a = window.__uminagi, L = a.life, C = L.cave, P = a.player, step = (n) => { for (let i = 0; i < n; i++) a.frame(0.05, false); };

@@ -5,6 +5,7 @@
 import * as THREE from 'three';
 import { ITEMS, ICON_BY_ID, dayKey } from './state.js';
 import { LAMPS } from '../town.js';
+import { PERKS } from './perks.js';
 
 const PI = Math.PI;
 // prices follow the slow-life games' public works where they have one (a housing plot 10,000; bridges and slopes
@@ -112,7 +113,7 @@ export class Build {
   async menu(sp) {
     const st = this.st, ui = this.life.ui;
     // facilities count three times what a piece of outdoor furniture does in the town's rating (goals.js), and lamps light up at night
-    const rows = FACILITIES.map((f) => ({ label: f.name, sub: `${f.cost.toLocaleString()} ナギ${f.desc ? ' / ' + f.desc : f.house ? '' : ' / 町の評判が 家具の3倍 上がる'}${LAMPS[f.model] ? '・夜は 光る' : ''}`, ok: st.money >= f.cost }));
+    const rows = FACILITIES.map((f) => ({ label: f.name, sub: `${f.cost.toLocaleString()} ナギ / ${f.desc || (PERKS[f.id] ? PERKS[f.id].short : '')}${f.house ? '' : '・町の評判アップ'}`, ok: st.money >= f.cost }));
     const i = await ui.list('しせつを たてる', rows);
     if (i < 0) return 'ほかに なにか あるかい?';
     const f = FACILITIES[i];
@@ -157,14 +158,17 @@ export class Build {
     if (this.life.home.inside) return null;
     for (const b of this.list) {
       const f = this.foot(b), cx = b.x + Math.sin(b.ry) * f.cz, cz = b.z + Math.cos(b.ry) * f.cz;
-      if (front(cx, cz, Math.max(f.hw, f.hd) + 0.9)) return { label: 'しらべる', run: () => this.inspect(b) };
+      if (front(cx, cz, Math.max(f.hw, f.hd) + 0.9)) return { label: (this.done(b) && PERKS[b.id]?.act) || 'しらべる', run: () => this.inspect(b) };
     }
     return null;
   }
   async inspect(b) {
     const ui = this.life.ui, f = this.fac(b), who = b.who && this.life.villagers.find((v) => v.def.id === b.who);
     const title = f.house ? (who ? `${who.def.name}の家` : '住人の家の土地') : f.name;
-    const k = await ui.list(title + (this.done(b) ? '' : '(工事中)'), [{ label: 'うごかす', sub: 'キットに もどして 建てなおす' }, { label: 'とりこわす', sub: 'お金は もどらないよ' }, { label: 'やめる' }]);
+    // a finished facility's own use comes first (perks.js); lamps that work by themselves just say what they do
+    const P = this.done(b) && PERKS[b.id], top = P ? [{ label: P.act || 'こうか', sub: P.what, ok: !!P.act }] : [];
+    let k = await ui.list(title + (this.done(b) ? '' : '(工事中)'), [...top, { label: 'うごかす', sub: 'キットに もどして 建てなおす' }, { label: 'とりこわす', sub: 'お金は もどらないよ' }, { label: 'やめる' }]);
+    if (P) { if (k === 0) { await this.life.perks.use(b); return; } if (k > 0) k--; }
     if (k === 0) {
       if (this.st.full()) { ui.toast('ポケットが いっぱい!'); return; }
       this.list.splice(this.list.indexOf(b), 1); this.st.add('kit_' + b.id); this.st.save(); this.render();
@@ -185,7 +189,7 @@ export class Build {
     for (const b of finished) {
       const v = b.who && this.life.villagers.find((x) => x.def.id === b.who);
       if (v) { this.life.moveIn(v, b); lines.push(`おはよう! ${v.def.name}の 家が できあがったよ。\nさっそく 引っこしてきたみたい!`); }
-      else lines.push(`おはよう! 「${this.fac(b).name}」が できあがったよ!`);
+      else lines.push(`おはよう! 「${this.fac(b).name}」が できあがったよ!${PERKS[b.id] ? `\n${PERKS[b.id].what}。` : ''}`);
     }
     this.life.ui.say({ name: 'あらた', color: '#4f8a46', pitch: 1.05 }, lines);
   }

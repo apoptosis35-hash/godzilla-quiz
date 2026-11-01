@@ -20,6 +20,7 @@ import './clothes.js';
 import { eat } from './farm.js';
 import { Fest } from './events.js';
 import { Tips } from './tips.js';
+import { Perks } from './perks.js';
 import { hasCreature, creatureModel, creatureShape } from './creatures.js';
 import { Craft } from './craft.js';
 import { Social } from './social.js';
@@ -85,7 +86,7 @@ export class Life {
     this.day = null; this.refreshDay();
     this.home = new Home(this); this.craft = new Craft(this); this.season = new Season(this);
     this.social = new Social(this); this.market = new Market(this); this.garden = new Garden(this);
-    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this); this.fest = new Fest(this); this.tips = new Tips(this);
+    this.goals = new Goals(this); this.folk = new Folk(this); this.tour = new Tour(this); this.skills = new Skills(this); this.cave = new Cave(this); this.fest = new Fest(this); this.tips = new Tips(this); this.perks = new Perks(this);
     this.mods = [this.home, this.craft, this.season, this.social, this.market, this.garden, this.build, this.goals, this.folk, this.tour, this.skills, this.cave, this.fest, this.tips];
     this.bindUI();
   }
@@ -461,7 +462,8 @@ export class Life {
     const m = this.month(), h = this.hour();
     const wet = this.season?.raining(), ok = list.filter((s) => [].concat(s.where).includes(where) && s.months.includes(m) && inHours(s.hours, h) && (!s.rain || wet) && (!extra || extra(s)));
     if (!ok.length) return null;
-    const W = (s) => (s.phantom ? 4 : (RARITY_W[s.rarity] || 1) * (this.tour?.boost && s.rarity >= 3 ? 4 : 1));
+    const lk = list === FISH ? 'fish' : list === BUGS ? 'bug' : null;
+    const W = (s) => (s.phantom ? 4 : (RARITY_W[s.rarity] || 1) * (this.tour?.boost && s.rarity >= 3 ? 4 : 1) * (this.perks?.luck(lk, s) ?? 1));
     let sum = 0; for (const s of ok) sum += W(s);
     let u = Math.random() * sum; for (const s of ok) { u -= W(s); if (u <= 0) return s; }
     return ok[0];
@@ -473,7 +475,7 @@ export class Life {
       if (!this.nearLand(x, z, 9)) continue;
       const sp = this.pickSpecies(FISH, this.fishZone(x, z), (s) => !this.goals || this.goals.allowFish(s)); if (!sp) return;
       const o = new THREE.Mesh(this.shadowGeo, this.shadowMat); o.renderOrder = 2;
-      const big = Math.random() < (this.tour?.boost ? 0.15 : 0.06), L = (0.35 + sp.size * 0.2) * (big ? 1.45 : 1); o.scale.set(L * 0.42, 1, L);
+      const big = Math.random() < (this.tour?.boost || this.perks?.bigFish() ? 0.15 : 0.06), L = (0.35 + sp.size * 0.2) * (big ? 1.45 : 1); o.scale.set(L * 0.42, 1, L);
       if (sp.id === 'tako' || sp.id === 'ei') o.scale.set(L * 0.8, 1, L * 0.8);
       o.position.set(x, 0, z); this.root.add(o);
       this.fish.push({ sp, o, x, z, h: Math.random() * 6.28, sp0: 0.25, state: 'swim', t: 0, turnT: 0, fade: 0, L, big });
@@ -650,6 +652,7 @@ export class Life {
     return g;
   }
   spawnBug(pp) {
+    if (this.perks?.lampBug(pp)) return;   // a facility's lamp draws one instead (perks.js)
     const w = pick(['flower', 'air', 'tree', 'tree', 'ground', 'water', 'beach', 'rock']), sp = this.pickSpecies(BUGS, w, null);
     if (!sp) return;
     let x, y, z, mode = 'sit', base = null;
@@ -675,7 +678,7 @@ export class Life {
       const p = randLand((a, b) => this.soft(a, b, 0.3)); if (!p) return; [x, z] = p; y = this.ground.height(x, z);
     }
     const o = this.bugMesh(sp.id); o.position.set(x, y, z); this.root.add(o);
-    const gold = Math.random() < (this.tour?.boost ? 0.1 : 0.03);   // now and then a golden one
+    const gold = Math.random() < (this.tour?.boost ? 0.1 : 0.03) * (this.perks?.goldK(x, z) ?? 1);   // now and then a golden one
     if (gold) o.traverse((m) => { if (m.isMesh && !m.userData.outline) m.material = new THREE.MeshStandardMaterial({ color: 0xffc830, emissive: 0x8a5a00, emissiveIntensity: 0.6, metalness: 0.8, roughness: 0.3 }); });
     if (mode === 'trunk') { o.rotation.set(-PI / 2, base + PI, 0, 'YXZ'); }
     this.bugs.push({ sp, w, o, mode, x, y, z, x0: x, y0: y, z0: z, t: Math.random() * 9, h: Math.random() * 6.28, flee: 0, base, gold });
@@ -857,7 +860,7 @@ export class Life {
     await this.ui.say(sp, fill(pick(P.bye), this.vars(d)));
     await this.goals.afterChat(v);
   }
-  sellValue(id) { const it = ITEMS[id]; return it.kind === 'furniture' || it.kind === 'clothes' ? Math.round(it.price / 4) : it.kind === 'seed' ? 30 : it.price; }
+  sellValue(id) { const it = ITEMS[id], v = it.kind === 'furniture' || it.kind === 'clothes' ? Math.round(it.price / 4) : it.kind === 'seed' ? 30 : it.price; return Math.round(v * (this.perks?.sellK(id) ?? 1)); }
   async shop(v) {
     const st = this.st, sp = v.speaker, L = SHOP_LINES, V = (x = {}) => ({ name: PLAYER, ...x });
     let line = fill(pick(L.welcome), V());
@@ -892,7 +895,7 @@ export class Life {
         } else if (c === 1) {
           const idx = st.pocket.map((id, i) => [id, i]).filter(([id]) => ['fish', 'bug', 'shell', 'fruit', 'sea', 'veg'].includes(ITEMS[id].kind));
           if (!idx.length) { line = fill(pick(L.nothingToSell), V()); continue; }
-          const sum = idx.reduce((a, [id]) => a + ITEMS[id].price, 0);
+          const sum = idx.reduce((a, [id]) => a + this.sellValue(id), 0);
           const ok = await this.ui.say(sp, `魚・虫・貝・果物・海の幸 ぜんぶで ${idx.length}こ……\f${sum.toLocaleString()} ナギで どうだい?`, ['売る', 'やめる']);
           if (ok === 0) { for (const [, i] of idx.reverse()) st.remove(i); st.money += sum; st.stats.sold += idx.length; this.emit('sell', idx.length); this.ui.jingle([880, 1175, 1568]); line = fill(pick(L.sold), V()); } else line = again;
         } else if (c === 2) line = await this.market.daikon(sp);
@@ -1059,6 +1062,7 @@ export class Life {
       ...(it.kind === 'seed' || id === 'mikan' ? [['植える', () => this.garden.plant(i)]] : []),
       ...(it.kind === 'clothes' ? [['身につける', () => this.home.wearItem(i)]] : []),
       ...(it.kind === 'dish' ? [['たべる', () => eat(this, i)]] : []),
+      ...(it.kind === 'drink' ? [['のむ', () => this.perks.drink(i)]] : []),
       [live ? 'にがす' : 'すてる', () => { this.st.remove(i); this.ui.toast(`${it.name}を ${live ? 'にがした' : 'すてた'}`); }],
       ['もどる', null],
     ];

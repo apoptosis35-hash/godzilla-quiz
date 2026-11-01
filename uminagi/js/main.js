@@ -294,6 +294,7 @@ class App {
   areas() {
     return this._areas ||= AREAS.flatMap((r) => (!r.need || this.has(r.need) ? [r] : r.wild ? [{ ...r, name: r.wild[0], sub: r.wild[1] }] : []));
   }
+  areaAt(x, z) { return this.areas().find((r) => x >= r.x0 && x <= r.x1 && z >= r.z0 && z <= r.z1 && (!r.test || r.test(x, z)))?.name || ''; }
   area() {
     const p = this.player.pos;
     const inside = this.life?.home.inside;   // interiors (js/life/home.js)

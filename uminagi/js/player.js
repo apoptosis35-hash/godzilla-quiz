@@ -222,7 +222,7 @@ export class Player {
     const mv = input.move, mag = Math.min(1, Math.hypot(mv.x, mv.y));
     const cfx = -Math.sin(camYaw), cfz = -Math.cos(camYaw), wx = cfx * mv.y - cfz * mv.x, wz = cfz * mv.y + cfx * mv.x;
     if (this.state !== 'ground') { this.hero(dt, input, wx, wz, mag, camYaw); this.speed = 0; this.animate(dt); return; }
-    const target = mag > 0.05 ? (input.run && this.skills.dash ? RUN : WALK) * mag : 0;
+    const target = mag > 0.05 ? (input.run && this.skills.dash ? RUN : WALK) * mag * (this.speedK?.() || 1) : 0;   // speedK: a drink's quick feet (perks.js)
     this.speed += (target - this.speed) * Math.min(1, dt * 8);
     const groundNow = this.support(this.pos.x, this.pos.z, this.pos.y);
     const onGround = this.pos.y <= groundNow + 0.05;

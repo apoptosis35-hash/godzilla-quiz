@@ -52,6 +52,7 @@ const ACHIEVE = [
   { ev: 'big', name: '大物ハンター', unit: '匹', tiers: [1, 5, 20, 50] }, { ev: 'login', name: '海凪の常連', unit: '日', tiers: [3, 7, 30, 100, 365] },
   { ev: 'goalsDone', name: 'がんばりや', unit: '回', tiers: [5, 30, 100, 300] }, { ev: 'tour', name: '島めぐり', unit: '回', tiers: [1, 5, 20, 50] },
   { ev: 'cave', name: '洞窟たんけん家', unit: 'フロア', tiers: [3, 20, 100, 300] }, { ev: 'request', name: 'たよれる ぽっけ', unit: 'かい', tiers: [3, 20, 60, 200] },
+  { ev: 'facility', name: '町の しせつ通', unit: 'かい', tiers: [5, 30, 100, 300] },
 ];
 const TIER_STAMPS = [100, 300, 500, 1000, 2000];
 const LOGIN = [50, 100, 150, 200, 250, 300, 500];
