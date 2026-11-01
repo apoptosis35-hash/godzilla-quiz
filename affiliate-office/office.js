@@ -3,17 +3,18 @@ const AGENTS = [
   { id: "scout",      name: "ミナト", role: "トレンド調査",   color: "#4f9dff", hair: "#2b2b2b" },
   { id: "strategist", name: "サクラ", role: "キーワード戦略", color: "#ff7eb6", hair: "#8b4a2b" },
   { id: "writer",     name: "ハル",   role: "ライター",       color: "#ffb340", hair: "#3a2a1a" },
+  { id: "qa",         name: "ナギ",   role: "品質・CTA",      color: "#22d3ee", hair: "#222" },
   { id: "editor",     name: "リン",   role: "校閲・法務",     color: "#3ecf8e", hair: "#111" },
   { id: "publisher",  name: "ソラ",   role: "パブリッシャー", color: "#a78bfa", hair: "#6b4f2b" },
   { id: "analyst",    name: "ケイ",   role: "アナリスト",     color: "#f87171", hair: "#444" },
 ];
 const PHONE = matchMedia("(max-width:640px)").matches;
 const DESKS = PHONE
-  ? { scout: [25, 22], strategist: [75, 22], writer: [25, 45], editor: [75, 45], publisher: [25, 82], analyst: [75, 82] }
-  : { scout: [18, 30], strategist: [50, 30], writer: [82, 30], editor: [18, 80], publisher: [50, 80], analyst: [82, 80] };
+  ? { scout: [25, 20], strategist: [75, 20], writer: [25, 42], qa: [75, 42], editor: [18, 86], publisher: [50, 86], analyst: [82, 86] }
+  : { scout: [13, 30], strategist: [37, 30], writer: [61, 30], qa: [85, 30], editor: [25, 80], publisher: [50, 80], analyst: [75, 80] };
 const MEETING = PHONE
-  ? [[36, 61], [50, 59], [64, 61], [36, 71], [50, 73], [64, 71]]
-  : [[44, 48], [50, 46], [56, 48], [44, 62], [50, 64], [56, 62]];
+  ? [[38, 60], [50, 58], [62, 60], [36, 67], [64, 67], [44, 73], [56, 73]]
+  : [[42, 47], [50, 45], [58, 47], [41, 55], [59, 55], [45, 63], [55, 63]];
 const COFFEE = PHONE ? [88, 94] : [92, 86];
 const $ = s => document.querySelector(s);
 const floor = $("#floor");
@@ -24,7 +25,7 @@ for (const [i, a] of AGENTS.entries()) {
   const [x, y] = DESKS[a.id];
   const desk = document.createElement("div");
   desk.className = "desk"; desk.style.cssText = `left:${x}%;top:${y - (PHONE ? 6 : 8)}%;--c:${a.color}`;
-  desk.innerHTML = `<div class="surface"><div class="monitor"></div><div class="paper">${["🔍", "🗂️", "✍️", "🧐", "🚀", "📊"][i]}</div></div><div class="plate">${a.role}</div>`;
+  desk.innerHTML = `<div class="surface"><div class="monitor"></div><div class="paper">${["🔍", "🗂️", "✍️", "🔎", "🧐", "🚀", "📊"][i]}</div></div><div class="plate">${a.role}</div>`;
   floor.append(desk);
   const el = document.createElement("div");
   el.className = "agent idle"; el.style.cssText = `--c:${a.color};--hair:${a.hair}`;
@@ -108,8 +109,9 @@ async function play(ev) {
 const queue = []; let busy = false;
 async function pump() {
   if (busy) return; busy = true;
-  while (queue.length) { speed = queue.length > 8 ? 3 : 1; await play(queue.shift()); }
+  while (queue.length) { speed = replaying ? 1.3 : queue.length > 8 ? 3 : 1; await play(queue.shift()); }
   busy = false;
+  if (replaying) { replaying = false; $("#replay").disabled = false; poll(); }
   idleLife();
 }
 // 手が空いている社員はたまにコーヒーを取りに行く
@@ -128,6 +130,65 @@ function idleLife() {
     }
     idleLife();
   }, 6000 + Math.random() * 6000);
+}
+
+// ───── 並行再生（複数の社員が同時に働いて見える）─────
+// 既存の live 用 pump/play はそのまま。再生(replay)だけ、社員ごとに独立して
+// 動くスケジューラに通すことで、調査・企画・執筆・校閲・公開が重なって見える。
+const STAGGER = 900, WORK_DUR = 6000, HOP = 1050;  // 各社員がしばらく働いて見えるよう長め
+function startWork(id, msg) {
+  clearTimeout(A[id].workT);
+  setStatus(id, "working", msg); say(id, msg, WORK_DUR);
+  A[id].workT = setTimeout(() => setStatus(id, "idle", "待機中"), WORK_DUR);
+}
+function keepWork(id, extra = 3000) {        // result のあとも少しのあいだ作業を続ける
+  clearTimeout(A[id].workT);
+  A[id].workT = setTimeout(() => setStatus(id, "idle", "待機中"), extra);
+}
+async function playMeetingEv(ev) {           // 朝会・終礼は全員集合（同期）
+  AGENTS.forEach(({ id }, i) => { clearTimeout(A[id].workT); A[id].el.classList.add("walking"); setStatus(id, "away", "会議"); moveTo(id, MEETING[i]); });
+  await wait(1200);
+  AGENTS.forEach(({ id }) => A[id].el.classList.remove("walking"));
+  say(ev.agent, ev.msg, 3000);
+  await wait(2400);
+  AGENTS.forEach(({ id }) => { A[id].el.classList.add("walking"); moveTo(id, A[id].home); });
+  await wait(1200);
+  AGENTS.forEach(({ id }) => { A[id].el.classList.remove("walking"); setStatus(id, "idle", "待機中"); });
+}
+function doHandoff(ev) {                      // 非ブロッキング：原稿を持って相手に渡しに行く
+  const from = A[ev.agent], to = A[ev.to]; if (!from || !to) return;
+  clearTimeout(from.workT);
+  const [tx, ty] = to.home, back = from.home;
+  setStatus(ev.agent, "away", ev.msg);
+  from.el.classList.add("walking", "carry");
+  moveTo(ev.agent, [tx + (tx > back[0] ? -5 : 5), ty]);
+  setTimeout(() => {
+    from.el.classList.remove("walking");
+    say(ev.agent, ev.msg, 1600); say(ev.to, "了解です！", 1600);
+    setTimeout(() => {
+      from.el.classList.remove("carry"); from.el.classList.add("walking");
+      moveTo(ev.agent, back);
+      setTimeout(() => { from.el.classList.remove("walking"); if (from.status === "away") setStatus(ev.agent, "idle", "待機中"); }, HOP);
+    }, 1100);
+  }, HOP);
+}
+async function pumpParallel(events) {
+  if (busy) return; busy = true; speed = 1;
+  for (const ev of events) {
+    if (ev.type !== "meeting" && !A[ev.agent]) continue;
+    addLog(ev);
+    if (A[ev.agent]) $("#board-note").textContent = `${A[ev.agent].name}: ${ev.msg}`;
+    if (ev.type === "meeting") await playMeetingEv(ev);
+    else if (ev.type === "work") { startWork(ev.agent, ev.msg); await wait(STAGGER); }
+    else if (ev.type === "result") { say(ev.agent, ev.msg, 2600); keepWork(ev.agent); await wait(STAGGER * 0.6); }
+    else if (ev.type === "handoff") { doHandoff(ev); await wait(STAGGER); }
+    else if (ev.type === "error") { say(ev.agent, "⚠️ " + ev.msg, 3500); await wait(STAGGER); }
+  }
+  await wait(1600);
+  AGENTS.forEach(({ id }) => { clearTimeout(A[id].workT); setStatus(id, "idle", "待機中"); });
+  busy = false;
+  if (replaying) { replaying = false; const r = $("#replay"); if (r) r.disabled = false; poll(); }
+  idleLife();
 }
 
 // ───── 事務所レベル・内装（放置ゲーム：実データ kpi だけで育つ）─────
@@ -248,16 +309,28 @@ async function poll() {
     lastState = s; showKpi(s.kpi);
     const fresh = Date.now() - new Date(s.updatedAt) < 10 * 60e3 && s.running;
     if (mode === "live") {
-      $("#mode").textContent = fresh ? `🟢 稼働中 — ${s.mode}` : !s.events.length ? "⚪ まだ本番の業務はありません" : `⚪ 業務時間外（最終業務 ${new Date(s.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}）`;
+      if (!replaying) $("#mode").textContent = fresh ? `🟢 稼働中 — ${s.mode}` : !s.events.length ? "⚪ まだ本番の業務はありません" : `⚪ 業務時間外（最終業務 ${new Date(s.updatedAt).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" })}）`;
       const news = s.events.filter(e => !seen.has(key(e)));
       news.forEach(e => seen.add(key(e)));
-      if (first) { first = false; news.slice(-6).forEach(addLog); } // 過去の業務は再生せず、ログに残すだけ
+      if (first) { first = false; if (fresh || !s.events.length) news.slice(-6).forEach(addLog); else replayLatest(); }
       else { queue.push(...news); pump(); }
     }
   } catch {
     $("#mode").textContent = "⚪ 業務ログ（data/state.json）を読み込めません";
   }
 }
-let first = true;
+let first = true, replaying = false;
+// 最後に実行された業務（朝会から終礼まで）の実際のログを、もう一度再生する
+function replayLatest() {
+  const ev = lastState?.events ?? [];
+  if (!ev.length || busy) return;
+  let start = ev.map(e => e.type === "meeting" && e.msg.startsWith("朝会")).lastIndexOf(true);
+  if (start < 0) start = 0;
+  replaying = true; $("#replay").disabled = true;
+  const at = new Date(ev[start].t).toLocaleString("ja-JP", { month: "numeric", day: "numeric", hour: "2-digit", minute: "2-digit" });
+  $("#mode").textContent = `📼 ${at} の業務を再生中（実際のログ）`;
+  pumpParallel(ev.slice(start));
+}
 setInterval(() => { $("#clock").textContent = new Date().toLocaleTimeString("ja-JP", { hour: "2-digit", minute: "2-digit" }); }, 1000);
+$("#replay").onclick = replayLatest;
 renderStaff(); renderOffice({}); poll(); setInterval(poll, 2000); idleLife(); assistLife();

@@ -106,6 +106,33 @@ export async function writer(bus, cfg, brief) {
   return md;
 }
 
+// ───────── 3.5 品質・CTAチェック（読者が実際にクリック・成約してくれるか） ─────────
+export async function qa(bus, cfg, brief, md) {
+  bus.work("qa", `クリックされるか品質チェック（CTA・リンク位置・納得感）: ${brief.title}`);
+  await pace();
+  const notes = [];
+  // オフラインの軽いチェック（クリック導線の観点）
+  if (!/\{\{link:/.test(md)) notes.push("本文に商品リンクが無い");
+  else if (md.indexOf("{{link:") < md.length * 0.4) notes.push("リンクが前半だけ→まとめ付近にも置きたい");
+  if (!/おすすめ|向いている|選び方|比較|こんな人|向き/.test(md)) notes.push("クリック前の納得材料（おすすめ理由・向き不向き）が弱い");
+  let revised = md;
+  if (llm.online) {
+    const r = await llm.json(
+      "あなたはアフィリエイト記事のCTA・品質チェック担当です。読者が“実際にリンクをクリックして確かめたくなる”導線になっているかを最重視します。" +
+      "観点: ①リンクが必要な場所（おすすめ理由・向き不向き・まとめの直後）に置かれているか ②次の一歩を促す自然な一言があるか ③納得材料（比較・向き不向き・具体例）が十分か ④タイトルと中身が一致し検索意図に応えているか。" +
+      "誇大表現・体験の捏造・ステマ・過度な煽りは禁止。改善が必要なら本文を自然に手直しして返す。{{link:...}} の記号は必ず残すこと。",
+      md,
+      { type: "object", additionalProperties: false, required: ["notes", "revised"], properties: { notes: { type: "array", items: { type: "string" } }, revised: { type: "string" } } },
+      "low");
+    notes.push(...r.notes);
+    if (r.revised.includes("{{link:")) revised = r.revised;
+  }
+  bus.log("qa", "result", notes.length ? `クリック改善メモ: ${notes.slice(0, 2).join(" / ")}` : "クリックされやすい導線。CTA・リンク位置OK");
+  bus.handoff("qa", "editor", `「${brief.title}」校閲お願いします`);
+  bus.idle("qa");
+  return revised;
+}
+
 // ───────── 4. 校閲・法務 ─────────
 const NG = [[/絶対(に)?/g, "きっと"], [/業界(No\.?1|ナンバーワン|最安)/gi, "人気の"], [/最安(値)?/g, "お得な価格"], [/必ず(痩せ|儲か|治)/g, "$1"], [/100%/g, "多くの場合"], [/確実に/g, "ぐっと"]];
 export async function editor(bus, cfg, brief, md) {
