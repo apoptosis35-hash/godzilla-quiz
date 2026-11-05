@@ -35,10 +35,45 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .hud .col.r{align-items:flex-end}
 #timer.warn{background:var(--red);color:#fff}
 
-#dist{position:fixed;left:50%;top:calc(64px + env(safe-area-inset-top,0px));transform:translateX(-50%);
+#dist{position:fixed;left:50%;top:calc(118px + env(safe-area-inset-top,0px));transform:translateX(-50%);
   font-family:var(--f-display);font-size:clamp(40px,11vw,72px);color:#fff;text-shadow:0 3px 0 var(--ink),0 0 18px rgba(0,0,0,.25);
   pointer-events:none;z-index:5;font-variant-numeric:tabular-nums;white-space:nowrap}
 #dist small{font-size:.45em}
+#dist.hot{color:#ffc93c}
+.coinpill b{color:#b07a00}
+#runCoins{position:fixed;left:50%;top:calc(196px + env(safe-area-inset-top,0px));transform:translateX(-50%);font-family:var(--f-display);
+  font-size:26px;color:#ffc93c;text-shadow:0 2px 0 var(--ink);pointer-events:none;z-index:5}
+#runCoins.bump{animation:bump .25s}
+@keyframes bump{50%{transform:translateX(-50%) scale(1.35)}}
+#glide{width:min(40vw,190px);height:14px;border-radius:999px;background:rgba(255,250,240,.85);overflow:hidden;align-self:center;box-shadow:0 2px 0 rgba(29,43,58,.2)}
+#glide i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#2f7cf6,#8fd3ff)}
+#glide.on i{background:linear-gradient(90deg,#3fbf6a,#b6f5c6)}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:8px}
+.sub{background:var(--sun);color:var(--ink);font-family:var(--f-display);font-size:18px;border-radius:16px;padding:10px 18px;
+  box-shadow:0 5px 0 rgba(29,43,58,.3);position:relative}
+.sub:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(29,43,58,.3)}
+.shopBtn.badge::after{content:'!';position:absolute;top:-8px;right:-8px;width:24px;height:24px;border-radius:50%;background:var(--red);color:#fff;
+  font-size:15px;line-height:24px;animation:blink .8s steps(2) infinite}
+.list{list-style:none;padding:0;margin:10px 0;text-align:left;font-size:14px;display:grid;gap:4px}
+.list li{display:flex;justify-content:space-between;gap:8px;background:#fff;border-radius:12px;padding:5px 12px}
+.list li.ok{background:#e3f8e8}
+.list li.tot{background:var(--sun);font-weight:900}
+.list b{white-space:nowrap}
+.mh{font-weight:900;font-size:13px;text-align:left;margin:10px 0 -4px;color:#5a6b7d}
+.near{color:var(--blue);font-weight:900;margin:4px 0}
+.card{max-height:calc(100dvh - 32px);overflow:auto}
+.shoplist{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px;text-align:left}
+.shoplist li{display:flex;align-items:center;gap:10px;background:#fff;border-radius:16px;padding:8px 10px}
+.shoplist .ic{font-size:28px;width:36px;text-align:center}
+.shoplist .tx{flex:1;min-width:0;display:grid;gap:2px}
+.shoplist .tx span{font-size:12px;color:#5a6b7d;line-height:1.4}
+.shoplist small{color:var(--blue)}
+.pips{display:flex;gap:3px}
+.pips i{width:12px;height:6px;border-radius:3px;background:#dde3ea}
+.pips i.on{background:var(--leaf)}
+.buy{background:var(--leaf);color:#fff;font-weight:900;border-radius:12px;padding:8px 10px;min-width:72px;box-shadow:0 4px 0 rgba(29,43,58,.25)}
+.buy:disabled{background:#c9d1da;box-shadow:none;cursor:default}
+.wallet{font-family:var(--f-display);font-size:22px}
 
 #pop{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);font-family:var(--f-display);font-size:clamp(28px,8vw,48px);
   color:#fff;text-shadow:0 3px 0 var(--ink);pointer-events:none;z-index:6;opacity:0;white-space:nowrap}
@@ -88,16 +123,19 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
     <div class="pill" id="wind">かぜ <b id="windNum">0</b></div>
   </div>
   <div class="col r">
+    <div class="pill coinpill">🪙 <b id="coinNum">0</b></div>
     <div class="pill">ベスト <b id="bestNum">0.0</b> m</div>
     <div class="pill">スピード <b id="speedNum">0</b></div>
   </div>
 </div>
 <div id="dist" hidden><span id="distNum">0.0</span><small>m</small></div>
+<div id="runCoins" hidden>+0</div>
 <div id="pop" aria-live="polite"></div>
 
 <div class="controls" id="controls" hidden>
   <button class="btn" id="pumpBtn" aria-label="こぐ">こぐ<small>まんなかでタップ</small></button>
   <canvas id="gauge" width="300" height="170" aria-hidden="true"></canvas>
+  <div id="glide" hidden aria-label="グライドのこり"><i id="glideBar"></i></div>
   <button class="btn" id="jumpBtn" aria-label="とぶ">とぶ!<small>前にいくときに</small></button>
 </div>
 
@@ -109,9 +147,15 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
       <li><b>こぐ</b>:ブランコが<b>まんなか(いちばん下)</b>にきたときにおす。ぴったりだと「パーフェクト!」</li>
       <li>うまくこぐと、どんどん高く。<b>一回転</b>もできる!</li>
       <li><b>とぶ!</b>:前にのぼっていくときにおすと遠くまでとべる。ななめ45°くらいがねらいめ。</li>
-      <li>キーボード:<kbd>スペース</kbd> こぐ / <kbd>Enter</kbd> か <kbd>↑</kbd> とぶ</li>
+      <li>空中で<b>長おし</b>するとグライド。コイン・ふうせん・トランポリンをねらえ!</li>
+      <li>キーボード:<kbd>スペース</kbd> こぐ・グライド / <kbd>Enter</kbd> か <kbd>↑</kbd> とぶ</li>
     </ol>
-    <button class="big" id="startBtn">スタート</button>
+    <div class="mh">ミッション</div>
+    <ul class="list" id="titleMissions"></ul>
+    <div class="row">
+      <button class="big" id="startBtn">スタート</button>
+      <button class="sub shopBtn" data-from="title">🛒 ショップ</button>
+    </div>
   </div>
 </div>
 
@@ -122,8 +166,26 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
     <div class="rank" id="rank">ブランコ名人</div>
     <p id="resNote"></p>
     <div id="newRec" class="newrec" hidden>しんきろく!</div>
-    <div class="hist" id="hist"></div>
-    <button class="big" id="againBtn">もういっかい</button>
+    <p class="near" id="near" hidden></p>
+    <ul class="list" id="earn"></ul>
+    <div class="mh">ミッション</div>
+    <ul class="list" id="resMissions"></ul>
+    <div class="row">
+      <button class="big" id="againBtn">もういっかい</button>
+      <button class="sub shopBtn" data-from="result">🛒 ショップ</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="shop" hidden>
+  <div class="card">
+    <h1 style="font-size:30px">ショップ</h1>
+    <div class="wallet">🪙 <span id="shopCoins">0</span></div>
+    <ul class="shoplist" id="shopList"></ul>
+    <div class="row">
+      <button class="big" id="shopGo">とびにいく!</button>
+      <button class="sub" id="shopClose">もどる</button>
+    </div>
   </div>
 </div>
 
@@ -156,7 +218,7 @@ renderer.outputColorSpace = THREE.SRGBColorSpace;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x8fd3ff);
-scene.fog = new THREE.Fog(0xbfe6ff, 60, 180);
+scene.fog = new THREE.Fog(0xbfe6ff, 70, 220);
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
 
@@ -192,10 +254,10 @@ const mat = (c, o={}) => new THREE.MeshStandardMaterial({color:c, roughness:.8, 
   x.fillStyle = '#5cbf52'; x.fillRect(0,0,256,256);
   for(let i=0;i<2500;i++){ x.fillStyle = `hsl(${100+Math.random()*25},${45+Math.random()*20}%,${38+Math.random()*16}%)`;
     x.fillRect(Math.random()*256, Math.random()*256, 2, 3); }
-  const tex = new THREE.CanvasTexture(gc); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(80, 30);
+  const tex = new THREE.CanvasTexture(gc); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(120, 30);
   tex.colorSpace = THREE.SRGBColorSpace;
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(400, 150), mat(0xffffff, {map:tex, roughness:1}));
-  ground.rotation.x = -Math.PI/2; ground.position.x = 80; ground.receiveShadow = true; scene.add(ground);
+  const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 150), mat(0xffffff, {map:tex, roughness:1}));
+  ground.rotation.x = -Math.PI/2; ground.position.x = 180; ground.receiveShadow = true; scene.add(ground);
 
   // sand pit under the swing
   const sand = new THREE.Mesh(new THREE.CircleGeometry(1, 40), mat(0xe9d39a, {roughness:1}));
@@ -216,7 +278,7 @@ function labelTex(text, {bg='#fffaf0', fg='#1d2b3a', w=256, h=128, size=64}={}){
 {
   const lineMat = mat(0xffffff, {roughness:1});
   const postMat = mat(0x8a5a32);
-  for(let d=5; d<=120; d+=5){
+  for(let d=5; d<=400; d+=5){
     const major = d % 10 === 0;
     const line = new THREE.Mesh(new THREE.BoxGeometry(major?0.18:0.1, 0.02, 14), lineMat);
     line.position.set(d, 0.012, 0); line.receiveShadow = true; scene.add(line);
@@ -234,27 +296,27 @@ const rand = (a,b) => a + Math.random()*(b-a);
 {
   const trunkG = new THREE.CylinderGeometry(.18,.25,1.6,7), leafG = new THREE.IcosahedronGeometry(1.3, 0);
   const trunkM = mat(0x7a4b2a), leafMs = [0x2f9e4f, 0x3fbf6a, 0x55c46e, 0x2a8a48].map(c=>mat(c,{flatShading:true}));
-  for(let i=0;i<70;i++){
+  for(let i=0;i<150;i++){
     const t = new THREE.Group();
     const tr = new THREE.Mesh(trunkG, trunkM); tr.position.y = .8; tr.castShadow = true;
     const lf = new THREE.Mesh(leafG, leafMs[i%4]); lf.position.y = 2.3; lf.castShadow = true;
     const s = rand(.8, 1.7); lf.scale.set(s, s*rand(1,1.4), s);
     t.add(tr, lf);
     const side = Math.random()<.5 ? -1 : 1;
-    t.position.set(rand(-25, 130), 0, side < 0 ? -rand(10, 30) : rand(28, 45)); // keep the camera side clear
+    t.position.set(rand(-25, 420), 0, side < 0 ? -rand(10, 30) : rand(28, 45)); // keep the camera side clear
     scene.add(t);
   }
   const cloudM = new THREE.MeshStandardMaterial({color:0xffffff, roughness:1, flatShading:true});
-  for(let i=0;i<18;i++){
+  for(let i=0;i<40;i++){
     const c = new THREE.Group();
     for(let k=0;k<5;k++){ const b = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(1.5,3),1), cloudM);
       b.position.set(k*2.2-4, rand(-.6,.6), rand(-1,1)); c.add(b); }
-    c.position.set(rand(-40, 160), rand(16, 34), rand(-90, -40)); scene.add(c);
+    c.position.set(rand(-40, 440), rand(16, 34), rand(-90, -40)); scene.add(c);
   }
   // fence behind
   const fm = mat(0xffffff);
-  for(let x=-20; x<=130; x+=2.5){ const p = new THREE.Mesh(new THREE.BoxGeometry(.12, 1, .12), fm); p.position.set(x, .5, -9); scene.add(p); }
-  const rail = new THREE.Mesh(new THREE.BoxGeometry(150, .1, .08), fm); rail.position.set(55, .8, -9); scene.add(rail);
+  for(let x=-20; x<=420; x+=2.5){ const p = new THREE.Mesh(new THREE.BoxGeometry(.12, 1, .12), fm); p.position.set(x, .5, -9); scene.add(p); }
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(440, .1, .08), fm); rail.position.set(200, .8, -9); scene.add(rail);
 }
 
 /* swing frame */
@@ -374,7 +436,12 @@ function noise(dur=.3, vol=.2, freq=800){
   s.connect(f).connect(g).connect(master); s.start();
 }
 const sfx = {
-  perfect(){ tone(880,.12,'triangle',.3); setTimeout(()=>tone(1320,.18,'triangle',.3),70); },
+  perfect(c=1){ const k = Math.pow(1.06, Math.min(c,10)-1); tone(880*k,.12,'triangle',.3); setTimeout(()=>tone(1320*k,.18,'triangle',.3),70); },
+  coin(big){ tone(big?1568:1318,.08,'square',.12); setTimeout(()=>tone(big?2093:1760,.12,'square',.12),50); },
+  balloon(){ noise(.12,.5,2500); tone(500,.4,'sine',.3,2.5); },
+  boing(){ tone(140,.5,'sine',.45,4); },
+  buy(){ [784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,.12,'triangle',.25),i*60)); },
+  mission(){ [659,880,1175].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.28),i*90)); },
   good(){ tone(660,.14,'triangle',.25); },
   miss(){ tone(180,.2,'square',.12,.7); },
   jump(){ tone(300,.35,'sine',.35,3.2); },
@@ -388,7 +455,7 @@ const $ = id => document.getElementById(id);
 const ui = {
   hud:$('hud'), controls:$('controls'), dist:$('dist'), distNum:$('distNum'), timeNum:$('timeNum'), timer:$('timer'),
   windNum:$('windNum'), bestNum:$('bestNum'), speedNum:$('speedNum'), pop:$('pop'), gauge:$('gauge'),
-  title:$('title'), result:$('result'),
+  title:$('title'), result:$('result'), shop:$('shop'), coinNum:$('coinNum'), runCoins:$('runCoins'), glide:$('glide'), glideBar:$('glideBar'),
 };
 const gctx = ui.gauge.getContext('2d');
 ui.bestNum.textContent = best.toFixed(1);
@@ -398,51 +465,214 @@ function pop(text, color='#fff'){
   ui.pop.classList.remove('show'); void ui.pop.offsetWidth; ui.pop.classList.add('show');
 }
 
+/* ---------- save data / upgrades / missions ---------- */
+const UPG = [
+  {id:'pump',  name:'こぐ力',     icon:'💪', desc:'こぐたびに もっと速く。さいこうスピードもアップ', base:20, max:10},
+  {id:'kick',  name:'ジャンプ力', icon:'🦵', desc:'とびだす いきおいがアップ',                   base:25, max:10},
+  {id:'glide', name:'グライド',   icon:'🪂', desc:'空中で長おしすると ふわっと長くとべる',         base:30, max:10},
+  {id:'bounce',name:'バウンド',   icon:'🏀', desc:'着地で よくはねて、よくすべる',                 base:20, max:8},
+  {id:'time',  name:'じかん',     icon:'⏱️', desc:'こげる時間が +2秒',                            base:40, max:5},
+  {id:'magnet',name:'じしゃく',   icon:'🧲', desc:'はなれたコインも すいよせる',                   base:35, max:5},
+];
+const save = Object.assign({coins:0, up:{}, missions:[], done:0, runs:0}, store.get('save', {}));
+for(const u of UPG) save.up[u.id] ??= 0;
+const lv = id => save.up[id];
+const cost = u => Math.round(u.base * Math.pow(1.55, lv(u.id)));
+const P = {
+  wMax: () => W_BOTTOM_MAX + .13*lv('pump'),
+  pumpMul: () => 1 + .08*lv('pump'),
+  kick: () => 1.4 + .55*lv('kick'),
+  glide: () => .6 + .55*lv('glide'),
+  restY: () => .3 + .05*lv('bounce'),
+  restX: () => .55 + .04*lv('bounce'),
+  slideDec: () => 7 - .45*lv('bounce'),
+  time: () => ROUND_TIME + 2*lv('time'),
+  magnet: () => .9 + .55*lv('magnet'),
+};
+function persist(){ store.set('save', save); }
+
+const MISSION_TYPES = {
+  dist:    (d) => { const n = Math.max(8, Math.round(best*0.9 + 2 + Math.random()*4)); return {n, reward: 15 + Math.round(n*0.8), text:`${n}m 以上とぶ`}; },
+  streak:  (d) => { const n = 3 + Math.min(5, Math.floor(d/3)); return {n, reward: 10*n, text:`パーフェクト ${n}回 れんぞく`}; },
+  loop:    (d) => { const n = 1 + (d > 6 ? 1 : 0); return {n, reward: 30*n, text: n>1 ? `${n}回転 する` : '一回転 する'}; },
+  coins:   (d) => { const n = 8 + 4*Math.min(8, Math.floor(d/2)); return {n, reward: 2*n, text:`1回で コイン ${n}まい`}; },
+  balloon: (d) => { const n = 1 + Math.min(3, Math.floor(d/4)); return {n, reward: 25*n, text:`ふうせんに ${n}こ さわる`}; },
+  tramp:   (d) => { const n = 1 + Math.min(2, Math.floor(d/5)); return {n, reward: 30*n, text:`トランポリンで ${n}回 はねる`}; },
+};
+function fillMissions(){
+  save.missions = save.missions.filter(m => !m.ok);
+  while(save.missions.length < 3){
+    const used = save.missions.map(m=>m.type);
+    const types = Object.keys(MISSION_TYPES).filter(t => !used.includes(t));
+    const type = types[Math.floor(Math.random()*types.length)];
+    save.missions.push({type, ...MISSION_TYPES[type](save.done), ok:false});
+  }
+  persist();
+}
+fillMissions();
+function missionValue(type){
+  return {dist:S.pos.x, streak:S.bestCombo, loop:S.loops, coins:S.got, balloon:S.balloons, tramp:S.tramps}[type] ?? 0;
+}
+function checkMissions(final=false){
+  for(const m of save.missions){
+    if(m.ok || (m.type === 'dist' && !final)) continue;
+    if(missionValue(m.type) >= m.n){
+      m.ok = true; S.missionCoins += m.reward; save.done++;
+      if(!final){ setTimeout(()=>pop('ミッション たっせい!', '#3fbf6a'), 350); sfx.mission(); }
+    }
+  }
+}
+function missionHTML(){
+  return save.missions.map(m => `<li class="${m.ok?'ok':''}"><span>${m.ok?'✅':'⬜'} ${m.text}</span><b>+${m.reward}🪙</b></li>`).join('');
+}
+function canBuy(){ return UPG.some(u => lv(u.id) < u.max && save.coins >= cost(u)); }
+function refreshMeta(){
+  ui.coinNum.textContent = save.coins;
+  for(const el of document.querySelectorAll('.shopBtn')) el.classList.toggle('badge', canBuy());
+  $('titleMissions').innerHTML = missionHTML();
+}
+
+/* ---------- air objects (coins, balloons, trampolines) ---------- */
+const coinG = new THREE.CylinderGeometry(.32,.32,.07,20); coinG.rotateX(Math.PI/2);
+const coinM = mat(0xffd23f, {metalness:.1, roughness:.3, emissive:0xa06a00});
+const starG = new THREE.OctahedronGeometry(.55, 0);
+const starM = mat(0xff8fd0, {metalness:.1, roughness:.3, emissive:0x992266});
+const balloonG = new THREE.SphereGeometry(.6, 18, 14); balloonG.scale(1, 1.2, 1);
+const balloonMs = [0xff5d5d, 0x2f7cf6, 0xffc93c, 0x3fbf6a, 0xc77dff].map(c => mat(c, {roughness:.35}));
+const stringM = new THREE.LineBasicMaterial({color:0xffffff});
+const trampTopM = mat(0x1d2b3a, {roughness:.6}), trampRimM = mat(0x2f7cf6);
+let things = [];
+function clearThings(){ for(const t of things) scene.remove(t.mesh); things = []; }
+function spawnThings(){
+  clearThings();
+  const reach = Math.max(40, best*1.4 + 20);
+  // coin trails along jumps you could actually make (so better jumps find more coins)
+  const vTop = P.wMax()*L*.85 + P.kick();
+  const onArc = (v, deg, t) => { const a = deg*Math.PI/180; return [2.5 + v*Math.cos(a)*t, 2 + v*Math.sin(a)*t - G/2*t*t]; };
+  for(let k=0;k<22;k++){
+    const v = rand(6, vTop + 2), deg = rand(25, 62);
+    const tEnd = (v*Math.sin(deg*Math.PI/180) + Math.sqrt((v*Math.sin(deg*Math.PI/180))**2 + 4*G))/G;
+    const t0 = rand(.15, tEnd*.85), n = 4 + Math.floor(Math.random()*4), dtc = .9/v;
+    for(let i=0;i<n;i++){
+      const [x, y] = onArc(v, deg, t0 + i*dtc);
+      if(y < .9 || x < 4) continue;
+      const m = new THREE.Mesh(coinG, coinM); m.position.set(x, y, 0); scene.add(m);
+      things.push({kind:'coin', mesh:m, v:1});
+    }
+    if(Math.random() < .25){
+      const [x, y] = onArc(v, deg, Math.min(tEnd*.5, t0 + n*dtc + .3));
+      if(y > 2){ const s = new THREE.Mesh(starG, starM); s.position.set(x, y + 1, 0); scene.add(s); things.push({kind:'star', mesh:s, v:5}); }
+    }
+  }
+  // balloons
+  for(let k=0;k<7;k++){
+    const v = rand(7, vTop + 1), deg = rand(30, 55);
+    const [x, y] = onArc(v, deg, rand(.5, 1.3)*v*Math.sin(deg*Math.PI/180)/G);
+    if(y < 2 || x < 6) continue;
+    const g = new THREE.Group();
+    const b = new THREE.Mesh(balloonG, balloonMs[Math.floor(Math.random()*balloonMs.length)]); b.castShadow = true; g.add(b);
+    const str = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,-.7,0), new THREE.Vector3(.1,-2,0)]), stringM); g.add(str);
+    g.position.set(x, y, 0); scene.add(g);
+    things.push({kind:'balloon', mesh:g, phase:Math.random()*6});
+  }
+  // trampolines on the ground
+  for(let x = rand(12, 20); x < reach + 20; x += rand(16, 30)){
+    const g = new THREE.Group();
+    const top = new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.3,.08,24), trampTopM); top.position.y = .45; top.receiveShadow = true;
+    const rim = new THREE.Mesh(new THREE.TorusGeometry(1.3,.09,8,28), trampRimM); rim.rotation.x = Math.PI/2; rim.position.y = .47;
+    g.add(top, rim);
+    for(let k=0;k<4;k++){ const lg = new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,.45,6), trampRimM);
+      lg.position.set(Math.cos(k*Math.PI/2)*1.1, .22, Math.sin(k*Math.PI/2)*1.1); g.add(lg); }
+    g.traverse(o => { if(o.isMesh) o.castShadow = true; });
+    g.position.set(x, 0, 0); scene.add(g);
+    things.push({kind:'tramp', mesh:g, squash:0});
+  }
+}
+function updateThings(dt, t){
+  for(const th of things){
+    if(th.kind === 'coin') th.mesh.rotation.y += dt*3;
+    else if(th.kind === 'star'){ th.mesh.rotation.y += dt*2; th.mesh.rotation.x += dt; }
+    else if(th.kind === 'balloon') th.mesh.position.y += Math.sin(t*1.5 + th.phase)*dt*.3;
+    else if(th.kind === 'tramp'){ th.squash = Math.max(0, th.squash - dt*3); th.mesh.scale.y = 1 - Math.sin(th.squash*Math.PI)*.4; }
+    if(th.fly){ // collected coins zip to the kid
+      th.fly += dt*5; th.mesh.position.lerp(kid.position, Math.min(1, th.fly*.3)); th.mesh.scale.setScalar(Math.max(0.01, 1 - th.fly*.25));
+      if(th.fly > 3){ scene.remove(th.mesh); th.dead = true; }
+    }
+  }
+  if(things.some(t=>t.dead)) things = things.filter(t=>!t.dead);
+}
+function collide(){
+  const p = S.pos, mag = P.magnet();
+  for(const th of things){
+    if(th.fly || th.used) continue;
+    const m = th.mesh.position;
+    const dx = m.x - p.x, dy = m.y - (p.y + .4);
+    const d2 = dx*dx + dy*dy;
+    if(th.kind === 'coin' || th.kind === 'star'){
+      const r = th.kind === 'star' ? mag + .3 : mag;
+      if(d2 < r*r){ th.fly = .01; S.got += th.v; sfx.coin(th.v>1); if(th.v>1) pop('スター! +5', '#ff8fd0'); updateRunCoins(); checkMissions(); }
+    }else if(th.kind === 'balloon'){
+      if(d2 < 1.3*1.3){
+        th.used = true; scene.remove(th.mesh); th.dead = true;
+        S.vel.y = Math.max(S.vel.y, 0) + 7.5; S.vel.x += 1.5; S.balloons++;
+        S.spin += 4; sfx.balloon(); pop('ふうせん ジャンプ!', '#fff'); puff(m.x, 6); checkMissions();
+      }
+    }
+  }
+}
+function updateRunCoins(){ ui.runCoins.textContent = '+' + S.got; ui.runCoins.classList.remove('bump'); void ui.runCoins.offsetWidth; ui.runCoins.classList.add('bump'); }
+
 /* ---------- game state ---------- */
-const S = { phase:'title', theta:0, omega:0, time:ROUND_TIME, wind:0, pumped:false, lastSign:1,
-  pos:new THREE.Vector3(), vel:new THREE.Vector3(), spin:0, rot:0, bounces:0, settle:0, combo:0, loops:0, prevTheta:0 };
+const S = { phase:'title', theta:0, omega:0, time:ROUND_TIME, wind:0, pumped:false,
+  pos:new THREE.Vector3(), vel:new THREE.Vector3(), spin:0, rot:0, bounces:0, settle:0, combo:0, bestCombo:0, loops:0, prevTheta:0,
+  got:0, balloons:0, tramps:0, missionCoins:0, stamina:0, passedBest:false, startBest:0 };
+let holding = false;
 
 function newRound(){
   S.phase = 'swing';
-  S.theta = 0.25; S.omega = 0; S.time = ROUND_TIME; S.pumped = false; S.combo = 0; S.loops = 0; S.prevTheta = S.theta;
+  S.theta = 0.25; S.omega = 0; S.time = P.time(); S.pumped = false; S.combo = 0; S.bestCombo = 0; S.loops = 0; S.prevTheta = S.theta;
+  S.got = 0; S.balloons = 0; S.tramps = 0; S.missionCoins = 0; S.passedBest = false; S.startBest = best;
   S.wind = Math.round(rand(-2, 3)*10)/10;
   swing.add(kid); kid.position.set(0, KID_SEAT_Y, 0); kid.rotation.set(0,0,0);
+  for(const a of kid.userData.arms) a.rotation.set(0,0,0);
+  spawnThings();
   ui.windNum.textContent = (S.wind>0?'→ ':S.wind<0?'← ':'') + Math.abs(S.wind).toFixed(1);
   ui.hud.hidden = false; ui.controls.hidden = false; ui.timer.hidden = false; ui.dist.hidden = true;
-  ui.title.hidden = true; ui.result.hidden = true;
+  ui.glide.hidden = true; ui.runCoins.hidden = true; jumpBtn.hidden = false; gaugeEl.hidden = false;
+  pumpBtn.innerHTML = 'こぐ<small>まんなかでタップ</small>';
+  ui.title.hidden = true; ui.result.hidden = true; ui.shop.hidden = true; ui.dist.classList.remove('hot');
+  save.runs++; persist();
   if(document.activeElement && document.activeElement.blur) document.activeElement.blur();
 }
 
 function energyCap(){
-  // Limit total energy: at the bottom, |omega| <= W_BOTTOM_MAX
+  const wMax = P.wMax();
   const e = .5*S.omega*S.omega - (G/L)*Math.cos(S.theta);
-  const eMax = .5*W_BOTTOM_MAX*W_BOTTOM_MAX - G/L;
+  const eMax = .5*wMax*wMax - G/L;
   if(e > eMax){
     const w2 = 2*(eMax + (G/L)*Math.cos(S.theta));
     S.omega = Math.sign(S.omega||1) * Math.sqrt(Math.max(0, w2));
   }
 }
 
-function angleFromBottom(){ // wrapped to [-PI, PI]
-  return Math.atan2(Math.sin(S.theta), Math.cos(S.theta));
-}
+function angleFromBottom(){ return Math.atan2(Math.sin(S.theta), Math.cos(S.theta)); }
 
 function pump(){
   if(S.phase !== 'swing') return;
   audio();
   const a = Math.abs(angleFromBottom());
-  if(S.pumped){ return; }
+  if(S.pumped) return;
   if(a < ZONE_PERFECT){
-    S.combo++;
-    S.omega += Math.sign(S.omega||1) * (0.5 + Math.min(S.combo,5)*0.03);
-    pop(S.combo>2 ? `パーフェクト×${S.combo}!` : 'パーフェクト!', '#ffc93c'); sfx.perfect();
+    S.combo++; S.bestCombo = Math.max(S.bestCombo, S.combo);
+    S.omega += Math.sign(S.omega||1) * (0.5 + Math.min(S.combo,5)*0.03) * P.pumpMul();
+    pop(S.combo>2 ? `パーフェクト×${S.combo}!` : 'パーフェクト!', '#ffc93c'); sfx.perfect(S.combo);
+    checkMissions();
   }else if(a < ZONE_GOOD){
     S.combo = 0;
-    S.omega += Math.sign(S.omega||1) * 0.28;
+    S.omega += Math.sign(S.omega||1) * 0.28 * P.pumpMul();
     pop('グッド!', '#fff'); sfx.good();
   }else{
-    S.combo = 0;
-    S.omega *= .9;
+    S.combo = 0; S.omega *= .9;
     pop('あわてない!', '#ff5d5d'); sfx.miss();
   }
   if(Math.abs(S.omega) < .4) S.omega = .4 * Math.sign(S.omega || 1);
@@ -453,20 +683,21 @@ function pump(){
 function jump(auto=false){
   if(S.phase !== 'swing') return;
   audio();
-  // world position + velocity of the seat
   const st = Math.sin(S.theta), ct = Math.cos(S.theta);
   const r = L - .05;
   S.pos.set(r*st, H - r*ct + .05, 0);
   S.vel.set(r*S.omega*ct, r*S.omega*st, 0);
-  // push off: along velocity + a little up
   const sp = S.vel.length();
-  if(sp > .01) S.vel.addScaledVector(S.vel.clone().normalize(), 1.4);
+  if(sp > .01) S.vel.addScaledVector(S.vel.clone().normalize(), P.kick());
   S.vel.y += 1.0;
   S.spin = -S.omega * 1.3;
   S.rot = S.theta;
+  S.stamina = P.glide();
   scene.add(kid); kid.position.copy(S.pos); kid.rotation.set(0,0,S.rot);
   S.phase = 'fly'; S.bounces = 0; S.settle = 0;
-  ui.controls.hidden = true; ui.dist.hidden = false; ui.timer.hidden = true;
+  ui.dist.hidden = false; ui.timer.hidden = true; ui.glide.hidden = false; ui.runCoins.hidden = false; ui.runCoins.textContent = '+0';
+  jumpBtn.hidden = true; gaugeEl.hidden = true;
+  pumpBtn.innerHTML = 'グライド<small>長おし</small>';
   sfx.jump();
   pop(auto ? 'じかんぎれ!' : 'ジャンプ!', auto ? '#ff5d5d' : '#fff');
 }
@@ -477,59 +708,105 @@ function rankOf(d){
   if(d < 10) return ['🙂','いいかんじ!','もっとこいでみよう'];
   if(d < 16) return ['🥉','すごい!','ななめ45°くらいでとぶのがコツ'];
   if(d < 22) return ['🥈','ブランコ名人','一回転できるくらいまでこいでみて'];
-  if(d < 28) return ['🥇','鳥になった!','かぜがいい日をねらおう'];
-  return ['🚀','うちゅうへ…!','もうこれ以上はムリかも!?'];
+  if(d < 30) return ['🥇','鳥になった!','ふうせんに さわると もっと高く!'];
+  if(d < 50) return ['🦅','わし級','ショップで パワーアップしよう'];
+  if(d < 80) return ['✈️','ひこうき級','トランポリンを ねらえ!'];
+  if(d < 120) return ['🚀','うちゅうへ…!','どこまで いけるかな?'];
+  return ['🌕','月までとどく!?','でんせつの ブランコ王'];
 }
 
 function finish(){
   S.phase = 'result';
   const d = Math.round(S.pos.x*10)/10;
+  const prevBest = best;
   const isNew = d > best;
   if(isNew){ best = d; store.set('best', best); sfx.fanfare(); }
   history = [d, ...history].slice(0, 5); store.set('hist', history);
+  checkMissions(true);
+  const distCoins = Math.max(0, Math.floor(d));
+  const recordBonus = isNew && prevBest > 0 ? 20 : 0;
+  const earned = distCoins + S.got + S.missionCoins + recordBonus;
+  save.coins += earned;
   placeFlags(d);
   ui.bestNum.textContent = best.toFixed(1);
   const [m, r, note] = rankOf(d);
   $('medal').textContent = m; $('rank').textContent = r; $('resNote').textContent = note;
   $('resNum').textContent = d.toFixed(1);
   $('newRec').hidden = !isNew;
-  $('hist').innerHTML = history.length > 1 ? 'これまで: ' + history.map(h=>`<span>${h.toFixed(1)}m</span>`).join('') : '';
+  const gap = prevBest - d;
+  $('near').hidden = !( !isNew && gap > 0 && gap < Math.max(3, prevBest*0.1) );
+  $('near').textContent = `ベストまで あと ${gap.toFixed(1)}m!おしい!`;
+  $('earn').innerHTML =
+    `<li><span>きょり</span><b>+${distCoins}</b></li><li><span>あつめたコイン</span><b>+${S.got}</b></li>` +
+    (S.missionCoins ? `<li><span>ミッション</span><b>+${S.missionCoins}</b></li>` : '') +
+    (recordBonus ? `<li><span>しんきろく ボーナス</span><b>+${recordBonus}</b></li>` : '') +
+    `<li class="tot"><span>ごうけい</span><b>+${earned} 🪙</b></li>`;
+  $('resMissions').innerHTML = missionHTML();
+  fillMissions();
+  persist(); refreshMeta();
+  ui.glide.hidden = true; ui.controls.hidden = true;
   setTimeout(()=>{ ui.result.hidden = false; ui.hud.hidden = true; $('againBtn').focus(); }, 700);
 }
 
+/* ---------- shop ---------- */
+let shopFrom = 'title';
+function openShop(from){
+  shopFrom = from; ui.title.hidden = true; ui.result.hidden = true; ui.shop.hidden = false; renderShop();
+}
+function renderShop(){
+  $('shopCoins').textContent = save.coins;
+  $('shopList').innerHTML = UPG.map(u => {
+    const l = lv(u.id), max = l >= u.max, c = cost(u);
+    const pips = Array.from({length:u.max}, (_,i)=>`<i class="${i<l?'on':''}"></i>`).join('');
+    return `<li><div class="ic">${u.icon}</div><div class="tx"><b>${u.name} <small>Lv.${l}</small></b><span>${u.desc}</span><div class="pips">${pips}</div></div>
+      <button class="buy" data-id="${u.id}" ${max || save.coins < c ? 'disabled' : ''}>${max ? 'MAX' : c + '🪙'}</button></li>`;
+  }).join('');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.buy'); if(!b) return;
+  const u = UPG.find(x => x.id === b.dataset.id);
+  if(!u || lv(u.id) >= u.max || save.coins < cost(u)) return;
+  save.coins -= cost(u); save.up[u.id]++; persist(); audio(); sfx.buy(); renderShop(); refreshMeta();
+});
+$('shopClose').addEventListener('click', () => { ui.shop.hidden = true; (shopFrom === 'result' ? ui.result : ui.title).hidden = false; refreshMeta(); });
+$('shopGo').addEventListener('click', () => { audio(); newRound(); });
+
 /* ---------- input ---------- */
-const pumpBtn = $('pumpBtn'), jumpBtn = $('jumpBtn');
-pumpBtn.addEventListener('pointerdown', e => { e.preventDefault(); pump(); });
+const pumpBtn = $('pumpBtn'), jumpBtn = $('jumpBtn'), gaugeEl = $('gauge');
+const press = e => { e.preventDefault(); holding = true; pump(); };
+const release = () => { holding = false; };
+pumpBtn.addEventListener('pointerdown', press);
+canvas.addEventListener('pointerdown', press);
+addEventListener('pointerup', release); addEventListener('pointercancel', release);
 jumpBtn.addEventListener('pointerdown', e => { e.preventDefault(); jump(); });
-canvas.addEventListener('pointerdown', e => { e.preventDefault(); pump(); });
-pumpBtn.addEventListener('click', e => { if(e.detail === 0) pump(); }); // keyboard activation
+pumpBtn.addEventListener('click', e => { if(e.detail === 0) pump(); });
 jumpBtn.addEventListener('click', e => { if(e.detail === 0) jump(); });
 addEventListener('keydown', e => {
-  if(e.repeat) return;
-  if(S.phase === 'swing'){
-    if(e.code === 'Space'){ e.preventDefault(); pumpBtn.classList.add('press'); pump(); }
-    else if(e.code === 'Enter' || e.code === 'ArrowUp'){ e.preventDefault(); jumpBtn.classList.add('press'); jump(); }
+  if(e.code === 'Space' && (S.phase === 'swing' || S.phase === 'fly' || S.phase === 'slide')){
+    e.preventDefault(); if(e.repeat) return; holding = true; pumpBtn.classList.add('press'); pump(); return;
   }
+  if(e.repeat) return;
+  if(S.phase === 'swing' && (e.code === 'Enter' || e.code === 'ArrowUp')){ e.preventDefault(); jumpBtn.classList.add('press'); jump(); }
 });
-addEventListener('keyup', () => { pumpBtn.classList.remove('press'); jumpBtn.classList.remove('press'); });
+addEventListener('keyup', e => { if(e.code === 'Space') holding = false; pumpBtn.classList.remove('press'); jumpBtn.classList.remove('press'); });
 $('startBtn').addEventListener('click', () => { audio(); newRound(); });
 $('againBtn').addEventListener('click', () => { audio(); newRound(); });
+for(const el of document.querySelectorAll('.shopBtn')) el.addEventListener('click', () => { audio(); openShop(el.dataset.from); });
+refreshMeta();
 
 /* ---------- gauge ---------- */
 function drawGauge(){
   const c = gctx, w = 300, h = 170, cx = 150, cy = 18, R = 130;
   c.clearRect(0,0,w,h);
-  // arc background (lower half: the swing path seen from the side)
   c.lineCap = 'round';
   c.lineWidth = 22; c.strokeStyle = 'rgba(255,250,240,.85)';
   c.beginPath(); c.arc(cx, cy, R, Math.PI*0.08, Math.PI*0.92); c.stroke();
-  c.lineWidth = 22; c.strokeStyle = '#8fe08a';
+  c.strokeStyle = '#8fe08a';
   c.beginPath(); c.arc(cx, cy, R, Math.PI/2 - ZONE_GOOD, Math.PI/2 + ZONE_GOOD); c.stroke();
   c.strokeStyle = '#ffc93c';
   c.beginPath(); c.arc(cx, cy, R, Math.PI/2 - ZONE_PERFECT, Math.PI/2 + ZONE_PERFECT); c.stroke();
-  // ball
   const a = angleFromBottom();
-  const ang = Math.PI/2 - a;  // canvas angle (screen: forward = right)
+  const ang = Math.PI/2 - a;
   const bx = cx + Math.cos(ang)*R, by = cy + Math.sin(ang)*R;
   c.lineWidth = 3; c.strokeStyle = 'rgba(29,43,58,.6)';
   c.beginPath(); c.moveTo(cx, cy); c.lineTo(bx, by); c.stroke();
@@ -542,29 +819,24 @@ function drawGauge(){
 const camPos = new THREE.Vector3(5, 3.4, 12), camLook = new THREE.Vector3(1.5, 2.4, 0);
 const tmpP = new THREE.Vector3(), tmpL = new THREE.Vector3();
 let last = performance.now(), titleT = 0;
-if(location.hash === '#debug') window.__S = S;
+if(location.hash === '#debug') Object.assign(window, {__S:S, __save:save});
 
 function stepSwing(dt){
-  // pendulum with tiny damping
   const n = 4, h = dt/n;
   for(let i=0;i<n;i++){
     const acc = -(G/L)*Math.sin(S.theta) - 0.06*S.omega;
     S.omega += acc*h; S.theta += S.omega*h;
   }
   const a = angleFromBottom();
-  // re-arm the pump once we leave the zone
   if(Math.abs(a) > ZONE_GOOD + .05) S.pumped = false;
-  // passing the bottom: whoosh
   const prevA = Math.atan2(Math.sin(S.prevTheta), Math.cos(S.prevTheta));
   if(Math.sign(prevA) !== Math.sign(a) && Math.abs(a) < 1) sfx.whoosh(Math.abs(S.omega)*L);
-  // loops
   if(Math.floor((S.theta+Math.PI)/(2*Math.PI)) !== Math.floor((S.prevTheta+Math.PI)/(2*Math.PI))){
-    S.loops++; pop(S.loops>1 ? `${S.loops}回転!` : '一回転!!', '#ffc93c'); sfx.fanfare();
+    S.loops++; pop(S.loops>1 ? `${S.loops}回転!` : '一回転!!', '#ffc93c'); sfx.fanfare(); checkMissions();
   }
   S.prevTheta = S.theta;
 
   swing.rotation.z = S.theta;
-  // kid pumping pose: legs out when going forward, tucked going back
   const fwd = S.omega > 0 ? 1 : 0;
   const {legs, arms} = kid.userData;
   for(const l of legs){
@@ -583,36 +855,62 @@ function stepSwing(dt){
 
 function stepFly(dt){
   const {legs, arms} = kid.userData;
+  const gliding = S.phase === 'fly' && holding && S.stamina > 0 && S.vel.y < 2;
   if(S.phase === 'fly'){
+    if(gliding) S.stamina = Math.max(0, S.stamina - dt);
     const n = 4, h = dt/n;
     for(let i=0;i<n;i++){
-      S.vel.y -= G*h;
-      S.vel.x += (S.wind - S.vel.x)*0.02*h;   // wind / drag
+      S.vel.y -= G*(gliding ? .25 : 1)*h;
+      if(gliding && S.vel.y < -2.5) S.vel.y += (-2.5 - S.vel.y)*3*h;
+      S.vel.x += (S.wind - S.vel.x)*(gliding ? 0.01 : 0.02)*h;
       S.pos.addScaledVector(S.vel, h);
       if(S.pos.y <= .12 && S.vel.y < 0){
+        // trampoline?
+        const tr = things.find(t => t.kind === 'tramp' && Math.abs(t.mesh.position.x - S.pos.x) < 1.5);
+        if(tr){
+          S.pos.y = .6; S.vel.y = Math.max(Math.abs(S.vel.y)*.85, 8.5); S.vel.x = Math.max(S.vel.x, 4) * 1.05;
+          tr.squash = 1; S.tramps++; S.spin = 6; S.stamina = Math.max(S.stamina, P.glide()*.5);
+          sfx.boing(); pop('ボヨーン!', '#2f7cf6'); checkMissions();
+          continue;
+        }
         S.pos.y = .12;
         S.bounces++;
         puff(S.pos.x, S.bounces===1 ? 14 : 6); sfx.land();
         if(S.bounces === 1) pop('ドスン!', '#fff');
-        S.vel.y = -S.vel.y * .3; S.vel.x *= .55; S.spin *= .4;
-        if(S.vel.y < 1.2){ S.vel.y = 0; S.phase = 'slide'; }
+        S.vel.y = -S.vel.y * P.restY(); S.vel.x *= P.restX(); S.spin *= .4;
+        if(S.vel.y < 1.2){ S.vel.y = 0; S.phase = 'slide'; ui.glide.hidden = true; }
       }
     }
-    S.rot += S.spin*dt;
-    for(const ar of arms) ar.rotation.z = Math.sin(performance.now()/60 + ar.position.z*10)*.9;
-    for(const l of legs) l.knee.rotation.z = .8 + Math.sin(performance.now()/80)*.5;
+    collide();
+    if(gliding){
+      S.spin *= Math.pow(.02, dt);
+      const target = Math.round((S.rot + 1.2)/(Math.PI*2))*Math.PI*2 - 1.2; // belly-down, head forward
+      S.rot = THREE.MathUtils.lerp(S.rot, target, Math.min(1, dt*6));
+      for(const ar of arms){ ar.rotation.z = THREE.MathUtils.lerp(ar.rotation.z, 0, dt*10); ar.rotation.x = THREE.MathUtils.lerp(ar.rotation.x, Math.sign(ar.position.z)*1.5, dt*10); }
+      for(const l of legs) l.knee.rotation.z = THREE.MathUtils.lerp(l.knee.rotation.z, 0, dt*8);
+    }else{
+      S.rot += S.spin*dt;
+      for(const ar of arms){ ar.rotation.z = Math.sin(performance.now()/60 + ar.position.z*10)*.9; ar.rotation.x = THREE.MathUtils.lerp(ar.rotation.x, 0, dt*8); }
+      for(const l of legs) l.knee.rotation.z = .8 + Math.sin(performance.now()/80)*.5;
+    }
+    ui.glideBar.style.width = (100*S.stamina/P.glide()) + '%';
+    ui.glide.classList.toggle('on', gliding);
   }else if(S.phase === 'slide'){
-    const dec = 7*dt;
+    const dec = P.slideDec()*dt;
     S.vel.x = Math.abs(S.vel.x) <= dec ? 0 : S.vel.x - Math.sign(S.vel.x)*dec;
     S.pos.x += S.vel.x*dt; S.pos.y = .12;
-    // settle upright-ish (sitting on the ground)
+    collide();
     const target = Math.round(S.rot/(Math.PI*2))*Math.PI*2;
     S.rot = THREE.MathUtils.lerp(S.rot, target, Math.min(1, dt*5));
-    for(const ar of arms) ar.rotation.z = THREE.MathUtils.lerp(ar.rotation.z, 2.6, dt*4);
+    for(const ar of arms){ ar.rotation.z = THREE.MathUtils.lerp(ar.rotation.z, 2.6, dt*4); ar.rotation.x = THREE.MathUtils.lerp(ar.rotation.x, 0, dt*6); }
     for(const l of legs) l.knee.rotation.z = THREE.MathUtils.lerp(l.knee.rotation.z, 1.5, dt*4);
     if(S.vel.x === 0){ S.settle += dt; if(S.settle > .6) finish(); }
   }
   kid.position.copy(S.pos); kid.rotation.z = S.rot;
+  if(!S.passedBest && S.startBest > 1 && S.pos.x > S.startBest){
+    S.passedBest = true; pop('ベスト こえた!!', '#ffc93c'); sfx.fanfare();
+    ui.dist.classList.add('hot');
+  }
   if(S.phase !== 'result') ui.distNum.textContent = S.pos.x.toFixed(1);
 }
 
@@ -621,19 +919,18 @@ function updateCamera(dt){
     titleT += dt;
     tmpP.set(Math.sin(titleT*.15)*10 + 3, 4.5, Math.cos(titleT*.15)*10 + 3); tmpL.set(2, 2.5, 0);
   }else if(S.phase === 'swing'){
-    // pull back further on tall screens so a full loop stays in view
     const fit = camera.aspect < 1 ? 1.45 : 1;
     const a = Math.abs(angleFromBottom()) > 1.6 ? 1.15 : 1;
     tmpP.set(4.5, 3.6 + (fit-1)*4, 13.5*fit*a); tmpL.set(1.8, 3.2 + (fit-1)*3, 0);
   }else{
     const x = kid.position.x, y = kid.position.y;
-    tmpP.set(x - 1.5, Math.max(3.2, y*0.8 + 2.5), 12 + Math.max(0, y-3)*0.8);
-    tmpL.set(x + 2.5, Math.max(1.5, y*0.7), 0);
+    const fit = camera.aspect < 1 ? 1.3 : 1;
+    tmpP.set(x - 1.5, Math.max(3.2, y*0.8 + 2.5), (12 + Math.max(0, y-3)*0.8)*fit);
+    tmpL.set(x + 3.5, Math.max(1.5, y*0.75), 0);
   }
   const k = 1 - Math.exp(-dt*(S.phase==='swing'?3:4));
   camPos.lerp(tmpP, k); camLook.lerp(tmpL, k);
   camera.position.copy(camPos); camera.lookAt(camLook);
-  // keep the shadow box near the action
   const fx = S.phase==='fly'||S.phase==='slide'||S.phase==='result' ? kid.position.x : 0;
   sun.target.position.set(fx, 0, 0); sun.position.set(fx-8, 18, 10);
 }
@@ -647,9 +944,7 @@ function updateDust(dt){
   }
 }
 
-function idleSwing(dt){ // gentle swing behind the title card
-  S.theta = Math.sin(performance.now()/1000*1.55)*.35; swing.rotation.z = S.theta;
-}
+function idleSwing(){ S.theta = Math.sin(performance.now()/1000*1.55)*.35; swing.rotation.z = S.theta; }
 
 function resize(){
   const w = innerWidth, h = innerHeight;
@@ -660,9 +955,10 @@ addEventListener('resize', resize); resize();
 
 function frame(now){
   const dt = Math.min(.05, (now - last)/1000); last = now;
-  if(S.phase === 'title') idleSwing(dt);
+  if(S.phase === 'title') idleSwing();
   else if(S.phase === 'swing'){ stepSwing(dt); drawGauge(); }
   else if(S.phase === 'fly' || S.phase === 'slide') stepFly(dt);
+  updateThings(dt, now/1000);
   updateDust(dt);
   updateCamera(dt);
   renderer.render(scene, camera);
