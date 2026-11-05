@@ -40,6 +40,25 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
   pointer-events:none;z-index:5;font-variant-numeric:tabular-nums;white-space:nowrap}
 #dist small{font-size:.45em}
 #dist.hot{color:#ffc93c}
+#dist.tick{animation:tick .2s}
+@keyframes tick{50%{transform:translateX(-50%) scale(1.12)}}
+#flash{position:fixed;inset:0;pointer-events:none;z-index:4;opacity:0;background:#fff}
+#flash.go{animation:flash .45s ease-out}
+@keyframes flash{0%{opacity:.75}100%{opacity:0}}
+#speedfx{position:fixed;inset:0;pointer-events:none;z-index:3;opacity:0;
+  background:radial-gradient(ellipse 70% 60% at 50% 50%, transparent 55%, rgba(255,255,255,.55) 100%)}
+.event{background:linear-gradient(90deg,#ff8fd0,#ffc93c)}
+.stages{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin:8px 0}
+.stage{background:#fff;border-radius:14px;padding:6px 10px;font-weight:900;font-size:13px;box-shadow:0 3px 0 rgba(29,43,58,.2);line-height:1.2}
+.stage small{display:block;font-size:10px;font-weight:700;color:#5a6b7d}
+.stage.on{background:var(--blue);color:#fff}
+.stage.on small{color:#dfeaff}
+.stage:disabled{opacity:.55;cursor:default}
+.daily{background:var(--sun);border-radius:14px;padding:6px 12px;font-weight:900;margin:6px 0;animation:bump2 .6s ease-out}
+@keyframes bump2{0%{transform:scale(.6)}60%{transform:scale(1.08)}100%{transform:scale(1)}}
+.unlock{background:#e8f0ff;color:var(--blue);border-radius:14px;padding:6px 12px;font-weight:900;margin:6px 0}
+.shoph{font-family:var(--f-display);font-size:18px;text-align:left;margin:14px 0 -4px}
+.sw{width:28px;height:28px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 1px #c9d1da}
 .coinpill b{color:#b07a00}
 #runCoins{position:fixed;left:50%;top:calc(196px + env(safe-area-inset-top,0px));transform:translateX(-50%);font-family:var(--f-display);
   font-size:26px;color:#ffc93c;text-shadow:0 2px 0 var(--ink);pointer-events:none;z-index:5}
@@ -100,6 +119,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 .card p{margin:6px 0;line-height:1.6}
 .how{text-align:left;background:#fff;border-radius:16px;padding:10px 14px;margin:14px 0;font-size:14px}
 .how li{margin:4px 0}
+.how summary{cursor:pointer}
 .how kbd{font-family:inherit;background:var(--ink);color:#fff;border-radius:6px;padding:0 6px;font-size:12px}
 .big{background:var(--leaf);color:#fff;font-family:var(--f-display);font-size:24px;border-radius:18px;padding:12px 28px;
   box-shadow:0 6px 0 rgba(29,43,58,.3);margin-top:6px}
@@ -121,6 +141,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
   <div class="col">
     <div class="pill" id="timer">のこり <b id="timeNum">25</b> 秒</div>
     <div class="pill" id="wind">かぜ <b id="windNum">0</b></div>
+    <div class="pill event" id="eventPill" hidden></div>
   </div>
   <div class="col r">
     <div class="pill coinpill">🪙 <b id="coinNum">0</b></div>
@@ -130,6 +151,8 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
 </div>
 <div id="dist" hidden><span id="distNum">0.0</span><small>m</small></div>
 <div id="runCoins" hidden>+0</div>
+<div id="flash"></div>
+<div id="speedfx"></div>
 <div id="pop" aria-live="polite"></div>
 
 <div class="controls" id="controls" hidden>
@@ -143,13 +166,15 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
   <div class="card">
     <h1>ブランコ<br><span>大ジャンプ</span></h1>
     <p>ブランコをこいで、いちばん遠くまでとぼう!</p>
-    <ol class="how">
+    <div class="daily" id="daily" hidden></div>
+    <div class="stages" id="stages"></div>
+    <details class="how" id="howto"><summary><b>あそびかた</b></summary><ol style="margin:6px 0 0;padding-left:20px">
       <li><b>こぐ</b>:ブランコが<b>まんなか(いちばん下)</b>にきたときにおす。ぴったりだと「パーフェクト!」</li>
       <li>うまくこぐと、どんどん高く。<b>一回転</b>もできる!</li>
-      <li><b>とぶ!</b>:前にのぼっていくときにおすと遠くまでとべる。ななめ45°くらいがねらいめ。</li>
+      <li><b>とぶ!</b>:前にのぼっていくとき、メーターの<b style="color:#ff5d5d">赤いところ</b>でおすと「パーフェクトジャンプ!」</li>
       <li>空中で<b>長おし</b>するとグライド。コイン・ふうせん・トランポリンをねらえ!</li>
       <li>キーボード:<kbd>スペース</kbd> こぐ・グライド / <kbd>Enter</kbd> か <kbd>↑</kbd> とぶ</li>
-    </ol>
+    </ol></details>
     <div class="mh">ミッション</div>
     <ul class="list" id="titleMissions"></ul>
     <div class="row">
@@ -167,6 +192,7 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
     <p id="resNote"></p>
     <div id="newRec" class="newrec" hidden>しんきろく!</div>
     <p class="near" id="near" hidden></p>
+    <div class="unlock" id="unlockMsg" hidden></div>
     <ul class="list" id="earn"></ul>
     <div class="mh">ミッション</div>
     <ul class="list" id="resMissions"></ul>
@@ -181,7 +207,10 @@ button:focus-visible{outline:3px solid var(--blue);outline-offset:3px}
   <div class="card">
     <h1 style="font-size:30px">ショップ</h1>
     <div class="wallet">🪙 <span id="shopCoins">0</span></div>
+    <div class="shoph">パワーアップ</div>
     <ul class="shoplist" id="shopList"></ul>
+    <div class="shoph">きせかえ</div>
+    <ul class="shoplist" id="cosList"></ul>
     <div class="row">
       <button class="big" id="shopGo">とびにいく!</button>
       <button class="sub" id="shopClose">もどる</button>
@@ -199,13 +228,16 @@ const G = 9.8;
 const ROUND_TIME = 25;
 const W_BOTTOM_MAX = 3.6; // cap angular speed at the bottom (enough for a loop)
 const ZONE_PERFECT = 0.14, ZONE_GOOD = 0.34;
+const JUMP_PERFECT = [0.66, 0.92], JUMP_NICE = [0.45, 1.15]; // forward release angles (rad)
+let zoneP = ZONE_PERFECT, GM = 1;
 
 /* ---------- storage ---------- */
 const store = {
   get(k, d){ try{ const v = localStorage.getItem('buranko.'+k); return v==null ? d : JSON.parse(v); }catch{ return d; } },
   set(k, v){ try{ localStorage.setItem('buranko.'+k, JSON.stringify(v)); }catch{} }
 };
-let best = store.get('best', 0);
+const bestBy = store.get('bestBy', {park: store.get('best', 0)});
+let best = 0;
 let history = store.get('hist', []);
 
 /* ---------- renderer / scene ---------- */
@@ -222,7 +254,7 @@ scene.fog = new THREE.Fog(0xbfe6ff, 70, 220);
 
 const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 500);
 
-scene.add(new THREE.HemisphereLight(0xdff3ff, 0x5a8a3a, 1.1));
+const hemi = new THREE.HemisphereLight(0xdff3ff, 0x5a8a3a, 1.1); scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff2d6, 2.2);
 sun.position.set(-8, 18, 10);
 sun.castShadow = true;
@@ -232,6 +264,7 @@ sun.shadow.bias = -0.0005;
 scene.add(sun, sun.target);
 
 /* sky dome gradient */
+let skyMat;
 {
   const g = new THREE.SphereGeometry(300, 32, 16);
   const m = new THREE.ShaderMaterial({
@@ -241,6 +274,7 @@ scene.add(sun, sun.target);
     fragmentShader:`uniform vec3 top; uniform vec3 bot; varying vec3 vP;
       void main(){ float h = clamp(normalize(vP).y*1.6, 0., 1.); gl_FragColor = vec4(mix(bot, top, h), 1.); }`
   });
+  skyMat = m;
   const sky = new THREE.Mesh(g, m); sky.renderOrder = -1; scene.add(sky);
   sky.onBeforeRender = () => sky.position.copy(camera.position);
 }
@@ -248,15 +282,26 @@ scene.add(sun, sun.target);
 const mat = (c, o={}) => new THREE.MeshStandardMaterial({color:c, roughness:.8, ...o});
 
 /* ground */
-{
+function groundTex(base, hue, sat, lit){
   const gc = document.createElement('canvas'); gc.width = gc.height = 256;
   const x = gc.getContext('2d');
-  x.fillStyle = '#5cbf52'; x.fillRect(0,0,256,256);
-  for(let i=0;i<2500;i++){ x.fillStyle = `hsl(${100+Math.random()*25},${45+Math.random()*20}%,${38+Math.random()*16}%)`;
+  x.fillStyle = base; x.fillRect(0,0,256,256);
+  for(let i=0;i<2500;i++){ x.fillStyle = `hsl(${hue[0]+Math.random()*hue[1]},${sat[0]+Math.random()*sat[1]}%,${lit[0]+Math.random()*lit[1]}%)`;
     x.fillRect(Math.random()*256, Math.random()*256, 2, 3); }
   const tex = new THREE.CanvasTexture(gc); tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(120, 30);
-  tex.colorSpace = THREE.SRGBColorSpace;
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 150), mat(0xffffff, {map:tex, roughness:1}));
+  tex.colorSpace = THREE.SRGBColorSpace; return tex;
+}
+const GROUND = {
+  grass: () => groundTex('#5cbf52', [100,25], [45,20], [38,16]),
+  sand:  () => groundTex('#efd9a0', [38,12], [55,20], [70,14]),
+  night: () => groundTex('#2f5a4a', [140,30], [25,20], [22,12]),
+  cloud: () => groundTex('#f4f9ff', [200,20], [40,30], [88,10]),
+};
+const groundCache = {};
+let ground;
+{
+  const tex = groundCache.grass = GROUND.grass();
+  ground = new THREE.Mesh(new THREE.PlaneGeometry(600, 150), mat(0xffffff, {map:tex, roughness:1}));
   ground.rotation.x = -Math.PI/2; ground.position.x = 180; ground.receiveShadow = true; scene.add(ground);
 
   // sand pit under the swing
@@ -293,6 +338,8 @@ function labelTex(text, {bg='#fffaf0', fg='#1d2b3a', w=256, h=128, size=64}={}){
 
 /* trees, clouds, fence */
 const rand = (a,b) => a + Math.random()*(b-a);
+const decor = new THREE.Group(); scene.add(decor);
+let cloudM;
 {
   const trunkG = new THREE.CylinderGeometry(.18,.25,1.6,7), leafG = new THREE.IcosahedronGeometry(1.3, 0);
   const trunkM = mat(0x7a4b2a), leafMs = [0x2f9e4f, 0x3fbf6a, 0x55c46e, 0x2a8a48].map(c=>mat(c,{flatShading:true}));
@@ -304,9 +351,9 @@ const rand = (a,b) => a + Math.random()*(b-a);
     t.add(tr, lf);
     const side = Math.random()<.5 ? -1 : 1;
     t.position.set(rand(-25, 420), 0, side < 0 ? -rand(10, 30) : rand(28, 45)); // keep the camera side clear
-    scene.add(t);
+    decor.add(t);
   }
-  const cloudM = new THREE.MeshStandardMaterial({color:0xffffff, roughness:1, flatShading:true});
+  cloudM = new THREE.MeshStandardMaterial({color:0xffffff, roughness:1, flatShading:true});
   for(let i=0;i<40;i++){
     const c = new THREE.Group();
     for(let k=0;k<5;k++){ const b = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(1.5,3),1), cloudM);
@@ -315,8 +362,13 @@ const rand = (a,b) => a + Math.random()*(b-a);
   }
   // fence behind
   const fm = mat(0xffffff);
-  for(let x=-20; x<=420; x+=2.5){ const p = new THREE.Mesh(new THREE.BoxGeometry(.12, 1, .12), fm); p.position.set(x, .5, -9); scene.add(p); }
-  const rail = new THREE.Mesh(new THREE.BoxGeometry(440, .1, .08), fm); rail.position.set(200, .8, -9); scene.add(rail);
+  for(let x=-20; x<=420; x+=2.5){ const p = new THREE.Mesh(new THREE.BoxGeometry(.12, 1, .12), fm); p.position.set(x, .5, -9); decor.add(p); }
+  const rail = new THREE.Mesh(new THREE.BoxGeometry(440, .1, .08), fm); rail.position.set(200, .8, -9); decor.add(rail);
+  // night stars
+  const sv = []; for(let i=0;i<700;i++){ const v = new THREE.Vector3().randomDirection(); v.y = Math.abs(v.y)*.9+.08; sv.push(v.normalize().multiplyScalar(250)); }
+  const starPts = new THREE.Points(new THREE.BufferGeometry().setFromPoints(sv), new THREE.PointsMaterial({color:0xffffff, size:1.6, fog:false, sizeAttenuation:false}));
+  starPts.visible = false; scene.add(starPts); window.__starPts = starPts;
+  starPts.onBeforeRender = () => starPts.position.copy(camera.position);
 }
 
 /* swing frame */
@@ -374,7 +426,7 @@ function makeKid(){
     kid.add(thigh); legs.push({thigh, knee});
   }
   kid.traverse(o => { if(o.isMesh) o.castShadow = true; });
-  kid.userData = {arms, legs};
+  kid.userData = {arms, legs, mats:{cap, shirt, pants}};
   return kid;
 }
 const kid = makeKid();
@@ -399,17 +451,34 @@ function placeFlags(last){
 }
 placeFlags(null);
 
-/* landing dust */
+/* particles */
 const dust = [];
-const dustM = new THREE.MeshStandardMaterial({color:0xd9c89a, transparent:true, roughness:1});
-function puff(x, n=10){
+const partG = new THREE.IcosahedronGeometry(1, 0);
+const CONFETTI = [0xff5d5d, 0xffc93c, 0x3fbf6a, 0x2f7cf6, 0xc77dff, 0xff8fd0];
+function burst(pos, {n=10, color=0xd9c89a, size=.18, speed=1.5, up=1.8, grav=3, life=.7, grow=true, basic=false}={}){
+  if(dust.length > 450) return;
   for(let i=0;i<n;i++){
-    const m = new THREE.Mesh(new THREE.IcosahedronGeometry(rand(.12,.25),0), dustM.clone());
-    m.position.set(x+rand(-.3,.3), .15, rand(-.4,.4));
-    m.userData.v = new THREE.Vector3(rand(-1.5,1.5), rand(1,2.5), rand(-1.5,1.5)); m.userData.t = 0;
+    const c = Array.isArray(color) ? color[Math.floor(Math.random()*color.length)] : color;
+    const m = new THREE.Mesh(partG, basic ? new THREE.MeshBasicMaterial({color:c, transparent:true})
+                                          : new THREE.MeshStandardMaterial({color:c, transparent:true, roughness:1}));
+    const s0 = size*rand(.6,1.3); m.scale.setScalar(s0);
+    m.position.set(pos.x+rand(-.3,.3), pos.y+rand(-.2,.2), pos.z+rand(-.4,.4));
+    m.rotation.set(rand(0,6), rand(0,6), 0);
+    m.userData = {v:new THREE.Vector3(rand(-speed,speed), rand(up*.5,up), rand(-speed,speed)), t:0, life, grav, grow, s0};
     scene.add(m); dust.push(m);
   }
 }
+const _v = new THREE.Vector3();
+function puff(x, n=10){ burst(_v.set(x, .15, 0), {n}); }
+
+/* speed trail */
+const trail = [];
+{
+  const tg = new THREE.SphereGeometry(.16, 8, 6);
+  for(let i=0;i<46;i++){ const m = new THREE.Mesh(tg, new THREE.MeshBasicMaterial({color:0xffffff, transparent:true, opacity:0, depthWrite:false}));
+    m.visible = false; scene.add(m); trail.push(m); }
+}
+let trailI = 0, trailT = 0;
 
 /* ---------- audio ---------- */
 let ac = null, master = null;
@@ -437,7 +506,10 @@ function noise(dur=.3, vol=.2, freq=800){
 }
 const sfx = {
   perfect(c=1){ const k = Math.pow(1.06, Math.min(c,10)-1); tone(880*k,.12,'triangle',.3); setTimeout(()=>tone(1320*k,.18,'triangle',.3),70); },
-  coin(big){ tone(big?1568:1318,.08,'square',.12); setTimeout(()=>tone(big?2093:1760,.12,'square',.12),50); },
+  coin(big, chain=0){ const k = Math.pow(2, Math.min(chain,15)/12); tone((big?1568:1318)*k,.08,'square',.11); setTimeout(()=>tone((big?2093:1760)*k,.12,'square',.11),50); },
+  ring(){ tone(400,.35,'sawtooth',.15,3); setTimeout(()=>tone(1200,.2,'triangle',.2),120); },
+  tick(){ tone(1760,.04,'square',.06); },
+  perfJump(){ [784,1047,1319,1568,2093].forEach((f,i)=>setTimeout(()=>tone(f,.18,'triangle',.25),i*55)); },
   balloon(){ noise(.12,.5,2500); tone(500,.4,'sine',.3,2.5); },
   boing(){ tone(140,.5,'sine',.45,4); },
   buy(){ [784,988,1319].forEach((f,i)=>setTimeout(()=>tone(f,.12,'triangle',.25),i*60)); },
@@ -452,6 +524,24 @@ const sfx = {
 
 /* ---------- UI refs ---------- */
 const $ = id => document.getElementById(id);
+function vib(ms){ try{ navigator.vibrate && navigator.vibrate(ms); }catch{} }
+let windSrc = null, windGain = null, windFilt = null;
+function windStart(){
+  const a = audio(); if(!a || windSrc) return;
+  const len = a.sampleRate*2, buf = a.createBuffer(1, len, a.sampleRate), d = buf.getChannelData(0);
+  for(let i=0;i<len;i++) d[i] = Math.random()*2-1;
+  windSrc = a.createBufferSource(); windSrc.buffer = buf; windSrc.loop = true;
+  windFilt = a.createBiquadFilter(); windFilt.type = 'bandpass'; windFilt.Q.value = .7;
+  windGain = a.createGain(); windGain.gain.value = 0;
+  windSrc.connect(windFilt).connect(windGain).connect(master); windSrc.start();
+}
+function windSet(sp){ if(!windGain) return; const t = ac.currentTime;
+  windGain.gain.setTargetAtTime(Math.min(.22, sp*.011), t, .08); windFilt.frequency.setTargetAtTime(250 + sp*45, t, .08); }
+function windStop(){ if(!windSrc) return; try{ windGain.gain.setTargetAtTime(0, ac.currentTime, .15); const s = windSrc; setTimeout(()=>s.stop(), 600); }catch{} windSrc = null; }
+function flash(color='#fff'){ const f = document.getElementById('flash'); f.style.background = color; f.classList.remove('go'); void f.offsetWidth; f.classList.add('go'); }
+let shake = 0, fovKick = 0, ts = 1, slowT = 0;
+function slowmo(scale, dur){ ts = Math.min(ts, scale); slowT = Math.max(slowT, dur); }
+
 const ui = {
   hud:$('hud'), controls:$('controls'), dist:$('dist'), distNum:$('distNum'), timeNum:$('timeNum'), timer:$('timer'),
   windNum:$('windNum'), bestNum:$('bestNum'), speedNum:$('speedNum'), pop:$('pop'), gauge:$('gauge'),
@@ -487,7 +577,7 @@ const P = {
   restX: () => .55 + .04*lv('bounce'),
   slideDec: () => 7 - .45*lv('bounce'),
   time: () => ROUND_TIME + 2*lv('time'),
-  magnet: () => .9 + .55*lv('magnet'),
+  magnet: () => 1.15 + .55*lv('magnet'),
 };
 function persist(){ store.set('save', save); }
 
@@ -498,6 +588,8 @@ const MISSION_TYPES = {
   coins:   (d) => { const n = 8 + 4*Math.min(8, Math.floor(d/2)); return {n, reward: 2*n, text:`1回で コイン ${n}まい`}; },
   balloon: (d) => { const n = 1 + Math.min(3, Math.floor(d/4)); return {n, reward: 25*n, text:`ふうせんに ${n}こ さわる`}; },
   tramp:   (d) => { const n = 1 + Math.min(2, Math.floor(d/5)); return {n, reward: 30*n, text:`トランポリンで ${n}回 はねる`}; },
+  perfjump:(d) => ({n:1, reward: 35, text:'パーフェクトジャンプ を きめる'}),
+  ring:    (d) => { const n = 1 + Math.min(2, Math.floor(d/6)); return {n, reward: 25*n, text:`ブーストリングを ${n}こ くぐる`}; },
 };
 function fillMissions(){
   save.missions = save.missions.filter(m => !m.ok);
@@ -511,7 +603,7 @@ function fillMissions(){
 }
 fillMissions();
 function missionValue(type){
-  return {dist:S.pos.x, streak:S.bestCombo, loop:S.loops, coins:S.got, balloon:S.balloons, tramp:S.tramps}[type] ?? 0;
+  return {dist:S.pos.x, streak:S.bestCombo, loop:S.loops, coins:S.got, balloon:S.balloons, tramp:S.tramps, perfjump:S.perfJump, ring:S.rings}[type] ?? 0;
 }
 function checkMissions(final=false){
   for(const m of save.missions){
@@ -525,11 +617,88 @@ function checkMissions(final=false){
 function missionHTML(){
   return save.missions.map(m => `<li class="${m.ok?'ok':''}"><span>${m.ok?'✅':'⬜'} ${m.text}</span><b>+${m.reward}🪙</b></li>`).join('');
 }
-function canBuy(){ return UPG.some(u => lv(u.id) < u.max && save.coins >= cost(u)); }
+function canBuy(){ return UPG.some(u => lv(u.id) < u.max && save.coins >= cost(u)) || COSTUMES.some(c => !(save.owned||[]).includes(c.id) && save.coins >= c.cost); }
 function refreshMeta(){
   ui.coinNum.textContent = save.coins;
   for(const el of document.querySelectorAll('.shopBtn')) el.classList.toggle('badge', canBuy());
   $('titleMissions').innerHTML = missionHTML();
+}
+
+/* ---------- stages ---------- */
+const STAGES = [
+  {id:'park',  name:'こうえん',       icon:'🌳', unlock:0,   top:0x4aa8f0, bot:0xd8f1ff, fog:0xbfe6ff, gnd:'grass', hs:0xdff3ff, hg:0x5a8a3a, sun:0xfff2d6, sunI:2.2, cloud:0xffffff, g:1,   wind:[-2,3], coin:1, note:'ふつうの こうえん'},
+  {id:'beach', name:'ゆうやけビーチ', icon:'🌅', unlock:40,  top:0x4b3a8f, bot:0xffa36b, fog:0xffb48a, gnd:'sand',  hs:0xffd6b8, hg:0x9a7a4a, sun:0xffa060, sunI:2.0, cloud:0xffc2a0, g:1,   wind:[1,6],  coin:1, note:'つよい おいかぜ'},
+  {id:'night', name:'よるの まち',    icon:'🌙', unlock:90,  top:0x060a24, bot:0x24346e, fog:0x1a2550, gnd:'night', hs:0x8a9aff, hg:0x202840, sun:0xaab8ff, sunI:.9,  cloud:0x4a5480, g:1,   wind:[-1,2], coin:2, note:'コインが 2ばい', stars:true},
+  {id:'sky',   name:'くものうえ',     icon:'☁️', unlock:160, top:0x6cc0ff, bot:0xffffff, fog:0xeaf6ff, gnd:'cloud', hs:0xffffff, hg:0xc8dcf0, sun:0xffffff, sunI:2.0, cloud:0xffffff, g:.7,  wind:[0,3],  coin:1, note:'ふわふわ 重力0.7', nodecor:true},
+];
+const maxBest = () => Math.max(0, ...Object.values(bestBy));
+let stage = STAGES.find(x => x.id === (store.get('stage', 'park'))) || STAGES[0];
+if(maxBest() < stage.unlock) stage = STAGES[0];
+function applyStage(st){
+  stage = st; store.set('stage', st.id);
+  skyMat.uniforms.top.value.setHex(st.top); skyMat.uniforms.bot.value.setHex(st.bot);
+  scene.background.setHex(st.bot); scene.fog.color.setHex(st.fog);
+  hemi.color.setHex(st.hs); hemi.groundColor.setHex(st.hg);
+  sun.color.setHex(st.sun); sun.intensity = st.sunI;
+  cloudM.color.setHex(st.cloud);
+  ground.material.map = groundCache[st.gnd] ||= GROUND[st.gnd](); ground.material.needsUpdate = true;
+  decor.visible = !st.nodecor; window.__starPts.visible = !!st.stars;
+  coinM.emissive.setHex(st.stars ? 0xffaa00 : 0xa06a00);
+  GM = st.g;
+  best = bestBy[st.id] || 0; ui.bestNum.textContent = best.toFixed(1); placeFlags(null);
+  renderStages();
+}
+function renderStages(){
+  const mb = maxBest();
+  $('stages').innerHTML = STAGES.map(st => {
+    const open = mb >= st.unlock;
+    return `<button class="stage ${st===stage?'on':''}" data-st="${st.id}" ${open?'':'disabled'}>${open?st.icon:'🔒'} ${st.name}<small>${open ? st.note : 'ベスト '+st.unlock+'m で かいほう'}</small></button>`;
+  }).join('');
+}
+document.addEventListener('click', e => {
+  const b = e.target.closest('.stage'); if(!b || b.disabled) return;
+  audio(); sfx.tick(); applyStage(STAGES.find(x => x.id === b.dataset.st)); fillMissionsForStage();
+});
+function fillMissionsForStage(){ refreshMeta(); }
+
+/* ---------- random events ---------- */
+const EVENTS = [
+  {id:'coin2',   name:'🪙 コイン2ばい'},
+  {id:'balloon', name:'🎈 ふうせんまつり'},
+  {id:'tramp',   name:'🟦 トランポリンまつり'},
+  {id:'tail',    name:'💨 おいかぜボーナス'},
+  {id:'gold',    name:'✨ ゴールデンタイム'},
+  {id:'ring',    name:'⭕ リングまつり'},
+];
+let ev = null;
+
+/* ---------- costumes ---------- */
+const COSTUMES = [
+  {id:'basic',  name:'いつもの',         cost:0,    cap:0xff5d5d, shirt:0x2f7cf6, pants:0x2d3a4a, trail:0xfff6a0},
+  {id:'sakura', name:'さくら',           cost:60,   cap:0xffffff, shirt:0xff8fc0, pants:0xffffff, trail:0xffb3d9},
+  {id:'ninja',  name:'にんじゃ',         cost:150,  cap:0x1d2b3a, shirt:0x26303d, pants:0x1d2b3a, trail:0x7a6cff},
+  {id:'astro',  name:'うちゅうひこうし', cost:300,  cap:0xffffff, shirt:0xe8edf2, pants:0xb8c2cc, trail:0x8fd3ff},
+  {id:'gold',   name:'きんぴか',         cost:600,  cap:0xffcc33, shirt:0xffcc33, pants:0xd4a017, trail:0xffd23f, shiny:true},
+  {id:'rainbow',name:'にじいろ',         cost:1000, cap:0xff5d5d, shirt:0xc77dff, pants:0x3fbf6a, trail:'rainbow'},
+];
+save.owned ??= ['basic']; save.wear ??= 'basic';
+const wearing = () => COSTUMES.find(c => c.id === save.wear) || COSTUMES[0];
+function applyCostume(){
+  const c = wearing(), m = kid.userData.mats;
+  m.cap.color.setHex(c.cap); m.shirt.color.setHex(c.shirt); m.pants.color.setHex(c.pants);
+  for(const k of ['cap','shirt','pants']){ m[k].metalness = c.shiny ? .6 : 0; m[k].roughness = c.shiny ? .25 : .8; }
+}
+applyCostume();
+
+/* ---------- daily bonus ---------- */
+{
+  const today = new Date().toDateString(), yest = new Date(Date.now() - 864e5).toDateString();
+  if(save.lastDay !== today){
+    save.streak = save.lastDay === yest ? (save.streak||0) + 1 : 1;
+    const bonus = 30 + 20*Math.min(save.streak, 7);
+    save.coins += bonus; save.lastDay = today; persist();
+    $('daily').hidden = false; $('daily').textContent = `🎁 ログインボーナス ${save.streak}日目 +${bonus}🪙`;
+  }
 }
 
 /* ---------- air objects (coins, balloons, trampolines) ---------- */
@@ -541,6 +710,7 @@ const balloonG = new THREE.SphereGeometry(.6, 18, 14); balloonG.scale(1, 1.2, 1)
 const balloonMs = [0xff5d5d, 0x2f7cf6, 0xffc93c, 0x3fbf6a, 0xc77dff].map(c => mat(c, {roughness:.35}));
 const stringM = new THREE.LineBasicMaterial({color:0xffffff});
 const trampTopM = mat(0x1d2b3a, {roughness:.6}), trampRimM = mat(0x2f7cf6);
+const ringG = new THREE.TorusGeometry(1.15, .13, 10, 32), ringM = mat(0xffd23f, {emissive:0xff8800, emissiveIntensity:.6, roughness:.3});
 let things = [];
 function clearThings(){ for(const t of things) scene.remove(t.mesh); things = []; }
 function spawnThings(){
@@ -549,13 +719,13 @@ function spawnThings(){
   // coin trails along jumps you could actually make (so better jumps find more coins)
   const vTop = P.wMax()*L*.85 + P.kick();
   const onArc = (v, deg, t) => { const a = deg*Math.PI/180; return [2.5 + v*Math.cos(a)*t, 2 + v*Math.sin(a)*t - G/2*t*t]; };
-  for(let k=0;k<22;k++){
-    const v = rand(6, vTop + 2), deg = rand(25, 62);
+  for(let k=0;k<20;k++){
+    const v = rand(7, vTop + 2), deg = rand(25, 62);
     const tEnd = (v*Math.sin(deg*Math.PI/180) + Math.sqrt((v*Math.sin(deg*Math.PI/180))**2 + 4*G))/G;
-    const t0 = rand(.15, tEnd*.85), n = 4 + Math.floor(Math.random()*4), dtc = .9/v;
+    const t0 = tEnd*rand(.12, .85), n = 4 + Math.floor(Math.random()*4), dtc = .9/v;
     for(let i=0;i<n;i++){
       const [x, y] = onArc(v, deg, t0 + i*dtc);
-      if(y < .9 || x < 4) continue;
+      if(y < .9 || x < 8) continue;
       const m = new THREE.Mesh(coinG, coinM); m.position.set(x, y, 0); scene.add(m);
       things.push({kind:'coin', mesh:m, v:1});
     }
@@ -565,7 +735,14 @@ function spawnThings(){
     }
   }
   // balloons
-  for(let k=0;k<7;k++){
+  for(let k=0;k<(ev?.id==='ring' ? 12 : 4);k++){
+    const v = rand(8, vTop + 2), deg = rand(30, 55);
+    const [x, y] = onArc(v, deg, rand(.4, 1.2)*v*Math.sin(deg*Math.PI/180)/G);
+    if(y < 2.5 || x < 8) continue;
+    const r = new THREE.Mesh(ringG, ringM); r.rotation.y = Math.PI/2; r.position.set(x, y, 0); r.castShadow = true; scene.add(r);
+    things.push({kind:'ring', mesh:r});
+  }
+  for(let k=0;k<(ev?.id==='balloon' ? 20 : 7);k++){
     const v = rand(7, vTop + 1), deg = rand(30, 55);
     const [x, y] = onArc(v, deg, rand(.5, 1.3)*v*Math.sin(deg*Math.PI/180)/G);
     if(y < 2 || x < 6) continue;
@@ -576,7 +753,8 @@ function spawnThings(){
     things.push({kind:'balloon', mesh:g, phase:Math.random()*6});
   }
   // trampolines on the ground
-  for(let x = rand(12, 20); x < reach + 20; x += rand(16, 30)){
+  const tg = ev?.id==='tramp' ? [6, 12] : [16, 30];
+  for(let x = rand(12, 20); x < reach + 20; x += rand(tg[0], tg[1])){
     const g = new THREE.Group();
     const top = new THREE.Mesh(new THREE.CylinderGeometry(1.3,1.3,.08,24), trampTopM); top.position.y = .45; top.receiveShadow = true;
     const rim = new THREE.Mesh(new THREE.TorusGeometry(1.3,.09,8,28), trampRimM); rim.rotation.x = Math.PI/2; rim.position.y = .47;
@@ -593,6 +771,7 @@ function updateThings(dt, t){
     if(th.kind === 'coin') th.mesh.rotation.y += dt*3;
     else if(th.kind === 'star'){ th.mesh.rotation.y += dt*2; th.mesh.rotation.x += dt; }
     else if(th.kind === 'balloon') th.mesh.position.y += Math.sin(t*1.5 + th.phase)*dt*.3;
+    else if(th.kind === 'ring'){ th.mesh.rotation.x += dt*2; if(th.hit){ th.hit += dt; th.mesh.scale.setScalar(1 + th.hit*3); th.mesh.material = th.hitM; th.hitM.opacity = Math.max(0, 1 - th.hit*2.5); if(th.hit > .4){ scene.remove(th.mesh); th.dead = true; } } }
     else if(th.kind === 'tramp'){ th.squash = Math.max(0, th.squash - dt*3); th.mesh.scale.y = 1 - Math.sin(th.squash*Math.PI)*.4; }
     if(th.fly){ // collected coins zip to the kid
       th.fly += dt*5; th.mesh.position.lerp(kid.position, Math.min(1, th.fly*.3)); th.mesh.scale.setScalar(Math.max(0.01, 1 - th.fly*.25));
@@ -610,12 +789,30 @@ function collide(){
     const d2 = dx*dx + dy*dy;
     if(th.kind === 'coin' || th.kind === 'star'){
       const r = th.kind === 'star' ? mag + .3 : mag;
-      if(d2 < r*r){ th.fly = .01; S.got += th.v; sfx.coin(th.v>1); if(th.v>1) pop('スター! +5', '#ff8fd0'); updateRunCoins(); checkMissions(); }
+      if(d2 < r*r){
+        th.fly = .01;
+        const nowT = performance.now();
+        S.chain = nowT - S.chainT < 700 ? S.chain + 1 : 0; S.chainT = nowT;
+        const val = th.v * stage.coin * (ev?.id==='coin2' ? 2 : 1);
+        S.got += val; sfx.coin(th.v>1, S.chain);
+        burst(m, {n: th.v>1 ? 14 : 4, color: th.v>1 ? CONFETTI : 0xffe066, size:.08, speed:2, up:2, grav:2, life:.45, grow:false, basic:true});
+        if(th.v>1){ pop(`スター! +${val}`, '#ff8fd0'); vib(20); }
+        else if(S.chain >= 5 && S.chain % 5 === 0) pop(`コイン ×${S.chain}!`, '#ffc93c');
+        updateRunCoins(); checkMissions();
+      }
+    }else if(th.kind === 'ring'){
+      if(!th.hit && Math.abs(dx) < .7 && Math.abs(dy) < 1.25){
+        th.hit = .001; th.hitM = new THREE.MeshBasicMaterial({color:0xfff2a0, transparent:true});
+        S.vel.x += 4; S.vel.y = Math.max(S.vel.y, 0) + 2; S.rings++;
+        sfx.ring(); pop('ブースト!!', '#ffc93c'); flash('#fff6c0'); fovKick = 14; shake = .15; vib(25); checkMissions();
+      }
     }else if(th.kind === 'balloon'){
       if(d2 < 1.3*1.3){
         th.used = true; scene.remove(th.mesh); th.dead = true;
         S.vel.y = Math.max(S.vel.y, 0) + 7.5; S.vel.x += 1.5; S.balloons++;
-        S.spin += 4; sfx.balloon(); pop('ふうせん ジャンプ!', '#fff'); puff(m.x, 6); checkMissions();
+        S.spin += 4; sfx.balloon(); pop('ふうせん ジャンプ!', '#fff'); checkMissions();
+        burst(m, {n:16, color:th.mesh.children[0].material.color.getHex(), size:.14, speed:4, up:3, grav:4, life:.6, grow:false, basic:true});
+        shake = .18; vib(20); slowmo(.5, .1);
       }
     }
   }
@@ -625,14 +822,21 @@ function updateRunCoins(){ ui.runCoins.textContent = '+' + S.got; ui.runCoins.cl
 /* ---------- game state ---------- */
 const S = { phase:'title', theta:0, omega:0, time:ROUND_TIME, wind:0, pumped:false,
   pos:new THREE.Vector3(), vel:new THREE.Vector3(), spin:0, rot:0, bounces:0, settle:0, combo:0, bestCombo:0, loops:0, prevTheta:0,
-  got:0, balloons:0, tramps:0, missionCoins:0, stamina:0, passedBest:false, startBest:0 };
+  got:0, balloons:0, tramps:0, missionCoins:0, stamina:0, passedBest:false, startBest:0,
+  chain:0, chainT:0, perfJump:0, rings:0, nextTick:10 };
 let holding = false;
 
 function newRound(){
   S.phase = 'swing';
   S.theta = 0.25; S.omega = 0; S.time = P.time(); S.pumped = false; S.combo = 0; S.bestCombo = 0; S.loops = 0; S.prevTheta = S.theta;
   S.got = 0; S.balloons = 0; S.tramps = 0; S.missionCoins = 0; S.passedBest = false; S.startBest = best;
-  S.wind = Math.round(rand(-2, 3)*10)/10;
+  S.chain = 0; S.perfJump = 0; S.rings = 0; S.nextTick = 10;
+  ev = Math.random() < .45 ? EVENTS[Math.floor(Math.random()*EVENTS.length)] : null;
+  zoneP = ev?.id === 'gold' ? ZONE_PERFECT*1.7 : ZONE_PERFECT;
+  S.wind = Math.round((rand(stage.wind[0], stage.wind[1]) + (ev?.id==='tail' ? 3.5 : 0))*10)/10;
+  $('eventPill').hidden = !ev; if(ev){ $('eventPill').textContent = ev.name; setTimeout(()=>pop(ev.name + '!', '#ffc93c'), 200); }
+  for(const t of trail){ t.visible = false; }
+  $('speedfx').style.opacity = 0;
   swing.add(kid); kid.position.set(0, KID_SEAT_Y, 0); kid.rotation.set(0,0,0);
   for(const a of kid.userData.arms) a.rotation.set(0,0,0);
   spawnThings();
@@ -662,8 +866,12 @@ function pump(){
   audio();
   const a = Math.abs(angleFromBottom());
   if(S.pumped) return;
-  if(a < ZONE_PERFECT){
+  if(a < zoneP){
     S.combo++; S.bestCombo = Math.max(S.bestCombo, S.combo);
+    kid.getWorldPosition(_v); _v.y += .3;
+    burst(_v, {n: 6 + Math.min(S.combo, 8)*2, color: S.combo >= 5 ? CONFETTI : 0xffd23f, size:.07, speed:2.5, up:2.5, grav:3, life:.5, grow:false, basic:true});
+    shake = Math.min(.12, .03 + S.combo*.01); vib(12);
+    if(S.combo >= 5) fovKick = 5;
     S.omega += Math.sign(S.omega||1) * (0.5 + Math.min(S.combo,5)*0.03) * P.pumpMul();
     pop(S.combo>2 ? `パーフェクト×${S.combo}!` : 'パーフェクト!', '#ffc93c'); sfx.perfect(S.combo);
     checkMissions();
@@ -690,6 +898,12 @@ function jump(auto=false){
   const sp = S.vel.length();
   if(sp > .01) S.vel.addScaledVector(S.vel.clone().normalize(), P.kick());
   S.vel.y += 1.0;
+  const ra = angleFromBottom();
+  let judge = null;
+  if(!auto && S.omega > 0 && ra > JUMP_PERFECT[0] && ra < JUMP_PERFECT[1]) judge = 'perfect';
+  else if(!auto && S.omega > 0 && ra > JUMP_NICE[0] && ra < JUMP_NICE[1]) judge = 'nice';
+  if(judge === 'perfect'){ S.vel.multiplyScalar(1.15); S.perfJump++; }
+  else if(judge === 'nice') S.vel.multiplyScalar(1.06);
   S.spin = -S.omega * 1.3;
   S.rot = S.theta;
   S.stamina = P.glide();
@@ -698,8 +912,16 @@ function jump(auto=false){
   ui.dist.hidden = false; ui.timer.hidden = true; ui.glide.hidden = false; ui.runCoins.hidden = false; ui.runCoins.textContent = '+0';
   jumpBtn.hidden = true; gaugeEl.hidden = true;
   pumpBtn.innerHTML = 'グライド<small>長おし</small>';
-  sfx.jump();
-  pop(auto ? 'じかんぎれ!' : 'ジャンプ!', auto ? '#ff5d5d' : '#fff');
+  sfx.jump(); windStart();
+  if(judge === 'perfect'){
+    pop('パーフェクトジャンプ!!', '#ffc93c'); sfx.perfJump(); flash('#ffe680'); slowmo(.18, .5); fovKick = 12; shake = .2; vib([30,40,30]);
+    burst(S.pos, {n:40, color:CONFETTI, size:.09, speed:4, up:4, grav:4, life:.9, grow:false, basic:true});
+    checkMissions();
+  }else if(judge === 'nice'){
+    pop('ナイスジャンプ!', '#fff'); flash('#ffffff'); slowmo(.4, .25); fovKick = 6; vib(20);
+  }else{
+    pop(auto ? 'じかんぎれ!' : 'ジャンプ!', auto ? '#ff5d5d' : '#fff'); slowmo(.7, .12);
+  }
 }
 
 function rankOf(d){
@@ -718,20 +940,26 @@ function rankOf(d){
 function finish(){
   S.phase = 'result';
   const d = Math.round(S.pos.x*10)/10;
-  const prevBest = best;
+  const prevBest = best, prevMax = maxBest();
   const isNew = d > best;
-  if(isNew){ best = d; store.set('best', best); sfx.fanfare(); }
+  windStop(); $('speedfx').style.opacity = 0;
+  if(isNew){ best = d; bestBy[stage.id] = d; store.set('bestBy', bestBy); sfx.fanfare(); vib([40,60,40]);
+    burst(_v.copy(S.pos).setY(1.5), {n:80, color:CONFETTI, size:.1, speed:5, up:7, grav:5, life:1.6, grow:false, basic:true}); }
+  const newStage = STAGES.find(st => prevMax < st.unlock && maxBest() >= st.unlock);
+  $('unlockMsg').hidden = !newStage;
+  if(newStage) $('unlockMsg').textContent = `🎉 あたらしいステージ「${newStage.icon} ${newStage.name}」が ひらいた!`;
+  renderStages();
   history = [d, ...history].slice(0, 5); store.set('hist', history);
   checkMissions(true);
   const distCoins = Math.max(0, Math.floor(d));
   const recordBonus = isNew && prevBest > 0 ? 20 : 0;
   const earned = distCoins + S.got + S.missionCoins + recordBonus;
+  countUp($('resNum'), d, 900, v => v.toFixed(1));
   save.coins += earned;
   placeFlags(d);
   ui.bestNum.textContent = best.toFixed(1);
   const [m, r, note] = rankOf(d);
   $('medal').textContent = m; $('rank').textContent = r; $('resNote').textContent = note;
-  $('resNum').textContent = d.toFixed(1);
   $('newRec').hidden = !isNew;
   const gap = prevBest - d;
   $('near').hidden = !( !isNew && gap > 0 && gap < Math.max(3, prevBest*0.1) );
@@ -745,7 +973,18 @@ function finish(){
   fillMissions();
   persist(); refreshMeta();
   ui.glide.hidden = true; ui.controls.hidden = true;
-  setTimeout(()=>{ ui.result.hidden = false; ui.hud.hidden = true; $('againBtn').focus(); }, 700);
+  setTimeout(()=>{ ui.result.hidden = false; ui.hud.hidden = true; $('againBtn').focus(); countUp($('resNum'), d, 900, v => v.toFixed(1)); }, 800);
+}
+
+function countUp(el, to, ms, fmt){
+  const t0 = performance.now(); let lastTick = 0;
+  const step = now => {
+    const k = Math.min(1, (now - t0)/ms), e = 1 - Math.pow(1-k, 3);
+    el.textContent = fmt(to*e);
+    if(now - lastTick > 60 && k < 1){ lastTick = now; sfx.tick(); }
+    if(k < 1) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
 }
 
 /* ---------- shop ---------- */
@@ -761,9 +1000,24 @@ function renderShop(){
     return `<li><div class="ic">${u.icon}</div><div class="tx"><b>${u.name} <small>Lv.${l}</small></b><span>${u.desc}</span><div class="pips">${pips}</div></div>
       <button class="buy" data-id="${u.id}" ${max || save.coins < c ? 'disabled' : ''}>${max ? 'MAX' : c + '🪙'}</button></li>`;
   }).join('');
+  const hex = n => '#' + n.toString(16).padStart(6, '0');
+  $('cosList').innerHTML = COSTUMES.map(c => {
+    const own = save.owned.includes(c.id), on = save.wear === c.id;
+    const tr = c.trail === 'rainbow' ? 'linear-gradient(90deg,#ff5d5d,#ffc93c,#3fbf6a,#2f7cf6,#c77dff)' : hex(c.trail);
+    return `<li><div class="ic"><div class="sw" style="background:linear-gradient(135deg,${hex(c.cap)} 0 35%,${hex(c.shirt)} 35% 70%,${hex(c.pants)} 70%)"></div></div>
+      <div class="tx"><b>${c.name}</b><span>ひこうきぐも: <i style="display:inline-block;width:40px;height:8px;border-radius:4px;vertical-align:middle;background:${tr}"></i></span></div>
+      <button class="buy cos" data-cos="${c.id}" ${on || (!own && save.coins < c.cost) ? 'disabled' : ''}>${on ? 'きてる' : own ? 'きる' : c.cost + '🪙'}</button></li>`;
+  }).join('');
 }
 document.addEventListener('click', e => {
-  const b = e.target.closest('.buy'); if(!b) return;
+  const b = e.target.closest('.cos'); if(!b) return;
+  const c = COSTUMES.find(x => x.id === b.dataset.cos); if(!c) return;
+  if(!save.owned.includes(c.id)){ if(save.coins < c.cost) return; save.coins -= c.cost; save.owned.push(c.id); sfx.buy(); }
+  else sfx.tick();
+  save.wear = c.id; persist(); applyCostume(); renderShop(); refreshMeta();
+});
+document.addEventListener('click', e => {
+  const b = e.target.closest('.buy'); if(!b || b.classList.contains('cos')) return;
   const u = UPG.find(x => x.id === b.dataset.id);
   if(!u || lv(u.id) >= u.max || save.coins < cost(u)) return;
   save.coins -= cost(u); save.up[u.id]++; persist(); audio(); sfx.buy(); renderShop(); refreshMeta();
@@ -796,7 +1050,7 @@ refreshMeta();
 
 /* ---------- gauge ---------- */
 function drawGauge(){
-  const c = gctx, w = 300, h = 170, cx = 150, cy = 18, R = 130;
+  const c = gctx, w = 300, h = 170, cx = 150, cy = 10, R = 122;
   c.clearRect(0,0,w,h);
   c.lineCap = 'round';
   c.lineWidth = 22; c.strokeStyle = 'rgba(255,250,240,.85)';
@@ -804,7 +1058,10 @@ function drawGauge(){
   c.strokeStyle = '#8fe08a';
   c.beginPath(); c.arc(cx, cy, R, Math.PI/2 - ZONE_GOOD, Math.PI/2 + ZONE_GOOD); c.stroke();
   c.strokeStyle = '#ffc93c';
-  c.beginPath(); c.arc(cx, cy, R, Math.PI/2 - ZONE_PERFECT, Math.PI/2 + ZONE_PERFECT); c.stroke();
+  c.beginPath(); c.arc(cx, cy, R, Math.PI/2 - zoneP, Math.PI/2 + zoneP); c.stroke();
+  // jump sweet spot (forward side), outer band
+  c.lineWidth = 8; c.strokeStyle = S.omega > 0 ? '#ff5d5d' : 'rgba(255,93,93,.35)';
+  c.beginPath(); c.arc(cx, cy, R + 17, Math.PI/2 - JUMP_PERFECT[1], Math.PI/2 - JUMP_PERFECT[0]); c.stroke();
   const a = angleFromBottom();
   const ang = Math.PI/2 - a;
   const bx = cx + Math.cos(ang)*R, by = cy + Math.sin(ang)*R;
@@ -819,7 +1076,7 @@ function drawGauge(){
 const camPos = new THREE.Vector3(5, 3.4, 12), camLook = new THREE.Vector3(1.5, 2.4, 0);
 const tmpP = new THREE.Vector3(), tmpL = new THREE.Vector3();
 let last = performance.now(), titleT = 0;
-if(location.hash === '#debug') Object.assign(window, {__S:S, __save:save});
+if(location.hash === '#debug') Object.assign(window, {__S:S, __save:save, __bestBy:bestBy});
 
 function stepSwing(dt){
   const n = 4, h = dt/n;
@@ -860,7 +1117,7 @@ function stepFly(dt){
     if(gliding) S.stamina = Math.max(0, S.stamina - dt);
     const n = 4, h = dt/n;
     for(let i=0;i<n;i++){
-      S.vel.y -= G*(gliding ? .25 : 1)*h;
+      S.vel.y -= G*GM*(gliding ? .25 : 1)*h;
       if(gliding && S.vel.y < -2.5) S.vel.y += (-2.5 - S.vel.y)*3*h;
       S.vel.x += (S.wind - S.vel.x)*(gliding ? 0.01 : 0.02)*h;
       S.pos.addScaledVector(S.vel, h);
@@ -871,11 +1128,14 @@ function stepFly(dt){
           S.pos.y = .6; S.vel.y = Math.max(Math.abs(S.vel.y)*.85, 8.5); S.vel.x = Math.max(S.vel.x, 4) * 1.05;
           tr.squash = 1; S.tramps++; S.spin = 6; S.stamina = Math.max(S.stamina, P.glide()*.5);
           sfx.boing(); pop('ボヨーン!', '#2f7cf6'); checkMissions();
+          shake = .3; slowmo(.45, .12); vib(30); fovKick = 8;
+          burst(_v.set(S.pos.x, .6, 0), {n:14, color:0x8fd3ff, size:.1, speed:3, up:3, grav:4, life:.5, grow:false, basic:true});
           continue;
         }
         S.pos.y = .12;
         S.bounces++;
-        puff(S.pos.x, S.bounces===1 ? 14 : 6); sfx.land();
+        puff(S.pos.x, S.bounces===1 ? 18 : 6); sfx.land();
+        shake = Math.max(shake, Math.min(.5, Math.abs(S.vel.y)*.035)); vib(S.bounces===1 ? 35 : 15);
         if(S.bounces === 1) pop('ドスン!', '#fff');
         S.vel.y = -S.vel.y * P.restY(); S.vel.x *= P.restX(); S.spin *= .4;
         if(S.vel.y < 1.2){ S.vel.y = 0; S.phase = 'slide'; ui.glide.hidden = true; }
@@ -907,8 +1167,23 @@ function stepFly(dt){
     if(S.vel.x === 0){ S.settle += dt; if(S.settle > .6) finish(); }
   }
   kid.position.copy(S.pos); kid.rotation.z = S.rot;
+  // trail + speed feel
+  const spd = S.vel.length();
+  if(S.phase === 'fly'){
+    windSet(spd);
+    $('speedfx').style.opacity = Math.min(.9, Math.max(0, (spd - 8)/14)).toFixed(2);
+    trailT -= dt;
+    if(trailT <= 0){
+      trailT = .022;
+      const t = trail[trailI = (trailI + 1) % trail.length], c = wearing();
+      t.visible = true; t.position.set(S.pos.x, S.pos.y + .35, 0); t.userData.life = 1;
+      if(c.trail === 'rainbow') t.material.color.setHSL((performance.now()/600) % 1, .9, .6); else t.material.color.setHex(c.trail);
+      t.scale.setScalar(.6 + Math.min(1.4, spd/12));
+    }
+  }else{ windSet(0); $('speedfx').style.opacity = 0; }
+  if(S.pos.x >= S.nextTick){ S.nextTick += 10; sfx.tick(); ui.dist.classList.remove('tick'); void ui.dist.offsetWidth; ui.dist.classList.add('tick'); }
   if(!S.passedBest && S.startBest > 1 && S.pos.x > S.startBest){
-    S.passedBest = true; pop('ベスト こえた!!', '#ffc93c'); sfx.fanfare();
+    S.passedBest = true; pop('ベスト こえた!!', '#ffc93c'); sfx.fanfare(); slowmo(.35, .35); flash('#ffe680'); vib(40);
     ui.dist.classList.add('hot');
   }
   if(S.phase !== 'result') ui.distNum.textContent = S.pos.x.toFixed(1);
@@ -930,7 +1205,14 @@ function updateCamera(dt){
   }
   const k = 1 - Math.exp(-dt*(S.phase==='swing'?3:4));
   camPos.lerp(tmpP, k); camLook.lerp(tmpL, k);
-  camera.position.copy(camPos); camera.lookAt(camLook);
+  camera.position.copy(camPos);
+  if(shake > .002){ camera.position.x += rand(-1,1)*shake; camera.position.y += rand(-1,1)*shake; shake *= Math.exp(-dt*9); }
+  camera.lookAt(camLook);
+  const baseF = camera.aspect < 1 ? 68 : 50;
+  const spdF = (S.phase === 'fly') ? Math.min(12, Math.max(0, S.vel.length() - 6)*.6) : 0;
+  fovKick *= Math.exp(-dt*4);
+  const fov = baseF + spdF + fovKick;
+  if(Math.abs(camera.fov - fov) > .05){ camera.fov += (fov - camera.fov)*Math.min(1, dt*6); camera.updateProjectionMatrix(); }
   const fx = S.phase==='fly'||S.phase==='slide'||S.phase==='result' ? kid.position.x : 0;
   sun.target.position.set(fx, 0, 0); sun.position.set(fx-8, 18, 10);
 }
@@ -938,10 +1220,15 @@ function updateCamera(dt){
 function updateDust(dt){
   for(let i=dust.length-1;i>=0;i--){
     const d = dust[i]; d.userData.t += dt;
-    d.position.addScaledVector(d.userData.v, dt); d.userData.v.y -= 3*dt;
-    d.scale.setScalar(1 + d.userData.t*2); d.material.opacity = Math.max(0, 1 - d.userData.t*1.5);
-    if(d.userData.t > .7){ scene.remove(d); d.geometry.dispose(); d.material.dispose(); dust.splice(i,1); }
+    const u = d.userData;
+    d.position.addScaledVector(u.v, dt); u.v.y -= u.grav*dt; u.v.multiplyScalar(Math.exp(-dt*1.5));
+    d.rotation.x += dt*4;
+    d.scale.setScalar(u.grow ? u.s0*(1 + u.t*2) : u.s0*(1 - .5*u.t/u.life));
+    d.material.opacity = Math.max(0, 1 - u.t/u.life);
+    if(u.t > u.life){ scene.remove(d); d.material.dispose(); dust.splice(i,1); }
   }
+  for(const t of trail){ if(!t.visible) continue; t.userData.life -= dt*1.6; t.material.opacity = Math.max(0, t.userData.life*.55);
+    t.scale.multiplyScalar(Math.exp(-dt*1.5)); if(t.userData.life <= 0) t.visible = false; }
 }
 
 function idleSwing(){ S.theta = Math.sin(performance.now()/1000*1.55)*.35; swing.rotation.z = S.theta; }
@@ -951,16 +1238,20 @@ function resize(){
   renderer.setSize(w, h, false); camera.aspect = w/h;
   camera.fov = w < h ? 68 : 50; camera.updateProjectionMatrix();
 }
+applyStage(stage);
+$('howto').open = save.runs < 3;
 addEventListener('resize', resize); resize();
 
 function frame(now){
-  const dt = Math.min(.05, (now - last)/1000); last = now;
+  const rdt = Math.min(.05, (now - last)/1000); last = now;
+  if(slowT > 0) slowT -= rdt; else ts += (1 - ts)*Math.min(1, rdt*5);
+  const dt = rdt*ts;
   if(S.phase === 'title') idleSwing();
   else if(S.phase === 'swing'){ stepSwing(dt); drawGauge(); }
   else if(S.phase === 'fly' || S.phase === 'slide') stepFly(dt);
   updateThings(dt, now/1000);
   updateDust(dt);
-  updateCamera(dt);
+  updateCamera(rdt);
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
