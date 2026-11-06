@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<title>ばあちゃんターボ</title>
+<meta name="description" content="孫を背負ったおばあちゃんが、時速100kmで商店街を爆走する3Dランゲーム">
+<meta name="theme-color" content="#ffb84d">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="ばあちゃんターボ">
+<meta name="format-detection" content="telephone=no">
+<meta name="robots" content="noindex, noimageindex">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<link rel="stylesheet" href="css/style.css">
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="fx"></canvas>
+<div id="flash"></div>
+
+<div id="hud">
+  <div class="hud-row">
+    <div class="koshi" id="koshi"></div>
+    <div class="dist"><b id="dist">0</b><small>m</small></div>
+    <button id="btn-pause" class="chip" aria-label="一時停止"><b class="pz">II</b></button>
+  </div>
+  <div class="hud-row sub">
+    <div class="chip"><span class="ame"></span><b id="ame">0</b></div>
+    <div class="chip score">SCORE <b id="score">0</b></div>
+    <div class="chip spd"><b id="kmh">0</b><small>km/h</small></div>
+  </div>
+  <div id="pw" class="pw"></div>
+</div>
+
+<div id="bubbles"></div>
+<div id="pops"></div>
+<div id="howto">
+  <div><span>← →</span>スワイプで車線</div>
+  <div><span>↑</span>ジャンプ</div>
+  <div><span>↓</span>しゃがむ</div>
+</div>
+
+<section id="title" class="ov on">
+  <div class="t-top">
+    <div class="kicker">孫をせおって 商店街を爆走！</div>
+    <h1 class="logo"><span class="l1">ばあちゃん</span><span class="l2">ターボ</span></h1>
+    <div class="best" id="best"></div>
+  </div>
+  <div class="t-bot">
+    <button id="btn-start" class="big">しっかりつかまる！</button>
+    <div class="toggles">
+      <button id="btn-sound" class="tg on">🔊 音</button>
+      <button id="btn-voice" class="tg on">🗣️ ばあちゃんの声</button>
+    </div>
+    <div class="keys">PC：← → 車線 ／ ↑・スペース ジャンプ ／ ↓ しゃがむ</div>
+  </div>
+</section>
+
+<section id="pause" class="ov dim">
+  <div class="card">
+    <h2>ひとやすみ</h2>
+    <p class="pz-line">「お茶でも飲むかい？」</p>
+    <button id="btn-resume" class="big">再開する</button>
+    <button id="btn-quit" class="sub-btn">タイトルへ</button>
+  </div>
+</section>
+
+<section id="over" class="ov dim">
+  <div class="card result">
+    <div class="r-quote" id="r-quote"></div>
+    <div class="r-title-k">今日の称号</div>
+    <div class="r-title" id="r-title"></div>
+    <div class="r-dist"><b id="r-dist">0</b>m</div>
+    <div class="r-new" id="r-new">自己ベスト更新！</div>
+    <ul class="r-stats" id="r-stats"></ul>
+    <div class="r-score">SCORE <b id="r-score">0</b></div>
+    <button id="btn-retry" class="big">もう一回 背負って！</button>
+    <button id="btn-home" class="sub-btn">タイトルへ</button>
+  </div>
+</section>
+
+<script type="module" src="js/main.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
+</script>
+</body>
+</html>

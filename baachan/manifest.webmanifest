@@ -1,0 +1,17 @@
+{
+  "name": "ばあちゃんターボ",
+  "short_name": "ばあちゃんターボ",
+  "description": "孫を背負ったおばあちゃんが商店街を爆走する3Dランゲーム",
+  "lang": "ja",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#ffcf8a",
+  "theme_color": "#ffb84d",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
