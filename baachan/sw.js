@@ -1,13 +1,11 @@
 // Offline cache: serve from cache instantly, refresh the cache in the background.
-const CACHE = 'baachan-v3';
+const CACHE = 'baachan-v4';
 // The town models and textures under ../uminagi-assets/ are cached as they are fetched.
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png',
   'icons/icon-512.png', 'js/main.js', 'js/assets.js', 'js/world.js', 'js/fx.js', 'js/save.js',
   'js/audio.js', 'vendor/three.module.min.js', 'vendor/addons/loaders/GLTFLoader.js', 'vendor/addons/libs/meshopt_decoder.module.js', 'vendor/addons/utils/BufferGeometryUtils.js', 'vendor/addons/environments/RoomEnvironment.js',
-  'models/boxes.glb', 'models/bucket.glb', 'models/cone.glb', 'models/daruma.glb', 'models/eggs.glb', 'models/granny.glb',
-  'models/jii.glb', 'models/kid.glb', 'models/kouji.glb', 'models/pigeon.glb', 'models/police.glb', 'models/ramp.glb',
-  'models/salaryman.glb', 'models/sale.glb', 'models/scooter.glb', 'models/tanuki.glb', 'models/watermelons.glb',
+    'models/boxes.glb', 'models/bucket.glb', 'models/cone.glb', 'models/daruma.glb', 'models/eggs.glb', 'models/granny.glb', 'models/jii.glb', 'models/kid.glb', 'models/kouji.glb', 'models/pigeon.glb', 'models/police.glb', 'models/ramp.glb', 'models/salaryman.glb', 'models/sale.glb', 'models/school.glb', 'models/scooter.glb', 'models/sento.glb', 'models/tanuki.glb', 'models/thermos.glb', 'models/towel.glb', 'models/watermelons.glb', 'models/yagura.glb',
 ];
 self.addEventListener('install', (e) => {
   e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting()));

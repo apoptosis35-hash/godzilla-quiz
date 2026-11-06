@@ -6,9 +6,10 @@ import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const TOWN = '../uminagi-assets/';
-const OWN = ['granny', 'kid', 'jii', 'scooter', 'tanuki', 'daruma', 'boxes', 'cone', 'bucket', 'watermelons', 'pigeon', 'salaryman', 'kouji', 'police', 'sale', 'ramp', 'eggs'];
-export const BUILDINGS = ['shop_general', 'shop_izakaya', 'shop_cafe', 'shop_sake', 'shop_restaurant', 'shop_souvenir', 'shop_fish', 'house_twostory', 'house_narrow', 'house_old'];
-const TOWN_PROPS = ['utility_pole', 'street_light', 'vending_machine', 'postbox', 'bicycle', 'keitora', 'car_kei', 'cat', 'shiba', 'nobori', 'chochin_hanging', 'curve_mirror', 'guardrail', 'bus_stop'];
+const OWN = ['granny', 'kid', 'jii', 'scooter', 'tanuki', 'daruma', 'boxes', 'cone', 'bucket', 'watermelons', 'pigeon', 'salaryman', 'police', 'sale', 'ramp', 'eggs', 'school', 'yagura', 'sento', 'thermos', 'towel'];
+export const BUILDINGS = ['shop_general', 'shop_izakaya', 'shop_cafe', 'shop_sake', 'shop_restaurant', 'shop_souvenir', 'shop_fish', 'house_twostory', 'house_narrow', 'house_old', 'house_hipped', 'house_standard'];
+const TOWN_PROPS = ['utility_pole', 'street_light', 'vending_machine', 'postbox', 'bicycle', 'keitora', 'car_kei', 'car_sedan', 'cat', 'shiba', 'nobori', 'curve_mirror', 'bus_stop', 'traffic_light',
+  'torii', 'shrine_hall', 'komainu', 'ishidoro', 'market_tent', 'tree_broadleaf', 'tree_sakura', 'tree_pine', 'bench', 'azumaya', 'townsman', 'shopkeeper', 'parasol', 'bush'];
 
 export const A = { models: {}, size: {} };
 const GLOW = new Set(['lamp', 'lantern_red', 'lantern_white', 'vend_panel', 'window_lit']);
@@ -114,13 +115,15 @@ export function clone(name, opt = {}) {
   const c = src.clone(true);
   c.traverse((o) => {
     if (!o.isMesh) return;
-    const far = /_lod1$/.test(o.name);
+    const far = isFar(o, src);
     if (far) o.visible = !!opt.far; else if (opt.far && hasLod(src)) o.visible = false;
     if (opt.shadow === false) o.castShadow = false;
   });
   return c;
 }
-function hasLod(src) { let f = false; src.traverse((o) => { if (/_lod1$/.test(o.name)) f = true; }); return f; }
+function hasLod(src) { let f = false; src.traverse((o) => { if (/_lod1/.test(o.name)) f = true; }); return f; }
+// a mesh belongs to the far version if it or any parent up to the model root is named …_lod1
+function isFar(o, root) { for (let p = o; p && p !== root; p = p.parent) if (/_lod1/.test(p.name)) return true; return false; }
 
 export function node(root, name) { let r = null; root.traverse((o) => { if (!r && o.name === name) r = o; }); return r; }
 
@@ -153,7 +156,7 @@ export class TownBatch {
       this.parts[name] = [];
       src.traverse((o) => {
         if (!o.isMesh || Array.isArray(o.material)) return;
-        const far = /_lod1$/.test(o.name);
+        const far = isFar(o, src);
         const m = o.material;
         if (!groups.has(m)) groups.set(m, []);
         groups.get(m).push({ name, cap, far: lod ? far : null, geo: flatGeo(o.geometry, o.matrixWorld, !!m.vertexColors) });
@@ -185,4 +188,51 @@ export class TownBatch {
     }
   }
   end() { for (const k in this.parts) for (const p of this.parts[k]) { for (let i = p.n; i < p.prev; i++) p.bm.setVisibleAt(p.pool[i], false); p.prev = p.n; } }
+}
+
+// Static town: every placement gets permanent instances (near and far versions); the town toggles them by distance.
+export class StaticBatch {
+  constructor(scene, placements) {
+    const count = {}; for (const p of placements) count[p.n] = (count[p.n] || 0) + 1;
+    const parts = {}; const groups = new Map();
+    for (const name of Object.keys(count)) {
+      const src = A.models[name]; if (!src) continue;
+      src.updateMatrixWorld(true);
+      const lod = hasLod(src);
+      parts[name] = [];
+      src.traverse((o) => {
+        if (!o.isMesh || Array.isArray(o.material)) return;
+        const far = isFar(o, src);
+        const m = o.material;
+        if (!groups.has(m)) groups.set(m, []);
+        groups.get(m).push({ name, far: lod ? far : null, geo: flatGeo(o.geometry, o.matrixWorld, !!m.vertexColors) });
+      });
+    }
+    for (const [m, items] of groups) {
+      let v = 0, ix = 0, inst = 0;
+      for (const it of items) { v += it.geo.attributes.position.count; ix += it.geo.index.count; inst += count[it.name]; }
+      const bm = new THREE.BatchedMesh(inst, v, ix, m);
+      bm.receiveShadow = true; bm.castShadow = false; bm.frustumCulled = false; bm.perObjectFrustumCulled = true;
+      scene.add(bm);
+      for (const it of items) { parts[it.name].push({ bm, gid: bm.addGeometry(it.geo), far: it.far }); it.geo.dispose(); }
+    }
+    this.handles = placements.map((p) => {
+      const h = { p, near: [], far: [], s: -1 };
+      for (const part of parts[p.n] || []) {
+        const id = part.bm.addInstance(part.gid); part.bm.setMatrixAt(id, p.m); part.bm.setVisibleAt(id, false);
+        if (part.far !== true) h.near.push([part.bm, id]);
+        if (part.far !== false) h.far.push([part.bm, id]);
+      }
+      return h;
+    });
+  }
+  // 0 hidden, 1 near detail, 2 far (low) detail
+  set(h, s) {
+    if (h.s === s) return;
+    for (const [bm, id] of h.near) bm.setVisibleAt(id, false);
+    for (const [bm, id] of h.far) bm.setVisibleAt(id, false);
+    if (s === 1) for (const [bm, id] of h.near) bm.setVisibleAt(id, true);
+    if (s === 2) for (const [bm, id] of h.far) bm.setVisibleAt(id, true);
+    h.s = s;
+  }
 }
