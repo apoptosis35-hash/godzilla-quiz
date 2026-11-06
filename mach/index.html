@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<title>マッハ突破</title>
+<meta name="description" content="音速の壁を突き破れ。障害物をよけながらマッハで飛ぶ3Dフライトゲーム。">
+<meta name="theme-color" content="#0b1530">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap" rel="stylesheet">
+<style>
+  html,body{margin:0;height:100%;background:#0b1530;overflow:hidden;touch-action:none;
+    -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+  .btn{position:fixed;border-radius:50%;border:2px solid #fff8;background:#0007;color:#fff;padding:0;cursor:pointer;z-index:2}
+  #mute{top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));
+    width:44px;height:44px;font-size:20px;line-height:40px;text-align:center}
+  #boost{display:none;right:max(18px,env(safe-area-inset-right));bottom:max(22px,env(safe-area-inset-bottom));
+    width:96px;height:96px;font:900 17px "Zen Kaku Gothic New",sans-serif;letter-spacing:.05em;
+    background:radial-gradient(circle,#ff7a1acc,#b3200acc);border-color:#ffd9a8}
+  #boost.on{transform:scale(.92);background:radial-gradient(circle,#fff2a8,#ff7a1a)}
+</style>
+<script type="importmap">
+{ "imports": { "three": "./vendor/three.module.min.js" } }
+</script>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<canvas id="ui"></canvas>
+<button id="mute" class="btn" aria-label="音のオン・オフ">🔊</button>
+<button id="boost" class="btn" aria-label="ブースト">BOOST</button>
+<script type="module" src="js/game.js"></script>
+</body>
+</html>
