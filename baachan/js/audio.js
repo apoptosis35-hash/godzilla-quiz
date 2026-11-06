@@ -40,6 +40,11 @@ export const audio = {
       case 'mission': [784, 988, 1175, 1568, 1976].forEach((f, i) => tone('triangle', f, f, t + i * 0.07, 0.16, 0.3)); break;
       case 'rankup': [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => { tone('square', f, f, t + i * 0.11, 0.2, 0.16); tone('triangle', f, f, t + i * 0.11, 0.25, 0.25); }); break;
       case 'whoosh': noise(t, 0.3, 1800, 0.5, true); break;
+      case 'bark': tone('square', 600, 380, t, 0.09, 0.25); tone('square', 640, 400, t + 0.16, 0.09, 0.22); break;
+      case 'clap': noise(t, 0.06, 2200, 0.8); noise(t + 0.22, 0.06, 2200, 0.8); break;
+      case 'screech': noise(t, 0.14, 3500, 0.25); tone('sawtooth', 1400, 1300, t, 0.14, 0.05); break;
+      case 'splash': noise(t, 0.6, 1200, 0.7, true); break;
+      case 'ach': [1047, 1319, 1568, 2093].forEach((f, i) => tone('triangle', f, f, t + i * 0.06, 0.18, 0.28)); break;
       case 'tick': tone('square', 1200, 1200, t, 0.03, 0.08); break;
       case 'candy': tone('square', 1320, 1760, t, 0.08, 0.15); tone('square', 1760, 2200, t + 0.06, 0.08, 0.12); break;
       case 'jump': tone('sine', 300, 1200, t, 0.3, 0.35); break; // slide whistle up

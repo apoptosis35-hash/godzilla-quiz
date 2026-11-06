@@ -712,9 +712,106 @@ def eggs():
     attach(parts, root, 'eggs_body')
     export(root, 'eggs')
 
+
+# ================================================================= TOWN LANDMARKS (free-roam map)
+def school():
+    reset()
+    wall = M('school_wall', C(0xf2efe6), 0.8); trim = M('school_trim', C(0x8fb8d8), 0.6); glass = M('school_glass', C(0x6f9fc8), 0.1, 0.2)
+    frame = M('school_frame', C(0xdddddd), 0.4, 0.5); roof = M('school_roof', C(0x7a7f88), 0.8); gate = M('school_gate', C(0x9a9a9a), 0.5, 0.6)
+    ink = M('ink', C(0x222222), 0.5); clockf = M('clock_face', C(0xffffff), 0.4); green = M('school_green', C(0x4f9e3a), 0.8)
+    root = pivot('school')
+    W, D, H = 40.0, 12.0, 11.0
+    parts = [box(wall, (W, D, H), loc=(0, 4, H / 2)), box(roof, (W + 0.6, D + 0.6, 0.4), loc=(0, 4, H + 0.2)),
+             box(wall, (6, 6, H + 4), loc=(0, -1, (H + 4) / 2)), box(roof, (6.4, 6.4, 0.4), loc=(0, -1, H + 4.2))]
+    for fl in range(3):
+        z = 1.8 + fl * 3.4
+        parts.append(box(trim, (W + 0.05, D + 0.05, 0.25), loc=(0, 4, z + 1.6)))
+        for i in range(12):
+            x = -W / 2 + 2.2 + i * 3.25
+            if abs(x) < 3.5: continue
+            parts.append(box(glass, (2.2, 0.1, 1.6), loc=(x, 4 - D / 2 - 0.02, z + 0.3)))
+            parts.append(box(frame, (0.08, 0.14, 1.6), loc=(x, 4 - D / 2 - 0.04, z + 0.3)))
+    parts.append(cyl(clockf, 1.2, 0.2, loc=(0, -4.05, H + 1.6), rot=(math.pi / 2, 0, 0), seg=32))
+    parts.append(torus(ink, 1.2, 0.08, loc=(0, -4.15, H + 1.6), rot=(math.pi / 2, 0, 0), maj=32, mn=6))
+    parts.append(box(ink, (0.08, 0.05, 0.9), loc=(0, -4.2, H + 1.9))); parts.append(box(ink, (0.6, 0.05, 0.08), loc=(0.25, -4.2, H + 1.6)))
+    parts.append(box(glass, (3, 0.1, 2.6), loc=(0, -4.02, 1.3)))
+    parts.append(text3d(ink, 'ばあちゃん小学校', 0.75, loc=(0, -4.06, H - 0.6), depth=0.04))
+    # gate posts with a name plate, and a bit of green
+    for s in (1, -1):
+        parts.append(box(gate, (0.6, 0.6, 2.2), loc=(4.0 * s, -14, 1.1), bevel=0.04))
+    parts.append(box(M('plate', C(0xf4ecd8), 0.6), (0.5, 0.05, 1.4), loc=(4.0, -14.31, 1.3)))
+    parts.append(text3d(ink, '小学校', 0.28, loc=(4.0, -14.35, 1.3), rot=(0, 0, 0), depth=0.01))
+    for i in range(8):
+        parts.append(sphere(green, 1.0, loc=(-18 + i * 5.1, -5.5, 0.8), scale=(1.4, 0.8, 0.8), seg=12, rings=8))
+    attach(parts, root, 'school_body')
+    export(root, 'school')
+
+def yagura():
+    reset()
+    wood = M('yagura_wood', C(0x8a5a32), 0.8); red = M('yagura_red', C(0xd8262e), 0.6); white = M('white', C(0xf6f4ef), 0.6)
+    lant = M('lantern_glow', C(0xffe0a0), 0.5, emit=C(0xffa040), strength=2.5); rope = M('rope', C(0x3a2a1a), 0.8)
+    root = pivot('yagura')
+    parts = []
+    for x in (-2, 2):
+        for y in (-2, 2): parts.append(box(wood, (0.25, 0.25, 4.2), loc=(x, y, 2.1)))
+    parts.append(box(wood, (4.8, 4.8, 0.25), loc=(0, 0, 2.6)))
+    for i in range(12):  # red & white bunting skirt
+        a = i / 12
+        for side in range(4):
+            ang = side * math.pi / 2
+            x, y = (-2.3 + a * 4.6), -2.32
+            vx, vy = x * math.cos(ang) - y * math.sin(ang), x * math.sin(ang) + y * math.cos(ang)
+            parts.append(box(red if i % 2 else white, (0.39, 0.04, 2.2), loc=(vx, vy, 1.4), rot=(0, 0, ang)))
+    parts.append(lathe(red, [(3.2, 4.2), (0.0005, 5.4)], seg=4, rot=(0, 0, math.pi / 4)))
+    parts.append(box(wood, (0.5, 0.5, 0.9), loc=(0, 0, 3.1)))
+    parts.append(cyl(M('taiko', C(0xc8a060), 0.5), 0.5, 0.7, loc=(0, 0, 3.1), rot=(0, math.pi / 2, 0), seg=24))
+    # lantern lines to four poles
+    for k in range(4):
+        ang = k * math.pi / 2 + math.pi / 4
+        for j in range(6):
+            r = 3.0 + j * 2.6
+            parts.append(sphere(lant, 0.28, loc=(math.cos(ang) * r, math.sin(ang) * r, 4.6 - j * 0.12), scale=(1, 1, 1.3), seg=12, rings=8))
+        parts.append(cyl(rope, 0.02, 15, loc=(math.cos(ang) * 10, math.sin(ang) * 10, 4.75), rot=(0, math.pi / 2, ang), seg=4))
+        parts.append(cyl(wood, 0.1, 5.2, loc=(math.cos(ang) * 17.5, math.sin(ang) * 17.5, 2.6), seg=8))
+    attach(parts, root, 'yagura_body')
+    export(root, 'yagura')
+
+def sento():
+    reset()
+    wall = M('sento_wall', C(0xe8dcc6), 0.8); wood = M('wood_dark', C(0x4a3020), 0.7); roof = M('sento_roof', C(0x3a4a5a), 0.6)
+    brick = M('brick', C(0xa0503a), 0.8); noren = M('noren', C(0x2a4aa0), 0.8); white = M('white', C(0xf6f4ef), 0.6)
+    root = pivot('sento')
+    parts = [box(wall, (14, 10, 6), loc=(0, 0, 3)), box(roof, (15, 11, 0.4), loc=(0, 0, 6.2)),
+             lathe(roof, [(8.5, 6.4), (0.0005, 9)], seg=4, rot=(0, 0, math.pi / 4), sy=0.75),
+             box(wood, (5, 0.4, 3.2), loc=(0, -5.1, 1.6)), box(roof, (7, 2, 0.25), loc=(0, -5.8, 3.8), rot=(-0.25, 0, 0)),
+             cyl(brick, 0.8, 18, loc=(5, 3, 9), seg=16), cyl(white, 0.85, 0.5, loc=(5, 3, 17.5), seg=16)]
+    for i in range(3):
+        parts.append(box(noren, (1.55, 0.03, 1.2), loc=(-1.6 + i * 1.6, -5.35, 2.6)))
+    parts.append(text3d(white, 'ゆ', 0.9, loc=(0, -5.38, 2.65), depth=0.02))
+    parts.append(text3d(M('ink', C(0x222222), 0.5), 'ばあちゃん湯', 0.55, loc=(0, -5.04, 4.6), depth=0.03))
+    parts.append(box(white, (4.2, 0.05, 0.8), loc=(0, -5.02, 4.6)))
+    parts.append(text3d(white, '湯', 1.2, loc=(5, 2.15, 12), depth=0.03, rot=(0, 0, 0)))
+    attach(parts, root, 'sento_body')
+    export(root, 'sento')
+
+def thermos():
+    reset()
+    root = pivot('thermos')
+    attach([cyl(M('thermos_body', C(0xd8262e), 0.3, 0.3), 0.06, 0.26, loc=(0, 0, 0.13), seg=20),
+            cyl(M('chrome', C(0xdddddd), 0.15, 1.0), 0.062, 0.06, loc=(0, 0, 0.29), seg=20),
+            box(M('flower', C(0xffffff), 0.5), (0.05, 0.005, 0.05), loc=(0, -0.061, 0.14))], root, 'thermos_body')
+    export(root, 'thermos')
+
+def towel():
+    reset()
+    root = pivot('towel')
+    attach([box(M('towel_white', C(0xf8f8f8), 0.9), (0.34, 0.26, 0.08), loc=(0, 0, 0.04), bevel=0.03, subdiv=1),
+            box(M('towel_blue', C(0x3a7ad8), 0.9), (0.345, 0.03, 0.082), loc=(0, -0.08, 0.04))], root, 'towel_body')
+    export(root, 'towel')
+
 ALL = {'granny': granny, 'kid': kid, 'jii': jii, 'scooter': scooter, 'tanuki': tanuki, 'daruma': daruma, 'boxes': boxes, 'cone': cone,
        'bucket': bucket, 'watermelons': watermelons, 'pigeon': pigeon, 'salaryman': salaryman, 'kouji': kouji, 'police': police,
-       'sale': sale_gate, 'ramp': ramp, 'eggs': eggs}
+       'sale': sale_gate, 'ramp': ramp, 'eggs': eggs, 'school': school, 'yagura': yagura, 'sento': sento, 'thermos': thermos, 'towel': towel}
 
 # ---------------------------------------------------------------- previews (Cycles)
 def render_preview(name):

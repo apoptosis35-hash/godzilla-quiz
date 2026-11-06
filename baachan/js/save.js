@@ -1,59 +1,51 @@
-// Progress: rank (段位), three missions per rank, unlockable riders and outfits. Stored in localStorage.
-const KEY = 'baachan2';
+// Progress: funny achievements (おもしろ実績) unlock passengers and outfits. Stored in localStorage.
+const KEY = 'baachan3';
 
-export const RANKS = ['見習いばあちゃん', '散歩ばあちゃん', '買い物ばあちゃん', '井戸端ばあちゃん', '商店街のうわさ', '町内会の韋駄天', '暴走老人会', '特売ハンター',
-  'ゲートボール番長', '腰痛知らず', '町の伝説', '市内最速', '県内最速', '新幹線より速い', '音速の老婆', 'ジェットばあちゃん', '光速ばあちゃん', '宇宙ばあちゃん', '銀河ばあちゃん', '神ばあちゃん'];
-export const rankName = (r) => r <= RANKS.length ? RANKS[r - 1] : `神ばあちゃん+${r - RANKS.length}`;
+export const ACH = [
+  { id: 'start', name: 'ばあちゃん、発進', how: '冒頭を見て走り出す' },
+  { id: 'school', name: '送迎完了…？', how: '孫を小学校に送る' },
+  { id: 'sale', name: '特売ハンター', how: 'スーパーの特売に突撃' },
+  { id: 'army', name: 'おばちゃん軍団', how: '特売でおばちゃん軍団に追われる' },
+  { id: 'shrine', name: 'おみくじ', how: '神社の鳥居をくぐる' },
+  { id: 'bon', name: '盆踊り乱入', how: '盆踊りの輪に飛び込む' },
+  { id: 'sento', name: 'いい湯じゃった', how: '銭湯に飛び込む' },
+  { id: 'radio', name: 'ラジオ体操ドミノ', how: '公園のラジオ体操に突っ込む' },
+  { id: 'pigeon', name: 'ハトの大爆発', how: 'ハトを100羽 驚かす' },
+  { id: 'cop', name: 'パトカーをまいた', how: 'パトカーから逃げきる' },
+  { id: 'copfly', name: '公務執行妨害', how: '覚醒中にパトカーを吹っ飛ばす' },
+  { id: 'jii', name: 'じいちゃんに勝つ', how: '空飛ぶじいちゃんとの競争に勝つ' },
+  { id: 'dog', name: 'ポチの追跡', how: '柴犬に追いかけられる' },
+  { id: 'ramp', name: '着地10点', how: 'ジャンプ台で大ジャンプ' },
+  { id: 'drift', name: 'ばあちゃんドリフト', how: '3秒ドリフトする' },
+  { id: 'wall', name: '壁ドン名人', how: '壁ドンを20回' },
+  { id: 'tea', name: 'お茶中毒', how: 'お茶ブーストを15回' },
+  { id: 'combo', name: '50コンボ', how: '50コンボを出す' },
+  { id: 'fever', name: 'ばあちゃん覚醒', how: 'ゲージを満タンにする' },
+  { id: 'man', name: '部長が星に', how: 'サラリーマンを15人 飛ばす' },
+  { id: 'tanuki', name: 'たぬき大量発生', how: 'たぬきを15体 飛ばす' },
+  { id: 'car', name: '車も飛ぶ', how: '車を10台 吹っ飛ばす' },
+  { id: 'speed', name: '新幹線より速い', how: '時速150kmを出す' },
+  { id: 'dist', name: '町内一周', how: '合計5km走る' },
+];
 
 export const RIDERS = [
-  { id: 'kid', name: '孫のたけし', rank: 1 },
-  { id: 'shiba', name: '柴犬のポチ', rank: 2 },
-  { id: 'cat', name: 'ねこのタマ', rank: 4 },
-  { id: 'tanuki', name: 'たぬきの置物', rank: 5 },
-  { id: 'jii', name: 'じいちゃん', rank: 7 },
-  { id: 'salaryman', name: '部長', rank: 11 },
-  { id: 'daruma', name: 'だるま', rank: 13 },
+  { id: 'kid', name: '孫のたけし', need: 0 },
+  { id: 'shiba', name: '柴犬のポチ', need: 3 },
+  { id: 'cat', name: 'ねこのタマ', need: 6 },
+  { id: 'tanuki', name: 'たぬきの置物', need: 9 },
+  { id: 'jii', name: 'じいちゃん', need: 12 },
+  { id: 'salaryman', name: '部長', need: 16 },
+  { id: 'daruma', name: 'だるま', need: 20 },
 ];
 export const OUTFITS = [
-  { id: 'purple', name: 'むらさきカーディガン', rank: 1 },
-  { id: 'leopard', name: 'ヒョウ柄', rank: 3 },
-  { id: 'jersey', name: '赤ジャージ', rank: 6 },
-  { id: 'gold', name: '金ラメ', rank: 9 },
+  { id: 'purple', name: 'むらさきカーディガン', need: 0 },
+  { id: 'leopard', name: 'ヒョウ柄', need: 4 },
+  { id: 'jersey', name: '赤ジャージ', need: 8 },
+  { id: 'gold', name: '金ラメ', need: 14 },
 ];
 
-const T = [
-  { k: 'dist', t: (n) => `1回で${n}m走る`, n: (r) => 300 + r * 150 },
-  { k: 'smash', t: (n) => `1回で${n}個 吹っ飛ばす`, n: (r) => 20 + r * 12 },
-  { k: 'combo', t: (n) => `${n}コンボを出す`, n: (r) => 10 + r * 6 },
-  { k: 'tanuki', t: (n) => `たぬきを${n}体 吹っ飛ばす`, n: (r) => 2 + r },
-  { k: 'man', t: (n) => `サラリーマンを${n}人 飛ばす`, n: (r) => 2 + Math.ceil(r / 2) },
-  { k: 'fever', t: (n) => `1回で${n}回 覚醒する`, n: (r) => 1 + Math.floor(r / 3) },
-  { k: 'score', t: (n) => `スコア${n.toLocaleString()}点`, n: (r) => 4000 + r * 3000 },
-  { k: 'ramp', t: (n) => `ジャンプ台で${n}回 着地`, n: (r) => 1 + Math.floor(r / 4), min: 2 },
-  { k: 'jii', t: () => 'じいちゃんを吹っ飛ばす', n: () => 1, min: 2 },
-  { k: 'cop', t: () => 'パトカーをまく', n: () => 1, min: 3 },
-  { k: 'nohit', t: (n) => `腰を減らさず${n}m`, n: (r) => 200 + r * 90 },
-  { k: 'melon', t: (n) => `スイカを${n}箱 割る`, n: (r) => 2 + r },
-  { k: 'vend', t: (n) => `自販機を${n}台 倒す`, n: (r) => 1 + Math.floor(r / 2) },
-  { k: 'egg', t: () => '特売たまごを持ったまま300m', n: () => 1, min: 2 },
-];
-
-function seeded(s) { return () => { s = (s * 1103515245 + 12345) & 0x7fffffff; return s / 0x7fffffff; }; }
-export function missionsFor(rank) {
-  const r = seeded(rank * 7919 + 13);
-  const pool = T.filter((m) => !m.min || rank >= m.min);
-  const out = [];
-  if (rank === 1) return [{ k: 'smash', text: T[1].t(15), n: 15 }, { k: 'dist', text: T[0].t(300), n: 300 }, { k: 'combo', text: T[2].t(10), n: 10 }];
-  while (out.length < 3) {
-    const m = pool[Math.floor(r() * pool.length)];
-    if (out.some((o) => o.k === m.k)) continue;
-    const n = m.n(rank);
-    out.push({ k: m.k, text: m.t(n), n });
-  }
-  return out;
-}
-
-export const save = { rank: 1, done: [false, false, false], best: 0, bestDist: 0, rider: 'kid', outfit: 'purple', plays: 0 };
+export const save = { ach: {}, best: 0, rider: 'kid', outfit: 'purple', dist: 0, seenIntro: false };
 try { Object.assign(save, JSON.parse(localStorage.getItem(KEY)) || {}); } catch (e) { /* ignore */ }
 export function persist() { try { localStorage.setItem(KEY, JSON.stringify(save)); } catch (e) { /* ignore */ } }
-export const unlocked = (item) => save.rank >= item.rank;
+export const achCount = () => ACH.filter((a) => save.ach[a.id]).length;
+export const unlocked = (item) => achCount() >= item.need;
