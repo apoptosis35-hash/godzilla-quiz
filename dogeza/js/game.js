@@ -30,6 +30,8 @@ const store = {
   set(k, v) { try { localStorage.setItem('dogeza.' + k, JSON.stringify(v)); } catch (e) {} }
 };
 let best = store.get('best', 0), bestStage = store.get('bestStage', 0);
+const meta = Object.assign({ level: 1, missions: null, depths: [0, 0, 0, 0, 0, 0, 0], outfit: 0, plays: 0 }, store.get('meta', {}));
+function saveMeta() { store.set('meta', meta); }
 
 // ====== 音 ======
 let AC = null, muted = store.get('muted', false), hum = null;
@@ -80,6 +82,32 @@ function say(text, rate = 1.25, pitch = 1) {
     speechSynthesis.speak(u);
   } catch (e) {}
 }
+// ====== BGM（ゆるいチップチューン。連続成功とフィーバーで速くなる） ======
+const BASS = [48, 0, 55, 0, 48, 0, 55, 0, 45, 0, 52, 0, 45, 0, 52, 0, 41, 0, 48, 0, 41, 0, 48, 0, 43, 0, 50, 0, 43, 0, 47, 0];
+const MEL = [72, 0, 76, 0, 79, 77, 76, 74, 72, 0, 69, 0, 72, 74, 76, 0, 77, 0, 76, 74, 72, 0, 74, 76, 79, 0, 77, 0, 74, 0, 71, 74];
+const MEL2 = [84, 0, 0, 83, 84, 0, 79, 0, 81, 0, 79, 76, 77, 0, 76, 0, 77, 79, 81, 0, 79, 77, 76, 74, 76, 0, 74, 0, 79, 0, 0, 0];
+let bgmNext = 0, bgmStep = 0, bgmBar = 0;
+const mf = n => 440 * Math.pow(2, (n - 69) / 12);
+function bnote(n, t, d, type, vol) {
+  const o = AC.createOscillator(), g = AC.createGain();
+  o.type = type; o.frequency.value = mf(n);
+  g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + d);
+  o.connect(g).connect(AC.destination); o.start(t); o.stop(t + d + .02);
+}
+setInterval(() => {
+  if (!AC || muted || AC.state !== 'running') return;
+  const now = AC.currentTime;
+  if (bgmNext < now - .2) bgmNext = now + .05;
+  const tempo = 128 + Math.min(56, st * 3 + combo * 3) + (fever ? 28 : 0), spb = 60 / tempo / 2;
+  const quiet = state === 'charge' ? .35 : (state === 'title' || state === 'over') ? .6 : 1;
+  while (bgmNext < now + .15) {
+    const i = bgmStep, mel = (fever || bgmBar % 4 === 3) ? MEL2 : MEL;
+    if (BASS[i]) bnote(BASS[i] + (fever ? 2 : 0), bgmNext, spb * 1.6, 'triangle', .09 * quiet);
+    if (mel[i]) bnote(mel[i] + (fever ? 2 : 0), bgmNext, spb * .9, 'square', .028 * quiet);
+    if (i % 2 === 1) bnote(fever ? 100 : 96, bgmNext, .025, 'square', .012 * quiet);
+    bgmNext += spb; bgmStep = (bgmStep + 1) % 32; if (!bgmStep) bgmBar++;
+  }
+}, 40);
 function buzz(ms) { try { navigator.vibrate && navigator.vibrate(ms); } catch (e) {} }
 
 // ====== データ ======
@@ -233,7 +261,8 @@ function makePlayer(tint, opacity = 1) {
     arms.push(a);
   }
   yaw.rotation.y = -.35;
-  return { yaw, root, hips, legs, tor, head, arms, sweat, suit };
+  const hats = tint ? [] : makeHats(head);
+  return { yaw, root, hips, legs, tor, head, arms, sweat, suit, pants, hats };
 }
 function applyPose(rig, p, baseY, rot, x, z = 0) {
   rig.yaw.position.set(x, baseY, z);
@@ -244,7 +273,49 @@ function applyPose(rig, p, baseY, rot, x, z = 0) {
   rig.tor.rotation.z = -p.tor;
   rig.arms[0].rotation.z = rig.arms[1].rotation.z = p.arm + p.tor;
 }
+function makeHats(head) {
+  const hats = [null];
+  const add = () => { const g = new THREE.Group(); g.visible = false; head.add(g); hats.push(g); return g; };
+  { // 必勝ハチマキ
+    const g = add();
+    const band = mesh(new THREE.TorusGeometry(.195, .035, 6, 24), M('#ffffff'), g, 0, .07, 0); band.rotation.x = Math.PI / 2;
+    const dot = mesh(new THREE.SphereGeometry(.05, 10, 8), MB('#e02020'), g, .2, .08, 0, false); dot.scale.x = .3;
+    for (const z of [-.04, .04]) { const tl = mesh(new THREE.BoxGeometry(.22, .04, .015), M('#ffffff'), g, -.27, .02, z); tl.rotation.z = .5; }
+  }
+  { // ちょんまげ
+    const g = add();
+    const mg = mesh(new THREE.CapsuleGeometry(.04, .22, 4, 8), M('#1e1e1e'), g, -.02, .22, 0); mg.rotation.z = Math.PI / 2;
+    mesh(new THREE.SphereGeometry(.03, 8, 6), M('#ffffff'), g, -.02, .22, 0);
+  }
+  { // アフロ
+    const g = add();
+    mesh(new THREE.IcosahedronGeometry(.34, 1), M('#2a1a10', { flatShading: true }), g, -.04, .12, 0);
+  }
+  { // 王冠
+    const g = add();
+    mesh(new THREE.CylinderGeometry(.13, .12, .1, 12, 1, true), M('#ffd23f', { side: THREE.DoubleSide }), g, 0, .24, 0);
+    for (let i = 0; i < 6; i++) { const a = i / 6 * Math.PI * 2; mesh(new THREE.ConeGeometry(.03, .09, 6), M('#ffd23f'), g, Math.cos(a) * .12, .33, Math.sin(a) * .12); }
+    mesh(new THREE.SphereGeometry(.03, 8, 6), MB('#e0245e'), g, .13, .25, 0, false);
+  }
+  hats.push(null); // 金のスーツ（帽子なし）
+  { // 宇宙ヘルメット
+    const g = add();
+    mesh(new THREE.SphereGeometry(.3, 20, 14), new THREE.MeshPhysicalMaterial({ color: '#cfefff', transparent: true, opacity: .3, roughness: .1, depthWrite: false }), g, 0, .02, 0, false);
+    const ring = mesh(new THREE.TorusGeometry(.2, .05, 8, 20), M('#e8e8f0'), g, 0, -.22, 0); ring.rotation.x = Math.PI / 2;
+  }
+  return hats;
+}
+const OUTFITS = [
+  { name: 'ふつうのスーツ', lv: 1 }, { name: '必勝ハチマキ', lv: 2 }, { name: 'ちょんまげ', lv: 3 }, { name: 'アフロ', lv: 5 },
+  { name: '王冠', lv: 7 }, { name: '金のスーツ', lv: 9 }, { name: '宇宙ヘルメット', lv: 12 },
+];
 const player = makePlayer(); scene.add(player.yaw);
+function wearOutfit(i) {
+  player.hats.forEach((h, j) => h && (h.visible = j === i));
+  const gold = i === 5;
+  player.suit.color.set(gold ? '#e2b33c' : '#33405f'); player.pants.color.set(gold ? '#c9982a' : '#262f48');
+}
+let viewOutfit = meta.outfit; wearOutfit(meta.outfit);
 const ghosts = [makePlayer('#ff6b9a', .35), makePlayer('#6bd5ff', .35)];
 ghosts.forEach(g => { g.yaw.visible = false; g.yaw.traverse(o => o.castShadow = false); scene.add(g.yaw); });
 
@@ -480,16 +551,70 @@ function confetti(x, y, z, n, colors, spd = 4) {
   for (let i = 0; i < n; i++) spawn('box', x + rnd(.5), y + rnd(.3), z + rnd(.5), rnd(spd), Math.random() * spd * 1.3, rnd(spd), 1.6, pick(colors), .09 + Math.random() * .06, 7);
 }
 
+// ====== ミッション ======
+const MT = [
+  { k: 'perfect_run', mode: 'count', run: true, ev: 'perfect', gen: l => 1 + Math.floor(l / 2), txt: n => `1プレイで神土下座を${n}回` },
+  { k: 'combo', mode: 'max', ev: 'combo', gen: l => 3 + Math.floor(l * .8), txt: n => `${n}連続で許される` },
+  { k: 'clear_run', mode: 'max', ev: 'cleared', gen: l => 3 + l, txt: n => `1プレイで罪を${n}件許される` },
+  { k: 'score_run', mode: 'max', ev: 'score', gen: l => Math.round(3 + l * l * .9) * 100, txt: n => `1プレイで${n}点とる` },
+  { k: 'depth', mode: 'eq', ev: 'depth', gen: () => 1 + Math.floor(Math.random() * 5), txt: n => `${LAYERS[n].name}までめり込む` },
+  { k: 'brazil', mode: 'eq', ev: 'depth', gen: () => 6, txt: () => 'ブラジルまで突き抜ける', minLv: 3 },
+  { k: 'weak_total', mode: 'count', ev: 'weak', gen: l => 2 + l, txt: n => `会釈を累計${n}回する` },
+  { k: 'perfect_total', mode: 'count', ev: 'perfect', gen: l => 3 + l * 2, txt: n => `神土下座を累計${n}回` },
+  { k: 'fever', mode: 'count', run: true, ev: 'fever', gen: l => 1 + Math.floor(l / 6), txt: n => `1プレイでフィーバーに${n}回入る`, minLv: 2 },
+  { k: 'boss', mode: 'max', ev: 'boss', gen: l => clamp(1 + Math.floor(l / 2), 1, 5), txt: n => `${BOSSES[n].name}にたどり着く` },
+];
+const mtOf = m => MT.find(t => t.k === m.k);
+const mGoal = m => mtOf(m).mode === 'eq' ? 1 : m.n;
+const mText = m => mtOf(m).txt(m.n);
+function newMission(exclude) {
+  const pool = MT.filter(t => (t.minLv || 1) <= meta.level && !exclude.includes(t.k));
+  const t = pick(pool); return { k: t.k, n: t.gen(meta.level), p: 0, done: false };
+}
+if (!Array.isArray(meta.missions) || meta.missions.length !== 3 || meta.missions.some(m => !mtOf(m))) {
+  meta.missions = []; for (let i = 0; i < 3; i++) meta.missions.push(newMission(meta.missions.map(m => m.k))); saveMeta();
+}
+function mEvent(ev, val = 1) {
+  if (state === 'title' || state === 'over') return;
+  let ch = false;
+  for (const m of meta.missions) {
+    const t = mtOf(m); if (m.done || t.ev !== ev) continue;
+    if (t.mode === 'count') m.p += 1; else if (t.mode === 'max') m.p = Math.max(m.p, val); else if (val === m.n) m.p = 1;
+    ch = true;
+    if (m.p >= mGoal(m)) { m.done = true; toast('ミッション達成！', mText(m), '#7cf29c'); [784, 988, 1175, 1568].forEach((f, i) => tone(f, .12, 'square', .08, 0, i * .07)); }
+  }
+  if (ch) saveMeta();
+}
+// ====== トースト ======
+const toasts = [];
+function toast(title, sub, color) { toasts.push({ title, sub, color, t: 0 }); }
+
 // ====== 状態 ======
 let state = 'title', st = 0, lives = 3, score = 0, combo = 0, cleared = 0, stT = 0;
 let crime, boss = BOSSES[0], style = styleFor(0), zone = { lo: 40, hi: 60, c: 50 }, power = 0, chargeT = 0, speed = 1;
 let pose = { ...STAND }, pry = 0, prot = 0, clones = 0;
 let anim = null, judge = null, bossMood = 'angry', bossAnger = .5, bossLine = '';
-let shake = 0, crash = null, flash = 0;
+let shake = 0, crash = null, flash = 0, fever = false, overInfo = null;
 const uiParts = [];
 
 function setState(s) { state = s; stT = 0; }
-function newGame() { st = 0; lives = 3; score = 0; combo = 0; cleared = 0; setupStage(); }
+function newGame() {
+  st = 0; lives = 3; score = 0; combo = 0; cleared = 0; fever = false; overInfo = null;
+  for (const m of meta.missions) if (!m.done && mtOf(m).run) m.p = 0;
+  meta.plays++; saveMeta();
+  setupStage();
+}
+function success(perfect, base) {
+  combo++; cleared++;
+  if (combo >= 5 && !fever) { fever = true; toast('土下座フィーバー！', '失敗するまで得点2倍', '#ffd23f'); mEvent('fever'); }
+  const pts = Math.round(base * (fever ? 2 : 1) * (1 + .1 * (combo - 1)));
+  score += pts;
+  if (perfect) { mEvent('perfect'); if (lives < 3) { lives++; toast('胃が回復！', '神土下座ボーナス', '#ff9ac0'); } }
+  mEvent('combo', combo); mEvent('cleared', cleared); mEvent('score', score);
+  return pts;
+}
+function failure() { combo = 0; lives--; fever = false; }
+function nearMiss(diff) { return diff < 5 ? `あと${Math.max(.1, diff).toFixed(1)}%！おしい！` : null; }
 function setupStage() {
   crime = crimeFor(st); boss = BOSSES[crime.boss]; style = styleFor(st);
   if (roomIdx !== crime.boss) { buildRoom(crime.boss); buildBoss(boss); }
@@ -498,6 +623,7 @@ function setupStage() {
   zone = { lo: c - w / 2, hi: c + w / 2, c };
   speed = .75 + st * .09;
   power = 0; pose = { ...STAND }; pry = 0; prot = 0; clones = 0; crash = null; judge = null; hole.visible = false;
+  mEvent('boss', crime.boss);
   bossMood = 'angry'; bossAnger = .45 + Math.min(.5, st * .04); bossLine = pick(['どういうつもりだ！', 'キミィ…！', '説明してもらおうか', 'なんてことを…']);
   setState('intro');
 }
@@ -506,11 +632,20 @@ function setupStage() {
 let holding = false;
 function down(vx, vy) {
   ac();
-  if (state === 'title') { tone(660, .08); tone(990, .12, 'square', .1, 0, .08); newGame(); return; }
+  if (state === 'title') {
+    if (vy > 455 && vy < 515 && (vx < 110 || vx > 290)) {
+      viewOutfit = (viewOutfit + (vx < 110 ? -1 : 1) + OUTFITS.length) % OUTFITS.length;
+      if (OUTFITS[viewOutfit].lv <= meta.level) { meta.outfit = viewOutfit; saveMeta(); wearOutfit(viewOutfit); tone(880, .06); } else tone(220, .08);
+      return;
+    }
+    viewOutfit = meta.outfit;
+    tone(660, .08); tone(990, .12, 'square', .1, 0, .08); newGame(); return;
+  }
   if (state === 'intro' && stT > .35) { holding = true; chargeT = 0; power = 0; setState('charge'); startHum(); return; }
-  if (state === 'result' && stT > .7) { nextStage(); return; }
-  if (state === 'over' && stT > 1) {
-    if (vy > 560 && vy < 620 && vx > 210 && vx < 360) { share(); return; }
+  if (state === 'result' && stT > .45) { nextStage(); return; }
+  if (state === 'over' && stT > .6) {
+    if (vy > 606 && vy < 656 && vx > 250 && vx < 370) { share(); return; }
+    if (vy > 606 && vy < 656 && vx > 30 && vx < 110) { setState('title'); viewOutfit = meta.outfit; return; }
     tone(660, .08); newGame();
   }
 }
@@ -595,17 +730,15 @@ function updateAnim(dt) {
 function finish() {
   const a = anim;
   if (a.kind === 'ok') {
-    combo++; cleared++;
-    const pts = Math.round(100 * (1 + st * .25) * (.5 + .5 * a.acc) * (a.perfect ? 2 : 1) * (1 + .1 * (combo - 1)));
-    score += pts;
+    const pts = success(a.perfect, 100 * (1 + st * .25) * (.5 + .5 * a.acc) * (a.perfect ? 2 : 1));
     bossMood = 'happy'; bossAnger = 0; bossLine = pick(a.perfect ? GOD_LINES : OK_LINES);
-    judge = { title: a.perfect ? '神土下座！！' : '許された！', sub: `+${pts}点` + (combo > 1 ? `　${combo}連続` : ''), color: a.perfect ? '#ffd23f' : '#7cf29c', ok: true, perfect: a.perfect };
+    judge = { title: a.perfect ? '神土下座！！' : '許された！', sub: `+${pts}点` + (combo > 1 ? `　${combo}連続` : '') + (fever ? '　FEVER×2' : ''), color: a.perfect ? '#ffd23f' : '#7cf29c', ok: true, perfect: a.perfect };
     if (a.perfect) { confetti(0, 2.5, 0, 80, ['#ffd23f', '#ff6b9a', '#6bd5ff', '#fff']); flash = .5; }
     [523, 659, 784, a.perfect ? 1047 : 0].forEach((f, i) => f && tone(f, .18, 'square', .1, 0, i * .09));
   } else {
-    combo = 0; lives--;
+    failure(); mEvent('weak');
     bossMood = 'angry'; bossAnger = 1; bossLine = pick(WEAK_LINES);
-    judge = { title: '誠意が足りない！', sub: `謝罪力 ${Math.round(a.p)}%（目標 ${Math.round(zone.lo)}〜${Math.round(zone.hi)}%）`, color: '#ff6b6b', ok: false };
+    judge = { title: '誠意が足りない！', sub: `謝罪力 ${Math.round(a.p)}%（目標 ${Math.round(zone.lo)}〜${Math.round(zone.hi)}%）`, color: '#ff6b6b', ok: false, near: nearMiss(zone.lo - a.p) };
     tone(140, .5, 'sawtooth', .12, -60);
   }
   setState('result');
@@ -635,17 +768,17 @@ function updateCrash(dt) {
   }
   if (u >= 1 && !c.done) {
     c.done = true; shake = .25; thud(.8); buzz(120);
+    if (!meta.depths[c.idx]) { meta.depths[c.idx] = 1; saveMeta(); toast('地層図鑑に登録！', `${LAYERS[c.idx].name}（${meta.depths.filter(Boolean).length}/7）`, '#6bd5ff'); }
+    mEvent('depth', c.idx);
     if (c.idx === 6) {
-      combo++; cleared++;
-      const pts = Math.round(300 * (1 + st * .25));
-      score += pts;
+      const pts = success(false, 300 * (1 + st * .25));
       judge = { title: 'ブラジルで許された！？', sub: `地球の裏側の人に謝ってしまった　+${pts}点`, color: '#ffe14d', ok: true, brazil: true };
       [392, 523, 659, 784, 1047].forEach((f, i) => tone(f, .2, 'square', .1, 0, i * .1));
       say('オブリガード！', 1.1, 1.3);
       for (let i = 0; i < 90; i++) spawn('box', rnd(4), Y_BR - .3 - Math.random() * 3, rnd(1), rnd(3), -Math.random() * 3, rnd(2), 2, pick(['#ffe14d', '#2fa84f', '#2b5fd9', '#fff']), .1, -5);
     } else {
-      combo = 0; lives--;
-      judge = { title: 'やりすぎ！', sub: `${LAYERS[c.idx].name}までめり込んだ（謝罪力 ${Math.round(anim.p)}%）`, color: '#ff9f43', ok: false };
+      failure();
+      judge = { title: 'やりすぎ！', sub: `${LAYERS[c.idx].name}までめり込んだ（謝罪力 ${Math.round(anim.p)}%）`, color: '#ff9f43', ok: false, near: nearMiss(anim.p - zone.hi) };
       tone(180, .5, 'sawtooth', .12, -100, .1);
     }
     setTimeout(() => { if (state === 'crash') setState('result'); }, 350);
@@ -657,6 +790,13 @@ function nextStage() {
     if (cleared > bestStage) { bestStage = cleared; store.set('bestStage', bestStage); }
     tone(330, .3, 'triangle', .12); tone(262, .5, 'triangle', .12, 0, .3);
     crash = null; hole.visible = false; pose = { ...DOGEZA }; pry = 0; prot = 0; bossMood = 'happy'; bossLine = '';
+    const lv0 = meta.level;
+    overInfo = { list: meta.missions.map(m => ({ txt: mText(m), done: m.done, p: Math.min(m.p, mGoal(m)), goal: mGoal(m) })), lv0, newOutfits: [], record: score >= best && score > 0 };
+    meta.missions = meta.missions.map(m => { if (!m.done) return m; meta.level++; return null; });
+    for (let i = 0; i < 3; i++) if (!meta.missions[i]) meta.missions[i] = newMission(meta.missions.filter(Boolean).map(x => x.k));
+    overInfo.newOutfits = OUTFITS.filter(o => o.lv > lv0 && o.lv <= meta.level).map(o => o.name);
+    saveMeta(); fever = false;
+    if (meta.level > lv0) [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, .15, 'square', .09, 0, .5 + i * .08));
     setState('over'); return;
   }
   if (judge && judge.ok) st++;
@@ -677,7 +817,8 @@ function updateCamera(dt, t) {
   const base = fitDist(), g = camGoal;
   const hip = player.hips.getWorldPosition(_v);
   Object.assign(g, { tx: 0, ty: 1.45, tz: 0, dist: base, yaw: 0, pitch: .12, roll: 0 });
-  if (state === 'title' || state === 'over') { g.yaw = Math.sin(t * .25) * .5; g.dist = base * .95; }
+  if (state === 'title') { g.tx = PX * .6; g.ty = 1.1; g.yaw = Math.sin(t * .25) * .4 - .15; g.dist = base * .62; }
+  if (state === 'over') { g.yaw = Math.sin(t * .25) * .5; g.dist = base * .95; }
   if (state === 'charge') { const f = power / 100; g.tx = lerp(0, PX * .6, f); g.ty = lerp(1.45, 1, f); g.dist = base * (1 - .32 * f); g.yaw = -.15 * f; }
   if (state === 'anim') {
     g.tx = PX * .5; g.ty = Math.max(1.2, hip.y * .8 + .4); g.dist = base * .85;
@@ -717,8 +858,8 @@ function frame(now) {
   applyPose(player, pose, -pry * K, prot, PX);
   player.sweat.visible = state === 'charge' || state === 'intro';
   if (player.sweat.visible) player.sweat.position.y = .25 + Math.sin(t * 8) * .02;
-  player.suit.emissive.set(state === 'charge' ? (power > 95 ? '#ff2020' : '#ffb000') : '#000');
-  player.suit.emissiveIntensity = state === 'charge' ? Math.pow(power / 100, 2) * .8 : 0;
+  player.suit.emissive.set(state === 'charge' ? (power > 95 ? '#ff2020' : '#ffb000') : fever ? '#ffcc33' : '#000');
+  player.suit.emissiveIntensity = state === 'charge' ? Math.pow(power / 100, 2) * .8 : fever ? .25 + Math.sin(t * 8) * .1 : 0;
   ghosts.forEach((g, i) => { g.yaw.visible = i < clones; if (i < clones) applyPose(g, pose, -pry * K + (i + 1) * .25, prot - (i + 1) * .5, PX - (i + 1) * .45, -(i + 1) * .5); });
   updateBoss(t, dt);
   if (room) room.traverse(o => {
@@ -737,6 +878,9 @@ function frame(now) {
 }
 function update(dt, t) {
   stT += dt;
+  if (state === 'result' && judge && stT > (judge.brazil ? 2.4 : judge.ok ? 1.3 : 1.9)) nextStage();
+  for (let i = toasts.length - 1; i >= 0; i--) { toasts[i].t += dt; if (toasts[i].t > 2.4) toasts.splice(i, 1); }
+  if (fever && state !== 'title' && state !== 'over' && Math.random() < .35) { const h = player.hips.getWorldPosition(_v); const a = Math.random() * 6.28; spawn('box', h.x + Math.cos(a) * .7, h.y + rnd(.5), Math.sin(a) * .7, 0, 1.2, 0, .8, pick(['#ffd23f', '#fff1a0']), .06); }
   if (state === 'charge') {
     chargeT += dt;
     const ph = (chargeT * speed) % 2;
@@ -798,6 +942,18 @@ function drawHUD() {
     ctx.restore();
   }
   txt(`${score}点`, VW / 2 + 40, tp + 29, 20, '#fff', FONT_T, 'center', '#1b1430', 5);
+  if (best > 0) txt(score > best ? 'ベスト更新中！' : `ベスト ${best}`, VW / 2 + 40, tp + 52, 11, score > best ? '#ff9ac0' : '#ddd', FONT_B, 'center', '#1b1430', 3);
+  if (combo >= 2) txt(`${combo}連続`, 22, tp + 64, 15, fever ? '#ffd23f' : '#fff', FONT_T, 'left', '#1b1430', 4);
+  if (fever) { const s = 1 + Math.sin(performance.now() / 90) * .06; ctx.save(); ctx.translate(VW - 60, tp + 70); ctx.scale(s, s); ctx.fillStyle = '#ff3d6e'; rr(-38, -14, 76, 28, 14); ctx.fill(); txt('FEVER×2', 0, 1, 14, '#ffe14d', FONT_T); ctx.restore(); }
+}
+function drawToasts() {
+  toasts.forEach((o, i) => {
+    const k = Math.min(1, o.t * 5) * Math.min(1, (2.4 - o.t) * 4), y = 372 + i * 56;
+    ctx.save(); ctx.globalAlpha = k; ctx.translate((1 - k) * 60, 0);
+    ctx.fillStyle = '#1b1430e8'; rr(60, y, VW - 120, 48, 12); ctx.fill(); ctx.strokeStyle = o.color; ctx.lineWidth = 2.5; ctx.stroke();
+    txt(o.title, VW / 2, y + 16, 15, o.color, FONT_T); txt(o.sub, VW / 2, y + 35, 12, '#fff', FONT_B);
+    ctx.restore();
+  });
 }
 function drawCard() {
   const y = 66;
@@ -840,44 +996,77 @@ function drawUI(t) {
     const lines = wrap(judge.title, 360, 40, FONT_T);
     lines.forEach((s, i) => txt(s, 0, (i - (lines.length - 1) / 2) * 46, lines.length > 1 ? 34 : 40, judge.color, FONT_T, 'center', '#1b1430', 9));
     ctx.restore();
+    if (judge.near) { const kk = easeOut(Math.min(1, Math.max(0, stT - .15) * 4)); ctx.save(); ctx.translate(VW / 2, 310); ctx.scale(kk, kk); txt(judge.near, 0, 0, 24, '#ffe14d', FONT_T, 'center', '#c0392b', 7); ctx.restore(); }
     wrap(judge.sub, 340, 16, FONT_B).forEach((s, i) => txt(s, VW / 2, 600 + i * 22, 16, '#fff', FONT_B, 'center', '#1b1430', 5));
-    if (stT > .7) { ctx.globalAlpha = .6 + .4 * Math.sin(t * 5); txt(lives <= 0 ? 'タップで結果へ' : judge.ok ? 'タップで次の罪へ' : 'タップでもう一回謝る', VW / 2, 670, 17, '#fff', FONT_B, 'center', '#1b1430', 4); ctx.globalAlpha = 1; }
+    ctx.globalAlpha = .5; txt(lives <= 0 ? 'タップで結果へ' : 'タップでスキップ', VW / 2, 670, 14, '#fff', FONT_B, 'center', '#1b1430', 4); ctx.globalAlpha = 1;
   }
+  drawToasts();
   for (const p of uiParts) { ctx.globalAlpha = Math.min(1, p.life / p.max * 1.5); txt(p.text, p.x, p.y, 20, '#fff', FONT_T, 'center', '#1b1430', 4); }
   ctx.globalAlpha = 1;
 }
+function drawMissions(y, list, lvText) {
+  ctx.fillStyle = '#000c'; rr(24, y, VW - 48, 26 + list.length * 30, 14); ctx.fill();
+  txt(lvText, 40, y + 15, 14, '#ffd23f', FONT_T, 'left');
+  list.forEach((m, i) => {
+    const yy = y + 42 + i * 30;
+    ctx.strokeStyle = m.done ? '#7cf29c' : '#888'; ctx.lineWidth = 2; rr(38, yy - 9, 18, 18, 4); ctx.stroke();
+    if (m.done) txt('✓', 47, yy + 1, 15, '#7cf29c', FONT_T);
+    const s2 = wrap(m.txt, 230, 13, FONT_B)[0];
+    txt(s2, 64, yy, 13, m.done ? '#7cf29c' : '#fff', FONT_B, 'left');
+    txt(m.done ? '達成！' : `${m.p}/${m.goal}`, VW - 40, yy, 13, m.done ? '#7cf29c' : '#aaa', FONT_B, 'right');
+  });
+}
+function missionView() { return meta.missions.map(m => ({ txt: mText(m), done: m.done, p: Math.min(m.p, mGoal(m)), goal: mGoal(m) })); }
 function drawTitle(t) {
   const bg = ctx.createLinearGradient(0, T(), 0, 230); bg.addColorStop(0, '#1b1430ee'); bg.addColorStop(.75, '#1b1430aa'); bg.addColorStop(1, '#1b143000');
   ctx.fillStyle = bg; ctx.fillRect(L(), T(), R() - L(), 230 - T());
   const k = 1 + Math.sin(t * 3) * .03;
-  ctx.save(); ctx.translate(VW / 2, 110); ctx.scale(k, k); ctx.rotate(-.04);
+  ctx.save(); ctx.translate(VW / 2, 100); ctx.scale(k, k); ctx.rotate(-.04);
   txt('全力', -70, -30, 40, '#fff', FONT_T, 'center', '#c0392b', 10);
   txt('土下座', 30, 26, 64, '#ffd23f', FONT_T, 'center', '#c0392b', 12);
   ctx.restore();
-  txt('〜 謝罪力をきわめろ 〜', VW / 2, 192, 16, '#fff', FONT_B, 'center', '#1b1430', 5);
-  ctx.fillStyle = '#000b'; rr(30, 548, VW - 60, 120, 16); ctx.fill();
-  txt('長押しで謝罪力を溜めて、', VW / 2, 572, 15, '#fff', FONT_B);
-  txt('緑のところで離すと許される。', VW / 2, 596, 15, '#fff', FONT_B);
-  txt('強すぎると床を突き抜けます。', VW / 2, 620, 15, '#ff9f9f', FONT_B);
-  if (best) txt(`ベスト ${best}点（${bestStage}件許された）`, VW / 2, 648, 13, '#ffd23f', FONT_B);
+  txt('〜 謝罪力をきわめろ 〜', VW / 2, 180, 16, '#fff', FONT_B, 'center', '#1b1430', 5);
+  if (best) txt(`ベスト ${best}点（${bestStage}件許された）`, VW / 2, 206, 13, '#ffd23f', FONT_B, 'center', '#1b1430', 4);
+  // 着せ替え
+  const o = OUTFITS[viewOutfit], locked = o.lv > meta.level;
+  ctx.fillStyle = '#000b'; rr(24, 460, VW - 48, 50, 14); ctx.fill();
+  txt('◀', 52, 485, 22, '#fff', FONT_T); txt('▶', VW - 52, 485, 22, '#fff', FONT_T);
+  txt(locked ? '？？？' : o.name, VW / 2, 478, 17, locked ? '#888' : '#fff', FONT_T);
+  txt(locked ? `🔒 謝罪レベル${o.lv}で解放` : `着せ替え ${OUTFITS.filter(x => x.lv <= meta.level).length}/${OUTFITS.length}`, VW / 2, 499, 11, locked ? '#ff9f9f' : '#aaa', FONT_B);
+  drawMissions(520, missionView(), `謝罪レベル ${meta.level}　ミッション`);
   ctx.globalAlpha = .6 + .4 * Math.sin(t * 5);
-  txt('タップでスタート', VW / 2, 696, 20, '#fff', FONT_T, 'center', '#1b1430', 5);
+  txt('タップでスタート', VW / 2, 680, 20, '#fff', FONT_T, 'center', '#1b1430', 5);
   ctx.globalAlpha = 1;
 }
 function drawOver() {
-  const k = easeOut(Math.min(1, stT * 2));
-  ctx.fillStyle = '#1b1430e6'; rr(24, 150, VW - 48, 490, 20); ctx.fill();
+  const k = easeOut(Math.min(1, stT * 2)), oi = overInfo;
+  ctx.fillStyle = '#1b1430ee'; rr(16, 92, VW - 32, 580, 20); ctx.fill();
   ctx.strokeStyle = '#ffd23f'; ctx.lineWidth = 3; ctx.stroke();
-  txt('胃が限界です', VW / 2, 196, 30, '#ff6b6b', FONT_T);
-  txt('あなたの謝罪ランク', VW / 2, 252, 15, '#ccc', FONT_B);
-  ctx.save(); ctx.translate(VW / 2, 300); ctx.scale(k, k);
-  txt(rankName(), 0, 0, 34, '#ffd23f', FONT_T, 'center', '#c0392b', 8); ctx.restore();
-  txt(`スコア ${score}点`, VW / 2, 372, 24, '#fff', FONT_T);
-  txt(`許された罪：${cleared}件`, VW / 2, 412, 16, '#fff', FONT_B);
-  txt(`ベスト ${best}点`, VW / 2, 440, 14, '#ffd23f', FONT_B);
-  if (score >= best && score > 0) txt('NEW RECORD!', VW / 2, 470, 18, '#7cf29c', FONT_T);
-  ctx.fillStyle = '#c0392b'; rr(40, 560, 150, 56, 14); ctx.fill(); txt('もう一回謝る', 115, 588, 17, '#fff', FONT_T);
-  ctx.fillStyle = '#2b5fd9'; rr(210, 560, 150, 56, 14); ctx.fill(); txt('シェア', 285, 588, 18, '#fff', FONT_T);
+  txt('胃が限界です', VW / 2, 124, 24, '#ff6b6b', FONT_T);
+  ctx.save(); ctx.translate(VW / 2, 166); ctx.scale(k, k);
+  txt(rankName(), 0, 0, 30, '#ffd23f', FONT_T, 'center', '#c0392b', 8); ctx.restore();
+  txt(`${score}点`, VW / 2, 212, 26, '#fff', FONT_T);
+  txt(oi && oi.record ? 'NEW RECORD!' : `ベスト ${best}点`, VW / 2, 240, oi && oi.record ? 17 : 13, oi && oi.record ? '#7cf29c' : '#ccc', FONT_T);
+  txt(`許された罪 ${cleared}件`, VW / 2, 262, 13, '#ccc', FONT_B);
+  if (oi) {
+    const up = meta.level - oi.lv0;
+    drawMissions(280, oi.list, up > 0 ? `謝罪レベルUP！ Lv${oi.lv0} → Lv${meta.level}` : `謝罪レベル ${meta.level}　ミッション`);
+    if (oi.newOutfits.length) txt(`着せ替え解放：${oi.newOutfits.join('・')}`, VW / 2, 414, 14, '#ff9ac0', FONT_T, 'center', '#1b1430', 4);
+  }
+  // 地層図鑑
+  txt(`地層図鑑 ${meta.depths.filter(Boolean).length}/7`, VW / 2, 446, 13, '#6bd5ff', FONT_B);
+  LAYERS.forEach((ly, i) => {
+    const x = 50 + i * 44, y = 460, got = meta.depths[i];
+    ctx.fillStyle = got ? ly.c1 : '#333'; rr(x, y, 36, 36, 8); ctx.fill();
+    txt(got ? ly.name.slice(0, 2) : '？', x + 18, y + 18, got ? 11 : 16, got ? '#fff' : '#777', FONT_T, 'center', '#1b1430', got ? 3 : 0);
+  });
+  const next = OUTFITS.find(o => o.lv > meta.level);
+  if (next) txt(`次の着せ替えまで あとレベル${next.lv - meta.level}`, VW / 2, 524, 12, '#aaa', FONT_B);
+  const pulse = 1 + Math.sin(stT * 6) * .04;
+  ctx.save(); ctx.translate(VW / 2 - 10, 631); ctx.scale(pulse, pulse);
+  ctx.fillStyle = '#c0392b'; rr(-70, -25, 140, 50, 14); ctx.fill(); txt('もう一回', 0, 1, 19, '#fff', FONT_T); ctx.restore();
+  ctx.fillStyle = '#444'; rr(30, 606, 80, 50, 14); ctx.fill(); txt('タイトル', 70, 632, 13, '#fff', FONT_T);
+  ctx.fillStyle = '#2b5fd9'; rr(250, 606, 120, 50, 14); ctx.fill(); txt('シェア', 310, 632, 16, '#fff', FONT_T);
 }
 
 // ====== 起動 ======
@@ -887,4 +1076,4 @@ function drawOver() {
   requestAnimationFrame(frame);
 })();
 // テスト・デバッグ用
-window.__dogeza = { get state() { return state; }, get power() { return power; }, get zone() { return zone; }, setStage(s) { st = s; setupStage(); }, force(p) { if (state !== 'intro') return; ac(); power = p; release(); }, setLives(n) { lives = n; } };
+window.__dogeza = { get state() { return state; }, get power() { return power; }, get zone() { return zone; }, setStage(s) { st = s; setupStage(); }, force(p) { if (state !== 'intro') return; ac(); power = p; release(); }, setLives(n) { lives = n; }, setCombo(n) { combo = n; }, get meta() { return meta; }, get fever() { return fever; } };
