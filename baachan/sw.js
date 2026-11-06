@@ -1,5 +1,5 @@
 // Offline cache: serve from cache instantly, refresh the cache in the background.
-const CACHE = 'baachan-v2';
+const CACHE = 'baachan-v3';
 // The town models and textures under ../uminagi-assets/ are cached as they are fetched.
 const CORE = [
   './', 'index.html', 'css/style.css', 'manifest.webmanifest', 'icons/icon-180.png', 'icons/icon-192.png',

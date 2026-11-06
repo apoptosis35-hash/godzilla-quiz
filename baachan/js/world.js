@@ -12,7 +12,7 @@ export class World {
     this.scene = scene;
     // sky, fog, light
     const top = new THREE.Color(0x3d9cff), hor = new THREE.Color(0xffe2b8);
-    scene.fog = new THREE.Fog(hor, 50, 155);
+    scene.fog = new THREE.Fog(hor, 40, 125);
     this.sky = new THREE.Mesh(new THREE.SphereGeometry(400, 24, 12), new THREE.ShaderMaterial({
       side: THREE.BackSide, depthWrite: false, fog: false,
       uniforms: { top: { value: top }, hor: { value: hor } },
@@ -30,8 +30,8 @@ export class World {
     }
     scene.add(new THREE.HemisphereLight(0xfff4e6, 0x9a8470, 1.4));
     const sun = this.sun = new THREE.DirectionalLight(0xfff0d8, 2.6);
-    sun.castShadow = true; sun.shadow.mapSize.set(1024, 1024);
-    const sc = sun.shadow.camera; sc.left = -12; sc.right = 12; sc.top = 14; sc.bottom = -14; sc.near = 1; sc.far = 60;
+    sun.castShadow = true; sun.shadow.mapSize.set(512, 512);
+    const sc = sun.shadow.camera; sc.left = -7; sc.right = 7; sc.top = 9; sc.bottom = -9; sc.near = 1; sc.far = 60;
     sun.shadow.bias = -0.0008; sun.shadow.normalBias = 0.03;
     scene.add(sun); scene.add(sun.target);
 
@@ -78,7 +78,7 @@ export class World {
   }
   reset() { this.place = []; this.cursor = { '-1': -20, '1': -20 }; this.propCursor = -20; this.dirty = true; }
   extend(dist) {
-    const horizon = dist + 160;
+    const horizon = dist + 130;
     for (const s of [-1, 1]) {
       while (this.cursor[s] < horizon) {
         const n = pick(BUILDINGS), sz = A.size[n] || [8, 8, 9];
@@ -120,7 +120,7 @@ export class World {
       this._p.set(p.x, p.y || (p.big ? 0.14 : 0.15), -p.d);
       this._q.setFromAxisAngle(_Y, p.ry);
       this._m.compose(this._p, this._q, this._s);
-      this.town.add(p.n, this._m, p.d - dist > 32);
+      this.town.add(p.n, this._m, p.d - dist > 22);
     }
     this.town.end();
   }
