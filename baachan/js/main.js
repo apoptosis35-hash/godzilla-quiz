@@ -13,7 +13,7 @@ const rnd = (a, b) => a + Math.random() * (b - a);
 const pick = (a) => a[Math.floor(Math.random() * a.length)];
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 const LANES = [-2.4, 0, 2.4];
-const FEVER_T = 7;
+const FEVER_T = 8;
 
 // ---------------------------------------------------------------- lines
 const L = {
@@ -40,10 +40,13 @@ const RL = { // passenger lines
 
 // ---------------------------------------------------------------- renderer
 const canvas = $('gl');
-const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: 'high-performance' });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+// phones: render at a modest resolution (the biggest cost), and lower it further if frames drop
+const HI_DPR = (window.devicePixelRatio || 1) >= 2;
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: !HI_DPR, powerPreference: 'high-performance' });
+let dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+renderer.setPixelRatio(dpr);
 renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFShadowMap;
 const scene = new THREE.Scene();
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -229,8 +232,8 @@ function spawnRow(d) {
   const lanes = [0, 1, 2].sort(() => Math.random() - 0.5);
   const ok = (l) => !laneBlocked(l, d);
   const used = new Set();
-  if (Math.random() < 0.24 + lv * 0.2) { // one hard thing, sometimes two
-    const nHard = Math.random() < 0.25 + lv * 0.35 ? 2 : 1;
+  if (Math.random() < 0.11 + lv * 0.09) { // now and then one hard thing (rarely two, later on)
+    const nHard = Math.random() < lv * 0.25 ? 2 : 1;
     for (let i = 0; i < nHard; i++) {
       const l = lanes[i]; if (!ok(l)) continue;
       const t = Math.random();
@@ -239,7 +242,7 @@ function spawnRow(d) {
       else addEnt('guardrail', d, LANES[l], { scaleX: 0.6 });
       used.add(l);
     }
-    if (Math.random() < 0.12 + lv * 0.1 && P.dist > 250 && used.size === 1 && !sale && !jiiRide) { // a full-width gate: slide!
+    if (Math.random() < 0.05 + lv * 0.05 && P.dist > 400 && used.size === 1 && !sale && !jiiRide) { // a full-width gate: slide!
       for (const l of [0, 1, 2]) if (!used.has(l)) { addEnt('kouji', d, LANES[l]); used.add(l); }
     }
   }
@@ -283,7 +286,7 @@ function spawnCat(d) {
   ents.push({ kind: 'cat', k: { w: 0.5 }, obj: c, d, x: from * 5, y: 0, w: 0.5, len: 0.6, dir: -from, walking: false, t: 0, dead: false, tail: node(c, 'cat_tail') });
 }
 function spawnAhead() {
-  const horizon = P.dist + 120;
+  const horizon = P.dist + 95;
   while (nextRowAt < horizon) {
     const d = nextRowAt;
     if (d >= ev.ramp) { nextRowAt = spawnRamp(d); ev.ramp = d + rnd(700, 950); continue; }
@@ -364,7 +367,7 @@ function smash(e) {
   P.combo++; P.comboT = 2.6; P.maxCombo = Math.max(P.maxCombo, P.combo);
   P.bonus += Math.round(k.pts * mult()); P.st.smash++;
   P.st[e.kind] = (P.st[e.kind] || 0) + 1;
-  addGauge(k.gauge);
+  addGauge(k.gauge * 1.4);
   // launch: up, ahead and out to the side, spinning
   const side = Math.sign(e.x - P.x) || (Math.random() < 0.5 ? -1 : 1);
   const heavy = k.big ? 0.75 : 1;
@@ -373,7 +376,7 @@ function smash(e) {
   e.obj.visible = true;
   const pos = e.obj.position.clone(); pos.y += (k.h || 1) * 0.5;
   const fwd = new THREE.Vector3(0, 0, -P.speed * 0.8);
-  fx.debris(pos, k.deb, { n: k.big ? 22 : 12, speed: k.big ? 9 : 7, vel: fwd, size: k.big ? 0.22 : 0.14 });
+  fx.debris(pos, k.deb, { n: k.big ? 16 : 8, speed: k.big ? 9 : 7, vel: fwd, size: k.big ? 0.22 : 0.14 });
   fx.emit('puff', pos, { n: k.big ? 8 : 4, speed: 3, life: 0.5, size: 1.1, grow: 1.5, vel: fwd });
   fx.emit('spark', pos, { n: 1, speed: 0, life: 0.18, size: k.big ? 5 : 3, grow: 2, add: true, vel: new THREE.Vector3(0, 0, -P.speed) });
   fx.word(pick(k.words), pos.clone().add(new THREE.Vector3(0, 1.2, 0)), { size: k.big ? 3 : 2.2, color: P.fever > 0 ? '#ffd23a' : '#ff3d2e', vel: new THREE.Vector3(0, 2.5, -P.speed * 0.9) });
@@ -691,8 +694,8 @@ function update(dt) {
     if (e.vx) { e.x += e.vx * dt; if (Math.abs(e.x) > 3.4) { e.vx *= -1; e.obj.rotation.y += Math.PI; e.x = clamp(e.x, -3.4, 3.4); } }
     const dd = e.d - P.dist;
     e.obj.position.set(e.x, e.y, -e.d);
-    e.obj.visible = dd < 85;
-    const cs = dd < 24 && dd > -4; // only nearby things cast shadows
+    e.obj.visible = dd < 80;
+    const cs = dd < 14 && dd > -3; // only the closest things cast shadows
     if (e.meshes && e.cs !== cs) { e.cs = cs; for (const m of e.meshes) m.castShadow = cs; }
     if (e.bump > 0) { e.bump -= dt; e.obj.position.y = Math.abs(Math.sin(e.bump * 30)) * 0.1; }
     switch (e.kind) {
@@ -889,10 +892,23 @@ function resize() {
 }
 addEventListener('resize', resize); resize();
 let last = performance.now();
+// if the phone can't keep up, drop resolution, then shadows
+const perf = { t: 0, n: 0, level: 0 };
+function adapt(real) {
+  perf.t += real; perf.n++;
+  if (perf.t < 2.5) return;
+  const fps = perf.n / perf.t; perf.t = 0; perf.n = 0;
+  if (fps > 48 || perf.level >= 3) return;
+  perf.level++;
+  if (perf.level === 1 && dpr > 1) { dpr = 1; renderer.setPixelRatio(dpr); resize(); }
+  else if (perf.level <= 2) { renderer.shadowMap.enabled = false; scene.traverse((o) => { if (o.material) [].concat(o.material).forEach((m) => { m.needsUpdate = true; }); }); perf.level = 2; }
+  else { dpr = 0.8; renderer.setPixelRatio(dpr); resize(); }
+}
 function frame(now) {
   requestAnimationFrame(frame);
   const real = Math.min(0.05, (now - last) / 1000); last = now;
   if (state === 'boot') return;
+  if (state === 'play') adapt(real);
   let dt = real * timeScale;
   if (hitstop > 0) { hitstop -= real; dt *= 0.08; }
   if (state === 'play') { update(dt); poseGranny(dt, false); renderHud(); }

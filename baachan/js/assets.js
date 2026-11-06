@@ -3,6 +3,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { MeshoptDecoder } from 'three/addons/libs/meshopt_decoder.module.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 
 export const TOWN = '../uminagi-assets/';
 const OWN = ['granny', 'kid', 'jii', 'scooter', 'tanuki', 'daruma', 'boxes', 'cone', 'bucket', 'watermelons', 'pigeon', 'salaryman', 'kouji', 'police', 'sale', 'ramp', 'eggs'];
@@ -54,7 +55,7 @@ export async function loadAll(renderer, onProgress) {
     ...OWN.map(async (n) => {
       const g = await load('models/' + n + '.glb');
       g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = false; fixOwnMat(o); } });
-      A.models[n] = g.scene; tick();
+      bakeColors(g.scene); A.models[n] = g.scene; tick();
     }),
     ...[...BUILDINGS, ...TOWN_PROPS].map(async (n) => {
       try {
@@ -65,6 +66,37 @@ export async function loadAll(renderer, onProgress) {
       tick();
     }),
   ]);
+}
+
+// Our Blender models use flat colours: merge sibling meshes of plain materials into one vertex-coloured mesh per node,
+// so a tanuki or a granny limb is one draw call instead of one per colour.
+const SEP = new Set(['cardigan', 'lens', 'egg_pack']);
+let bakedMat = null;
+function bakeColors(root) {
+  if (!bakedMat) bakedMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.05, name: 'baked' });
+  const parents = new Set(); root.traverse((o) => { if (o.isMesh) parents.add(o.parent); });
+  for (const par of parents) {
+    const ms = par.children.filter((m) => m.isMesh && !Array.isArray(m.material) && !m.material.map && !m.material.transparent && !SEP.has(m.material.name) && !(m.material.emissive && m.material.emissive.getHex() !== 0));
+    if (ms.length < 2) continue;
+    const geos = ms.map((m) => {
+      m.updateMatrix();
+      const g = new THREE.BufferGeometry();
+      const pos = m.geometry.attributes.position, nor = m.geometry.attributes.normal, n = pos.count;
+      const P = new Float32Array(n * 3), N = new Float32Array(n * 3), Cc = new Float32Array(n * 3);
+      const c = m.material.color;
+      for (let i = 0; i < n; i++) { P[i * 3] = pos.getX(i); P[i * 3 + 1] = pos.getY(i); P[i * 3 + 2] = pos.getZ(i); N[i * 3] = nor ? nor.getX(i) : 0; N[i * 3 + 1] = nor ? nor.getY(i) : 1; N[i * 3 + 2] = nor ? nor.getZ(i) : 0; Cc[i * 3] = c.r; Cc[i * 3 + 1] = c.g; Cc[i * 3 + 2] = c.b; }
+      g.setAttribute('position', new THREE.BufferAttribute(P, 3)); g.setAttribute('normal', new THREE.BufferAttribute(N, 3)); g.setAttribute('color', new THREE.BufferAttribute(Cc, 3));
+      const idx = m.geometry.index;
+      g.setIndex(idx ? Array.from({ length: idx.count }, (_, i) => idx.getX(i)) : Array.from({ length: n }, (_, i) => i));
+      g.applyMatrix4(m.matrix);
+      return g;
+    });
+    const merged = mergeGeometries(geos, false);
+    if (!merged) continue;
+    const mesh = new THREE.Mesh(merged, bakedMat); mesh.name = ms[0].name + '_baked'; mesh.castShadow = true;
+    for (const m of ms) par.remove(m);
+    par.add(mesh);
+  }
 }
 
 function fixOwnMat(o) {
