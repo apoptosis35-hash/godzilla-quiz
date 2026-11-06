@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>ばあちゃんターボ</title>
-<meta name="description" content="孫を背負ったおばあちゃんが、時速100kmで商店街を爆走する3Dランゲーム">
+<meta name="description" content="孫を背負ったおばあちゃんが商店街を爆走し、なんでも吹っ飛ばす3Dランゲーム">
 <meta name="theme-color" content="#ffb84d">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
@@ -17,7 +17,7 @@
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="stylesheet" href="css/style.css">
 <script type="importmap">
-{ "imports": { "three": "./vendor/three.module.min.js" } }
+{ "imports": { "three": "./vendor/three.module.min.js", "three/addons/": "./vendor/addons/" } }
 </script>
 </head>
 <body>
@@ -32,34 +32,54 @@
     <button id="btn-pause" class="chip" aria-label="一時停止"><b class="pz">II</b></button>
   </div>
   <div class="hud-row sub">
-    <div class="chip"><span class="ame"></span><b id="ame">0</b></div>
     <div class="chip score">SCORE <b id="score">0</b></div>
     <div class="chip spd"><b id="kmh">0</b><small>km/h</small></div>
   </div>
-  <div id="pw" class="pw"></div>
+  <div id="gauge"><div id="gauge-fill"></div><span id="gauge-label">ばあちゃんゲージ</span></div>
 </div>
+<div id="combo"><b id="combo-n">0</b><span>COMBO</span><em id="combo-x">×1.0</em></div>
 
 <div id="bubbles"></div>
 <div id="pops"></div>
+<div id="toasts"></div>
 <div id="howto">
   <div><span>← →</span>スワイプで車線</div>
   <div><span>↑</span>ジャンプ</div>
   <div><span>↓</span>しゃがむ</div>
+  <p>ぶつかって吹っ飛ばせ！ 車と工事現場だけは よけて！</p>
 </div>
 
-<section id="title" class="ov on">
+<section id="boot" class="ov on">
+  <div class="boot-in">
+    <div class="logo small"><span class="l1">ばあちゃん</span><span class="l2">ターボ</span></div>
+    <div class="load"><div id="load-fill"></div></div>
+    <div id="load-msg">商店街を準備中…</div>
+  </div>
+</section>
+
+<section id="title" class="ov">
   <div class="t-top">
-    <div class="kicker">孫をせおって 商店街を爆走！</div>
+    <div class="kicker">孫をせおって 商店街を ぜんぶ吹っ飛ばせ！</div>
     <h1 class="logo"><span class="l1">ばあちゃん</span><span class="l2">ターボ</span></h1>
-    <div class="best" id="best"></div>
   </div>
   <div class="t-bot">
+    <div class="panel">
+      <div id="t-rank" class="t-rank"></div>
+      <ul id="t-missions" class="missions"></ul>
+      <div id="t-next" class="t-next"></div>
+    </div>
+    <div class="sel">
+      <button id="rider-prev" class="arr">◀</button><div><small>背中</small><b id="sel-rider"></b></div><button id="rider-next" class="arr">▶</button>
+    </div>
+    <div class="sel">
+      <button id="outfit-prev" class="arr">◀</button><div><small>服</small><b id="sel-outfit"></b></div><button id="outfit-next" class="arr">▶</button>
+    </div>
     <button id="btn-start" class="big">しっかりつかまる！</button>
+    <div class="best" id="best"></div>
     <div class="toggles">
       <button id="btn-sound" class="tg on">🔊 音</button>
       <button id="btn-voice" class="tg on">🗣️ ばあちゃんの声</button>
     </div>
-    <div class="keys">PC：← → 車線 ／ ↑・スペース ジャンプ ／ ↓ しゃがむ</div>
   </div>
 </section>
 
@@ -77,10 +97,12 @@
     <div class="r-quote" id="r-quote"></div>
     <div class="r-title-k">今日の称号</div>
     <div class="r-title" id="r-title"></div>
-    <div class="r-dist"><b id="r-dist">0</b>m</div>
-    <div class="r-new" id="r-new">自己ベスト更新！</div>
-    <ul class="r-stats" id="r-stats"></ul>
     <div class="r-score">SCORE <b id="r-score">0</b></div>
+    <div class="r-new" id="r-new">ハイスコア更新！</div>
+    <div class="r-dist"><b id="r-dist">0</b>m</div>
+    <div id="r-rank" class="r-rank"></div>
+    <ul class="missions" id="r-missions"></ul>
+    <ul class="r-stats" id="r-stats"></ul>
     <button id="btn-retry" class="big">もう一回 背負って！</button>
     <button id="btn-home" class="sub-btn">タイトルへ</button>
   </div>

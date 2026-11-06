@@ -1,7 +1,7 @@
 // WebAudio synth: a festive loop that speeds up with granny, comic sound effects, and (optional) speech voices.
 let ctx = null, master = null, musicGain = null, sfxGain = null, noiseBuf = null;
 let soundOn = true, voiceOn = true;
-let tempo = 1, nextNote = 0, step = 0, musicOn = false, timer = null;
+let tempo = 1, nextNote = 0, step = 0, musicOn = false, timer = null, fever = false;
 
 export const audio = {
   init() {
@@ -23,13 +23,24 @@ export const audio = {
   setVoice(on) { voiceOn = on; if (!on) this.hush(); },
   hush() { try { speechSynthesis.cancel(); } catch (e) { /* ignore */ } },
   setTempo(t) { tempo = t; },
+  setFever(f) { fever = f; },
   startMusic() { if (!ctx || musicOn) return; musicOn = true; nextNote = ctx.currentTime + 0.05; step = 0; timer = setInterval(sched, 25); },
   stopMusic() { musicOn = false; clearInterval(timer); },
 
-  sfx(name) {
+  sfx(name, k = 0) {
     if (!ctx || !soundOn) return;
     const t = ctx.currentTime;
     switch (name) {
+      case 'smash': noise(t, 0.18, 900 + Math.random() * 600, 0.9); tone('square', 180, 50, t, 0.14, 0.4); tone('sine', 90, 40, t, 0.2, 0.7); break;
+      case 'crunch': for (let i = 0; i < 4; i++) noise(t + i * 0.025, 0.06, 1500 + i * 400, 0.6); tone('sine', 120, 50, t, 0.18, 0.6); break;
+      case 'clang': tone('square', 900, 850, t, 0.3, 0.18); tone('square', 1350, 1300, t, 0.25, 0.1); noise(t, 0.25, 4000, 0.4); break;
+      case 'glass': for (let i = 0; i < 7; i++) tone('sine', 2500 + Math.random() * 2500, 2000, t + i * 0.02, 0.12, 0.12); noise(t, 0.3, 6000, 0.5); break;
+      case 'combo': { const f = 520 * Math.pow(2, Math.min(k, 36) / 24); tone('square', f, f * 1.01, t, 0.07, 0.12); tone('triangle', f * 2, f * 2, t + 0.02, 0.08, 0.1); break; }
+      case 'fever': [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => { tone('square', f, f, t + i * 0.05, 0.12, 0.2); tone('triangle', f / 2, f / 2, t + i * 0.05, 0.15, 0.25); }); noise(t, 0.8, 2500, 0.4, true); break;
+      case 'mission': [784, 988, 1175, 1568, 1976].forEach((f, i) => tone('triangle', f, f, t + i * 0.07, 0.16, 0.3)); break;
+      case 'rankup': [523, 659, 784, 1047, 784, 1047, 1319, 1568].forEach((f, i) => { tone('square', f, f, t + i * 0.11, 0.2, 0.16); tone('triangle', f, f, t + i * 0.11, 0.25, 0.25); }); break;
+      case 'whoosh': noise(t, 0.3, 1800, 0.5, true); break;
+      case 'tick': tone('square', 1200, 1200, t, 0.03, 0.08); break;
       case 'candy': tone('square', 1320, 1760, t, 0.08, 0.15); tone('square', 1760, 2200, t + 0.06, 0.08, 0.12); break;
       case 'jump': tone('sine', 300, 1200, t, 0.3, 0.35); break; // slide whistle up
       case 'slide': tone('sine', 1100, 260, t, 0.3, 0.3); break;
@@ -115,6 +126,7 @@ function sched() {
     if (i % 4 === 0) kick(t);
     if (i % 4 === 2) hat(t, 0.25);
     if (i % 8 === 6) hat(t, 0.12, 2400); // wood block-ish
+    if (fever) { if (m) note('sawtooth', N(m + 12), t, spb * 0.6, 0.06); if (i % 2 === 1) hat(t, 0.18); if (i % 4 === 2) kick(t); }
     nextNote += spb; step++;
   }
 }
