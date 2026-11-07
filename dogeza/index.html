@@ -13,7 +13,8 @@
 <style>
   html,body{margin:0;height:100%;background:#1b1430;overflow:hidden;touch-action:none;
     -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;-webkit-tap-highlight-color:transparent}
-  canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+  *{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+  canvas{display:block;position:fixed;inset:0;width:100%;height:100%;touch-action:none}
   #mute{position:fixed;top:max(10px,env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));
     width:44px;height:44px;border-radius:50%;border:2px solid #fff6;background:#0006;color:#fff;
     font-size:20px;line-height:40px;text-align:center;padding:0;cursor:pointer;z-index:2}
