@@ -11,8 +11,10 @@ renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, 1, .1, 500);
+const QUALITY = [2, 1.5, 1.25, 1];
+let qLevel = 0;
 function resize() {
-  DPR = Math.min(2, window.devicePixelRatio || 1);
+  DPR = Math.min(QUALITY[qLevel], window.devicePixelRatio || 1);
   W = innerWidth; H = innerHeight;
   renderer.setPixelRatio(DPR); renderer.setSize(W, H, false);
   ui.width = Math.round(W * DPR); ui.height = Math.round(H * DPR);
@@ -77,10 +79,14 @@ function stopHum() { if (hum) { try { hum.o.stop(); } catch (e) {} hum = null; }
 function say(text, rate = 1.25, pitch = 1) {
   if (muted || !('speechSynthesis' in window)) return;
   try {
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    u.lang = 'ja-JP'; u.rate = rate; u.pitch = pitch; u.volume = .9;
-    speechSynthesis.speak(u);
+    setTimeout(() => {
+      try {
+        speechSynthesis.cancel();
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = 'ja-JP'; u.rate = rate; u.pitch = pitch; u.volume = .9;
+        speechSynthesis.speak(u);
+      } catch (e) {}
+    }, 0);
   } catch (e) {}
 }
 // ====== BGM（ゆるいチップチューン。連続成功とフィーバーで速くなる） ======
@@ -327,7 +333,9 @@ function veinTex() {
 }
 const VEIN = veinTex();
 function buildBoss(b) {
-  if (bossRig) scene.remove(bossRig.g);
+  const bi = BOSSES.indexOf(b);
+  if (bossRig) bossRig.g.visible = false;
+  if (bossRigs[bi]) { bossRig = bossRigs[bi]; bossRig.g.visible = true; return; }
   const g = new THREE.Group(), body = new THREE.Group(); g.add(body);
   const suit = M(b.suit), dark = M('#22222c'), black = MB('#111'), face = M(b.skin);
   for (const x of [-.22, .22]) {
@@ -386,7 +394,7 @@ function buildBoss(b) {
   });
   g.position.set(BX, 0, 0); g.rotation.y = -.75;
   scene.add(g);
-  bossRig = { g, body, head, face, eyes, whites, brows, mouth, oMouth, cheeks, tears, wig, veins, arms, skin: new THREE.Color(b.skin), wigT: 0 };
+  bossRig = bossRigs[bi] = { g, body, head, face, eyes, whites, brows, mouth, oMouth, cheeks, tears, wig, veins, arms, skin: new THREE.Color(b.skin), wigT: 0 };
 }
 const RED = new THREE.Color('#ff4a3d');
 function updateBoss(t, dt) {
@@ -407,16 +415,19 @@ function updateBoss(t, dt) {
   r.arms[0].rotation.z = -armA; r.arms[1].rotation.z = armA;
   if (r.wig) { r.wigT = shock ? Math.min(1, r.wigT + dt * 2) : Math.max(0, r.wigT - dt * 3); r.wig.position.y = .02 + r.wigT * .9; r.wig.rotation.z = r.wigT * 2.5; }
   if (angry && bossAnger > .6 && Math.random() < bossAnger * .3) {
-    const p = r.head.getWorldPosition(new THREE.Vector3());
+    const p = r.head.getWorldPosition(_v);
     spawn('ball', p.x + rnd(.3), p.y + .45, p.z, rnd(.3), 1.2, 0, .9, '#ffffff', .12, 0, true);
   }
 }
 
 // ====== 部屋 ======
 let room = null, roomIdx = -1;
+const rooms = [], bossRigs = [];
 function buildRoom(i) {
-  if (room) scene.remove(room);
-  const b = BOSSES[i]; room = new THREE.Group(); roomIdx = i;
+  if (room) room.visible = false;
+  roomIdx = i;
+  if (rooms[i]) { room = rooms[i]; room.visible = true; return; }
+  const b = BOSSES[i]; room = new THREE.Group(); rooms[i] = room;
   let floorMat = M(b.floor);
   if (b.deco === 'washitsu') floorMat = M('#ffffff', { map: canvasTex(256, 256, (c, w, h) => { c.fillStyle = '#c9b77c'; c.fillRect(0, 0, w, h); c.strokeStyle = '#a99a5e'; c.lineWidth = 3; for (let k = 0; k < w; k += 6) { c.globalAlpha = .25; c.beginPath(); c.moveTo(k, 0); c.lineTo(k, h); c.stroke(); } c.globalAlpha = 1; c.lineWidth = 8; c.strokeStyle = '#4a3a1a'; c.strokeRect(0, 0, w, h); }) });
   if (floorMat.map) { floorMat.map.wrapS = floorMat.map.wrapT = THREE.RepeatWrapping; floorMat.map.repeat.set(7, 4); }
@@ -466,6 +477,8 @@ function buildRoom(i) {
     for (let k = 0; k < 14; k++) { const cl = new THREE.Group(); cl.position.set(rnd(9), 1 + Math.random() * 6, -4 - Math.random() * 8); for (let j = 0; j < 4; j++) P(new THREE.SphereGeometry(.6 + Math.random() * .5, 12, 10), '#ffffff', j * .7 - 1, rnd(.2), rnd(.3), cl); room.add(cl); cl.userData.drift = .2 + Math.random() * .3; }
     for (let k = 0; k < 7; k++) { const ray = mesh(new THREE.ConeGeometry(.9, 14, 12, 1, true), MB('#fff6c0', { transparent: true, opacity: .14, side: THREE.DoubleSide, depthWrite: false }), room, BX + rnd(.5), 7, -3, false); ray.rotation.z = (k - 3) * .18; }
   }
+  room.userData.anim = [];
+  room.traverse(o => { if (o.userData.spin || o.userData.bob || o.userData.drift) room.userData.anim.push(o); });
   scene.add(room);
 }
 
@@ -527,15 +540,20 @@ const pBall = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(1, 1), new T
 for (const m of [pBox, pBall]) { m.frustumCulled = false; m.setColorAt(0, new THREE.Color()); scene.add(m); }
 const parts = [];
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _e = new THREE.Euler(), _v = new THREE.Vector3(), _s = new THREE.Vector3(), _c = new THREE.Color();
+const colorCache = new Map(), partPool = [];
+function colorOf(c) { let v = colorCache.get(c); if (!v) { v = new THREE.Color(c); colorCache.set(c, v); } return v; }
 function spawn(kind, x, y, z, vx, vy, vz, life, color, size, g = 0, grow = false) {
   if (parts.length > MAXP * 1.6) return;
-  parts.push({ kind, x, y, z, vx, vy, vz, life, max: life, color: new THREE.Color(color), size, g, grow, r: Math.random() * 6 });
+  const p = partPool.pop() || {};
+  p.kind = kind; p.x = x; p.y = y; p.z = z; p.vx = vx; p.vy = vy; p.vz = vz; p.life = life; p.max = life;
+  p.color = colorOf(color); p.size = size; p.g = g; p.grow = grow; p.r = Math.random() * 6;
+  parts.push(p);
 }
 function updateParts(dt) {
   let nb = 0, nl = 0;
   for (let i = parts.length - 1; i >= 0; i--) {
     const p = parts[i]; p.life -= dt;
-    if (p.life <= 0) { parts.splice(i, 1); continue; }
+    if (p.life <= 0) { parts[i] = parts[parts.length - 1]; parts.pop(); partPool.push(p); continue; }
     p.vy -= p.g * dt; p.x += p.vx * dt; p.y += p.vy * dt; p.z += p.vz * dt; p.r += dt * 6;
     const a = p.life / p.max, sc = p.grow ? p.size * (1.8 - a) * Math.min(1, a * 3) : p.size * Math.min(1, a * 2);
     _q.setFromEuler(_e.set(p.r, p.r * .7, 0)); _m.compose(_v.set(p.x, p.y, p.z), _q, _s.set(sc, sc, sc));
@@ -708,7 +726,8 @@ function release() {
   else say(p > 97 ? '申し訳ございませんでしたぁぁぁぁぁ！' : '申し訳ございませんでしたぁ！', 1.3, 1);
   setState('anim');
 }
-function headPos() { return player.head.getWorldPosition(new THREE.Vector3()); }
+const _hp = new THREE.Vector3();
+function headPos() { return player.head.getWorldPosition(_hp); }
 function updateAnim(dt) {
   const a = anim; a.t += dt; const u = clamp(a.t / a.dur, 0, 1);
   prot = 0; pry = 0; clones = 0;
@@ -888,9 +907,14 @@ function updateCamera(dt, t) {
 }
 
 // ====== 更新 ======
-let last = performance.now();
+let last = performance.now(), perfAcc = 0, perfN = 0;
 function frame(now) {
-  const dt = Math.min(.05, (now - last) / 1000); last = now;
+  const raw = (now - last) / 1000, dt = Math.min(.05, raw); last = now;
+  // 平均が45fpsを下回り続けたら解像度を1段下げる（一瞬のカクつきは数えない）
+  if (raw < .1 && document.visibilityState === 'visible') {
+    perfAcc += raw; perfN++;
+    if (perfN >= 120) { if (perfAcc / perfN > 1 / 45 && qLevel < QUALITY.length - 1 && (window.devicePixelRatio || 1) > QUALITY[qLevel + 1]) { qLevel++; resize(); } perfAcc = 0; perfN = 0; }
+  }
   const t = now / 1000;
   update(dt, t);
   applyPose(player, pose, -pry * K, prot, PX);
@@ -900,11 +924,11 @@ function frame(now) {
   player.suit.emissiveIntensity = state === 'charge' ? Math.pow(power / 100, 2) * .8 : fever ? .25 + Math.sin(t * 8) * .1 : 0;
   ghosts.forEach((g, i) => { g.yaw.visible = i < clones; if (i < clones) applyPose(g, pose, -pry * K + (i + 1) * .25, prot - (i + 1) * .5, PX - (i + 1) * .45, -(i + 1) * .5); });
   updateBoss(t, dt);
-  if (room) room.traverse(o => {
+  if (room) for (const o of room.userData.anim) {
     if (o.userData.spin) o.rotation.y += dt * 20;
     if (o.userData.bob) o.position.y = 4.2 + Math.sin(t * 1.5) * .25;
     if (o.userData.drift) { o.position.x += o.userData.drift * dt; if (o.position.x > 10) o.position.x = -10; }
-  });
+  }
   if (train) { train.position.x = ((t * 6) % 26) - 13; }
   fans.forEach((f, i) => f.userData.arms.forEach((a, j) => a.rotation.z = (j ? 1 : -1) * (2.4 + Math.sin(t * 9 + i) * .5)));
   skirt.visible = !crash;
@@ -951,12 +975,20 @@ function txt(s, x, y, size, color, font = FONT_T, align = 'center', stroke = '#1
   if (sw) { ctx.lineJoin = 'round'; ctx.strokeStyle = stroke; ctx.lineWidth = sw; ctx.strokeText(s, x, y); }
   ctx.fillStyle = color; ctx.fillText(s, x, y);
 }
+const wrapCache = new Map();
 function wrap(s, maxW, size, font) {
+  const key = s + '|' + maxW + '|' + size + '|' + font;
+  let hit = wrapCache.get(key); if (hit) return hit;
+  if (wrapCache.size > 400) wrapCache.clear();
+  hit = wrapRaw(s, maxW, size, font); wrapCache.set(key, hit); return hit;
+}
+function wrapRaw(s, maxW, size, font) {
   ctx.font = `${size}px ${font}`; const lines = []; let cur = '';
   for (const ch of s) { if (ctx.measureText(cur + ch).width > maxW && cur && !'、。，．）」』！？…ーっゃゅょッャュョ'.includes(ch)) { lines.push(cur); cur = ch; } else cur += ch; }
   if (cur) lines.push(cur); return lines;
 }
-function toScreen(v) { const p = v.clone().project(camera); return [((p.x + 1) / 2 * W - OX) / S, ((1 - p.y) / 2 * H - OY) / S, p.z]; }
+const _bv = new THREE.Vector3(), _up85 = new THREE.Vector3(0, .85, 0), _sv = new THREE.Vector3();
+function toScreen(v) { const p = _sv.copy(v).project(camera); return [((p.x + 1) / 2 * W - OX) / S, ((1 - p.y) / 2 * H - OY) / S, p.z]; }
 
 function drawGauge() {
   const x0 = 34, x1 = 366, y = 600, h = 34, w = x1 - x0;
@@ -1013,7 +1045,7 @@ function drawCard() {
 }
 function drawBubble(s) {
   if (!s || !bossRig) return;
-  const [x, y, z] = toScreen(bossRig.head.getWorldPosition(new THREE.Vector3()).add(new THREE.Vector3(0, .85, 0)));
+  const [x, y, z] = toScreen(bossRig.head.getWorldPosition(_bv).add(_up85));
   if (z > 1 || y < 190 || y > 560) return;
   const lines = wrap(s, 200, 15, FONT_T).slice(0, 3);
   ctx.font = `15px ${FONT_T}`; const w = Math.min(226, Math.max(...lines.map(l => ctx.measureText(l).width)) + 26), h = 18 + lines.length * 20;
@@ -1211,10 +1243,30 @@ function drawOver() {
   ctx.fillStyle = '#2b5fd9'; rr(250, 606, 120, 50, 14); ctx.fill(); txt('シェア', 310, 632, 16, '#fff', FONT_T);
 }
 
+// 起動時に、あとで出てくる物（分身・帽子・全部屋・全上司・地下）も一度だけ描画の準備をしておく
+function warmup() {
+  const hidden = [];
+  scene.traverse(o => { if (!o.visible) { hidden.push(o); o.visible = true; } });
+  const savedCount = [pBox.count, pBall.count]; pBox.count = pBall.count = 1;
+  try {
+    renderer.compile(scene, camera);
+    scene.traverse(o => {
+      const ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+      for (const m of ms) for (const k of ['map', 'gradientMap']) if (m[k]) renderer.initTexture(m[k]);
+    });
+    // 影も含めて一度描いておく
+    camera.position.set(0, 2, 12); camera.lookAt(0, 1, 0); renderer.render(scene, camera);
+  } catch (e) {}
+  hidden.forEach(o => o.visible = false);
+  [pBox.count, pBall.count] = savedCount;
+}
+
 // ====== 起動 ======
 (async () => {
   try { await Promise.race([Promise.all([document.fonts.load(`40px ${FONT_T}`), document.fonts.load(`20px ${FONT_B}`)]), new Promise(r => setTimeout(r, 1500))]); } catch (e) {}
-  buildUnder(); buildRoom(0); buildBoss(BOSSES[0]);
+  buildUnder();
+  for (let i = BOSSES.length - 1; i >= 0; i--) { buildRoom(i); buildBoss(BOSSES[i]); }
+  warmup();
   requestAnimationFrame(frame);
 })();
 // テスト・デバッグ用
