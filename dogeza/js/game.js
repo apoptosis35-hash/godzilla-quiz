@@ -703,6 +703,9 @@ addEventListener('pointerup', up); addEventListener('pointercancel', up); addEve
 addEventListener('keydown', e => { if (e.code !== 'Space' && e.code !== 'Enter') return; e.preventDefault(); if (e.repeat) return; down(0, 0); });
 addEventListener('keyup', e => { if (e.code === 'Space' || e.code === 'Enter') up(); });
 ui.addEventListener('contextmenu', e => e.preventDefault());
+// iPhoneのSafari：長押しで文字選択・虫めがね・メニューの判定が走って一瞬止まるのを防ぐ
+for (const ev of ['touchstart', 'touchmove', 'touchend']) ui.addEventListener(ev, e => { if (e.cancelable) e.preventDefault(); }, { passive: false });
+for (const ev of ['selectstart', 'gesturestart', 'dblclick']) document.addEventListener(ev, e => e.preventDefault(), { passive: false });
 
 async function share() {
   const text = `全力土下座で「${rankName()}」になった！ スコア${score}・${cleared}件の罪を許された #全力土下座`;
