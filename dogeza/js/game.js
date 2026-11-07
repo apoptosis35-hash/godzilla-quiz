@@ -12,7 +12,8 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(40, 1, .1, 500);
 const QUALITY = [2, 1.5, 1.25, 1];
-let qLevel = 0;
+let qLevel = clamp0(+(localStorage.getItem('dogeza.q') || 0));
+function clamp0(v) { return v >= 0 && v <= 3 ? Math.floor(v) : 0; }
 function resize() {
   DPR = Math.min(QUALITY[qLevel], window.devicePixelRatio || 1);
   W = innerWidth; H = innerHeight;
@@ -897,7 +898,8 @@ function updateCamera(dt, t) {
   camera.up.set(upX, upY, 0);
   const cp = Math.cos(cam.pitch);
   camera.position.set(cam.tx + Math.sin(cam.yaw) * cp * cam.dist, cam.ty + Math.sin(cam.pitch) * cam.dist * upY, cam.tz + Math.cos(cam.yaw) * cp * cam.dist);
-  camera.position.x += rnd(shake); camera.position.y += rnd(shake);
+  camera.position.x += shake * (Math.sin(t * 37) + Math.sin(t * 59 + 1.3)) * .5;
+  camera.position.y += shake * (Math.sin(t * 43 + .7) + Math.sin(t * 67 + 2.1)) * .5;
   camera.lookAt(cam.tx, cam.ty, cam.tz);
   // 背景色・ライト
   const deep = cam.ty < -1;
@@ -913,14 +915,20 @@ function frame(now) {
   // 平均が45fpsを下回り続けたら解像度を1段下げる（一瞬のカクつきは数えない）
   if (raw < .1 && document.visibilityState === 'visible') {
     perfAcc += raw; perfN++;
-    if (perfN >= 120) { if (perfAcc / perfN > 1 / 45 && qLevel < QUALITY.length - 1 && (window.devicePixelRatio || 1) > QUALITY[qLevel + 1]) { qLevel++; resize(); } perfAcc = 0; perfN = 0; }
+    if (perfN >= 120) {
+      const calm = state === 'title' || state === 'intro' || state === 'talk' || state === 'result' || state === 'over';
+      if (calm && perfAcc / perfN > 1 / 45 && qLevel < QUALITY.length - 1 && (window.devicePixelRatio || 1) > QUALITY[qLevel + 1]) {
+        qLevel++; try { localStorage.setItem('dogeza.q', qLevel); } catch (e) {} resize();
+      }
+      perfAcc = 0; perfN = 0;
+    }
   }
   const t = now / 1000;
   update(dt, t);
   applyPose(player, pose, -pry * K, prot, PX);
   player.sweat.visible = state === 'charge' || state === 'intro' || state === 'talk';
   if (player.sweat.visible) player.sweat.position.y = .25 + Math.sin(t * 8) * .02;
-  player.suit.emissive.set(state === 'charge' ? (power > 95 ? '#ff2020' : '#ffb000') : fever ? '#ffcc33' : '#000');
+  player.suit.emissive.setHex(state === 'charge' ? (power > 95 ? 0xff2020 : 0xffb000) : fever ? 0xffcc33 : 0);
   player.suit.emissiveIntensity = state === 'charge' ? Math.pow(power / 100, 2) * .8 : fever ? .25 + Math.sin(t * 8) * .1 : 0;
   ghosts.forEach((g, i) => { g.yaw.visible = i < clones; if (i < clones) applyPose(g, pose, -pry * K + (i + 1) * .25, prot - (i + 1) * .5, PX - (i + 1) * .45, -(i + 1) * .5); });
   updateBoss(t, dt);
@@ -955,9 +963,9 @@ function update(dt, t) {
     chargeT += dt;
     const ph = (chargeT * speed) % 2;
     power = (ph < 1 ? ph : 2 - ph) * 100;
-    if (hum && AC) hum.o.frequency.setTargetAtTime(110 + power * 7, AC.currentTime, .02);
+    if (hum && AC) hum.o.frequency.value = 110 + power * 7;
     pose = lp(STAND, CROUCH, power / 100 * .35);
-    pose.hy += Math.sin(chargeT * 60) * power / 100 * 1.5;
+    pose.hy += Math.sin(chargeT * 26) * power / 100 * 1.2;
     shake = Math.max(shake, power > 85 ? (power - 85) / 15 * .04 : 0);
     if (power > 70 && Math.random() < .5) { const h = player.hips.getWorldPosition(_v); spawn('ball', h.x + rnd(.4), h.y + rnd(.6), rnd(.4), rnd(.3), 1.4, rnd(.3), .5, power > 95 ? '#ff4040' : '#ffd23f', .05 + Math.random() * .05); }
   }
