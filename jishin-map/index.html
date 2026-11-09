@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>日本の地震リスクマップ</title>
+<meta name="description" content="30年以内に強い揺れに見舞われる確率（J-SHIS）、想定震源域、主要活断層、過去の大地震を1枚の地図で拡大して確認できます。">
+<link rel="stylesheet" href="vendor/leaflet/leaflet.css">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="map" aria-label="地図"></div>
+
+<header class="topbar">
+  <h1>日本の地震リスクマップ</h1>
+  <form id="search" class="search" role="search">
+    <input id="q" type="search" placeholder="住所・地名で検索（例：高知市、渋谷区）" autocomplete="off" aria-label="住所・地名">
+    <button type="submit" aria-label="検索">検索</button>
+    <button type="button" id="locate" title="現在地" aria-label="現在地">◎</button>
+  </form>
+</header>
+
+<aside id="panel" class="panel">
+  <button id="grip" class="grip" aria-label="パネルを開閉"><span></span></button>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="layers" class="on">地図</button>
+    <button role="tab" data-tab="point">地点</button>
+    <button role="tab" data-tab="rank">ランキング</button>
+    <button role="tab" data-tab="learn">解説</button>
+  </nav>
+
+  <section id="tab-layers" class="tab on">
+    <h2>揺れの確率（J-SHIS 約250mメッシュ）</h2>
+    <div class="seg" id="hazard">
+      <label><input type="radio" name="hz" value="T30_I45_PS"><span>震度5弱+</span></label>
+      <label><input type="radio" name="hz" value="T30_I50_PS"><span>5強+</span></label>
+      <label><input type="radio" name="hz" value="T30_I55_PS" checked><span>6弱+</span></label>
+      <label><input type="radio" name="hz" value="T30_I60_PS"><span>6強+</span></label>
+      <label><input type="radio" name="hz" value=""><span>なし</span></label>
+    </div>
+    <label class="row">透明度 <input id="opacity" type="range" min="0.2" max="1" step="0.05" value="0.65"></label>
+    <div class="scale" aria-hidden="true">
+      <div class="bar"></div>
+      <div class="ticks"><span>0.1%</span><span>3%</span><span>6%</span><span>26%</span><span>100%</span></div>
+      <div class="ticks sub"><span></span><span>約1000年に1回</span><span>約500年に1回</span><span>約100年に1回</span><span></span></div>
+    </div>
+    <p class="hint">今後30年間にその場所が選んだ震度以上で揺れる確率。拡大すると町丁目レベルまで細かく見えます。色の目安は概略で、正確な凡例は <a id="legendLink" target="_blank" rel="noopener">J-SHIS公式凡例</a>。</p>
+
+    <h2>重ねる情報</h2>
+    <label class="chk"><input type="checkbox" id="lyTrench" checked> 海溝型の想定震源域 <small>（30年確率）</small></label>
+    <label class="chk"><input type="checkbox" id="lyFault" checked> 主要活断層帯 <small>（Sランク中心・概略位置）</small></label>
+    <label class="chk"><input type="checkbox" id="lyCap"> 県庁所在地の確率（6弱+）</label>
+    <label class="chk"><input type="checkbox" id="lyHist" checked> 主な被害地震</label>
+    <label class="chk"><input type="checkbox" id="lyUsgs"> 観測された地震 M5.5+（1990〜、USGS）</label>
+    <label class="chk"><input type="checkbox" id="lyAfm"> 活断層図（国土地理院・拡大時に詳細）</label>
+    <label class="chk"><input type="checkbox" id="lyTsunami"> 津波浸水想定（ハザードマップポータル）</label>
+
+    <h2>背景地図</h2>
+    <div class="seg" id="base">
+      <label><input type="radio" name="bm" value="pale" checked><span>淡色</span></label>
+      <label><input type="radio" name="bm" value="std"><span>標準</span></label>
+      <label><input type="radio" name="bm" value="photo"><span>写真</span></label>
+      <label><input type="radio" name="bm" value="relief"><span>陰影</span></label>
+    </div>
+
+    <h2>凡例</h2>
+    <ul class="legend">
+      <li><i class="sw r3"></i>海溝型 26%以上（ランクIII）</li>
+      <li><i class="sw r2"></i>海溝型 3〜26%（ランクII）</li>
+      <li><i class="ln s"></i>活断層 Sランク（3%以上）</li>
+      <li><i class="ln a"></i>活断層 Aランク（0.1〜3%）</li>
+      <li><i class="dot h"></i>主な被害地震（大きさ＝M）</li>
+    </ul>
+  </section>
+
+  <section id="tab-point" class="tab">
+    <div id="pointInfo" class="point-empty">
+      <p><b>地図をタップ</b>すると、その地点の揺れの確率・地盤の揺れやすさ・近くの想定震源を表示します。</p>
+      <p class="hint">住所検索や「◎ 現在地」からも調べられます。</p>
+    </div>
+  </section>
+
+  <section id="tab-rank" class="tab">
+    <h2>県庁所在地 30年以内に震度6弱以上の確率</h2>
+    <p class="hint">全国地震動予測地図2020年版（最新版）。県内でも場所によって大きく違います（例：北海道は札幌2%台、根室は約80%）。</p>
+    <ol id="rankList" class="rank"></ol>
+    <h2>海溝型地震 30年以内の発生確率</h2>
+    <ol id="trenchList" class="rank trench"></ol>
+  </section>
+
+  <section id="tab-learn" class="tab learn">
+    <h2>この地図の読み方</h2>
+    <p><b>「30年で26%」は「約100年に1回」</b>に相当します。6%は約500年、3%は約1000年に1回。比較の目安として、30年間に交通事故で死亡する確率は約0.2%、火災で被災する確率は約2%です（地震本部の資料より）。3%でも「低い」とは言えません。</p>
+    <p>色の薄い場所も<b>安全ではありません</b>。2016年熊本地震を起こした布田川断層帯の確率は「ほぼ0〜0.9%」、2024年能登半島地震の地域も確率は高くありませんでした。日本ではどこでも強い揺れに備える必要があります。</p>
+
+    <h2>日本でリスクが高いエリア</h2>
+    <ul>
+      <li><b>太平洋側（静岡〜四国〜宮崎）</b>：南海トラフ巨大地震。30年確率「60〜90%程度以上」。揺れと大津波。</li>
+      <li><b>首都圏（南関東）</b>：M7程度の直下地震が70%程度。地盤の軟らかい湾岸・低地は特に揺れやすい。</li>
+      <li><b>北海道東部（根室・釧路）</b>：千島海溝。根室沖が90%程度（2026年に引き上げ）、超巨大地震も切迫。</li>
+      <li><b>東北・関東の太平洋沖</b>：宮城県沖90%、茨城県沖80%、津波地震30%など。</li>
+      <li><b>内陸の活断層</b>：糸魚川－静岡構造線（長野・山梨）、日奈久（熊本）など。一度動くと直上で震度7。</li>
+    </ul>
+
+    <h2>最近の動き</h2>
+    <ul>
+      <li>2024年1月 能登半島地震（M7.6・震度7）</li>
+      <li>2024年8月 日向灘M7.1 → 初の「南海トラフ地震臨時情報（巨大地震注意）」</li>
+      <li>2025年9月 南海トラフの確率を「60〜90%程度以上」と「20〜50%」の併記に改訂</li>
+      <li>2025年12月 青森県東方沖M7.5（震度6強）→ 初の「北海道・三陸沖後発地震注意情報」</li>
+      <li>2026年1月 確率値更新：根室沖を「90%程度」に引き上げ</li>
+    </ul>
+
+    <h2>今日できる備え</h2>
+    <ul>
+      <li>家具の固定、寝室に倒れる物を置かない</li>
+      <li>水・食料は最低3日分（できれば1週間）、簡易トイレ</li>
+      <li>自宅が1981年5月以前の旧耐震なら耐震診断を（多くの自治体で補助あり）</li>
+      <li>沿岸部は「揺れたらすぐ高い所へ」。津波浸水想定レイヤーで避難先を確認</li>
+      <li>家族の連絡方法（災害用伝言ダイヤル171）を決めておく</li>
+    </ul>
+
+    <h2>出典</h2>
+    <ul class="src">
+      <li><a href="https://www.j-shis.bosai.go.jp/" target="_blank" rel="noopener">J-SHIS 地震ハザードステーション（防災科研）</a> — 確率地図・地盤情報</li>
+      <li><a href="https://www.jishin.go.jp/evaluation/long_term_evaluation/lte_summary/" target="_blank" rel="noopener">地震調査研究推進本部 長期評価結果一覧</a>（2026年1月1日算定）</li>
+      <li><a href="https://www.jishin.go.jp/evaluation/seismic_hazard_map/" target="_blank" rel="noopener">全国地震動予測地図2020年版</a></li>
+      <li><a href="https://maps.gsi.go.jp/development/ichiran.html" target="_blank" rel="noopener">地理院タイル</a>・<a href="https://disaportal.gsi.go.jp/" target="_blank" rel="noopener">ハザードマップポータル</a>（国土地理院）</li>
+      <li><a href="https://earthquake.usgs.gov/fdsnws/event/1/" target="_blank" rel="noopener">USGS Earthquake Catalog</a></li>
+    </ul>
+    <p class="hint">想定震源域・活断層の線は位置関係を示す概略図です。確率は毎年更新されるため、正確な値は出典で確認してください。この地図は防災の参考情報で、地震の発生を予知するものではありません。</p>
+  </section>
+</aside>
+
+<div id="toast" class="toast" role="status" hidden></div>
+
+<script src="vendor/leaflet/leaflet.js"></script>
+<script src="js/data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
